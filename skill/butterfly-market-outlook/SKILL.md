@@ -1,3 +1,7 @@
+---
+name: butterfly-market-outlook
+description: Analyze, optimize, manage, and journal Indian index option butterflies using Dhan when available, full option surfaces, Greeks/OI/bid-ask, risk-neutral distributions, deterministic expiry/recenter diagnostics, and fresh event/cross-asset research. Use for checking an open NIFTY/BANKNIFTY/SENSEX butterfly, deciding HOLD/RECENTRE/SQUARE OFF or CARRY, searching for a wide butterfly, reviewing near-expiry risk, or recording butterfly market outlooks and trade/position history to the connected volarb GitHub repository.
+---
 
 # Butterfly Market Outlook — Engine v2
 
@@ -19,6 +23,7 @@ Use India time (Asia/Kolkata).
 8. RECENTRE only when the new structure materially improves risk/carry **after close+reopen friction**.
 9. On follow-up reviews, compare the current MarketState with the previous review and focus on what materially changed.
 10. Never manufacture live quotes, IV, Greeks, probabilities, events or position data.
+11. Persist every completed market outlook, position review and confirmed trade lifecycle event to the volarb GitHub repository when the GitHub connector is writable. Keep this logging backend-only unless it fails.
 
 Read `references/architecture-v2.md` for the system design and `references/research-basis.md` for the research rationale when revising or debugging the workflow.
 
@@ -237,9 +242,25 @@ For HOLD/CARRY, choose the earliest useful next observation point from:
 
 Read `references/output-template.md` for exact timing rules.
 
-## 12. Post-trade calibration
+## 12. Persist the research and trade record
 
-After a trade is fully closed, optionally create one episode using `references/post-trade-learning.md`.
+Read `references/repo-logging.md` on every completed outlook, candidate search, position check, entry/recenter confirmation or closure.
+
+Use `ayyararyan/volarb` on `main` as the canonical repository unless the user explicitly changes it.
+
+- Append every completed market outlook/candidate search/position review to **one daily file**: `market-outlook/YYYY-MM-DD.md`.
+- Reuse the same daily file across NIFTY, BANKNIFTY and SENSEX; add timestamped sections in IST rather than creating one file per symbol or review.
+- If an identifiable live trade exists, also update its trade record with material position-state changes and decisions.
+- When a trade is confirmed entered, create/update its ledger row and trade record from broker/user-confirmed facts only.
+- When a trade is fully closed, finalize realized P&L/leg outcomes when known and append/update the post-trade episode used for calibration.
+- Never store access tokens, broker credentials, full account identifiers or other secrets.
+- Fetch the current GitHub file/blob SHA immediately before each write so repeated reviews append rather than overwrite concurrent history.
+
+Complete the trading decision first, then persist it **before** emitting the normal user-facing table. Repository logging must never change the trading decision. If GitHub is unavailable or a write fails after one retry, return the decision on time and briefly disclose the logging failure; never invent a successful commit.
+
+## 13. Post-trade calibration
+
+After a trade is fully closed, create or update one episode using `references/post-trade-learning.md` and the repository workflow in `references/repo-logging.md`.
 
 Periodically run:
 
@@ -312,6 +333,8 @@ Before answering verify:
 - RECENTRE includes transaction friction and remaining time;
 - expiry-exit layer active when required;
 - follow-up review compares state changes rather than restarting narratively;
+- today's `market-outlook/YYYY-MM-DD.md` entry has been created/appended when GitHub is writable;
+- any confirmed entry/recenter/closure has been reflected in the trade log without inventing missing fields;
 - final answer obeys the one-table contract.
 
 
