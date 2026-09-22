@@ -1,0 +1,7 @@
+{
+  "captured_at": "2026-09-22T16:56:00+05:30",
+  "source": "connected Dhan MCP",
+  "positions": [],
+  "current_day_trades": [],
+  "interpretation": "The connector returned no current positions and no current-day trades at repository-capture time. This snapshot is not evidence that no historical trades occurred; the available connector actions do not expose a complete historical tradebook."
+}
