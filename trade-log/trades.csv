@@ -1,0 +1,2 @@
+trade_id,instrument,strategy,opened_at_ist,closed_at_ist,status,expiry,lower_strike,body_strike,upper_strike,quantity,entry_credit_points,exit_cost_points,realized_pnl_inr,provenance,notes
+2026-09-18-NIFTY-001,NIFTY,wide_iron_butterfly,2026-09-18 afternoon,2026-09-21,closed,,,,,,,,,conversation-reconstructed,"Opened Friday afternoon; carried into Monday near-expiry reviews; subsequently closed. Exact legs/fills/quantity/final P&L are not recoverable from the currently connected Dhan endpoint and are deliberately left blank."
