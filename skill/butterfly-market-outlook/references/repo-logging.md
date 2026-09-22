@@ -64,6 +64,7 @@ Append one section in chronological order:
 | Decision | HOLD / RECENTRE / SQUARE OFF / CARRY / NO TRADE / candidate |
 | Expiry | YYYY-MM-DD or unknown |
 | Position | concise geometry or none |
+| Trade ID | active trade ID if one exists, otherwise — |
 | Spot / forward | values if available |
 | Data health | HEALTHY / DEGRADED / STALE / INVALID |
 | Key surface state | short skew/IV/RND description |
