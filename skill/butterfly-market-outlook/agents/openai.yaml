@@ -1,0 +1,13 @@
+interface:
+  display_name: Butterfly Market Outlook
+  short_description: Stress-test and optimize Indian index butterflies using Dhan
+    live positions, full option surfaces, and exchange price discovery.
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true
