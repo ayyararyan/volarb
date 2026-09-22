@@ -1,0 +1,98 @@
+# Canonical MarketState
+
+Use one state object per decision pass. It is an internal contract between modules, not a user-facing artifact.
+
+```json
+{
+  "meta": {
+    "symbol": "NIFTY|BANKNIFTY|SENSEX",
+    "expiry": "YYYY-MM-DD",
+    "asof_ist": "ISO-8601",
+    "mode": "open_position|candidate_search",
+    "session": "preopen|open|postclose|overnight|weekend",
+    "holding_horizon_hours": 24.0
+  },
+  "data_health": {
+    "status": "HEALTHY|DEGRADED|STALE|INVALID",
+    "surface_freshness": "live|stale_to_price_discovery|stale_to_news",
+    "issues": [],
+    "forward_source": "parity|exchange_future|input|spot_fallback",
+    "parity_dispersion_points": null,
+    "rnd_repair_fraction": null
+  },
+  "price": {
+    "spot": null,
+    "forward": null,
+    "futures": null,
+    "gift_nifty": null,
+    "india_vix": null
+  },
+  "surface": {
+    "atm_strike": null,
+    "atm_iv": null,
+    "atm_straddle": null,
+    "rr25_vp": null,
+    "bf25_vp": null,
+    "local_skew_vp": null,
+    "local_curvature_vp": null,
+    "front_minus_next_atm_iv_vp": null,
+    "rnd_q10": null,
+    "rnd_median": null,
+    "rnd_q90": null,
+    "rnd_mode": null
+  },
+  "event_clock": [
+    {
+      "time_ist": "ISO-8601 or null",
+      "kind": "scheduled|unscheduled",
+      "name": "event",
+      "severity": "low|medium|high|critical",
+      "channels": ["equity", "oil", "fx", "rates"],
+      "priced_by_surface": true
+    }
+  ],
+  "path": {
+    "regime": "range_bound|choppy|directional_up|directional_down|event_jump|uncertain",
+    "expected_center": null,
+    "confidence": "low|medium|high",
+    "scenarios": [
+      {
+        "label": "base",
+        "spot": null,
+        "probability": null,
+        "iv_shift_vp": 0.0,
+        "source": "judgmental|model|market"
+      }
+    ]
+  },
+  "position": {
+    "lower": null,
+    "center": null,
+    "upper": null,
+    "entry_credit": null,
+    "close_cost": null,
+    "net_delta": null,
+    "net_gamma": null,
+    "net_theta": null,
+    "break_even_lower": null,
+    "break_even_upper": null,
+    "dynamic_harvest_saturation": null,
+    "remaining_static_harvest": null
+  },
+  "decision": {
+    "previous_action": null,
+    "current_action": null,
+    "dominant_reason": null,
+    "next_review_ist": null
+  }
+}
+```
+
+## Rules
+
+- Populate only fields supported by current evidence; use `null`, not guesses.
+- Keep RND fields and path scenario probabilities conceptually separate.
+- A previous state may come from an earlier review in the same conversation. If unavailable, initialize without inventing history.
+- Do not persist sensitive account identifiers in the state.
+- Use `scripts/compare_market_states.py` when both previous and current states are available.
+- A newly unpriced high/critical event combined with an `event_jump` regime must produce at least an elevated review state (normally <=30 minutes) unless the decision layer already chooses RECENTRE/SQUARE OFF/NO TRADE.
