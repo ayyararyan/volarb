@@ -43,6 +43,14 @@ Use one state object per decision pass. It is an internal contract between modul
     "rnd_q90": null,
     "rnd_mode": null
   },
+  "market_regime": {
+    "state": "CALM_CARRY|TRANSITION|LATENT_JUMP_RISK|ACTIVE_STRESS|UNKNOWN",
+    "confidence": "low|medium|high",
+    "path_stress": null,
+    "implied_stress": null,
+    "event_hazard": null,
+    "complacency_gap": null
+  },
   "event_clock": [
     {
       "time_ist": "ISO-8601 or null",
@@ -70,6 +78,7 @@ Use one state object per decision pass. It is an internal contract between modul
   },
   "overnight_carry": {
     "active": false,
+    "market_regime_state": "CALM_CARRY|TRANSITION|LATENT_JUMP_RISK|ACTIVE_STRESS|UNKNOWN|null",
     "operational_state": "ACTIONABLE|LOCKED_OVERNIGHT|null",
     "broker_feasibility": "PASS|UNKNOWN|WARN|FAIL|null",
     "broker_auto_squareoff_warning": false,
