@@ -1,44 +1,33 @@
 # volarb
 
-Research, execution logic, and trade journal for index volatility-arbitrage butterflies.
+Research, decision logic, and trade journal for Indian index butterfly strategies.
 
-This repository is the working record of the **Butterfly Market Outlook** framework used for NIFTY, BANKNIFTY, and SENSEX iron butterflies. It separates option-implied information from real-world path/event judgment, applies deterministic data-health and expiry-risk gates, and keeps the user-facing decision intentionally small: HOLD / RECENTRE / SQUARE OFF before 14:45 IST, or CARRY / RECENTRE / SQUARE OFF thereafter.
+The repository is the source of truth for **Butterfly Market Outlook v2.2**, used for NIFTY, BANKNIFTY, and SENSEX iron butterflies. The engine separates option-implied information from real-world path/event risk, classifies the market regime before overnight carry, and keeps the final trading decision deliberately small.
 
-## Repository layout
+## Layout
 
-- `skill/butterfly-market-outlook/` — the ChatGPT skill source: control instructions, references, scripts, and UI metadata.
-- `docs/WORKFLOW.md` — end-to-end operating workflow in human-readable form.
-- `trade-log/` — trade episodes, review history, and a machine-readable ledger.
-- `trade-log/episodes.jsonl` — post-trade learning records suitable for the skill's calibration workflow.
-- `trade-log/trades.csv` — compact trade ledger.
+- `skill/butterfly-market-outlook/` — production skill source, references, scripts, tests, and UI metadata.
+- `market-outlook/` — one append-only market-outlook journal per IST day.
+- `trade-log/` — executed-trade ledger, lifecycle records, post-trade episodes, and provenance snapshots.
+- `docs/WORKFLOW.md` — human-readable operating workflow.
+- `docs/DEVELOPMENT_HISTORY.md` — concise evolution of the engine.
+- `.github/` — skill validation, regression testing, and packaging workflow.
 
-## Core philosophy
+## Operating rules
 
-1. **Data health before optimization.** Bad or stale option data blocks new entries.
-2. **Risk-neutral is not real-world.** RND is used for pricing geometry and tail compensation, not as a literal forecast.
-3. **Tail/event risk outranks theta.** High carry never overrides a material jump regime or break-even threat.
-4. **Actual four-leg execution matters.** Liquidity, bid/ask, Greeks, and friction are evaluated on the executable iron-fly legs.
-5. **Near expiry is a different regime.** Remaining harvest is compared with gamma/path risk using dynamic harvest saturation.
-6. **Recentring must earn its keep.** A new fly must materially improve alignment/risk after close-and-reopen friction.
-7. **Learning is logged, not auto-fitted.** Threshold changes require explicit review and regression testing.
+1. **Data health before optimization.**
+2. **Market regime before overnight carry.** Low VIX alone is not evidence of a calm regime.
+3. **Risk-neutral is not real-world.** RND is pricing information, not a literal physical forecast.
+4. **Tail/event/gap risk outranks theta.**
+5. **Actual four-leg execution matters.**
+6. **Near expiry is a different problem.** Dynamic harvest, gamma, break-even buffer, and next-open risk dominate headline theta.
+7. **Intraday is the default in hostile regimes.** Overnight carry must explicitly pass regime, recent-gap, event-latency, broker/RMS, and full-reprice stress gates.
+8. **Learning is logged, not auto-fitted.** Threshold changes require review and regression testing.
 
-## Data sources
+## Current engine
 
-The live workflow prefers Dhan for account truth and structured option-chain data, validates against official exchange sources where needed, and uses fresh public information for event and cross-asset context.
+**Butterfly Market Outlook v2.2 — regime-aware candidate engine**
 
-## Trade-log provenance
+Regimes: `CALM_CARRY / TRANSITION / LATENT_JUMP_RISK / ACTIVE_STRESS / UNKNOWN`.
 
-Trade records distinguish among:
-- **broker-verified** fields obtained from Dhan;
-- **conversation-reconstructed** facts established during live reviews;
-- **unknown** fields that are intentionally left blank rather than inferred.
-
-The connected Dhan interface currently provides current positions/orders/trades but does not expose a complete historical fill ledger through this repository workflow. Older fills therefore remain marked as incomplete unless independently supplied or recovered from another source.
-
-## Status
-
-Engine: **Butterfly Market Outlook v2**
-
-Timezone: **Asia/Kolkata**
-
-This repository is a research and trading-process record, not a promise of future performance.
+The repository records research and trading process. It is not a promise of future performance.
