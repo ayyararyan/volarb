@@ -157,9 +157,9 @@ Only compute `scenario_expected_pnl_points` when explicit probabilities are supp
 Even without scenario probabilities, use the worst scenario as a path-risk stress.
 
 
-## 10A. v2.1 overnight candidate gate
+## 10A. v2.2 regime-aware overnight candidate gate
 
-When a candidate will be held across the home-market close and <=2 trading sessions remain, include an `overnight_carry` object in the optimizer input. Also provide `overnight_carry.empirical_gap_gate` with roughly 20-30 recent close-to-next-open gap percentages (minimum 15 for a new entry), source metadata, and the current gap-regime thresholds. The optimizer computes candidate-specific current-spot-to-break-even buffer and local gap-gamma burden before ranking.
+When a candidate will be held across the home-market close and <=2 trading sessions remain, include an `overnight_carry` object in the optimizer input plus `overnight_carry.market_regime` from `scripts/classify_market_regime.py`. Also provide `overnight_carry.empirical_gap_gate` with roughly 20-30 recent close-to-next-open gap percentages (minimum 15 for a new entry), source metadata, and the current gap-regime thresholds. The optimizer computes candidate-specific current-spot-to-break-even buffer and local gap-gamma burden before ranking.
 
 The optimizer then full-reprices each surviving candidate at the next actionable exit under mandatory +/-1.0, +/-1.5 and +/-2.0 ATM-straddle gap states with default ATM-IV multipliers 1.20 / 1.40 / 1.60.
 
@@ -169,6 +169,8 @@ A new next-session-expiry entry/recenter/rotation is removed **before Pareto ran
 - required full next-open repricing cannot be completed;
 - `OCR_1_5 < 0.5`; or
 - a high/critical event inside the untradeable window has `OCR_1_5 < 1.0`.
+
+The regime gate runs first. `LATENT_JUMP_RISK`, `ACTIVE_STRESS` and `UNKNOWN` block new expiry-eve candidates; `TRANSITION` applies tighter OCR and break-even-buffer requirements. The optimizer also adds a regime tail penalty before Pareto ranking.
 
 The empirical gap gate blocks a candidate when the recent 90th-percentile absolute gap reaches/exceeds its nearest break-even buffer, or when estimated local gap-gamma drag consumes all same-state next-open harvest. Near-threshold candidates remain eligible only with warnings and carry a worse combined-tail score.
 
