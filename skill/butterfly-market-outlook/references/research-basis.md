@@ -1,4 +1,4 @@
-# Research Basis for Butterfly Engine v2
+# Research Basis for Butterfly Engine v2.2
 
 Use these sources as design rationale, not as live market data.
 
