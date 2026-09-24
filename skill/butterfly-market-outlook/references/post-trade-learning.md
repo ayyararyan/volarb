@@ -30,7 +30,19 @@ Store one record only after a trade is fully closed:
   "recenter_incremental_pnl_points": null,
   "estimated_slippage_points": null,
   "actual_slippage_points": null,
-  "dominant_exit_reason": "harvest|gamma|event|alignment|liquidity|other"
+  "dominant_exit_reason": "harvest|gamma|event|alignment|liquidity|broker|other",
+  "overnight_carry": {
+    "next_actionable_exit_ist": null,
+    "untradeable_window_hours": null,
+    "broker_feasibility": null,
+    "broker_auto_squareoff_warning": null,
+    "max_latency_event_severity": null,
+    "same_state_open_pnl_points": null,
+    "worst_1_5_straddle_open_pnl_points": null,
+    "worst_2_0_straddle_open_pnl_points": null,
+    "ocr_1_5": null,
+    "actual_open_gap_in_prior_straddles": null
+  }
 }
 ```
 
@@ -43,7 +55,8 @@ Store one record only after a trade is fully closed:
 - execution slippage versus estimate;
 - profit give-back after maximum open P&L;
 - recenter incremental P&L only when a defensible counterfactual is available;
-- performance by days-to-expiry and regime.
+- performance by days-to-expiry and regime;
+- overnight next-open forecast error, gap in prior-close straddle units, event-latency misses, and broker/RMS warning frequency when the v2.1 overnight gate was active.
 
 ## Threshold changes
 

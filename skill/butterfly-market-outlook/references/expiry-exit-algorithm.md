@@ -11,7 +11,7 @@ Activate the expiry-exit layer when either condition is true:
 
 On expiry day, always activate it regardless of distance from the body.
 
-This layer supplements the normal live-surface, news, liquidity and geometry workflow. It never replaces them.
+This layer supplements the normal live-surface, news, liquidity and geometry workflow. It never replaces them. If the proposed hold crosses market close, run the v2.1 overnight carry gate **before** treating remaining theta as harvestable.
 
 ## Required inputs
 
@@ -137,6 +137,10 @@ Do not rely on a single ratio mechanically. The decision worsens when gamma stre
 ## Decision gates
 
 Evaluate these gates in order. A later HOLD condition cannot override a hard risk exit.
+
+### Gate 0 - overnight broker/event feasibility
+
+Before knowingly carrying an expiry-eve fly across market close, apply `overnight-carry-gate.md`. A broker/RMS warning, unvalidated broker feasibility for a new expiry-eve position, or failed next-open joint gap/IV stress blocks carry regardless of headline theta.
 
 ### Gate 1 - hard event / market-risk override
 

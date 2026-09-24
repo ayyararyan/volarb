@@ -3,7 +3,7 @@ name: butterfly-market-outlook
 description: Analyze, optimize, manage, and journal Indian index option butterflies using Dhan when available, full option surfaces, Greeks/OI/bid-ask, risk-neutral distributions, deterministic expiry/recenter diagnostics, and fresh event/cross-asset research. Use for checking an open NIFTY/BANKNIFTY/SENSEX butterfly, deciding HOLD/RECENTRE/SQUARE OFF or CARRY, searching for a wide butterfly, reviewing near-expiry risk, or recording butterfly market outlooks and trade/position history to the connected volarb GitHub repository.
 ---
 
-# Butterfly Market Outlook — Engine v2
+# Butterfly Market Outlook — Engine v2.1 Candidate
 
 Treat every request as an options risk-desk decision, not generic market commentary.
 
@@ -23,14 +23,17 @@ Use India time (Asia/Kolkata).
 8. RECENTRE only when the new structure materially improves risk/carry **after close+reopen friction**.
 9. On follow-up reviews, compare the current MarketState with the previous review and focus on what materially changed.
 10. Never manufacture live quotes, IV, Greeks, probabilities, events or position data.
-11. Persist every completed market outlook, position review and confirmed trade lifecycle event to the volarb GitHub repository when the GitHub connector is writable. Keep this logging backend-only unless it fails.
+11. For any overnight hold, price the **next actionable exit** rather than treating expiry payoff or headline theta as the primary horizon.
+12. Before expiry-eve overnight entry/rotation, require the v2.1 event-latency, joint gap/IV, and broker/RMS feasibility gates to pass.
+13. Persist every completed market outlook, position review and confirmed trade lifecycle event to the volarb GitHub repository when the GitHub connector is writable. Keep this logging backend-only unless it fails.
 
-Read `references/architecture-v2.md` for the system design and `references/research-basis.md` for the research rationale when revising or debugging the workflow.
+Read `references/architecture-v2.md` for the system design, `references/overnight-carry-gate.md` for v2.1 overnight logic, and `references/research-basis.md` for the research rationale when revising or debugging the workflow.
 
 ## 1. Select the branch
 
 - **Open butterfly, before 14:45 IST:** emit exactly one of **HOLD / RECENTRE / SQUARE OFF**.
-- **Open butterfly, 14:45 IST or later:** emit exactly one of **CARRY / RECENTRE / SQUARE OFF**.
+- **Open butterfly, 14:45 IST or later while the home option market is actionable:** emit exactly one of **CARRY / RECENTRE / SQUARE OFF**.
+- **Open butterfly after the home option market closes:** treat the state as **LOCKED_OVERNIGHT**; no fresh executable carry decision exists until the next session.
 - **No open butterfly / candidate search:** apply the data/tail-risk gate, then return up to three ranked wide butterflies or exactly one **NO TRADE** row.
 
 If Dhan shows no open position, do not infer that an old screenshot is still live.
@@ -41,8 +44,10 @@ Record internally:
 - current IST date/time and market session;
 - symbol and exact expiry;
 - intended exit/review horizon;
+- **next actionable exit timestamp** and untradeable-window duration when the position crosses market close;
 - trading sessions/calendar time to expiry;
-- whether the expiry-exit layer is active.
+- whether the expiry-exit layer is active;
+- broker/RMS feasibility state when overnight carry is contemplated.
 
 For an open position, prefer Dhan position truth. Read `references/dhan-mcp-workflow.md`.
 
@@ -136,7 +141,7 @@ Check only decision-relevant items:
 - oil, INR, U.S. rates/equities and Asia when relevant;
 - material index-heavyweight news.
 
-Timestamp events relative to the last tradable option surface.
+Timestamp events relative to the last tradable option surface **and flag whether each event occurs while the home option market is closed before the next actionable exit**.
 
 Create internally:
 - benign/base scenario;
@@ -144,6 +149,28 @@ Create internally:
 - tail/stress scenario.
 
 Use probabilities only when defensible. If you assign judgmental weights, label them internally as real-world/judgmental. Never blend them with RND probabilities as though they were the same measure.
+
+## 7A. Apply the v2.1 overnight carry gate
+
+If a position/candidate will cross the home-market close, read `references/overnight-carry-gate.md`. The gate is mandatory when <=2 trading sessions remain to expiry and for any new/recentered/rotated next-session-expiry short-gamma position after 14:30 IST.
+
+Record:
+- next actionable exit and hours in the untradeable window;
+- latency-critical scheduled events inside that window;
+- broker feasibility `PASS / UNKNOWN / WARN / FAIL`;
+- any explicit auto-squareoff/RMS warning;
+- same-state next-open harvest;
+- full-reprice +/-1.0, +/-1.5 and +/-2.0 ATM-straddle gap stresses with IV expansion.
+
+Run:
+
+```bash
+python scripts/evaluate_overnight_carry.py --input overnight_snapshot.json --pretty
+```
+
+For a **new expiry-eve entry/recenter/rotation**, broker feasibility must be `PASS`; `UNKNOWN` is insufficient. A high/critical latency event or a failed next-open stress gate blocks the overnight trade before theta/Pareto ranking.
+
+When the market is already closed, treat the position as `LOCKED_OVERNIGHT` and prepare the next-open contingency map. A post-close review is monitoring, not a fresh endorsement of the earlier carry decision.
 
 ## 8A. Existing-position engine
 
@@ -183,7 +210,7 @@ Run:
 python scripts/optimize_butterflies.py --input snapshot.json --pretty
 ```
 
-The v2 optimizer must:
+The v2.1 optimizer must:
 - estimate/check the parity forward;
 - use actual four-leg execution quotes;
 - enforce a dynamic wide-width floor;
@@ -191,6 +218,8 @@ The v2 optimizer must:
 - compute same-state carry and actual-leg net Greeks when available;
 - compute RND `P(loss)`, wing mass, expected loss, VaR/CVaR;
 - add path-scenario MTM stress when supplied;
+- when `overnight_carry` is active, full-reprice each candidate at the next actionable exit under mandatory +/-1.0, +/-1.5 and +/-2.0 straddle gap/IV stresses;
+- reject expiry-eve overnight candidates that fail broker/RMS feasibility, event-latency, or next-open stress gates **before** Pareto ranking;
 - include close/open friction and liquidity;
 - remove Pareto-dominated candidates;
 - rank Pareto-efficient candidates with equal emphasis on theta efficiency, low carry burden and low combined tail/path risk, with liquidity as a hard filter/tie-break.
@@ -224,10 +253,12 @@ Near expiry, demand a larger improvement; repeated expiry-afternoon recentering 
 Apply in this order:
 
 1. **Data gate** — unreliable current surface blocks new entry.
-2. **Hard event/tail/liquidity override** — jump regime, wing/break-even threat or unusable execution -> SQUARE OFF / NO TRADE.
-3. **Expiry-exit hard gates** — harvest saturation / gamma / break-even buffer.
-4. **Recenter gate** — only if the range thesis survives and the new fly materially improves the state after friction.
-5. **Ordinary HOLD/CARRY** or ranked candidate selection.
+2. **Broker/RMS feasibility gate** — known warning/failure, or unvalidated broker feasibility for a new expiry-eve overnight entry -> SQUARE OFF / NO TRADE.
+3. **Overnight event-latency / next-open stress gate** — untradeable-window events or joint gap/IV stress can block carry before theta is considered.
+4. **Hard event/tail/liquidity override** — jump regime, wing/break-even threat or unusable execution -> SQUARE OFF / NO TRADE.
+5. **Expiry-exit hard gates** — harvest saturation / gamma / break-even buffer.
+6. **Recenter gate** — only if the range thesis survives and the new fly materially improves the state after friction.
+7. **Ordinary HOLD/CARRY** or ranked candidate selection.
 
 Do not let a high theta number override a higher-precedence risk gate.
 
@@ -265,7 +296,8 @@ After a trade is fully closed, create or update one episode using `references/po
 Periodically run:
 
 ```bash
-python scripts/summarize_trade_log.py --input episodes.jsonl --pretty
+python scripts/summarize_trade_log.py
+tests/test_v21_overnight.py --input episodes.jsonl --pretty
 ```
 
 Measure forecast errors, tail misses, execution slippage, profit give-back and recenter incremental P&L where a defensible counterfactual exists.
@@ -301,11 +333,17 @@ Unless the user explicitly asks for explanation, output **one small markdown tab
 |---|---|---|
 | HOLD / RECENTRE / SQUARE OFF | One short concrete reason | Time or `—` |
 
-### Open position at/after 14:45 IST
+### Open position at/after 14:45 IST while the option market is actionable
 
 | Decision | Why | Next review |
 |---|---|---|
 | CARRY / RECENTRE / SQUARE OFF | One short concrete reason | Time or `—` |
+
+### Post-close open position
+
+| Status | Why | Next action |
+|---|---|---|
+| LOCKED OVERNIGHT | One short concrete reason | Next actionable exit/review |
 
 ### Candidate search
 
@@ -329,6 +367,10 @@ Before answering verify:
 - current news/events timestamped relative to the option surface;
 - actual iron-fly legs used for execution/liquidity/Greeks;
 - tail/data gate run before candidate optimization;
+- if carry crosses market close, next-actionable-exit horizon and untradeable window are explicit;
+- v2.1 broker/RMS feasibility checked before expiry-eve overnight entry/rotation;
+- latency-critical events inside the untradeable window are identified;
+- mandatory +/-1.0, +/-1.5 and +/-2.0 straddle joint spot/IV stresses are full-repriced when overnight gate is active;
 - Pareto ranking uses theta/carry/tail risk, not raw max loss;
 - RECENTRE includes transaction friction and remaining time;
 - expiry-exit layer active when required;
@@ -336,7 +378,6 @@ Before answering verify:
 - today's `market-outlook/YYYY-MM-DD.md` entry has been created/appended when GitHub is writable;
 - any confirmed entry/recenter/closure has been reflected in the trade log without inventing missing fields;
 - final answer obeys the one-table contract.
-
 
 ---
 To read any file's contents, use `functions.exec` to run `text(await tools.skills__read({"uri": "skills://butterfly-market-outlook/<relative_file_path>"}))`.
@@ -353,6 +394,7 @@ references/exchange-surface-workflow.md
 references/expiry-exit-algorithm.md
 references/market-state.md
 references/nse-option-chain.md
+references/overnight-carry-gate.md
 references/output-template.md
 references/position-screenshots.md
 references/post-trade-learning.md
@@ -362,8 +404,10 @@ scripts/analyze_option_surface.py
 scripts/analyze_position.py
 scripts/compare_market_states.py
 scripts/evaluate_expiry_exit.py
+scripts/evaluate_overnight_carry.py
 scripts/evaluate_recentre.py
 scripts/fetch_nse_option_chain.py
 scripts/normalize_dhan_option_chain.py
 scripts/optimize_butterflies.py
 scripts/summarize_trade_log.py
+tests/test_v21_overnight.py

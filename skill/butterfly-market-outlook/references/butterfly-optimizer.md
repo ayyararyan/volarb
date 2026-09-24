@@ -1,4 +1,4 @@
-# Wide Butterfly Optimizer — Engine v2
+# Wide Butterfly Optimizer — Engine v2.1 Candidate
 
 Use this reference for **new butterfly search/optimization**. The optimizer is for wide symmetric **short iron butterflies** by default, evaluated through their payoff-equivalent long-fly debit where useful.
 
@@ -14,7 +14,8 @@ Candidate selection is a constrained multi-objective problem:
    - option-implied RND geometry/pricing risk; and
    - separate real-world event/path stress;
 4. require robust liquidity in **all actual iron-fly legs**;
-5. align the body with parity forward, option-implied centre and real-world path centre unless the user explicitly wants a directional fly.
+5. align the body with parity forward, option-implied centre and real-world path centre unless the user explicitly wants a directional fly;
+6. when the holding interval crosses market close, pass the v2.1 next-open event/broker/stress gate before final ranking.
 
 Theoretical maximum loss is descriptive. It is not the tail-risk objective.
 
@@ -155,6 +156,20 @@ Only compute `scenario_expected_pnl_points` when explicit probabilities are supp
 
 Even without scenario probabilities, use the worst scenario as a path-risk stress.
 
+
+## 10A. v2.1 overnight candidate gate
+
+When a candidate will be held across the home-market close and <=2 trading sessions remain, include an `overnight_carry` object in the optimizer input. The optimizer full-reprices each candidate at the next actionable exit under mandatory +/-1.0, +/-1.5 and +/-2.0 ATM-straddle gap states with default ATM-IV multipliers 1.20 / 1.40 / 1.60.
+
+A new next-session-expiry entry/recenter/rotation is removed **before Pareto ranking** if:
+- broker feasibility is not `PASS`;
+- an explicit broker/RMS warning exists;
+- required full next-open repricing cannot be completed;
+- `OCR_1_5 < 0.5`; or
+- a high/critical event inside the untradeable window has `OCR_1_5 < 1.0`.
+
+These are stress diagnostics, not probabilities. Explicit real-world opening probabilities, when defensible, remain a separate path layer. See `overnight-carry-gate.md`.
+
 ## 11. Carry burden
 
 Carry burden includes:
@@ -234,6 +249,16 @@ The optimizer accepts normalized Dhan/NSE/BSE chain JSON:
   "min_oi": 20000,
   "max_spread_pct": 0.05,
   "path_scenarios": [],
+  "overnight_carry": {
+    "active": true,
+    "mode": "candidate_entry",
+    "expiry_sessions_remaining": 1,
+    "hours_to_next_actionable_exit": 18.5,
+    "broker_feasibility_status": "PASS",
+    "broker_auto_squareoff_warning": false,
+    "event_latency_severity": "medium",
+    "events": [{"severity":"medium","inside_untradeable_window":true}]
+  },
   "chain": [
     {
       "strike": 75000,

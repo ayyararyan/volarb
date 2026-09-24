@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Butterfly Engine v2 wide-iron-fly optimizer.
+"""Butterfly Engine v2.1 candidate wide-iron-fly optimizer.
 
 Dependency-free deterministic backend for:
 - quote/data sanity checks and parity-implied forward estimation;
@@ -7,7 +7,8 @@ Dependency-free deterministic backend for:
 - arbitrage-repaired risk-neutral terminal distribution;
 - actual four-leg iron-butterfly execution economics;
 - theta/carry, liquidity, RND tail risk and optional real-world path scenarios;
-- Pareto screening across theta efficiency, carry burden and combined tail risk.
+- Pareto screening across theta efficiency, carry burden and combined tail risk;
+- mandatory next-open stress and broker/event-latency gates for expiry-eve overnight carry.
 
 The risk-neutral distribution is a pricing-measure object. Optional path scenarios are
 kept separate and may contain judgmental/real-world probabilities supplied by the
@@ -593,6 +594,152 @@ def scenario_metrics(data, rows, meta, entry_credit, debit, carry_days):
     }
 
 
+
+def _latency_severity(cfg):
+    order = {"low": 0, "medium": 1, "high": 2, "critical": 3}
+    best = "low"
+    for e in cfg.get("events", []) or []:
+        if not e.get("inside_untradeable_window", e.get("latency_critical", False)):
+            continue
+        sev = str(e.get("severity", "low")).lower()
+        if order.get(sev, 0) > order.get(best, 0):
+            best = sev
+    fallback = str(cfg.get("event_latency_severity", "low")).lower()
+    if order.get(fallback, 0) > order.get(best, 0):
+        best = fallback
+    return best
+
+
+def overnight_stress_metrics(surface, data, rows, meta, entry_credit, debit, carry_days):
+    cfg = data.get("overnight_carry") or {}
+    active = bool(cfg.get("active", cfg.get("enabled", False)))
+    if not active:
+        return {"active": False, "status": "NOT_APPLICABLE", "hard_failures": []}
+
+    expiry_sessions = float(cfg.get("expiry_sessions_remaining", 999.0))
+    mode = str(cfg.get("mode", "candidate_entry"))
+    broker_status = str(cfg.get("broker_feasibility_status", "UNKNOWN")).upper()
+    auto_warn = bool(cfg.get("broker_auto_squareoff_warning", False))
+    if auto_warn and broker_status == "PASS":
+        broker_status = "WARN"
+    latency = _latency_severity(cfg)
+
+    strikes = sorted(r["strike"] for r in surface if r.get("call_mark") is not None)
+    byk = row_by_strike(surface)
+    atm = min(strikes, key=lambda k: abs(k - meta["forward"]))
+    atmr = byk[atm]
+    c_atm, _ = pick_mark(atmr.get("call", {}))
+    p_atm, _ = pick_mark(atmr.get("put", {}))
+    atm_straddle = as_float(cfg.get("atm_straddle"))
+    if atm_straddle is None and c_atm is not None and p_atm is not None:
+        atm_straddle = c_atm + p_atm
+    atm_iv = normalize_iv(cfg.get("atm_iv"))
+    if atm_iv is None:
+        atm_iv = atmr.get("iv")
+
+    hard = []
+    warnings = []
+    entry_modes = {"candidate_entry", "recenter_entry", "rotation_entry"}
+    if broker_status == "FAIL":
+        hard.append("broker_feasibility_fail")
+    if broker_status == "WARN" or auto_warn:
+        hard.append("broker_rms_warning")
+    if expiry_sessions <= 1.0 and mode in entry_modes and broker_status != "PASS":
+        hard.append("new_expiry_eve_entry_requires_broker_pass")
+
+    if atm_straddle is None or atm_straddle <= 0 or atm_iv is None or atm_iv <= 0:
+        hard.append("missing_full_next_open_reprice_inputs")
+        return {
+            "active": True,
+            "status": "BLOCK" if mode in entry_modes else "DEGRADED",
+            "broker_status": broker_status,
+            "latency_severity": latency,
+            "hard_failures": sorted(set(hard)),
+            "warnings": warnings,
+            "same_state_open_pnl_points": None,
+            "worst_1_5_straddle_pnl_points": None,
+            "worst_2_0_straddle_pnl_points": None,
+            "ocr_1_5": None,
+            "scenarios": [],
+        }
+
+    hours = float(cfg.get("hours_to_next_actionable_exit", carry_days * 24.0))
+    days_ahead = max(hours, 0.0) / 24.0
+    spread_mult = float(cfg.get("opening_spread_multiplier", 1.5))
+    hs = []
+    r1, r2, r3 = rows
+    for side in (r1.get("put", {}), r2.get("put", {}), r2.get("call", {}), r3.get("call", {})):
+        v = half_spread(side)
+        if v is not None:
+            hs.append(v)
+    friction = spread_mult * sum(hs) if len(hs) == 4 else 0.0
+
+    same_close = iron_close_cost(rows, meta, meta["spot"], days_ahead, 0.0)
+    same_pnl = entry_credit - same_close - friction if same_close is not None else None
+    scenarios = []
+    iv_defaults = {1.0: 1.20, 1.5: 1.40, 2.0: 1.60}
+    custom = cfg.get("stress_iv_multipliers") or {}
+    for m in (1.0, 1.5, 2.0):
+        iv_mult = float(custom.get(str(m), custom.get(m, iv_defaults[m])))
+        iv_shift_vp = atm_iv * 100.0 * (iv_mult - 1.0)
+        for direction in (-1.0, 1.0):
+            future_spot = meta["spot"] + direction * m * atm_straddle
+            close = iron_close_cost(rows, meta, future_spot, days_ahead, iv_shift_vp)
+            if close is None:
+                continue
+            pnl = entry_credit - close - friction
+            scenarios.append({
+                "label": f"v21_gap_{'down' if direction < 0 else 'up'}_{m:g}S",
+                "straddle_multiple": m,
+                "direction": "down" if direction < 0 else "up",
+                "future_spot": future_spot,
+                "iv_multiplier": iv_mult,
+                "iv_shift_vp": iv_shift_vp,
+                "pnl_points": pnl,
+            })
+
+    def worst(m):
+        vals = [z["pnl_points"] for z in scenarios if abs(z["straddle_multiple"] - m) < 1e-9]
+        return min(vals) if vals else None
+
+    w15 = worst(1.5)
+    w20 = worst(2.0)
+    loss15 = max(0.0, -w15) if w15 is not None else None
+    if same_pnl is not None and loss15 is not None:
+        ocr15 = 999.0 if loss15 <= 0 else max(same_pnl, 0.0) / loss15
+    else:
+        ocr15 = None
+
+    if len(scenarios) < 6 or same_pnl is None:
+        hard.append("incomplete_next_open_full_reprice")
+    if latency in {"high", "critical"}:
+        if ocr15 is None or ocr15 < 1.0:
+            hard.append("high_latency_event_stress_efficiency_fail")
+    elif latency == "medium" and ocr15 is not None and ocr15 < 0.5:
+        hard.append("medium_latency_event_stress_efficiency_fail")
+    if ocr15 is not None and ocr15 < 0.5:
+        hard.append("overnight_stress_efficiency_fail")
+    elif ocr15 is not None and ocr15 < 1.0:
+        warnings.append("moderate_overnight_stress_efficiency")
+
+    status = "BLOCK" if hard else "PASS"
+    return {
+        "active": True,
+        "status": status,
+        "broker_status": broker_status,
+        "latency_severity": latency,
+        "hours_to_next_actionable_exit": hours,
+        "same_state_open_pnl_points": same_pnl,
+        "worst_1_5_straddle_pnl_points": w15,
+        "worst_2_0_straddle_pnl_points": w20,
+        "ocr_1_5": ocr15,
+        "opening_friction_points": friction,
+        "hard_failures": sorted(set(hard)),
+        "warnings": warnings,
+        "scenarios": scenarios,
+    }
+
+
 def candidate_metrics(surface, meta, dist, data, k1, k2, k3, carry_days, lot_size):
     byk = row_by_strike(surface)
     if k1 not in byk or k2 not in byk or k3 not in byk:
@@ -648,8 +795,12 @@ def candidate_metrics(surface, meta, dist, data, k1, k2, k3, carry_days, lot_siz
         + 0.15 * min(stats["cvar95_loss_points"] / debit, 1.5)
     )
     scen = scenario_metrics(data, [r1, r2, r3], meta, credit, debit, carry_days)
+    overnight = overnight_stress_metrics(surface, data, [r1, r2, r3], meta, credit, debit, carry_days)
     path_component = 0.5 * min(scen["path_tail_loss_ratio"], 2.0) + 0.5 * min(scen["path_expected_loss_ratio"], 2.0)
-    combined_tail = rnd_tail_score + path_component
+    overnight_loss_ratio = 0.0
+    if overnight.get("active") and overnight.get("worst_1_5_straddle_pnl_points") is not None:
+        overnight_loss_ratio = max(0.0, -overnight["worst_1_5_straddle_pnl_points"]) / max(debit, EPS)
+    combined_tail = rnd_tail_score + path_component + 0.5 * min(overnight_loss_ratio, 2.0)
 
     friction_ratio = (est_roundtrip_slippage / debit) if est_roundtrip_slippage is not None else 0.0
     carry_burden = debit / width + friction_ratio
@@ -682,6 +833,7 @@ def candidate_metrics(surface, meta, dist, data, k1, k2, k3, carry_days, lot_siz
         **stats,
         **greek_values,
         **scen,
+        "overnight_gate": overnight,
     }
 
 
@@ -804,6 +956,7 @@ def optimize(data):
     max_slippage_pct_debit = float(data.get("max_slippage_pct_debit", 0.12))
 
     candidates = []
+    overnight_rejected = 0
     for c in centers:
         for w in widths:
             k1, k3 = c - w, c + w
@@ -820,9 +973,13 @@ def optimize(data):
                 continue
             if m["est_roundtrip_slippage_points"] is not None and m["est_roundtrip_slippage_points"] / max(m["equivalent_long_fly_debit_points"], EPS) > max_slippage_pct_debit:
                 continue
+            if m.get("overnight_gate", {}).get("status") == "BLOCK":
+                overnight_rejected += 1
+                continue
             candidates.append(m)
 
     base = {
+        "engine_version": "v2.1-candidate",
         "underlying": data.get("underlying", data.get("symbol")),
         "asof": data.get("asof"),
         "expiry": data.get("expiry"),
@@ -837,11 +994,15 @@ def optimize(data):
         "rnd_q90": nearest_quantile(dist, 0.90),
         "rnd_mode": mode,
         "distribution_diagnostics": dist_diag,
+        "overnight_rejected_count": overnight_rejected,
     }
     if health["status"] == "INVALID":
         return {**base, "candidates": [], "message": "Option surface failed the v2 data-health gate."}
     if not candidates:
-        return {**base, "candidates": [], "message": "No candidates survived width/data/liquidity constraints."}
+        msg = "No candidates survived width/data/liquidity constraints."
+        if overnight_rejected > 0:
+            msg = "No candidates survived the v2.1 overnight event/broker/next-open stress gate."
+        return {**base, "candidates": [], "message": msg}
 
     pareto = []
     for i, a in enumerate(candidates):

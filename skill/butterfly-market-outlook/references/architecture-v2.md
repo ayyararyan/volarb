@@ -1,4 +1,4 @@
-# Butterfly Engine v2 Architecture
+# Butterfly Engine v2.1 Candidate Architecture
 
 This is the control architecture behind every live butterfly review and candidate search. The user-facing format remains intentionally tiny; all complexity stays in the backend.
 
@@ -11,7 +11,9 @@ This is the control architecture behind every live butterfly review and candidat
 5. **No false precision.** If data are stale, repaired heavily, missing, or conflicting, downgrade the state and refuse to turn an unreliable surface into an executable recommendation.
 6. **Execution is part of strategy economics.** Use the actual iron-fly legs (lower put, body call+put, upper call) for bid/ask, OI, volume, slippage and live Greeks.
 7. **Near expiry, remaining harvest matters more than headline theta.** Apply the Dynamic Harvest Saturation / remaining-harvest-versus-gamma framework.
-8. **Every closed trade can become a calibration episode.** Store forecasts and outcomes separately from the live decision logic; use them to measure whether rules add value before changing thresholds.
+8. **Overnight carry is a next-exit problem.** When the home market will be closed, model next-actionable-exit MTM under joint gap/IV/execution stress before theta optimization.
+9. **Broker feasibility is part of the state.** A defined-risk payoff does not eliminate RMS/auto-squareoff risk; new expiry-eve overnight entries require validated broker feasibility.
+10. **Every closed trade can become a calibration episode.** Store forecasts and outcomes separately from the live decision logic; use them to measure whether rules add value before changing thresholds.
 
 ## Modules
 
@@ -99,6 +101,12 @@ Create at least:
 
 Use probabilities only when defensible. If judgmental scenario weights are used, label them internally as subjective and never mix them with RND probabilities as though they were the same measure.
 
+### 6A. Overnight event-latency / broker-feasibility engine
+
+When the intended hold crosses market close, run the v2.1 overnight gate before candidate ranking or a carry decision. Track the next actionable exit, untradeable-window events, broker feasibility, and full-reprice +/-1.0/1.5/2.0 straddle joint spot/IV stresses. See `overnight-carry-gate.md` and `scripts/evaluate_overnight_carry.py`.
+
+A new next-session-expiry entry/recenter/rotation requires broker status `PASS`; `UNKNOWN` is not enough. After market close, the operational state is `LOCKED_OVERNIGHT`, not a fresh carry decision.
+
 ### 7. Position engine
 
 For an existing fly:
@@ -143,10 +151,12 @@ Only this module can emit the final action.
 
 Hard precedence:
 1. invalid/stale-to-shock data that prevent reliable entry -> `NO TRADE` for candidate mode;
-2. hard event/tail/liquidity override -> `SQUARE OFF` / `NO TRADE`;
-3. expiry-exit hard gates;
-4. recenter gate;
-5. ordinary HOLD/CARRY or ranked candidate selection.
+2. broker/RMS feasibility gate;
+3. overnight event-latency / next-open stress gate;
+4. hard event/tail/liquidity override -> `SQUARE OFF` / `NO TRADE`;
+5. expiry-exit hard gates;
+6. recenter gate;
+7. ordinary HOLD/CARRY or ranked candidate selection.
 
 The language model may synthesize evidence, but must not override deterministic hard gates without an explicit, documented reason from newer evidence.
 
