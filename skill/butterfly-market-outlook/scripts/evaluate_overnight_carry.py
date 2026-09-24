@@ -12,6 +12,7 @@ import math
 from pathlib import Path
 
 import optimize_butterflies as ob
+import classify_market_regime as mr
 
 EPS = 1e-12
 SEV_ORDER = {"low": 0, "medium": 1, "high": 2, "critical": 3}
@@ -337,6 +338,7 @@ def evaluate(x):
         ocr_15 = 999.0
 
     emp = empirical_gap_metrics(x, same, scen)
+    regime = mr.classify(x.get("market_regime") or {})
 
     hard = []
     warnings = []
@@ -352,6 +354,22 @@ def evaluate(x):
     else:
         new_expiry_eve = mode in {"candidate_entry", "recenter_entry", "rotation_entry"} and expiry_sessions <= 1.0
         apply_empirical_gap_gate(emp, hard, warnings)
+
+        rstate = regime["state"]
+        rparams = regime["parameters"]
+        if new_expiry_eve and rstate == "UNKNOWN":
+            hard.append("new_expiry_eve_requires_market_regime")
+        if new_expiry_eve and not rparams["new_expiry_eve_allowed"]:
+            hard.append("market_regime_blocks_new_expiry_eve_carry")
+
+        ratio = emp.get("q90_break_even_buffer_ratio")
+        max_ratio = rparams["max_q90_break_even_buffer_ratio"]
+        if expiry_sessions <= 1.0 and ratio is not None and ratio >= max_ratio:
+            hard.append("regime_adjusted_gap_buffer_fail")
+
+        min_ocr = rparams["min_ocr_1_5"]
+        if expiry_sessions <= 1.0 and ocr_15 is not None and ocr_15 < min_ocr:
+            hard.append("regime_adjusted_stress_efficiency_fail")
         if broker_status == "FAIL":
             hard.append("broker_feasibility_fail")
         if auto_warn or broker_status == "WARN":
@@ -392,7 +410,7 @@ def evaluate(x):
             reason = "Only prepared/local stress values are available; full four-leg repricing is preferred."
         else:
             state = "CARRY_ELIGIBLE"
-            reason = "Broker feasibility, event latency and mandatory next-open stress gates passed."
+            reason = f"{regime['state']} regime plus broker, event-latency and next-open stress gates passed."
 
     return {
         "engine": "v2.1-candidate",
@@ -407,6 +425,7 @@ def evaluate(x):
         "event_latency": {
             "max_severity_inside_untradeable_window": latency_sev,
         },
+        "market_regime": regime,
         "empirical_gap": emp,
         "next_open_stress": {
             "source": scen.get("source") if scen else None,
@@ -420,7 +439,7 @@ def evaluate(x):
         },
         "hard_failures": sorted(set(hard)),
         "warnings": list(dict.fromkeys(warnings)),
-        "note": "Recent realized gaps are an empirical risk screen, not a forecast. Mandatory stress scenarios remain deterministic diagnostics; full-reprice large moves rather than extrapolating only with local gamma."
+        "note": "Market regime, recent realized gaps and stress scenarios are risk diagnostics, not forecasts. CALM_CARRY never overrides weak economics; severe/latent regimes tighten or block overnight short-gamma carry."
     }
 
 
