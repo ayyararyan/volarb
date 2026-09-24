@@ -1,4 +1,4 @@
-# Overnight Carry Gate — Engine v2.1 Candidate
+# Overnight Carry Gate — Engine v2.2 Candidate
 
 Use this gate after the v2.2 market-regime classifier whenever a butterfly will remain open across a period in which the home option market is closed and the next actionable exit is in a later session. It is mandatory when <=2 trading sessions remain to expiry and especially for a new entry/recenter/rotation into next-session expiry.
 
@@ -204,7 +204,7 @@ For a prepared overnight snapshot run:
 python scripts/evaluate_overnight_carry.py --input overnight_snapshot.json --pretty
 ```
 
-For candidate search, `scripts/optimize_butterflies.py` v2.1 automatically applies the mandatory next-open stress and candidate rejection logic when an `overnight_carry` object is supplied.
+For candidate search, `scripts/optimize_butterflies.py` v2.2 automatically applies the mandatory next-open stress and candidate rejection logic when an `overnight_carry` object is supplied.
 
 ## 10. Logging / calibration
 
