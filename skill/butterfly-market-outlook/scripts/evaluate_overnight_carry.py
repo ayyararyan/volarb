@@ -258,7 +258,7 @@ def empirical_gap_metrics(x, same_state_open, scen):
         lower_be = cfg.get("break_even_lower", x.get("break_even_lower"))
         upper_be = cfg.get("break_even_upper", x.get("break_even_upper"))
         if (lower_be is None or upper_be is None) and x.get("center") is not None:
-            credit = x.get("entry_credit")
+            credit = x.get("entry_credit", x.get("entry_credit_points"))
             if credit is not None:
                 lower_be = float(x["center"]) - float(credit)
                 upper_be = float(x["center"]) + float(credit)
