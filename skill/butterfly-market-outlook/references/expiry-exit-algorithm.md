@@ -11,7 +11,7 @@ Activate the expiry-exit layer when either condition is true:
 
 On expiry day, always activate it regardless of distance from the body.
 
-This layer supplements the normal live-surface, news, liquidity and geometry workflow. It never replaces them. If the proposed hold crosses market close, run the v2.1 overnight carry gate **before** treating remaining theta as harvestable.
+This layer supplements the normal live-surface, news, liquidity and geometry workflow. It never replaces them. If the proposed hold crosses market close, run the regime-aware overnight carry gate **before** treating remaining theta as harvestable.
 
 ## Required inputs
 
