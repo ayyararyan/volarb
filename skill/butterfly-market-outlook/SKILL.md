@@ -29,7 +29,7 @@ Use India time (Asia/Kolkata).
 14. Treat intraday butterflies as the default operating mode; overnight carry must earn its way in by beating regime-adjusted jump/gamma risk rather than relying on headline theta.
 15. Persist every completed market outlook, position review and confirmed trade lifecycle event to the volarb GitHub repository when the GitHub connector is writable. Keep this logging backend-only unless it fails.
 
-Read `references/architecture-v2.md` for the system design, `references/regime-engine.md` for v2.2 regime logic, `references/overnight-carry-gate.md` for v2.1 overnight mechanics, and `references/research-basis.md` for the research rationale when revising or debugging the workflow.
+Read `references/architecture-v2.md` for the system design, `references/regime-engine.md` for v2.2 regime logic, `references/overnight-carry-gate.md` for regime-aware overnight mechanics, and `references/research-basis.md` for the research rationale when revising or debugging the workflow.
 
 ## 1. Select the branch
 
@@ -168,7 +168,7 @@ A low India VIX or low front IV does **not** establish `CALM_CARRY`. If implied 
 
 `CALM_CARRY` means the environment is suitable for considering short-gamma carry; it never overrides weak premium, bad liquidity, broker risk or the ordinary next-open stress gate.
 
-## 7B. Apply the v2.1 overnight carry gate
+## 7B. Apply the regime-aware overnight carry gate
 
 If a position/candidate will cross the home-market close, first supply the v2.2 `market_regime` object, then read `references/overnight-carry-gate.md`. The gate is mandatory when <=2 trading sessions remain to expiry and for any new/recentered/rotated next-session-expiry short-gamma position after 14:30 IST.
 
