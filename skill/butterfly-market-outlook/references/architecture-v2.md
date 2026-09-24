@@ -14,7 +14,7 @@ This is the control architecture behind every live butterfly review and candidat
 8. **Overnight carry is a next-exit problem.** When the home market will be closed, model next-actionable-exit MTM under joint gap/IV/execution stress before theta optimization.
 9. **Recent opening-gap risk is state-dependent.** Carry must also pass a rolling realized-gap regime gate using recent close-to-open gaps, current-spot-to-break-even buffer and gap-gamma burden.
 10. **Broker feasibility is part of the state.** A defined-risk payoff does not eliminate RMS/auto-squareoff risk; new expiry-eve overnight entries require validated broker feasibility.
-10. **Every closed trade can become a calibration episode.** Store forecasts and outcomes separately from the live decision logic; use them to measure whether rules add value before changing thresholds.
+11. **Every closed trade can become a calibration episode.** Store forecasts and outcomes separately from the live decision logic; use them to measure whether rules add value before changing thresholds.
 
 ## Modules
 
