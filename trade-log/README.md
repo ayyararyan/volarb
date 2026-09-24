@@ -6,7 +6,7 @@ This directory separates **executed trades** from **research/review sessions**.
 
 - `trades.csv` — compact ledger of trades that can be established as executed.
 - `episodes.jsonl` — machine-readable post-trade episodes for calibration analysis.
-- `reviews/` — dated market/position review history, including candidate sessions that may not have resulted in trades.
+- `reviews/` — **legacy pre-journal review history only**. New reviews belong in `market-outlook/YYYY-MM-DD.md`; do not create new files here.
 - `snapshots/` — raw provenance snapshots where useful.
 
 ## Provenance levels
@@ -32,6 +32,6 @@ The skill now treats this repository as the persistent research/trading journal 
 
 - Every market outlook and position review is appended to `market-outlook/YYYY-MM-DD.md`.
 - A confirmed executed butterfly is entered in `trades.csv` and may receive a detailed `trade-log/trades/<trade_id>.md` lifecycle record.
-- Position checks are recorded chronologically in the daily market-outlook file; durable execution facts go in the ledger.
+- Position checks and candidate reviews are recorded chronologically only in the daily market-outlook file; durable execution facts go in the ledger.
 - Fully closed trades update `episodes.jsonl` for post-trade calibration.
 - Recommendations are never logged as fills unless Dhan or the user confirms execution.
