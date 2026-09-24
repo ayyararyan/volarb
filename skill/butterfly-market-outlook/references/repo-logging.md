@@ -81,7 +81,7 @@ Append one section in chronological order:
 ### Notes
 - Record only details useful for later research/calibration.
 - Keep risk-neutral and real-world probabilities conceptually separate.
-- When the v2.1 overnight gate is active, record next-actionable-exit horizon, broker feasibility/warning status, latency-event severity, same-state open harvest, 1.5S/2.0S stress P&L and OCR_1_5 when available.
+- When the regime-aware overnight gate is active, record next-actionable-exit horizon, broker feasibility/warning status, latency-event severity, same-state open harvest, 1.5S/2.0S stress P&L and OCR_1_5 when available.
 ```
 
 Do not dump the entire raw chain or every web headline into the daily file. Capture the decision-relevant state.
