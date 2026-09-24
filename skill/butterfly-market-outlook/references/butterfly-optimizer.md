@@ -159,7 +159,9 @@ Even without scenario probabilities, use the worst scenario as a path-risk stres
 
 ## 10A. v2.1 overnight candidate gate
 
-When a candidate will be held across the home-market close and <=2 trading sessions remain, include an `overnight_carry` object in the optimizer input. The optimizer full-reprices each candidate at the next actionable exit under mandatory +/-1.0, +/-1.5 and +/-2.0 ATM-straddle gap states with default ATM-IV multipliers 1.20 / 1.40 / 1.60.
+When a candidate will be held across the home-market close and <=2 trading sessions remain, include an `overnight_carry` object in the optimizer input. Also provide `overnight_carry.empirical_gap_gate` with roughly 20-30 recent close-to-next-open gap percentages (minimum 15 for a new entry), source metadata, and the current gap-regime thresholds. The optimizer computes candidate-specific current-spot-to-break-even buffer and local gap-gamma burden before ranking.
+
+The optimizer then full-reprices each surviving candidate at the next actionable exit under mandatory +/-1.0, +/-1.5 and +/-2.0 ATM-straddle gap states with default ATM-IV multipliers 1.20 / 1.40 / 1.60.
 
 A new next-session-expiry entry/recenter/rotation is removed **before Pareto ranking** if:
 - broker feasibility is not `PASS`;
@@ -168,7 +170,9 @@ A new next-session-expiry entry/recenter/rotation is removed **before Pareto ran
 - `OCR_1_5 < 0.5`; or
 - a high/critical event inside the untradeable window has `OCR_1_5 < 1.0`.
 
-These are stress diagnostics, not probabilities. Explicit real-world opening probabilities, when defensible, remain a separate path layer. See `overnight-carry-gate.md`.
+The empirical gap gate blocks a candidate when the recent 90th-percentile absolute gap reaches/exceeds its nearest break-even buffer, or when estimated local gap-gamma drag consumes all same-state next-open harvest. Near-threshold candidates remain eligible only with warnings and carry a worse combined-tail score.
+
+These are stress/regime diagnostics, not probabilities. Explicit real-world opening probabilities, when defensible, remain a separate path layer. See `overnight-carry-gate.md`.
 
 ## 11. Carry burden
 

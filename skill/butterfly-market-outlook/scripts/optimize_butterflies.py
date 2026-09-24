@@ -610,7 +610,105 @@ def _latency_severity(cfg):
     return best
 
 
-def overnight_stress_metrics(surface, data, rows, meta, entry_credit, debit, carry_days):
+
+def _gap_quantile(values, q):
+    vals = sorted(float(v) for v in values)
+    if not vals:
+        return None
+    h = (len(vals) - 1) * float(q)
+    lo = int(math.floor(h))
+    hi = int(math.ceil(h))
+    if lo == hi:
+        return vals[lo]
+    return vals[lo] + (vals[hi] - vals[lo]) * (h - lo)
+
+
+def _empirical_gap_metrics(cfg, meta, center, entry_credit, same_pnl, net_gamma):
+    ecfg = cfg.get("empirical_gap_gate") or {}
+    mode = str(cfg.get("mode", "candidate_entry"))
+    entry_modes = {"candidate_entry", "recenter_entry", "rotation_entry"}
+    required = bool(ecfg.get("required", mode in entry_modes))
+    raw = ecfg.get("gap_pct", ecfg.get("recent_gap_pct", [])) or []
+    vals = []
+    for v in raw:
+        try:
+            z = float(v)
+        except (TypeError, ValueError):
+            continue
+        if math.isfinite(z):
+            vals.append(z)
+    min_obs = max(int(ecfg.get("min_observations", 15)), 1)
+    out = {
+        "required": required,
+        "source": ecfg.get("source"),
+        "sample_size": len(vals),
+        "min_observations": min_obs,
+        "sufficient_history": len(vals) >= min_obs,
+        "median_abs_gap_pct": None,
+        "p80_abs_gap_pct": None,
+        "p90_abs_gap_pct": None,
+        "large_gap_threshold_pct": float(ecfg.get("large_gap_threshold_pct", 0.50)),
+        "large_gap_rate": None,
+        "p90_gap_points": None,
+        "expected_local_gamma_drag_points": None,
+        "gap_gamma_burden": None,
+        "nearest_break_even_buffer_points": None,
+        "q90_break_even_buffer_ratio": None,
+        "spot_outside_break_even": False,
+    }
+    if not out["sufficient_history"]:
+        return out
+
+    av = [abs(v) for v in vals]
+    out["median_abs_gap_pct"] = _gap_quantile(av, 0.50)
+    out["p80_abs_gap_pct"] = _gap_quantile(av, 0.80)
+    out["p90_abs_gap_pct"] = _gap_quantile(av, 0.90)
+    thr = out["large_gap_threshold_pct"]
+    out["large_gap_rate"] = sum(1 for v in av if v >= thr) / len(av)
+
+    spot = float(meta["spot"])
+    out["p90_gap_points"] = spot * out["p90_abs_gap_pct"] / 100.0
+    if net_gamma is not None and same_pnl is not None and same_pnl > EPS:
+        mean_sq_gap = sum((spot * v / 100.0) ** 2 for v in vals) / len(vals)
+        drag = 0.5 * abs(float(net_gamma)) * mean_sq_gap
+        out["expected_local_gamma_drag_points"] = drag
+        out["gap_gamma_burden"] = drag / same_pnl
+
+    lower_be = float(center) - float(entry_credit)
+    upper_be = float(center) + float(entry_credit)
+    buffer_points = min(spot - lower_be, upper_be - spot)
+    out["nearest_break_even_buffer_points"] = buffer_points
+    if buffer_points <= 0:
+        out["spot_outside_break_even"] = True
+    else:
+        out["q90_break_even_buffer_ratio"] = out["p90_gap_points"] / buffer_points
+    return out
+
+
+def _apply_empirical_gap_gate(emp, hard, warnings):
+    if emp.get("required") and not emp.get("sufficient_history"):
+        hard.append("insufficient_recent_gap_history")
+        return
+    if not emp.get("sufficient_history"):
+        return
+    if emp.get("spot_outside_break_even"):
+        hard.append("spot_outside_break_even_before_overnight")
+    ratio = emp.get("q90_break_even_buffer_ratio")
+    if ratio is not None:
+        if ratio >= 1.0:
+            hard.append("recent_q90_gap_exceeds_break_even_buffer")
+        elif ratio >= 0.80:
+            warnings.append("recent_q90_gap_near_break_even_buffer")
+    burden = emp.get("gap_gamma_burden")
+    if burden is not None:
+        if burden >= 1.0:
+            hard.append("empirical_gap_gamma_exceeds_same_state_harvest")
+        elif burden >= 0.60:
+            warnings.append("recent_gap_gamma_consumes_most_same_state_harvest")
+    if (emp.get("large_gap_rate") or 0.0) >= 0.15:
+        warnings.append("recent_large_gap_frequency_elevated")
+
+def overnight_stress_metrics(surface, data, rows, meta, entry_credit, debit, carry_days, net_gamma=None):
     cfg = data.get("overnight_carry") or {}
     active = bool(cfg.get("active", cfg.get("enabled", False)))
     if not active:
@@ -710,6 +808,9 @@ def overnight_stress_metrics(surface, data, rows, meta, entry_credit, debit, car
     else:
         ocr15 = None
 
+    emp = _empirical_gap_metrics(cfg, meta, rows[1]["strike"], entry_credit, same_pnl, net_gamma)
+    _apply_empirical_gap_gate(emp, hard, warnings)
+
     if len(scenarios) < 6 or same_pnl is None:
         hard.append("incomplete_next_open_full_reprice")
     if latency in {"high", "critical"}:
@@ -734,8 +835,9 @@ def overnight_stress_metrics(surface, data, rows, meta, entry_credit, debit, car
         "worst_2_0_straddle_pnl_points": w20,
         "ocr_1_5": ocr15,
         "opening_friction_points": friction,
+        "empirical_gap": emp,
         "hard_failures": sorted(set(hard)),
-        "warnings": warnings,
+        "warnings": list(dict.fromkeys(warnings)),
         "scenarios": scenarios,
     }
 
@@ -795,12 +897,19 @@ def candidate_metrics(surface, meta, dist, data, k1, k2, k3, carry_days, lot_siz
         + 0.15 * min(stats["cvar95_loss_points"] / debit, 1.5)
     )
     scen = scenario_metrics(data, [r1, r2, r3], meta, credit, debit, carry_days)
-    overnight = overnight_stress_metrics(surface, data, [r1, r2, r3], meta, credit, debit, carry_days)
+    overnight = overnight_stress_metrics(surface, data, [r1, r2, r3], meta, credit, debit, carry_days, greek_values.get("net_gamma"))
     path_component = 0.5 * min(scen["path_tail_loss_ratio"], 2.0) + 0.5 * min(scen["path_expected_loss_ratio"], 2.0)
     overnight_loss_ratio = 0.0
     if overnight.get("active") and overnight.get("worst_1_5_straddle_pnl_points") is not None:
         overnight_loss_ratio = max(0.0, -overnight["worst_1_5_straddle_pnl_points"]) / max(debit, EPS)
-    combined_tail = rnd_tail_score + path_component + 0.5 * min(overnight_loss_ratio, 2.0)
+    emp = overnight.get("empirical_gap") or {}
+    empirical_parts = []
+    if emp.get("gap_gamma_burden") is not None:
+        empirical_parts.append(min(emp["gap_gamma_burden"], 2.0))
+    if emp.get("q90_break_even_buffer_ratio") is not None:
+        empirical_parts.append(min(emp["q90_break_even_buffer_ratio"], 2.0))
+    empirical_component = sum(empirical_parts) / len(empirical_parts) if empirical_parts else 0.0
+    combined_tail = rnd_tail_score + path_component + 0.5 * min(overnight_loss_ratio, 2.0) + 0.5 * empirical_component
 
     friction_ratio = (est_roundtrip_slippage / debit) if est_roundtrip_slippage is not None else 0.0
     carry_burden = debit / width + friction_ratio
@@ -1001,7 +1110,7 @@ def optimize(data):
     if not candidates:
         msg = "No candidates survived width/data/liquidity constraints."
         if overnight_rejected > 0:
-            msg = "No candidates survived the v2.1 overnight event/broker/next-open stress gate."
+            msg = "No candidates survived the v2.1 overnight empirical-gap/event/broker/next-open stress gate."
         return {**base, "candidates": [], "message": msg}
 
     pareto = []

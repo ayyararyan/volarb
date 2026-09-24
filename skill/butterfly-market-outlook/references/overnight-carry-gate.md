@@ -44,7 +44,37 @@ Record:
 
 If the user intends to close around the next open, optimize the distribution of `PnL_next_open`, not primarily `PnL_expiry`.
 
-## 2. Mandatory joint stress grid
+
+## 2. Recent realized-gap regime gate
+
+Before endorsing an actionable overnight carry, measure the **recent close-to-next-open gap distribution** for the same underlying.
+
+Use a rolling window of roughly **20-30 trading opens** when available; require at least **15 observations** for a new entry/recenter/rotation. Define each observation as:
+
+`gap_pct = 100 * (next_open - prior_close) / prior_close`
+
+Track:
+
+- median, 80th-percentile and 90th-percentile absolute gap;
+- frequency of absolute gaps >= 0.50%;
+- 90th-percentile gap converted to current index points;
+- distance from **current spot** to the nearest expiry break-even, not merely body-to-break-even distance;
+- local expected gap-gamma drag `0.5 * |Gamma| * E[gap_points^2]` when reliable actual-leg net gamma is available;
+- `gap_gamma_burden = expected_gap_gamma_drag / same_state_next_open_harvest`.
+
+Default rules:
+
+- missing/insufficient recent gap history -> **BLOCK a new overnight entry/recenter/rotation**;
+- current spot already outside the nearest break-even -> **BLOCK**;
+- recent 90th-percentile absolute gap >= current-spot-to-nearest-break-even buffer -> **BLOCK**;
+- expected local gap-gamma drag >= same-state next-open harvest -> **BLOCK**;
+- 90th-percentile gap at 80-100% of the break-even buffer -> warning / strong exit bias;
+- gap-gamma burden at 60-100% -> warning;
+- >=15% of recent opens with |gap| >= 0.50% -> elevated-gap-regime warning.
+
+This gate deliberately uses recent realized opens as a **regime screen**, not as a forecast that the next gap will equal a historical percentile. It complements, and never replaces, the full joint gap/IV repricing grid below. Do not estimate large-move P&L from local gamma alone.
+
+## 3. Mandatory joint stress grid
 
 For expiry-eve overnight carry, full-reprice the actual four legs at the next actionable exit under at least:
 
@@ -64,7 +94,7 @@ Also reprice a `same_state_open` case with spot and IV unchanged to estimate har
 
 For large moves, do **not** extrapolate only with local gamma. Use full four-leg repricing from leg IVs whenever possible. If full repricing is impossible, classify the overnight gate as `DEGRADED`; a new expiry-eve entry cannot pass solely on a local Greek approximation.
 
-## 3. Stress economics
+## 4. Stress economics
 
 Define:
 
@@ -83,7 +113,7 @@ Do not interpret `OCR_1_5` as expected value. It is a reward-versus-stress diagn
 
 If explicit real-world opening scenario probabilities are defensible, compute probability-weighted next-open P&L separately. Do not assign probabilities to the mandatory stress grid merely to manufacture an expected value.
 
-## 4. Event-latency gate
+## 5. Event-latency gate
 
 An event is **latency-critical** when it can materially change the index path after the home option market closes and before the next actionable exit.
 
@@ -106,7 +136,7 @@ Rules:
 
 A post-close event review updates contingency planning only; it cannot retroactively make the original carry decision safer.
 
-## 5. Broker / RMS feasibility gate
+## 6. Broker / RMS feasibility gate
 
 The theoretical defined-risk payoff is not enough. Model whether the broker can force liquidation before the intended exit.
 
@@ -128,19 +158,20 @@ Hard rules:
 
 Do not infer the broker's exact liquidation rule from generic exchange margin concepts. Use authoritative broker data/warnings when available.
 
-## 6. Candidate gate precedence
+## 7. Candidate gate precedence
 
 For a new expiry-eve overnight candidate or rotation:
 
 1. data health must pass;
-2. broker/RMS feasibility must be `PASS`;
-3. latency-critical events must pass the event gate;
-4. mandatory next-open stress must pass;
-5. only then may theta/carry and Pareto ranking choose among survivors.
+2. recent realized-gap history must pass the empirical gap gate;
+3. broker/RMS feasibility must be `PASS`;
+4. latency-critical events must pass the event gate;
+5. mandatory next-open full-reprice stress must pass;
+6. only then may theta/carry and Pareto ranking choose among survivors.
 
 A candidate rejected by this gate must not re-enter the ranking because it has unusually high theta.
 
-## 7. Existing-position rule
+## 8. Existing-position rule
 
 Before local close, an existing position that fails the overnight gate should normally be squared off rather than knowingly entering the untradeable window.
 
@@ -152,7 +183,7 @@ and prepare the next-open contingency map. Do not label the post-close state a f
 
 At the next open, the ordinary expiry-exit algorithm resumes with live forward, surface, broker state and liquidity.
 
-## 8. Deterministic helper
+## 9. Deterministic helper
 
 For a prepared overnight snapshot run:
 
@@ -162,12 +193,13 @@ python scripts/evaluate_overnight_carry.py --input overnight_snapshot.json --pre
 
 For candidate search, `scripts/optimize_butterflies.py` v2.1 automatically applies the mandatory next-open stress and candidate rejection logic when an `overnight_carry` object is supplied.
 
-## 9. Logging / calibration
+## 10. Logging / calibration
 
 Persist, when known:
 
 - next-actionable-exit horizon;
 - untradeable-window duration;
+- recent gap sample size, p80/p90 absolute gap, >=0.50% gap frequency, break-even-buffer ratio and gap-gamma burden;
 - event-latency classification;
 - broker feasibility status and warning presence;
 - same-state next-open harvest;

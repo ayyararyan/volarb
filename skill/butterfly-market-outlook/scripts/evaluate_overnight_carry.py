@@ -175,6 +175,135 @@ def worst_for_multiple(scenarios, multiple):
     return min(vals) if vals else None
 
 
+
+def _quantile(values, q):
+    vals = sorted(float(v) for v in values)
+    if not vals:
+        return None
+    h = (len(vals) - 1) * float(q)
+    lo = int(math.floor(h))
+    hi = int(math.ceil(h))
+    if lo == hi:
+        return vals[lo]
+    return vals[lo] + (vals[hi] - vals[lo]) * (h - lo)
+
+
+def empirical_gap_metrics(x, same_state_open, scen):
+    """Summarize the recent close-to-next-open gap regime.
+
+    gap_pct values are percentage points, e.g. -0.96 means a -0.96% opening gap.
+    This is an empirical risk screen, not a probability forecast.
+    """
+    cfg = x.get("empirical_gap_gate") or {}
+    mode = str(x.get("mode", "open_position"))
+    entry_modes = {"candidate_entry", "recenter_entry", "rotation_entry"}
+    required = bool(cfg.get("required", mode in entry_modes))
+    raw = cfg.get("gap_pct", cfg.get("recent_gap_pct", [])) or []
+    vals = []
+    for v in raw:
+        try:
+            z = float(v)
+        except (TypeError, ValueError):
+            continue
+        if math.isfinite(z):
+            vals.append(z)
+
+    min_obs = max(int(cfg.get("min_observations", 15)), 1)
+    out = {
+        "required": required,
+        "source": cfg.get("source"),
+        "sample_size": len(vals),
+        "min_observations": min_obs,
+        "sufficient_history": len(vals) >= min_obs,
+        "median_abs_gap_pct": None,
+        "p80_abs_gap_pct": None,
+        "p90_abs_gap_pct": None,
+        "large_gap_threshold_pct": float(cfg.get("large_gap_threshold_pct", 0.50)),
+        "large_gap_rate": None,
+        "p90_gap_points": None,
+        "expected_local_gamma_drag_points": None,
+        "gap_gamma_burden": None,
+        "nearest_break_even_buffer_points": None,
+        "q90_break_even_buffer_ratio": None,
+        "spot_outside_break_even": False,
+    }
+    if not out["sufficient_history"]:
+        return out
+
+    av = [abs(v) for v in vals]
+    out["median_abs_gap_pct"] = _quantile(av, 0.50)
+    out["p80_abs_gap_pct"] = _quantile(av, 0.80)
+    out["p90_abs_gap_pct"] = _quantile(av, 0.90)
+    thr = out["large_gap_threshold_pct"]
+    out["large_gap_rate"] = sum(1 for v in av if v >= thr) / len(av)
+
+    spot = cfg.get("reference_spot", x.get("spot"))
+    if spot is None and scen:
+        spot = scen.get("reference_spot")
+    spot = float(spot) if spot is not None else None
+
+    gamma = cfg.get("net_gamma", x.get("net_gamma"))
+    gamma = float(gamma) if gamma is not None else None
+    if spot is not None:
+        out["p90_gap_points"] = spot * out["p90_abs_gap_pct"] / 100.0
+        if gamma is not None:
+            gap_points_sq = [(spot * v / 100.0) ** 2 for v in vals]
+            drag = 0.5 * abs(gamma) * (sum(gap_points_sq) / len(gap_points_sq))
+            out["expected_local_gamma_drag_points"] = drag
+            if same_state_open is not None and float(same_state_open) > EPS:
+                out["gap_gamma_burden"] = drag / float(same_state_open)
+
+    buffer_points = cfg.get("nearest_break_even_buffer_points")
+    if buffer_points is None:
+        lower_be = cfg.get("break_even_lower", x.get("break_even_lower"))
+        upper_be = cfg.get("break_even_upper", x.get("break_even_upper"))
+        if (lower_be is None or upper_be is None) and x.get("center") is not None:
+            credit = x.get("entry_credit")
+            if credit is not None:
+                lower_be = float(x["center"]) - float(credit)
+                upper_be = float(x["center"]) + float(credit)
+        if spot is not None and lower_be is not None and upper_be is not None:
+            buffer_points = min(spot - float(lower_be), float(upper_be) - spot)
+
+    if buffer_points is not None:
+        buffer_points = float(buffer_points)
+        out["nearest_break_even_buffer_points"] = buffer_points
+        if buffer_points <= 0:
+            out["spot_outside_break_even"] = True
+        elif out["p90_gap_points"] is not None:
+            out["q90_break_even_buffer_ratio"] = out["p90_gap_points"] / buffer_points
+
+    return out
+
+
+def apply_empirical_gap_gate(emp, hard, warnings):
+    if emp.get("required") and not emp.get("sufficient_history"):
+        hard.append("insufficient_recent_gap_history")
+        return
+
+    if not emp.get("sufficient_history"):
+        return
+
+    if emp.get("spot_outside_break_even"):
+        hard.append("spot_outside_break_even_before_overnight")
+
+    buffer_ratio = emp.get("q90_break_even_buffer_ratio")
+    if buffer_ratio is not None:
+        if buffer_ratio >= 1.0:
+            hard.append("recent_q90_gap_exceeds_break_even_buffer")
+        elif buffer_ratio >= 0.80:
+            warnings.append("recent_q90_gap_near_break_even_buffer")
+
+    burden = emp.get("gap_gamma_burden")
+    if burden is not None:
+        if burden >= 1.0:
+            hard.append("empirical_gap_gamma_exceeds_same_state_harvest")
+        elif burden >= 0.60:
+            warnings.append("recent_gap_gamma_consumes_most_same_state_harvest")
+
+    if (emp.get("large_gap_rate") or 0.0) >= 0.15:
+        warnings.append("recent_large_gap_frequency_elevated")
+
 def evaluate(x):
     mode = str(x.get("mode", "open_position"))
     crosses = bool(x.get("crosses_market_close", x.get("holding_crosses_market_close", False)))
@@ -207,6 +336,8 @@ def evaluate(x):
     elif same is not None and loss_15 == 0:
         ocr_15 = 999.0
 
+    emp = empirical_gap_metrics(x, same, scen)
+
     hard = []
     warnings = []
 
@@ -220,6 +351,7 @@ def evaluate(x):
             warnings.append("Broker/RMS warning exists while the position is already locked overnight; prioritize exit at the next actionable window.")
     else:
         new_expiry_eve = mode in {"candidate_entry", "recenter_entry", "rotation_entry"} and expiry_sessions <= 1.0
+        apply_empirical_gap_gate(emp, hard, warnings)
         if broker_status == "FAIL":
             hard.append("broker_feasibility_fail")
         if auto_warn or broker_status == "WARN":
@@ -275,6 +407,7 @@ def evaluate(x):
         "event_latency": {
             "max_severity_inside_untradeable_window": latency_sev,
         },
+        "empirical_gap": emp,
         "next_open_stress": {
             "source": scen.get("source") if scen else None,
             "full_reprice": full_reprice,
@@ -286,8 +419,8 @@ def evaluate(x):
             "scenarios": stress,
         },
         "hard_failures": sorted(set(hard)),
-        "warnings": warnings,
-        "note": "Mandatory stress scenarios are deterministic diagnostics, not physical probabilities. Full-reprice large moves rather than extrapolating only with local gamma."
+        "warnings": list(dict.fromkeys(warnings)),
+        "note": "Recent realized gaps are an empirical risk screen, not a forecast. Mandatory stress scenarios remain deterministic diagnostics; full-reprice large moves rather than extrapolating only with local gamma."
     }
 
 
