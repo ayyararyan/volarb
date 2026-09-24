@@ -56,7 +56,7 @@ Store one record only after a trade is fully closed:
 - profit give-back after maximum open P&L;
 - recenter incremental P&L only when a defensible counterfactual is available;
 - performance by days-to-expiry and regime;
-- overnight next-open forecast error, gap in prior-close straddle units, event-latency misses, and broker/RMS warning frequency when the v2.1 overnight gate was active.
+- overnight next-open forecast error, gap in prior-close straddle units, event-latency misses, and broker/RMS warning frequency when the overnight gate was active.
 
 ## Threshold changes
 
