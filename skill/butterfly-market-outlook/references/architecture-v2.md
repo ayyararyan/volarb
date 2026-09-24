@@ -1,4 +1,8 @@
-# Butterfly Engine v2.2 Candidate Architecture
+# Butterfly Engine v2.3 Controller Architecture
+
+## Module 0 - canonical decision controller
+
+`references/decision-algorithm.md` is the only control plane. Start there on every run. Do not preload all references. Evaluate one gate at a time, load only the reference needed for that gate, and stop on the first terminal action. `scripts/decision_controller.py` can enforce normalized gate precedence. All modules below are calculation/data modules only; they may not reorder the controller.
 
 This is the control architecture behind every live butterfly review and candidate search. The user-facing format remains intentionally tiny; all complexity stays in the backend.
 
@@ -104,6 +108,7 @@ Create at least:
 
 Use probabilities only when defensible. If judgmental scenario weights are used, label them internally as subjective and never mix them with RND probabilities as though they were the same measure.
 
+
 ### 6A. Market-regime engine
 
 Before any actionable overnight carry decision, combine recent realized/gap state, option-implied state and fresh event/news hazard into one deterministic regime: `CALM_CARRY / TRANSITION / LATENT_JUMP_RISK / ACTIVE_STRESS / UNKNOWN`. See `regime-engine.md` and `scripts/classify_market_regime.py`.
@@ -112,7 +117,7 @@ The classifier explicitly detects a **complacency gap**: event/tail hazard mater
 
 ### 6B. Overnight event-latency / broker-feasibility engine
 
-When the intended hold crosses market close, run the v2.2 overnight gate before candidate ranking or a carry decision. Track the next actionable exit, a rolling 20-30-open realized-gap regime, current-spot-to-break-even buffer, gap-gamma burden, untradeable-window events, broker feasibility, and full-reprice +/-1.0/1.5/2.0 straddle joint spot/IV stresses. See `overnight-carry-gate.md` and `scripts/evaluate_overnight_carry.py`.
+When the intended hold crosses market close, run the v2.1 overnight gate before candidate ranking or a carry decision. Track the next actionable exit, a rolling 20-30-open realized-gap regime, current-spot-to-break-even buffer, gap-gamma burden, untradeable-window events, broker feasibility, and full-reprice +/-1.0/1.5/2.0 straddle joint spot/IV stresses. See `overnight-carry-gate.md` and `scripts/evaluate_overnight_carry.py`.
 
 A new next-session-expiry entry/recenter/rotation requires broker status `PASS`; `UNKNOWN` is not enough. After market close, the operational state is `LOCKED_OVERNIGHT`, not a fresh carry decision.
 
@@ -156,18 +161,11 @@ Do not claim positive EV unless a real-world scenario distribution has actually 
 
 ### 10. Decision policy
 
-Only this module can emit the final action.
+This module no longer owns gate precedence. `references/decision-algorithm.md` is the only control plane and must be followed literally.
 
-Hard precedence:
-1. invalid/stale-to-shock data that prevent reliable entry -> `NO TRADE` for candidate mode;
-2. broker/RMS feasibility gate;
-3. overnight event-latency / next-open stress gate;
-4. hard event/tail/liquidity override -> `SQUARE OFF` / `NO TRADE`;
-5. expiry-exit hard gates;
-6. recenter gate;
-7. ordinary HOLD/CARRY or ranked candidate selection.
+Each analytical module returns a normalized gate result such as `PASS`, `WARN`, `BLOCK`, `FAIL`, `EXIT`, or `UNKNOWN`. The controller consumes those results in canonical order and the first terminal result wins. A later module may never resurrect a trade rejected by an earlier gate.
 
-The language model may synthesize evidence, but must not override deterministic hard gates without an explicit, documented reason from newer evidence.
+When normalized gate outputs are available, enforce the policy with `scripts/decision_controller.py`. The language model may explain a gate result but may not reorder the controller or override a terminal result with a later attractive metric such as theta.
 
 ### 11. Review scheduler
 
