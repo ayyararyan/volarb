@@ -21,6 +21,10 @@ jobs:
           python-version: '3.12'
       - name: Install validator dependency
         run: python -m pip install --disable-pip-version-check pyyaml
+      - name: Run overnight regression tests
+        run: python skill/butterfly-market-outlook/tests/test_v21_overnight.py
+      - name: Run regime regression tests
+        run: python skill/butterfly-market-outlook/tests/test_v22_regime.py
       - name: Validate and package skill
         run: python .github/skill-tools/package_skill.py skill/butterfly-market-outlook dist
       - name: Upload skill.zip
