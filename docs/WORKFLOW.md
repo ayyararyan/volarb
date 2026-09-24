@@ -1,222 +1,209 @@
 # Butterfly VolArb Operating Workflow
 
-This document is the human-readable operating procedure behind the Butterfly Market Outlook v2 skill.
+This is the human-readable operating procedure behind **Butterfly Market Outlook v2.2**.
 
 ## 1. Classify the task
 
-There are three front-end branches:
+- **Open butterfly before 14:45 IST:** HOLD / RECENTRE / SQUARE OFF.
+- **Open butterfly at or after 14:45 IST:** CARRY / RECENTRE / SQUARE OFF.
+- **No open butterfly:** ranked wide candidates or NO TRADE.
 
-- **Open butterfly before 14:45 IST:** decide exactly one of HOLD / RECENTRE / SQUARE OFF.
-- **Open butterfly at or after 14:45 IST:** decide exactly one of CARRY / RECENTRE / SQUARE OFF.
-- **No open butterfly / candidate search:** return up to three wide candidates or NO TRADE.
+The user-facing answer stays small; the backend work does not.
 
-The final answer is intentionally tiny. The work underneath it is not.
+## 2. Establish state and horizon
 
-## 2. Establish clock, position, expiry and horizon
-
-Record internally:
-
-- current Asia/Kolkata date/time and market session;
-- index and exact option expiry;
-- exact four-leg geometry when a position exists;
+Record:
+- current IST clock/session;
+- index, expiry, exact geometry, quantities, and broker position truth;
 - intended exit/review horizon;
-- trading sessions and calendar time remaining;
-- whether the near-expiry exit layer is active.
+- trading sessions/calendar time remaining;
+- next actionable exit and untradeable-window duration when crossing market close;
+- whether expiry-exit and overnight gates are active.
 
-Dhan account state is the preferred source of truth for live positions.
-
-## 3. Acquire one coherent market snapshot
+## 3. Acquire one coherent snapshot
 
 Prefer:
-
-1. Dhan positions and structured option chain;
-2. NSE/BSE official validation and fallback;
+1. Dhan for positions and the structured full option chain;
+2. NSE/BSE for official validation/fallback;
 3. NSE IX for GIFT Nifty;
-4. Reuters and primary/high-quality sources for fresh event context;
-5. relevant cross-assets only when they materially affect the path distribution.
+4. Reuters/primary sources for decision-relevant event context;
+5. cross-assets only when they materially affect Indian index path risk.
 
-Fetch the full relevant expiry once per pass and reuse it. Pull the next expiry when term structure matters.
+Fetch the full expiry once and reuse it.
 
-## 4. Run the data-health gate first
+## 4. Data-health gate
 
-Before interpreting skew, theta or probabilities, validate:
-
+Before interpreting theta, skew, or probabilities, validate:
 - two-sided quote sanity;
 - strike coverage;
-- parity consistency and robust parity-implied forward;
-- raw monotonicity / convexity and RND repair intensity;
-- timestamp consistency between the option surface and later futures/GIFT/news;
-- actual leg liquidity and quote quality.
+- parity consistency and forward;
+- monotonicity/convexity and RND repair intensity;
+- quote freshness versus later futures/news;
+- actual four-leg liquidity.
 
-Health states:
+States: **HEALTHY / DEGRADED / STALE / INVALID**.
 
-- **HEALTHY** — optimization allowed;
-- **DEGRADED** — broad context usable; fine ranking only if weakness is immaterial;
-- **STALE** — later price discovery/news has superseded the tradable surface;
-- **INVALID** — do not optimize or infer terminal probabilities.
-
-New entry is blocked on INVALID data.
+`INVALID` blocks new entry.
 
 ## 5. Build the canonical MarketState
 
-The state combines:
-
+Track:
 - clock/session/horizon;
-- data health/freshness;
-- spot, forward, futures, GIFT and VIX when relevant;
-- surface, skew, curvature and term structure;
-- risk-neutral terminal distribution;
-- scheduled and unscheduled event clock;
-- real-world path regime/scenarios;
-- position or candidate economics;
-- prior decision and current decision fields.
+- data health;
+- spot/forward/futures/GIFT/VIX when relevant;
+- surface/skew/curvature/term structure/RND;
+- market-regime state;
+- event clock and real-world scenarios;
+- position/candidate economics;
+- previous/current decision.
 
-Follow-up reviews compare the current state with the previous state instead of restarting the narrative.
+Follow-up reviews compare state changes rather than restarting from scratch.
 
 ## 6. Build the option-implied layer
 
-Use the entire relevant expiry and parity-consistent OTM pricing.
-
-Derive:
-
-- robust forward;
-- ATM strike, straddle and IV;
-- local skew and curvature;
-- approximately 25-delta risk reversal and butterfly;
-- front-versus-next-expiry IV;
+Using the entire relevant expiry, derive:
+- robust parity forward;
+- ATM strike, straddle, and IV;
+- skew/curvature;
+- approximate 25-delta RR/BF;
+- front-versus-next expiry IV;
 - arbitrage-repaired risk-neutral terminal distribution;
-- q10 / median / q90 and modal region;
-- leg liquidity and quote quality.
+- q10/median/q90/modal region;
+- executable leg liquidity.
 
-The RND is a **pricing-measure distribution**. It is used for geometry, relative wing mass and tail compensation. It is not called the true physical probability of expiry outcomes.
+RND remains a **pricing-measure distribution**, not a physical forecast.
 
-## 7. Build the real-world path/event layer separately
+## 7. Build the real-world path/event layer
 
-Search from now through intended exit/expiry for decision-relevant information:
-
-- scheduled macro or policy events;
-- unscheduled geopolitical / policy shocks;
-- domestic spot/futures/GIFT persistence;
-- oil, INR, U.S. rates/equities and Asia when relevant;
+Search through the intended exit horizon for:
+- scheduled macro/policy events;
+- unscheduled geopolitical/policy shocks;
+- domestic price persistence;
+- oil, INR, U.S. rates/equities, and Asia when relevant;
 - material index-heavyweight news.
 
-Build benign/base, adverse-plausible and tail/stress scenarios. Judgmental physical-world weights, when used, remain explicitly separate from RND probabilities.
+Keep judgmental real-world scenarios separate from risk-neutral probabilities.
 
-## 8A. Existing-position analysis
+## 8. Classify the market regime
 
-Reconstruct and verify exact legs and ratios.
+Run the v2.2 regime engine before any actionable overnight carry decision.
 
-When data permit calculate:
+States:
+- **CALM_CARRY** — realized/gap/event risk jointly quiet.
+- **TRANSITION** — mixed or changing conditions.
+- **LATENT_JUMP_RISK** — implied vol looks calm but event/tail hazard is high.
+- **ACTIVE_STRESS** — realized/tail/implied stress is already high.
+- **UNKNOWN** — insufficient inputs.
 
+A low India VIX alone never establishes `CALM_CARRY`.
+
+## 9. Apply the overnight carry gate
+
+If the trade crosses the close, evaluate:
+- 20–30 recent close-to-open gaps;
+- p80/p90 absolute gap and tail-gap frequency;
+- current spot to nearest break-even buffer;
+- gap-gamma drag versus same-state next-open harvest;
+- regime-adjusted OCR threshold;
+- scheduled/unscheduled events in the untradeable window;
+- broker/RMS feasibility and auto-squareoff risk;
+- full-reprice ±1.0/1.5/2.0 straddle spot/IV stresses.
+
+For new expiry-eve entry/recenter/rotation:
+- `LATENT_JUMP_RISK`, `ACTIVE_STRESS`, or `UNKNOWN` blocks overnight initiation;
+- `TRANSITION` requires materially stronger OCR and break-even buffer;
+- missing recent gap history or unvalidated broker feasibility also blocks.
+
+Intraday butterflies remain possible when the ordinary data/tail/liquidity gates pass.
+
+## 10. Existing-position analysis
+
+Calculate when data permit:
 - entry credit / equivalent long-fly debit;
 - executable close cost;
-- bankable P&L versus expiry payoff;
+- bankable P&L;
 - break-evens and wing distances;
-- actual-leg net delta, gamma, theta and vega;
-- RND mapping to body/break-evens/wings;
-- real-world scenario mapping;
-- liquidity and unwind friction.
+- actual-leg delta/gamma/theta/vega;
+- RND and real-world scenario mapping;
+- unwind friction.
 
 ### Near expiry
 
-With roughly <=2 trading sessions or <=36 calendar hours remaining, activate the expiry-exit layer.
-
-Compare:
-
+With <=2 trading sessions or roughly <=36 hours remaining, compare:
 - Dynamic Harvest Saturation;
 - Remaining Static Harvest;
-- break-even / straddle buffer;
-- gamma stress and plausible path risk.
+- break-even/straddle buffer;
+- gamma/path stress;
+- overnight regime and next-open risk when carry is contemplated.
 
-Original maximum-profit capture is only a secondary reference. High theta by itself is not a HOLD/CARRY signal.
+Headline theta is never enough by itself.
 
-## 8B. Candidate search
+## 11. Candidate search
 
 Default to **wide symmetric iron butterflies**.
 
-Candidate generation should:
-
+Candidates must:
 - use forward-aware centering;
-- enforce a dynamic wide-width floor;
-- use actual four-leg execution quotes;
+- respect the dynamic width floor;
+- use executable four-leg quotes;
 - compute same-state carry and actual-leg Greeks;
-- calculate RND P(loss), wing mass, expected loss, VaR/CVaR;
-- incorporate real-world scenario MTM stress when defensible;
-- include close/open friction and liquidity;
+- include RND tail metrics and real-world stress;
+- include regime and overnight penalties when applicable;
 - remove Pareto-dominated candidates.
 
-Among Pareto-efficient flies, give equal conceptual emphasis to:
+Rank survivors by theta efficiency, low carry burden, and low combined tail/path risk. Liquidity is a hard filter/tie-break.
 
-1. theta efficiency;
-2. low carry burden;
-3. low combined tail/path risk.
+## 12. Recenter gate
 
-Liquidity is a hard filter and tie-break, not an afterthought.
+Never recenter merely because spot moved.
 
-## 9. Recenter gate
+RECENTRE requires:
+- range thesis still intact;
+- healthy data;
+- materially better alignment/tail risk;
+- acceptable close-and-reopen friction;
+- enough time to re-harvest;
+- no worse regime/event state.
 
-Never recenter simply because spot moved.
-
-RECENTRE requires all of the following:
-
-- the range-bound/choppy thesis still survives;
-- data are healthy enough;
-- body alignment and/or tail risk improves materially;
-- close-and-reopen friction is acceptable;
-- enough time remains to re-harvest carry;
-- event/path state is not worse.
-
-Near expiry the hurdle is deliberately higher.
-
-## 10. Decision precedence
+## 13. Decision precedence
 
 Apply in this order:
 
 1. data gate;
-2. hard event/tail/liquidity override;
-3. expiry-exit hard gates;
-4. recenter gate;
-5. ordinary HOLD/CARRY or candidate ranking.
+2. market-regime gate;
+3. recent realized-gap gate;
+4. broker/RMS feasibility;
+5. overnight event-latency/full-reprice stress gate;
+6. hard event/tail/liquidity override;
+7. expiry-exit hard gates;
+8. recenter gate;
+9. ordinary HOLD/CARRY or candidate ranking.
 
-A lower-priority theta benefit never overrides a higher-priority risk gate.
+Theta never overrides a higher-priority risk gate.
 
-## 11. Review timing
+## 14. Logging and calibration
 
-For HOLD/CARRY, choose the earliest useful observation point among:
+Persist:
+- every completed outlook/review to `market-outlook/YYYY-MM-DD.md`;
+- confirmed trade lifecycle facts to `trade-log/`;
+- closed-trade episodes to `trade-log/episodes.jsonl`.
 
-- next scheduled event;
-- next price-discovery session;
-- meaningful MarketState change;
-- expiry gamma cadence;
-- 14:45 carry gate / close.
+Do not infer missing broker facts.
 
-## 12. Post-trade learning
-
-After a trade is fully closed, store one episode containing:
-
-- geometry and fills when available;
-- entry and exit market state;
-- decision sequence;
-- realized P&L;
-- slippage;
-- forecast / tail misses;
-- profit give-back;
-- recenter incremental P&L only where a defensible counterfactual exists.
-
-Periodically summarize the episode log. Do **not** auto-change live thresholds from a small sample. Calibration changes require explicit review, regression testing and a new skill version.
+Threshold changes require explicit review and regression testing; never auto-fit from a small sample.
 
 ## Executable components
 
-See `skill/butterfly-market-outlook/scripts/` for:
+The production source is `skill/butterfly-market-outlook/`. Key scripts include:
 
+- `classify_market_regime.py`
 - `analyze_option_surface.py`
 - `analyze_position.py`
 - `compare_market_states.py`
 - `evaluate_expiry_exit.py`
+- `evaluate_overnight_carry.py`
 - `evaluate_recentre.py`
-- `fetch_nse_option_chain.py`
-- `normalize_dhan_option_chain.py`
 - `optimize_butterflies.py`
 - `summarize_trade_log.py`
 
-The source-of-truth control plane remains `skill/butterfly-market-outlook/SKILL.md`.
+The control-plane source of truth remains `skill/butterfly-market-outlook/SKILL.md`.
