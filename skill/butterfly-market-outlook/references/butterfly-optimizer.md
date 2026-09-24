@@ -1,4 +1,4 @@
-# Wide Butterfly Optimizer — Engine v2.1 Candidate
+# Wide Butterfly Optimizer — Engine v2.2 Candidate
 
 Use this reference for **new butterfly search/optimization**. The optimizer is for wide symmetric **short iron butterflies** by default, evaluated through their payoff-equivalent long-fly debit where useful.
 
@@ -15,7 +15,7 @@ Candidate selection is a constrained multi-objective problem:
    - separate real-world event/path stress;
 4. require robust liquidity in **all actual iron-fly legs**;
 5. align the body with parity forward, option-implied centre and real-world path centre unless the user explicitly wants a directional fly;
-6. when the holding interval crosses market close, pass the v2.1 next-open event/broker/stress gate before final ranking.
+6. when the holding interval crosses market close, pass the v2.2 regime-aware next-open event/broker/stress gate before final ranking.
 
 Theoretical maximum loss is descriptive. It is not the tail-risk objective.
 
