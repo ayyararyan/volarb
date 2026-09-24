@@ -1,8 +1,8 @@
 # Overnight Carry Gate — Engine v2.1 Candidate
 
-Use this gate whenever a butterfly will remain open across a period in which the home option market is closed and the next actionable exit is in a later session. It is mandatory when <=2 trading sessions remain to expiry and especially for a new entry/recenter/rotation into next-session expiry.
+Use this gate after the v2.2 market-regime classifier whenever a butterfly will remain open across a period in which the home option market is closed and the next actionable exit is in a later session. It is mandatory when <=2 trading sessions remain to expiry and especially for a new entry/recenter/rotation into next-session expiry.
 
-The objective is not to ban overnight carry. It is to price the thing actually being traded: **next-actionable-exit MTM under gap, volatility and execution stress**, plus broker/RMS feasibility. Headline theta is considered only after these gates pass.
+The objective is not to ban overnight carry. The v2.2 regime state determines how demanding this gate must be. It is to price the thing actually being traded: **next-actionable-exit MTM under gap, volatility and execution stress**, plus broker/RMS feasibility. Headline theta is considered only after these gates pass.
 
 ## Core principle
 
@@ -44,6 +44,18 @@ Record:
 
 If the user intends to close around the next open, optimize the distribution of `PnL_next_open`, not primarily `PnL_expiry`.
 
+
+## 1A. Regime-adjusted thresholds
+
+Supply the output of `scripts/classify_market_regime.py` as `market_regime`. Apply its threshold parameters before ordinary overnight stress rules:
+
+- `CALM_CARRY`: baseline OCR and gap-buffer thresholds;
+- `TRANSITION`: require `OCR_1_5 >= 1.0` and recent p90 gap < 80% of nearest break-even buffer;
+- `LATENT_JUMP_RISK`: block new expiry-eve carry; existing carry requires `OCR_1_5 >= 1.25` and p90 gap < 65% of nearest break-even buffer;
+- `ACTIVE_STRESS`: block new expiry-eve carry; existing carry requires `OCR_1_5 >= 1.50` and p90 gap < 50% of nearest break-even buffer;
+- `UNKNOWN`: block a new expiry-eve carry.
+
+A low VIX does not relax these rules when the regime classifier detects latent event/tail risk.
 
 ## 2. Recent realized-gap regime gate
 
@@ -163,11 +175,12 @@ Do not infer the broker's exact liquidation rule from generic exchange margin co
 For a new expiry-eve overnight candidate or rotation:
 
 1. data health must pass;
-2. recent realized-gap history must pass the empirical gap gate;
-3. broker/RMS feasibility must be `PASS`;
-4. latency-critical events must pass the event gate;
-5. mandatory next-open full-reprice stress must pass;
-6. only then may theta/carry and Pareto ranking choose among survivors.
+2. market regime must be classified and eligible;
+3. recent realized-gap history must pass the empirical gap gate;
+4. broker/RMS feasibility must be `PASS`;
+5. latency-critical events must pass the event gate;
+6. mandatory next-open full-reprice stress must pass;
+7. only then may theta/carry and Pareto ranking choose among survivors.
 
 A candidate rejected by this gate must not re-enter the ranking because it has unusually high theta.
 
