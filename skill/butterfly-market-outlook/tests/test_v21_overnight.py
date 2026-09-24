@@ -44,6 +44,7 @@ def base():
         'expiry_sessions_remaining': 1,
         'market_actionable': True,
         'events': [{'severity': 'medium', 'inside_untradeable_window': True}],
+        'market_regime': {'state': 'CALM_CARRY'},
         'empirical_gap_gate': benign_gap_gate(),
     }
 
