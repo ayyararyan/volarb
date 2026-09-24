@@ -3,7 +3,7 @@ name: butterfly-market-outlook
 description: Analyze, optimize, manage, and journal Indian index option butterflies using Dhan when available, full option surfaces, Greeks/OI/bid-ask, risk-neutral distributions, deterministic expiry/recenter diagnostics, and fresh event/cross-asset research. Use for checking an open NIFTY/BANKNIFTY/SENSEX butterfly, deciding HOLD/RECENTRE/SQUARE OFF or CARRY, searching for a wide butterfly, reviewing near-expiry risk, or recording butterfly market outlooks and trade/position history to the connected volarb GitHub repository.
 ---
 
-# Butterfly Market Outlook — Engine v2.1 Candidate
+# Butterfly Market Outlook — Engine v2.2 Candidate
 
 Treat every request as an options risk-desk decision, not generic market commentary.
 
@@ -24,11 +24,12 @@ Use India time (Asia/Kolkata).
 9. On follow-up reviews, compare the current MarketState with the previous review and focus on what materially changed.
 10. Never manufacture live quotes, IV, Greeks, probabilities, events or position data.
 11. For any overnight hold, price the **next actionable exit** rather than treating expiry payoff or headline theta as the primary horizon.
-12. Before expiry-eve overnight entry/rotation, require the v2.1 **recent realized-gap regime**, event-latency, joint gap/IV, and broker/RMS feasibility gates to pass.
-13. Treat intraday butterflies as the default operating mode; overnight carry must earn its way in by beating recent realized gap-gamma risk rather than relying on headline theta.
-14. Persist every completed market outlook, position review and confirmed trade lifecycle event to the volarb GitHub repository when the GitHub connector is writable. Keep this logging backend-only unless it fails.
+12. Classify the **market regime** before any actionable overnight carry decision. A low VIX is not a calm-regime signal when event/tail hazard is elevated.
+13. Before expiry-eve overnight entry/rotation, require the v2.2 regime gate plus the v2.1 recent-gap, event-latency, joint gap/IV, and broker/RMS gates to pass.
+14. Treat intraday butterflies as the default operating mode; overnight carry must earn its way in by beating regime-adjusted jump/gamma risk rather than relying on headline theta.
+15. Persist every completed market outlook, position review and confirmed trade lifecycle event to the volarb GitHub repository when the GitHub connector is writable. Keep this logging backend-only unless it fails.
 
-Read `references/architecture-v2.md` for the system design, `references/overnight-carry-gate.md` for v2.1 overnight logic, and `references/research-basis.md` for the research rationale when revising or debugging the workflow.
+Read `references/architecture-v2.md` for the system design, `references/regime-engine.md` for v2.2 regime logic, `references/overnight-carry-gate.md` for v2.1 overnight mechanics, and `references/research-basis.md` for the research rationale when revising or debugging the workflow.
 
 ## 1. Select the branch
 
@@ -151,9 +152,25 @@ Create internally:
 
 Use probabilities only when defensible. If you assign judgmental weights, label them internally as real-world/judgmental. Never blend them with RND probabilities as though they were the same measure.
 
-## 7A. Apply the v2.1 overnight carry gate
+## 7A. Classify the v2.2 market regime
 
-If a position/candidate will cross the home-market close, read `references/overnight-carry-gate.md`. The gate is mandatory when <=2 trading sessions remain to expiry and for any new/recentered/rotated next-session-expiry short-gamma position after 14:30 IST.
+Before any actionable overnight decision, read `references/regime-engine.md` and build a regime snapshot from the same underlying's recent realized/gap history, option-implied state and fresh event/news context.
+
+Run:
+
+```bash
+python scripts/classify_market_regime.py --input regime_snapshot.json --pretty
+```
+
+Use exactly one state: `CALM_CARRY / TRANSITION / LATENT_JUMP_RISK / ACTIVE_STRESS / UNKNOWN`.
+
+A low India VIX or low front IV does **not** establish `CALM_CARRY`. If implied volatility is compressed while geopolitical, oil, policy or recent tail-gap hazard is elevated, classify `LATENT_JUMP_RISK`. New next-session-expiry overnight entry/recenter/rotation is blocked in `LATENT_JUMP_RISK`, `ACTIVE_STRESS` and `UNKNOWN`. `TRANSITION` remains eligible only under tighter stress-efficiency and break-even-buffer thresholds.
+
+`CALM_CARRY` means the environment is suitable for considering short-gamma carry; it never overrides weak premium, bad liquidity, broker risk or the ordinary next-open stress gate.
+
+## 7B. Apply the v2.1 overnight carry gate
+
+If a position/candidate will cross the home-market close, first supply the v2.2 `market_regime` object, then read `references/overnight-carry-gate.md`. The gate is mandatory when <=2 trading sessions remain to expiry and for any new/recentered/rotated next-session-expiry short-gamma position after 14:30 IST.
 
 Record:
 - next actionable exit and hours in the untradeable window;
@@ -223,8 +240,9 @@ The v2.1 optimizer must:
 - compute same-state carry and actual-leg net Greeks when available;
 - compute RND `P(loss)`, wing mass, expected loss, VaR/CVaR;
 - add path-scenario MTM stress when supplied;
-- when `overnight_carry` is active, apply the recent realized-gap regime gate to each candidate using candidate-specific break-even buffer and actual-leg gamma, then full-reprice at the next actionable exit under mandatory +/-1.0, +/-1.5 and +/-2.0 straddle gap/IV stresses;
-- reject expiry-eve overnight candidates that fail the empirical gap, broker/RMS feasibility, event-latency, or next-open stress gates **before** Pareto ranking;
+- when `overnight_carry` is active, apply the v2.2 market-regime state plus the recent realized-gap gate to each candidate using candidate-specific break-even buffer and actual-leg gamma, then full-reprice at the next actionable exit under mandatory +/-1.0, +/-1.5 and +/-2.0 straddle gap/IV stresses;
+- add the regime tail penalty to candidate combined-tail risk so `TRANSITION` and severe regimes cannot rank as though the world were calm;
+- reject expiry-eve overnight candidates that fail the regime, empirical gap, broker/RMS feasibility, event-latency, or next-open stress gates **before** Pareto ranking;
 - include close/open friction and liquidity;
 - remove Pareto-dominated candidates;
 - rank Pareto-efficient candidates with equal emphasis on theta efficiency, low carry burden and low combined tail/path risk, with liquidity as a hard filter/tie-break.
@@ -258,13 +276,14 @@ Near expiry, demand a larger improvement; repeated expiry-afternoon recentering 
 Apply in this order:
 
 1. **Data gate** — unreliable current surface blocks new entry.
-2. **Recent realized-gap gate** — insufficient gap history for a new overnight entry, p90 gap >= nearest break-even buffer, or gap-gamma drag >= same-state next-open harvest -> SQUARE OFF / NO TRADE.
-3. **Broker/RMS feasibility gate** — known warning/failure, or unvalidated broker feasibility for a new expiry-eve overnight entry -> SQUARE OFF / NO TRADE.
-4. **Overnight event-latency / next-open stress gate** — untradeable-window events or joint gap/IV stress can block carry before theta is considered.
-5. **Hard event/tail/liquidity override** — jump regime, wing/break-even threat or unusable execution -> SQUARE OFF / NO TRADE.
-6. **Expiry-exit hard gates** — harvest saturation / gamma / break-even buffer.
-7. **Recenter gate** — only if the range thesis survives and the new fly materially improves the state after friction.
-8. **Ordinary HOLD/CARRY** or ranked candidate selection.
+2. **Market-regime gate** — classify `CALM_CARRY / TRANSITION / LATENT_JUMP_RISK / ACTIVE_STRESS / UNKNOWN`; severe/unknown states block new expiry-eve overnight carry and tighten existing-position thresholds.
+3. **Recent realized-gap gate** — insufficient gap history for a new overnight entry, p90 gap >= nearest break-even buffer, or gap-gamma drag >= same-state next-open harvest -> SQUARE OFF / NO TRADE.
+4. **Broker/RMS feasibility gate** — known warning/failure, or unvalidated broker feasibility for a new expiry-eve overnight entry -> SQUARE OFF / NO TRADE.
+5. **Overnight event-latency / next-open stress gate** — untradeable-window events or joint gap/IV stress can block carry before theta is considered.
+6. **Hard event/tail/liquidity override** — jump regime, wing/break-even threat or unusable execution -> SQUARE OFF / NO TRADE.
+7. **Expiry-exit hard gates** — harvest saturation / gamma / break-even buffer.
+8. **Recenter gate** — only if the range thesis survives and the new fly materially improves the state after friction.
+9. **Ordinary HOLD/CARRY** or ranked candidate selection.
 
 Do not let a high theta number override a higher-precedence risk gate.
 
@@ -374,6 +393,8 @@ Before answering verify:
 - actual iron-fly legs used for execution/liquidity/Greeks;
 - tail/data gate run before candidate optimization;
 - if carry crosses market close, next-actionable-exit horizon and untradeable window are explicit;
+- v2.2 market regime classified from recent path/gaps, implied state and fresh event/news hazard before an actionable overnight carry decision;
+- a low VIX is rejected as sufficient evidence of calm when event/tail hazard is elevated;
 - recent 20-30-open gap regime measured before an actionable overnight carry decision, with minimum 15 observations for a new entry/recenter/rotation;
 - p90 realized gap compared with current-spot-to-nearest-break-even buffer and gap-gamma drag compared with same-state next-open harvest;
 - v2.1 broker/RMS feasibility checked before expiry-eve overnight entry/rotation;
