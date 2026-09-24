@@ -262,3 +262,8 @@ On repeated checks, compare with the previous run:
 - distance from centre/break-even.
 
 Lead with the change in risk state rather than repeating the whole dashboard.
+
+
+## Regime classification
+
+Before overnight carry, explicitly decide whether the market is `CALM_CARRY`, `TRANSITION`, `LATENT_JUMP_RISK`, `ACTIVE_STRESS` or `UNKNOWN`. Do not use VIX alone. Compare recent realized volatility/gaps and tail-gap frequency with implied volatility, skew/term structure and fresh event/news hazard. A low-VIX/high-event-risk mismatch is `LATENT_JUMP_RISK`. See `regime-engine.md`.
