@@ -23,3 +23,10 @@ Use these sources as design rationale, not as live market data.
 - Cboe RiskEdge describes professional risk workflows using Greeks, P&L attribution, expiring-option/pin-risk monitoring and custom what-if scenarios. This supports a scenario-first risk layer rather than a single indicator.
 - CME Group (2025), *Equity Index Options – A Quick Look at the Current State of Play*, emphasizes that liquidity is multidimensional: spread, depth, replenishment, volatility and execution mechanism all matter. This supports leg-level liquidity and slippage filters rather than OI alone.
 - Cboe's Iron Butterfly benchmark/strategy material describes butterflies as range strategies with limited risk, reinforcing that centre alignment and wing geometry—not headline theta alone—define the trade.
+
+
+## Regime dependence and latent jump risk
+
+The v2.2 regime layer is motivated by time variation in volatility and jump risk rather than a claim that one fixed regime model is structurally correct. Bollerslev and Todorov (2011) document large, time-varying rare-event compensation; Broadie, Chernov and Johannes (2009) emphasize jump-risk premia in market-neutral option returns; and Zhao et al. (2024) document pronounced clustering in overnight volatility across global equity markets. Cboe historical reviews likewise show long calm realized-volatility stretches favorable to short-premium strategies followed by abrupt regime breaks.
+
+Operational implication: classify realized/gap state and exogenous event hazard jointly with implied volatility. Low implied volatility with high external hazard is not a benign regime.
