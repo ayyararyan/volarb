@@ -232,7 +232,7 @@ Run:
 python scripts/optimize_butterflies.py --input snapshot.json --pretty
 ```
 
-The v2.1 optimizer must:
+The v2.2 optimizer must:
 - estimate/check the parity forward;
 - use actual four-leg execution quotes;
 - enforce a dynamic wide-width floor;
@@ -318,11 +318,12 @@ Complete the trading decision first, then persist it **before** emitting the nor
 
 After a trade is fully closed, create or update one episode using `references/post-trade-learning.md` and the repository workflow in `references/repo-logging.md`.
 
-Periodically run:
+Periodically, from a repository checkout, run:
 
 ```bash
-python scripts/summarize_trade_log.py
-tests/test_v21_overnight.py --input episodes.jsonl --pretty
+python scripts/summarize_trade_log.py --input ../../trade-log/episodes.jsonl --pretty
+python tests/test_v21_overnight.py
+python tests/test_v22_regime.py
 ```
 
 Measure forecast errors, tail misses, execution slippage, profit give-back and recenter incremental P&L where a defensible counterfactual exists.
