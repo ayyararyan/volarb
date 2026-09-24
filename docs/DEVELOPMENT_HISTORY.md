@@ -1,6 +1,6 @@
 # Development history
 
-This is a conversation-derived history of how the butterfly workflow evolved into Engine v2.
+This is a concise history of how the butterfly workflow evolved into the current Engine v2.2.
 
 ## 2026-09-20 — Front-end discipline and wide-fly optimization
 
@@ -43,3 +43,36 @@ A promotion-gate concept was introduced to compare the more sophisticated v2 eng
 ## 2026-09-22 — Repository capture
 
 The complete live Butterfly Market Outlook v2 skill source, references and scripts were copied into this repository. Trade/review history is stored with explicit provenance so missing historical broker fields are left unknown rather than reverse-engineered.
+
+
+## 2026-09-23 — Overnight carry failure becomes a first-class problem
+
+The SENSEX expiry-eve carry exposed a weakness in treating overnight theta as though it were locally continuous. The following morning's large gap overwhelmed the expected theta harvest and the trade was closed for a gross realized loss.
+
+The engine was tightened around:
+- next-actionable-exit rather than expiry-payoff thinking;
+- broker/RMS and auto-squareoff feasibility;
+- full joint spot-gap / IV-expansion repricing;
+- stricter expiry-eve carry rules.
+
+## 2026-09-24 — Empirical gap gate and Engine v2.2 regime layer
+
+Recent NIFTY opens were reviewed directly. The lesson was that most overnight carries can look harmless while a small number of tail gaps dominate the risk.
+
+An empirical gap-regime gate was added:
+- rolling 20–30 open sample;
+- p80/p90 absolute gap;
+- frequency of large gaps;
+- current-spot-to-nearest-break-even buffer;
+- expected gap-gamma drag versus next-open harvest.
+
+The broader **v2.2 market-regime engine** was then added so butterfly decisions depend on the environment rather than on IV/theta alone.
+
+The engine now distinguishes:
+- `CALM_CARRY`;
+- `TRANSITION`;
+- `LATENT_JUMP_RISK`;
+- `ACTIVE_STRESS`;
+- `UNKNOWN`.
+
+A low VIX no longer qualifies as evidence of a calm regime when realized tail gaps or exogenous event hazard remain elevated. Intraday butterflies remain possible in hostile regimes, but overnight carry must pass the regime layer before ordinary theta/carry ranking.
