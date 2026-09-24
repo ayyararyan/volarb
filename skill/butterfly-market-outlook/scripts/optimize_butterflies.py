@@ -21,6 +21,8 @@ import json
 import math
 from pathlib import Path
 
+import classify_market_regime as mr
+
 SQRT2 = math.sqrt(2.0)
 EPS = 1e-12
 
@@ -721,6 +723,7 @@ def overnight_stress_metrics(surface, data, rows, meta, entry_credit, debit, car
     if auto_warn and broker_status == "PASS":
         broker_status = "WARN"
     latency = _latency_severity(cfg)
+    regime = mr.classify(cfg.get("market_regime") or {})
 
     strikes = sorted(r["strike"] for r in surface if r.get("call_mark") is not None)
     byk = row_by_strike(surface)
@@ -738,6 +741,11 @@ def overnight_stress_metrics(surface, data, rows, meta, entry_credit, debit, car
     hard = []
     warnings = []
     entry_modes = {"candidate_entry", "recenter_entry", "rotation_entry"}
+    new_expiry_eve = expiry_sessions <= 1.0 and mode in entry_modes
+    if new_expiry_eve and regime["state"] == "UNKNOWN":
+        hard.append("new_expiry_eve_requires_market_regime")
+    if new_expiry_eve and not regime["parameters"]["new_expiry_eve_allowed"]:
+        hard.append("market_regime_blocks_new_expiry_eve_carry")
     if broker_status == "FAIL":
         hard.append("broker_feasibility_fail")
     if broker_status == "WARN" or auto_warn:
@@ -752,6 +760,7 @@ def overnight_stress_metrics(surface, data, rows, meta, entry_credit, debit, car
             "status": "BLOCK" if mode in entry_modes else "DEGRADED",
             "broker_status": broker_status,
             "latency_severity": latency,
+            "market_regime": regime,
             "hard_failures": sorted(set(hard)),
             "warnings": warnings,
             "same_state_open_pnl_points": None,
@@ -811,6 +820,15 @@ def overnight_stress_metrics(surface, data, rows, meta, entry_credit, debit, car
     emp = _empirical_gap_metrics(cfg, meta, rows[1]["strike"], entry_credit, same_pnl, net_gamma)
     _apply_empirical_gap_gate(emp, hard, warnings)
 
+    ratio = emp.get("q90_break_even_buffer_ratio")
+    max_ratio = regime["parameters"]["max_q90_break_even_buffer_ratio"]
+    if expiry_sessions <= 1.0 and ratio is not None and ratio >= max_ratio:
+        hard.append("regime_adjusted_gap_buffer_fail")
+
+    min_ocr = regime["parameters"]["min_ocr_1_5"]
+    if expiry_sessions <= 1.0 and ocr15 is not None and ocr15 < min_ocr:
+        hard.append("regime_adjusted_stress_efficiency_fail")
+
     if len(scenarios) < 6 or same_pnl is None:
         hard.append("incomplete_next_open_full_reprice")
     if latency in {"high", "critical"}:
@@ -835,6 +853,7 @@ def overnight_stress_metrics(surface, data, rows, meta, entry_credit, debit, car
         "worst_2_0_straddle_pnl_points": w20,
         "ocr_1_5": ocr15,
         "opening_friction_points": friction,
+        "market_regime": regime,
         "empirical_gap": emp,
         "hard_failures": sorted(set(hard)),
         "warnings": list(dict.fromkeys(warnings)),
@@ -909,7 +928,8 @@ def candidate_metrics(surface, meta, dist, data, k1, k2, k3, carry_days, lot_siz
     if emp.get("q90_break_even_buffer_ratio") is not None:
         empirical_parts.append(min(emp["q90_break_even_buffer_ratio"], 2.0))
     empirical_component = sum(empirical_parts) / len(empirical_parts) if empirical_parts else 0.0
-    combined_tail = rnd_tail_score + path_component + 0.5 * min(overnight_loss_ratio, 2.0) + 0.5 * empirical_component
+    regime_penalty = float((overnight.get("market_regime") or {}).get("parameters", {}).get("tail_penalty", 0.0))
+    combined_tail = rnd_tail_score + path_component + 0.5 * min(overnight_loss_ratio, 2.0) + 0.5 * empirical_component + regime_penalty
 
     friction_ratio = (est_roundtrip_slippage / debit) if est_roundtrip_slippage is not None else 0.0
     carry_burden = debit / width + friction_ratio
