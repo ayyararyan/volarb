@@ -1,4 +1,4 @@
-# Engine v2 additions
+# Engine v2.2 analysis framework
 
 Before the legacy research checklist below, enforce these v2 rules:
 
