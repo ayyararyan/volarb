@@ -25,7 +25,7 @@ Use India time (Asia/Kolkata).
 10. Never manufacture live quotes, IV, Greeks, probabilities, events or position data.
 11. For any overnight hold, price the **next actionable exit** rather than treating expiry payoff or headline theta as the primary horizon.
 12. Classify the **market regime** before any actionable overnight carry decision. A low VIX is not a calm-regime signal when event/tail hazard is elevated.
-13. Before expiry-eve overnight entry/rotation, require the v2.2 regime gate plus the v2.1 recent-gap, event-latency, joint gap/IV, and broker/RMS gates to pass.
+13. Before expiry-eve overnight entry/rotation, require the v2.2 regime gate plus the recent-gap, event-latency, joint gap/IV, and broker/RMS gates to pass.
 14. Treat intraday butterflies as the default operating mode; overnight carry must earn its way in by beating regime-adjusted jump/gamma risk rather than relying on headline theta.
 15. Persist every completed market outlook, position review and confirmed trade lifecycle event to the volarb GitHub repository when the GitHub connector is writable. Keep this logging backend-only unless it fails.
 
@@ -398,7 +398,7 @@ Before answering verify:
 - a low VIX is rejected as sufficient evidence of calm when event/tail hazard is elevated;
 - recent 20-30-open gap regime measured before an actionable overnight carry decision, with minimum 15 observations for a new entry/recenter/rotation;
 - p90 realized gap compared with current-spot-to-nearest-break-even buffer and gap-gamma drag compared with same-state next-open harvest;
-- v2.1 broker/RMS feasibility checked before expiry-eve overnight entry/rotation;
+- broker/RMS feasibility checked before expiry-eve overnight entry/rotation;
 - latency-critical events inside the untradeable window are identified;
 - mandatory +/-1.0, +/-1.5 and +/-2.0 straddle joint spot/IV stresses are full-repriced when overnight gate is active;
 - Pareto ranking uses theta/carry/tail risk, not raw max loss;
