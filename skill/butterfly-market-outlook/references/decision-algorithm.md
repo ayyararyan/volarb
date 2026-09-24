@@ -26,6 +26,9 @@ Always establish:
 4. One coherent relevant-expiry option-chain snapshot.
 5. Actual four-leg liquidity for an existing or proposed iron fly.
 6. Intended holding horizon and next actionable exit.
+7. One normalized `market-news-signal-filter` packet for the current decision horizon whenever event/news state can affect the trade.
+
+Read `references/news-signal-integration.md` before interpreting current news. Invoke the child skill once and reuse the packet; do not independently rescore raw articles in later gates. For any actionable overnight branch set `news_filter_required=true` in the regime snapshot.
 
 Use `references/dhan-mcp-workflow.md` for Dhan acquisition and `references/exchange-surface-workflow.md` only when exchange validation/fallback is needed.
 
@@ -44,17 +47,19 @@ If this gate terminates, do not evaluate theta, regime, recentering, or optimiza
 
 ## 3. Post-close terminal gate
 
-If branch = `LOCKED_OVERNIGHT` -> **LOCKED OVERNIGHT**.
+If branch = `LOCKED_OVERNIGHT` -> **LOCKED_OVERNIGHT**.
 
 Do not issue a fresh CARRY/HOLD/RECENTRE/SQUARE OFF decision after the local market is already non-actionable. Build only the next-open contingency map.
 
 Stop.
 
-## 4. Overnight branch: classify regime first
+## 4. Overnight branch: normalize news, then classify regime
 
-Run this step only for `OPEN_CARRY_GATE` or `CANDIDATE_OVERNIGHT`.
+Run this step only for `OPEN_CARRY_GATE` or `CANDIDATE_OVERNIGHT`. When building `controller_snapshot.json`, set `news_filter_required=true` and pass `news_filter_status` for any proposed overnight structure.
 
-Read `references/regime-engine.md`, build the regime snapshot, and run:
+First require the normalized child-skill news packet described in `references/news-signal-integration.md`. If it is `UNAVAILABLE` or `INVALID`, the regime must be `UNKNOWN` for a new overnight structure; never substitute ad hoc headline judgment. Existing positions continue conservatively with degraded/unknown event state.
+
+Then read `references/regime-engine.md`, build the regime snapshot including `news_filter`, and run:
 
 ```bash
 python scripts/classify_market_regime.py --input regime_snapshot.json --pretty
@@ -92,6 +97,7 @@ Evaluate in this exact order:
    - Existing `UNKNOWN` is degraded, not an automatic pass; continue only with that uncertainty explicit internally.
 
 3. **Event-latency gate**
+   - Derive latency severity from the normalized Market News Signal Filter packet; do not rescore raw articles here.
    - High/critical event with no full next-open repricing -> terminal **NO TRADE** for new/recenter/rotation; **SQUARE OFF** for an existing actionable carry.
    - High/critical event with `OCR_1_5 < 1.0` -> same terminal action.
    - Medium event with `OCR_1_5 < 0.5` -> same terminal action.
@@ -106,7 +112,7 @@ If any gate terminates, stop. Do not proceed to theta or recenter optimization.
 
 ## 6. Hard event / tail / liquidity override
 
-Evaluate current event/path state, threatened break-even/wing, actual-leg execution quality, and surface instability.
+Evaluate the normalized Market News Signal Filter state, current path state, threatened break-even/wing, actual-leg execution quality, and surface instability. The news packet is evidence for this gate; raw headlines are not independently rescored.
 
 If a credible shock, materially threatened wing/break-even, or unusable execution makes the short-gamma state unacceptable:
 
@@ -218,6 +224,7 @@ Logging is a side effect and may never change the decision.
 ```text
 branch = classify_branch(clock, open_position, intended_horizon)
 state  = acquire_minimum_state()
+news   = normalize_market_news_signal_filter_once()
 
 if candidate and data_health in {INVALID, STALE}:
     return NO_TRADE
@@ -226,7 +233,8 @@ if branch == LOCKED_OVERNIGHT:
     return LOCKED_OVERNIGHT
 
 if branch crosses market close:
-    regime = classify_regime()
+    require_news_filter_for_overnight(news)
+    regime = classify_regime(news_filter=news)
 
     if proposed_structure_is_new_or_recentered and regime in {LATENT_JUMP_RISK, ACTIVE_STRESS, UNKNOWN}:
         return NO_TRADE

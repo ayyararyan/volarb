@@ -1,0 +1,13 @@
+interface:
+  display_name: Market News Signal Filter
+  short_description: Filters financial news into credible information, attention and
+    uncertainty shocks, then applies calibrated Indian-index sensitivity.
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true

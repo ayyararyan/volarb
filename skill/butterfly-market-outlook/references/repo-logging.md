@@ -69,6 +69,7 @@ Append one section in chronological order:
 | Data health | HEALTHY / DEGRADED / STALE / INVALID |
 | Key surface state | short skew/IV/RND description |
 | Key path/event state | short real-world risk description |
+| News filter | calibration status/as-of, aggregate state, dominant channels, max gap risk/latency when material |
 | Position economics | bankable P&L, dynamic harvest, Greeks or other decision-critical metrics when available |
 | Why | the concrete reason behind the final decision |
 | Next review | IST timestamp/event/close or — |
@@ -81,7 +82,8 @@ Append one section in chronological order:
 ### Notes
 - Record only details useful for later research/calibration.
 - Keep risk-neutral and real-world probabilities conceptually separate.
-- When the regime-aware overnight gate is active, record next-actionable-exit horizon, broker feasibility/warning status, latency-event severity, same-state open harvest, 1.5S/2.0S stress P&L and OCR_1_5 when available.
+- Record only compact Market News Signal Filter outputs; never dump the raw article corpus or headline list.
+- When the overnight gate is active, record next-actionable-exit horizon, broker feasibility/warning status, child-filter latency severity, same-state open harvest, 1.5S/2.0S stress P&L and OCR_1_5 when available.
 ```
 
 Do not dump the entire raw chain or every web headline into the daily file. Capture the decision-relevant state.

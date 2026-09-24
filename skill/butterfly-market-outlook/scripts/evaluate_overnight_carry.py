@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Engine v2.1 overnight-carry gate for short-gamma butterflies.
+"""Engine v2.4 overnight-carry gate for short-gamma butterflies.
 
 Evaluates the intended next-actionable-exit horizon rather than expiry payoff alone.
 Uses full four-leg repricing when normalized chain data are supplied; otherwise it can
@@ -13,6 +13,7 @@ from pathlib import Path
 
 import optimize_butterflies as ob
 import classify_market_regime as mr
+import news_signal_adapter as nsa
 
 EPS = 1e-12
 SEV_ORDER = {"low": 0, "medium": 1, "high": 2, "critical": 3}
@@ -321,7 +322,11 @@ def evaluate(x):
         broker_status = "WARN"
 
     events = x.get("events", x.get("event_clock", [])) or []
+    news_filter = x.get("news_filter") or {}
     latency_sev = max_latency_severity(events)
+    nf_latency = nsa.latency_severity(news_filter)
+    if SEV_ORDER.get(nf_latency, -1) > SEV_ORDER.get(latency_sev, -1):
+        latency_sev = nf_latency
 
     scen = reprice_scenarios(x) or prepared_scenarios(x)
     full_reprice = bool(scen and scen.get("full_reprice"))
@@ -338,14 +343,19 @@ def evaluate(x):
         ocr_15 = 999.0
 
     emp = empirical_gap_metrics(x, same, scen)
-    regime = mr.classify(x.get("market_regime") or {})
+    regime_input = dict(x.get("market_regime") or {})
+    if news_filter and "news_filter" not in regime_input:
+        regime_input["news_filter"] = news_filter
+    if crosses:
+        regime_input.setdefault("news_filter_required", bool(x.get("news_filter_required", True)))
+    regime = mr.classify(regime_input)
 
     hard = []
     warnings = []
 
     if not active:
         state = "NOT_APPLICABLE"
-        reason = "The position does not trigger the v2.1 overnight-carry gate."
+        reason = "The position does not trigger the v2.4 overnight-carry gate."
     elif not market_actionable:
         state = "LOCKED_OVERNIGHT"
         reason = "The home option market is closed; this is a monitoring/contingency state, not a fresh carry decision."
@@ -353,6 +363,11 @@ def evaluate(x):
             warnings.append("Broker/RMS warning exists while the position is already locked overnight; prioritize exit at the next actionable window.")
     else:
         new_expiry_eve = mode in {"candidate_entry", "recenter_entry", "rotation_entry"} and expiry_sessions <= 1.0
+        nf_status = nsa.status(news_filter)
+        if new_expiry_eve and nf_status in {"UNAVAILABLE", "INVALID"}:
+            hard.append("news_filter_unavailable_for_new_overnight")
+        elif nf_status == "STALE_CALIBRATION":
+            warnings.append("news_filter_calibration_stale")
         apply_empirical_gap_gate(emp, hard, warnings)
 
         rstate = regime["state"]
@@ -401,7 +416,7 @@ def evaluate(x):
 
         if hard:
             state = "BLOCK"
-            reason = "One or more v2.1 overnight hard gates failed."
+            reason = "One or more v2.4 overnight hard gates failed."
         elif scen is None:
             state = "DEGRADED"
             reason = "Overnight carry lacks a complete next-open stress map."
@@ -413,7 +428,7 @@ def evaluate(x):
             reason = f"{regime['state']} regime plus broker, event-latency and next-open stress gates passed."
 
     return {
-        "engine": "v2.1-candidate",
+        "engine": "v2.4-overnight",
         "active": active,
         "mandatory": mandatory,
         "operational_state": state,
@@ -425,6 +440,7 @@ def evaluate(x):
         "event_latency": {
             "max_severity_inside_untradeable_window": latency_sev,
         },
+        "news_filter": nsa.compact(news_filter),
         "market_regime": regime,
         "empirical_gap": emp,
         "next_open_stress": {
@@ -444,7 +460,7 @@ def evaluate(x):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Evaluate Engine v2.1 overnight butterfly carry diagnostics")
+    ap = argparse.ArgumentParser(description="Evaluate Engine v2.4 overnight butterfly carry diagnostics")
     ap.add_argument("--input", required=True)
     ap.add_argument("--pretty", action="store_true")
     args = ap.parse_args()

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Butterfly Engine v2.1 candidate wide-iron-fly optimizer.
+"""Butterfly Engine v2.4 candidate wide-iron-fly optimizer.
 
 Dependency-free deterministic backend for:
 - quote/data sanity checks and parity-implied forward estimation;
@@ -22,6 +22,7 @@ import math
 from pathlib import Path
 
 import classify_market_regime as mr
+import news_signal_adapter as nsa
 
 SQRT2 = math.sqrt(2.0)
 EPS = 1e-12
@@ -598,7 +599,7 @@ def scenario_metrics(data, rows, meta, entry_credit, debit, carry_days):
 
 
 def _latency_severity(cfg):
-    order = {"low": 0, "medium": 1, "high": 2, "critical": 3}
+    order = {"low": 0, "medium": 1, "high": 2, "critical": 3, "unknown": -1}
     best = "low"
     for e in cfg.get("events", []) or []:
         if not e.get("inside_untradeable_window", e.get("latency_critical", False)):
@@ -609,6 +610,9 @@ def _latency_severity(cfg):
     fallback = str(cfg.get("event_latency_severity", "low")).lower()
     if order.get(fallback, 0) > order.get(best, 0):
         best = fallback
+    nf = nsa.latency_severity(cfg.get("news_filter") or {})
+    if order.get(nf, -1) > order.get(best, -1):
+        best = nf
     return best
 
 
@@ -723,7 +727,12 @@ def overnight_stress_metrics(surface, data, rows, meta, entry_credit, debit, car
     if auto_warn and broker_status == "PASS":
         broker_status = "WARN"
     latency = _latency_severity(cfg)
-    regime = mr.classify(cfg.get("market_regime") or {})
+    news_filter = cfg.get("news_filter") or {}
+    regime_input = dict(cfg.get("market_regime") or {})
+    if news_filter and "news_filter" not in regime_input:
+        regime_input["news_filter"] = news_filter
+    regime_input.setdefault("news_filter_required", True)
+    regime = mr.classify(regime_input)
 
     strikes = sorted(r["strike"] for r in surface if r.get("call_mark") is not None)
     byk = row_by_strike(surface)
@@ -742,6 +751,11 @@ def overnight_stress_metrics(surface, data, rows, meta, entry_credit, debit, car
     warnings = []
     entry_modes = {"candidate_entry", "recenter_entry", "rotation_entry"}
     new_expiry_eve = expiry_sessions <= 1.0 and mode in entry_modes
+    nf_status = nsa.status(news_filter)
+    if new_expiry_eve and nf_status in {"UNAVAILABLE", "INVALID"}:
+        hard.append("news_filter_unavailable_for_new_overnight")
+    elif nf_status == "STALE_CALIBRATION":
+        warnings.append("news_filter_calibration_stale")
     if new_expiry_eve and regime["state"] == "UNKNOWN":
         hard.append("new_expiry_eve_requires_market_regime")
     if new_expiry_eve and not regime["parameters"]["new_expiry_eve_allowed"]:
@@ -761,6 +775,7 @@ def overnight_stress_metrics(surface, data, rows, meta, entry_credit, debit, car
             "broker_status": broker_status,
             "latency_severity": latency,
             "market_regime": regime,
+            "news_filter": nsa.compact(news_filter),
             "hard_failures": sorted(set(hard)),
             "warnings": warnings,
             "same_state_open_pnl_points": None,
@@ -854,6 +869,7 @@ def overnight_stress_metrics(surface, data, rows, meta, entry_credit, debit, car
         "ocr_1_5": ocr15,
         "opening_friction_points": friction,
         "market_regime": regime,
+        "news_filter": nsa.compact(news_filter),
         "empirical_gap": emp,
         "hard_failures": sorted(set(hard)),
         "warnings": list(dict.fromkeys(warnings)),
@@ -1108,7 +1124,7 @@ def optimize(data):
             candidates.append(m)
 
     base = {
-        "engine_version": "v2.1-candidate",
+        "engine_version": "v2.4-candidate",
         "underlying": data.get("underlying", data.get("symbol")),
         "asof": data.get("asof"),
         "expiry": data.get("expiry"),
@@ -1130,7 +1146,7 @@ def optimize(data):
     if not candidates:
         msg = "No candidates survived width/data/liquidity constraints."
         if overnight_rejected > 0:
-            msg = "No candidates survived the v2.1 overnight empirical-gap/event/broker/next-open stress gate."
+            msg = "No candidates survived the v2.4 overnight empirical-gap/event/broker/next-open stress gate."
         return {**base, "candidates": [], "message": msg}
 
     pareto = []

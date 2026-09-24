@@ -1,7 +1,8 @@
 interface:
   display_name: Butterfly Market Outlook
   short_description: Stress-test and optimize Indian index butterflies using Dhan
-    live positions, full option surfaces, and exchange price discovery.
+    live positions, full option surfaces, calibrated news filtering, and exchange
+    price discovery.
   icon_small: assets/icon.svg
   icon_large: assets/icon.svg
 policy:

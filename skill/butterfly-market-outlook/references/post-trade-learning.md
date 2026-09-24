@@ -31,6 +31,15 @@ Store one record only after a trade is fully closed:
   "estimated_slippage_points": null,
   "actual_slippage_points": null,
   "dominant_exit_reason": "harvest|gamma|event|alignment|liquidity|broker|other",
+  "news_filter": {
+    "calibration_asof": null,
+    "calibration_status": null,
+    "aggregate_state": null,
+    "dominant_channels": [],
+    "max_gap_risk": null,
+    "max_butterfly_relevance": null,
+    "max_latency_severity": null
+  },
   "overnight_carry": {
     "next_actionable_exit_ist": null,
     "untradeable_window_hours": null,
@@ -49,6 +58,7 @@ Store one record only after a trade is fully closed:
 ## What to measure
 
 - centre forecast absolute error;
+- child news-filter hazard bucket versus realized opening-gap percentile, without changing the original information-quality labels;
 - frequency and severity of tail misses;
 - Brier score only for **explicit real-world probabilities**;
 - RND wing-mass frequency as a pricing diagnostic, not a claim that it should calibrate one-for-one to physical outcomes;
@@ -56,7 +66,7 @@ Store one record only after a trade is fully closed:
 - profit give-back after maximum open P&L;
 - recenter incremental P&L only when a defensible counterfactual is available;
 - performance by days-to-expiry and regime;
-- overnight next-open forecast error, gap in prior-close straddle units, event-latency misses, and broker/RMS warning frequency when the overnight gate was active.
+- overnight next-open forecast error, gap in prior-close straddle units, event-latency misses, and broker/RMS warning frequency when the v2.4 overnight gate was active.
 
 ## Threshold changes
 

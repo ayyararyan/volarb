@@ -43,6 +43,17 @@ Use one state object per decision pass. It is an internal contract between modul
     "rnd_q90": null,
     "rnd_mode": null
   },
+  "news_filter": {
+    "status": "CURRENT|STALE_CALIBRATION|UNAVAILABLE|INVALID",
+    "calibration_asof": null,
+    "aggregate_state": "CALM|NOISY_BUT_BENIGN|EVENTFUL|HIGH_UNCERTAINTY|TAIL_RISK_ACTIVE|UNKNOWN",
+    "max_gap_risk": "none|low|moderate|high|extreme|unknown",
+    "max_butterfly_relevance": "ignore|watch|material|critical|unknown",
+    "max_overnight_relevance": "none|low|moderate|high|extreme|unknown",
+    "max_latency_severity": "low|medium|high|critical|unknown",
+    "dominant_channels": [],
+    "direction": "risk-on|risk-off|mixed|unknown"
+  },
   "market_regime": {
     "state": "CALM_CARRY|TRANSITION|LATENT_JUMP_RISK|ACTIVE_STRESS|UNKNOWN",
     "confidence": "low|medium|high",
@@ -114,10 +125,12 @@ Use one state object per decision pass. It is an internal contract between modul
 ## Rules
 
 - Populate only fields supported by current evidence; use `null`, not guesses.
+- Populate `news_filter` from `market-news-signal-filter` once per decision horizon; never place raw article dumps in MarketState.
 - Keep RND fields and path scenario probabilities conceptually separate.
 - A previous state may come from an earlier review in the same conversation. If unavailable, initialize without inventing history.
 - Do not persist sensitive account identifiers in the state.
 - Use `scripts/compare_market_states.py` when both previous and current states are available.
 - A newly unpriced high/critical event combined with an `event_jump` regime must produce at least an elevated review state (normally <=30 minutes) unless the decision layer already chooses RECENTRE/SQUARE OFF/NO TRADE.
+- If the intended hold crosses market close, set `news_filter_required=true` in the regime snapshot. `UNAVAILABLE/INVALID` filtering cannot be interpreted as calm.
 - If the intended hold crosses market close with <=2 sessions to expiry, populate `overnight_carry` and the next-actionable-exit horizon before theta/carry interpretation.
 - A post-close open position has `operational_state=LOCKED_OVERNIGHT`; do not log a fresh executable carry decision while the home option market is closed.

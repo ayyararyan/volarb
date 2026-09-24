@@ -87,6 +87,6 @@ Unless the user asks for detail, do not surface:
 All live-data citations or source references should be attached compactly to the factual reason they support without expanding the table.
 
 
-## Post-close operational state
+## v2.4 post-close operational state
 
 If the home option market is closed and the position cannot be changed, do not present a fresh CARRY recommendation. Use a one-row status table with `LOCKED OVERNIGHT` and the next actionable exit/review.

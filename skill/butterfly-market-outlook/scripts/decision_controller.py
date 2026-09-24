@@ -52,6 +52,13 @@ def decide(data: Dict[str, Any]) -> Dict[str, Any]:
     if crosses_close:
         regime = str(data.get("market_regime", "UNKNOWN")).upper()
         proposed_new = bool(data.get("proposed_new_structure", mode == "CANDIDATE"))
+        news_required = bool(data.get("news_filter_required", False))
+        news_status = str(data.get("news_filter_status", "CURRENT" if not news_required else "UNAVAILABLE")).upper()
+        if news_required and proposed_new and news_status in {"UNAVAILABLE", "INVALID"}:
+            action = "NO_TRADE" if mode == "CANDIDATE" else "SQUARE_OFF"
+            return _result(action, "NEWS_FILTER", warnings)
+        if news_status == "STALE_CALIBRATION":
+            warnings.append("news_filter=STALE_CALIBRATION; use live cross-asset confirmation and lower confidence")
 
         if proposed_new and regime in SEVERE_NEW_OVERNIGHT_REGIMES:
             action = "NO_TRADE" if mode == "CANDIDATE" else "SQUARE_OFF"

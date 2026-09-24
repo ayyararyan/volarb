@@ -1,4 +1,4 @@
-# Wide Butterfly Optimizer — Engine v2.2 Candidate
+# Wide Butterfly Optimizer — Engine v2.4 Candidate
 
 Use this reference for **new butterfly search/optimization**. The optimizer is for wide symmetric **short iron butterflies** by default, evaluated through their payoff-equivalent long-fly debit where useful.
 
@@ -12,10 +12,10 @@ Candidate selection is a constrained multi-objective problem:
 2. minimize carry burden: equivalent debit/capital at risk plus realistic execution friction;
 3. minimize **combined tail risk** from:
    - option-implied RND geometry/pricing risk; and
-   - separate real-world event/path stress;
+   - separate real-world event/path stress sourced from the normalized Market News Signal Filter packet;
 4. require robust liquidity in **all actual iron-fly legs**;
 5. align the body with parity forward, option-implied centre and real-world path centre unless the user explicitly wants a directional fly;
-6. when the holding interval crosses market close, pass the v2.2 regime-aware next-open event/broker/stress gate before final ranking.
+6. when the holding interval crosses market close, pass the v2.4 next-open event/broker/stress gate before final ranking.
 
 Theoretical maximum loss is descriptive. It is not the tail-risk objective.
 
@@ -157,7 +157,7 @@ Only compute `scenario_expected_pnl_points` when explicit probabilities are supp
 Even without scenario probabilities, use the worst scenario as a path-risk stress.
 
 
-## 10A. v2.2 regime-aware overnight candidate gate
+## 10A. v2.4 regime-aware overnight candidate gate
 
 When a candidate will be held across the home-market close and <=2 trading sessions remain, include an `overnight_carry` object in the optimizer input plus `overnight_carry.market_regime` from `scripts/classify_market_regime.py`. Also provide `overnight_carry.empirical_gap_gate` with roughly 20-30 recent close-to-next-open gap percentages (minimum 15 for a new entry), source metadata, and the current gap-regime thresholds. The optimizer computes candidate-specific current-spot-to-break-even buffer and local gap-gamma burden before ranking.
 
@@ -262,7 +262,7 @@ The optimizer accepts normalized Dhan/NSE/BSE chain JSON:
     "hours_to_next_actionable_exit": 18.5,
     "broker_feasibility_status": "PASS",
     "broker_auto_squareoff_warning": false,
-    "event_latency_severity": "medium",
+    "news_filter": {"status":"CURRENT","aggregate_state":"EVENTFUL","max_latency_severity":"medium","max_gap_risk":"moderate","max_butterfly_relevance":"material"},
     "events": [{"severity":"medium","inside_untradeable_window":true}]
   },
   "chain": [

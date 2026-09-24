@@ -45,6 +45,17 @@ def base():
         'market_actionable': True,
         'events': [{'severity': 'medium', 'inside_untradeable_window': True}],
         'market_regime': {'state': 'CALM_CARRY'},
+        'news_filter': {
+            'status': 'CURRENT',
+            'calibration_asof': '2026-09-24',
+            'aggregate_state': 'CALM',
+            'max_gap_risk': 'low',
+            'max_butterfly_relevance': 'ignore',
+            'max_overnight_relevance': 'low',
+            'max_latency_severity': 'low',
+            'dominant_channels': [],
+            'events': [],
+        },
         'empirical_gap_gate': benign_gap_gate(),
     }
 
@@ -142,6 +153,24 @@ def test_new_overnight_entry_requires_recent_gap_history():
     out = evaluate(x)
     assert out['operational_state'] == 'BLOCK'
     assert 'insufficient_recent_gap_history' in out['hard_failures']
+
+
+def test_new_overnight_entry_blocks_when_news_filter_missing():
+    x = base() | stress(300.0, -250.0)
+    x['broker'] = {'status': 'PASS'}
+    x.pop('news_filter', None)
+    out = evaluate(x)
+    assert out['operational_state'] == 'BLOCK'
+    assert 'news_filter_unavailable_for_new_overnight' in out['hard_failures']
+
+
+def test_stale_news_calibration_warns_but_does_not_alone_block():
+    x = base() | stress(300.0, -250.0)
+    x['broker'] = {'status': 'PASS'}
+    x['news_filter']['status'] = 'STALE_CALIBRATION'
+    out = evaluate(x)
+    assert 'news_filter_calibration_stale' in out['warnings']
+
 
 def run():
     tests = [v for k, v in globals().items() if k.startswith('test_') and callable(v)]

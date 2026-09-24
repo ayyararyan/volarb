@@ -1,4 +1,4 @@
-# Engine v2.2 data-health overlay
+# Engine v2 data-health overlay
 
 Before using any surface for a decision, classify it as `HEALTHY`, `DEGRADED`, `STALE`, or `INVALID`. Diagnostics must include parity-forward dispersion, raw monotonicity/convexity violations, RND repair fraction, local strike coverage, quote sanity and freshness relative to later price discovery/news. A heavily repaired RND is not a high-confidence probability surface merely because the algorithm produced a smooth density.
 

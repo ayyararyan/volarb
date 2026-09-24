@@ -1,8 +1,8 @@
-# Overnight Carry Gate — Engine v2.2 Candidate
+# Overnight Carry Gate — Engine v2.4
 
-Use this gate after the v2.2 market-regime classifier whenever a butterfly will remain open across a period in which the home option market is closed and the next actionable exit is in a later session. It is mandatory when <=2 trading sessions remain to expiry and especially for a new entry/recenter/rotation into next-session expiry.
+Use this gate after the v2.4 market-regime classifier whenever a butterfly will remain open across a period in which the home option market is closed and the next actionable exit is in a later session. It is mandatory when <=2 trading sessions remain to expiry and especially for a new entry/recenter/rotation into next-session expiry.
 
-The objective is not to ban overnight carry. The v2.2 regime state determines how demanding this gate must be. It is to price the thing actually being traded: **next-actionable-exit MTM under gap, volatility and execution stress**, plus broker/RMS feasibility. Headline theta is considered only after these gates pass.
+The objective is not to ban overnight carry. The v2.4 regime state determines how demanding this gate must be. It is to price the thing actually being traded: **next-actionable-exit MTM under gap, volatility and execution stress**, plus broker/RMS feasibility. Headline theta is considered only after these gates pass.
 
 ## Core principle
 
@@ -43,6 +43,7 @@ Record:
 - whether settlement/expiry occurs the same session.
 
 If the user intends to close around the next open, optimize the distribution of `PnL_next_open`, not primarily `PnL_expiry`.
+
 
 
 ## 1A. Regime-adjusted thresholds
@@ -127,6 +128,8 @@ If explicit real-world opening scenario probabilities are defensible, compute pr
 
 ## 5. Event-latency gate
 
+Source event severity from the normalized `market-news-signal-filter` packet described in `news-signal-integration.md`. Reuse the same packet that fed the regime classifier; do not independently rescore the raw article set.
+
 An event is **latency-critical** when it can materially change the index path after the home option market closes and before the next actionable exit.
 
 Examples:
@@ -137,10 +140,12 @@ Examples:
 - policy announcements or elections with likely overnight transmission;
 - material index-heavyweight news released after local close.
 
-Classify each as `low / medium / high / critical` and record whether it occurs inside the untradeable window.
+Classify each as `low / medium / high / critical` using the child packet's calibrated gap risk, butterfly relevance, overnight relevance, and timing. Record whether it occurs inside the untradeable window. A low-credibility rumor may still be high latency hazard if its attention/uncertainty channel is material; preserve the child skill's distinction between truth confidence and movement hazard.
 
 Rules:
 
+- `UNAVAILABLE/INVALID` news filter on a new overnight entry/recenter/rotation -> **BLOCK**;
+- `STALE_CALIBRATION` -> warning and lower confidence; require live cross-asset confirmation but do not treat staleness alone as proof of danger;
 - `high/critical` latency event + no full next-open repricing -> **BLOCK overnight entry/rotation**;
 - `high/critical` latency event + `OCR_1_5 < 1.0` -> **BLOCK overnight entry/rotation**;
 - `medium` latency event + `OCR_1_5 < 0.5` -> **BLOCK overnight entry/rotation**;
@@ -204,7 +209,7 @@ For a prepared overnight snapshot run:
 python scripts/evaluate_overnight_carry.py --input overnight_snapshot.json --pretty
 ```
 
-For candidate search, `scripts/optimize_butterflies.py` v2.2 automatically applies the mandatory next-open stress and candidate rejection logic when an `overnight_carry` object is supplied.
+For candidate search, `scripts/optimize_butterflies.py` v2.4 automatically applies the mandatory next-open stress and candidate rejection logic when an `overnight_carry` object is supplied.
 
 ## 10. Logging / calibration
 
@@ -213,6 +218,7 @@ Persist, when known:
 - next-actionable-exit horizon;
 - untradeable-window duration;
 - recent gap sample size, p80/p90 absolute gap, >=0.50% gap frequency, break-even-buffer ratio and gap-gamma burden;
+- Market News Signal Filter calibration as-of/status, aggregate state and dominant channels;
 - event-latency classification;
 - broker feasibility status and warning presence;
 - same-state next-open harvest;

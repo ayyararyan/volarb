@@ -1,4 +1,4 @@
-# Butterfly Engine v2.3 Controller Architecture
+# Butterfly Engine v2.4 Controller Architecture
 
 ## Module 0 - canonical decision controller
 
@@ -20,7 +20,8 @@ This is the control architecture behind every live butterfly review and candidat
 10. **Low implied volatility can be deceptive.** A compressed VIX/IV state with elevated event or tail-gap hazard is `LATENT_JUMP_RISK`, not calm.
 11. **Recent opening-gap risk is state-dependent.** Carry must also pass a rolling realized-gap gate using recent close-to-open gaps, current-spot-to-break-even buffer and gap-gamma burden.
 12. **Broker feasibility is part of the state.** A defined-risk payoff does not eliminate RMS/auto-squareoff risk; new expiry-eve overnight entries require validated broker feasibility.
-13. **Every closed trade can become a calibration episode.** Store forecasts and outcomes separately from the live decision logic; use them to measure whether rules add value before changing thresholds.
+13. **News interpretation is a child-skill responsibility.** Current raw news is classified once by `market-news-signal-filter`; the parent reuses its normalized packet and never independently re-scores the same headlines.
+14. **Every closed trade can become a calibration episode.** Store forecasts and outcomes separately from the live decision logic; use them to measure whether rules add value before changing thresholds.
 
 ## Modules
 
@@ -42,7 +43,8 @@ Source hierarchy:
 - Dhan: positions and structured option chain when healthy;
 - NSE/BSE: official validation/fallback and exchange status;
 - NSE IX: GIFT Nifty;
-- Reuters/primary/high-quality reporting: current event and cross-asset context.
+- `market-news-signal-filter`: current news/event interpretation and calibrated India transmission sensitivity;
+- Reuters/primary/high-quality reporting: raw inputs used by the child news filter, not separately rescored by the parent.
 
 Fetch one option-chain snapshot per expiry per decision pass and reuse it.
 
@@ -94,6 +96,8 @@ The surface engine never claims the RND is a physical forecast.
 
 ### 6. Event / path engine
 
+Read `news-signal-integration.md`. Build the real-world event layer from one normalized child-skill packet plus current market observations. Do not reconstruct a separate headline narrative.
+
 Build a separate real-world path overlay from:
 - scheduled events before intended exit/expiry;
 - unscheduled geopolitical/policy/corporate shocks;
@@ -111,13 +115,13 @@ Use probabilities only when defensible. If judgmental scenario weights are used,
 
 ### 6A. Market-regime engine
 
-Before any actionable overnight carry decision, combine recent realized/gap state, option-implied state and fresh event/news hazard into one deterministic regime: `CALM_CARRY / TRANSITION / LATENT_JUMP_RISK / ACTIVE_STRESS / UNKNOWN`. See `regime-engine.md` and `scripts/classify_market_regime.py`.
+Before any actionable overnight carry decision, combine recent realized/gap state, option-implied state and the calibrated Market News Signal Filter hazard into one deterministic regime: `CALM_CARRY / TRANSITION / LATENT_JUMP_RISK / ACTIVE_STRESS / UNKNOWN`. See `regime-engine.md` and `scripts/classify_market_regime.py`.
 
 The classifier explicitly detects a **complacency gap**: event/tail hazard materially above implied-volatility stress. A low VIX must not overrule this mismatch. Severe/unknown regimes block new next-session-expiry overnight carry; `TRANSITION` tightens the overnight thresholds.
 
 ### 6B. Overnight event-latency / broker-feasibility engine
 
-When the intended hold crosses market close, run the v2.1 overnight gate before candidate ranking or a carry decision. Track the next actionable exit, a rolling 20-30-open realized-gap regime, current-spot-to-break-even buffer, gap-gamma burden, untradeable-window events, broker feasibility, and full-reprice +/-1.0/1.5/2.0 straddle joint spot/IV stresses. See `overnight-carry-gate.md` and `scripts/evaluate_overnight_carry.py`.
+When the intended hold crosses market close, run the v2.4 overnight gate before candidate ranking or a carry decision. Track the next actionable exit, a rolling 20-30-open realized-gap regime, current-spot-to-break-even buffer, gap-gamma burden, untradeable-window events, broker feasibility, and full-reprice +/-1.0/1.5/2.0 straddle joint spot/IV stresses. See `overnight-carry-gate.md` and `scripts/evaluate_overnight_carry.py`.
 
 A new next-session-expiry entry/recenter/rotation requires broker status `PASS`; `UNKNOWN` is not enough. After market close, the operational state is `LOCKED_OVERNIGHT`, not a fresh carry decision.
 

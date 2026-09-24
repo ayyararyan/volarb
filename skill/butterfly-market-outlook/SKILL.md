@@ -1,9 +1,5 @@
----
-name: butterfly-market-outlook
-description: Analyze, optimize, manage, and journal Indian index option butterflies using Dhan when available, full option surfaces, Greeks/OI/bid-ask, risk-neutral distributions, deterministic regime/overnight/expiry/recenter diagnostics, and fresh event/cross-asset research. Use for checking an open NIFTY/BANKNIFTY/SENSEX butterfly, deciding HOLD/RECENTRE/SQUARE OFF or CARRY, searching for a wide butterfly, reviewing near-expiry or overnight risk, or recording butterfly market outlooks and trade/position history to the connected volarb GitHub repository.
----
 
-# Butterfly Market Outlook — Engine v2.3 Controller
+# Butterfly Market Outlook — Engine v2.4 Controller
 
 Treat every request as an options risk-desk decision, not generic market commentary. Use Asia/Kolkata time.
 
@@ -39,7 +35,8 @@ Use the controller result as the final policy action. The language model may exp
 10. On follow-up reviews, compare the current state with the prior review and focus on material changes.
 11. Never manufacture quotes, IV, Greeks, probabilities, events, fills, margins, or position data.
 12. Treat intraday butterflies as the default operating mode; overnight carry must pass the regime, gap, broker, event-latency, and joint-stress gates.
-13. Persist every completed outlook, position review, and confirmed trade lifecycle event to `ayyararyan/volarb` when GitHub is writable.
+13. Delegate raw financial/news interpretation to the `market-news-signal-filter` skill and reuse one normalized news packet across all event-sensitive gates. Do not independently rescore the same articles inside this skill.
+14. Persist every completed outlook, position review, and confirmed trade lifecycle event to `ayyararyan/volarb` when GitHub is writable.
 
 ## Minimal acquisition workflow
 
@@ -52,7 +49,10 @@ Before running decision gates, establish only what is needed:
 - one full relevant-expiry chain snapshot;
 - actual/proposed leg liquidity;
 - near-expiry activation state;
-- whether the proposed hold crosses market close.
+- whether the proposed hold crosses market close;
+- one normalized Market News Signal Filter packet for the decision horizon whenever current event/news state can affect the trade.
+
+For current news/event interpretation, read `references/news-signal-integration.md` and invoke the `market-news-signal-filter` skill once for the decision horizon. Raw articles belong to the child skill; the butterfly engine consumes only its normalized packet.
 
 For Dhan, read `references/dhan-mcp-workflow.md`.
 
@@ -81,6 +81,10 @@ python scripts/analyze_option_surface.py --input chain.json --pretty
 ```
 
 Classify `HEALTHY / DEGRADED / STALE / INVALID` and keep the RND explicitly under the pricing measure.
+
+### News-signal gate
+
+For every fresh outlook whose decision can be affected by current events, read `references/news-signal-integration.md`. Invoke `market-news-signal-filter` once and normalize its output before regime/event/path analysis. For any actionable overnight decision, set `news_filter_required=true`; unavailable/invalid filtering must not be silently interpreted as benign.
 
 ### Market-regime gate
 
@@ -166,7 +170,9 @@ python scripts/compare_market_states.py --previous previous.json --current curre
 
 Use the delta only to update the current gate inputs. It does not change gate order.
 
-## Review timin�((For HOLD/CARRY, select the earliest useful next review from:
+## Review timing
+
+For HOLD/CARRY, select the earliest useful next review from:
 
 - next scheduled decision-relevant event;
 - next price-discovery session;
@@ -245,6 +251,7 @@ Never give alternate actions, hedge ideas, a second table, long scenario dump, o
 Before answering verify:
 
 - `references/decision-algorithm.md` controlled the sequence;
+- current raw news was delegated to `market-news-signal-filter` and one normalized packet was reused;
 - branch and current IST session are correct;
 - Dhan position truth was checked when relevant;
 - one coherent chain snapshot was reused;

@@ -1,4 +1,4 @@
-# Research Basis for Butterfly Engine v2.2
+# Research Basis for Butterfly Engine v2
 
 Use these sources as design rationale, not as live market data.
 
@@ -27,6 +27,6 @@ Use these sources as design rationale, not as live market data.
 
 ## Regime dependence and latent jump risk
 
-The v2.2 regime layer is motivated by time variation in volatility and jump risk rather than a claim that one fixed regime model is structurally correct. Bollerslev and Todorov (2011) document large, time-varying rare-event compensation; Broadie, Chernov and Johannes (2009) emphasize jump-risk premia in market-neutral option returns; and Zhao et al. (2024) document pronounced clustering in overnight volatility across global equity markets. Cboe historical reviews likewise show long calm realized-volatility stretches favorable to short-premium strategies followed by abrupt regime breaks.
+The v2.4 regime layer is motivated by time variation in volatility and jump risk rather than a claim that one fixed regime model is structurally correct. Bollerslev and Todorov (2011) document large, time-varying rare-event compensation; Broadie, Chernov and Johannes (2009) emphasize jump-risk premia in market-neutral option returns; and Zhao et al. (2024) document pronounced clustering in overnight volatility across global equity markets. Cboe historical reviews likewise show long calm realized-volatility stretches favorable to short-premium strategies followed by abrupt regime breaks.
 
 Operational implication: classify realized/gap state and exogenous event hazard jointly with implied volatility. Low implied volatility with high external hazard is not a benign regime.

@@ -105,6 +105,6 @@ When Dhan is connected:
 - **Structured live option surface:** Dhan first.
 - **Exchange status, official reference and anomaly check:** NSE/BSE first.
 - **GIFT Nifty:** NSE IX.
-- **Overnight news/cross-assets:** Reuters/primary/high-quality sources per `analysis-framework.md`.
+- **Overnight news:** delegate raw-news interpretation to `market-news-signal-filter` via `news-signal-integration.md`; use cross-assets as live confirmation.
 
 If Dhan and an official exchange page materially disagree, check timestamps and market status before trusting either. Do not average contradictory stale/live values.

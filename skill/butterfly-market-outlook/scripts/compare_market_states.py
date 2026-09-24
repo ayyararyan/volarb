@@ -39,6 +39,19 @@ def event_rank(state):
     return best
 
 
+
+def news_rank(state):
+    ranks = {
+        "CALM": 0,
+        "NOISY_BUT_BENIGN": 1,
+        "EVENTFUL": 2,
+        "HIGH_UNCERTAINTY": 3,
+        "TAIL_RISK_ACTIVE": 4,
+        "UNKNOWN": 2,
+    }
+    return ranks.get(str(get(state, "news_filter.aggregate_state", "UNKNOWN")).upper(), 2)
+
+
 def compare(prev, cur):
     out = {"deltas": {}, "flags": []}
     score = 0
@@ -105,6 +118,11 @@ def compare(prev, cur):
 
     ep, ec = event_rank(prev), event_rank(cur)
     out["deltas"]["unpriced_event_severity_change"] = ec - ep
+    np, nc = news_rank(prev), news_rank(cur)
+    out["deltas"]["news_filter_state_change"] = nc - np
+    if nc > np:
+        score += min(3, nc - np + 1)
+        out["flags"].append("calibrated_news_risk_increased")
     if ec > ep:
         # Unpriced event severity should materially shorten review cadence.
         # low/medium/high/critical changes add 1/2/3/4 points respectively.

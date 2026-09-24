@@ -129,3 +129,37 @@ def test_candidate_survivors_return_candidates():
         "candidate_count": 3,
     })
     assert out["action"] == "CANDIDATES"
+
+
+def test_required_news_filter_blocks_new_overnight_candidate():
+    out = decide({
+        "mode": "CANDIDATE",
+        "branch": "CANDIDATE_OVERNIGHT",
+        "data_health": "HEALTHY",
+        "news_filter_required": True,
+        "news_filter_status": "UNAVAILABLE",
+        "market_regime": "CALM_CARRY",
+        "recent_gap_gate": "PASS",
+        "broker_rms_gate": "PASS",
+    })
+    assert out["action"] == "NO_TRADE"
+    assert out["terminal_gate"] == "NEWS_FILTER"
+
+
+def test_stale_news_filter_is_warning_not_terminal_by_itself():
+    out = decide({
+        "mode": "OPEN_POSITION",
+        "branch": "OPEN_CARRY_GATE",
+        "news_filter_required": True,
+        "news_filter_status": "STALE_CALIBRATION",
+        "market_regime": "CALM_CARRY",
+        "recent_gap_gate": "PASS",
+        "broker_rms_gate": "PASS",
+        "event_latency_gate": "PASS",
+        "joint_stress_gate": "PASS",
+        "hard_risk_gate": "PASS",
+        "expiry_exit_gate": "PASS",
+        "recenter_gate": "FAIL",
+    })
+    assert out["action"] == "CARRY"
+    assert any("STALE_CALIBRATION" in w for w in out["warnings"])
