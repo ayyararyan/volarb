@@ -1,4 +1,4 @@
-# Butterfly Engine v2.1 Candidate Architecture
+# Butterfly Engine v2.2 Candidate Architecture
 
 This is the control architecture behind every live butterfly review and candidate search. The user-facing format remains intentionally tiny; all complexity stays in the backend.
 
@@ -12,9 +12,11 @@ This is the control architecture behind every live butterfly review and candidat
 6. **Execution is part of strategy economics.** Use the actual iron-fly legs (lower put, body call+put, upper call) for bid/ask, OI, volume, slippage and live Greeks.
 7. **Near expiry, remaining harvest matters more than headline theta.** Apply the Dynamic Harvest Saturation / remaining-harvest-versus-gamma framework.
 8. **Overnight carry is a next-exit problem.** When the home market will be closed, model next-actionable-exit MTM under joint gap/IV/execution stress before theta optimization.
-9. **Recent opening-gap risk is state-dependent.** Carry must also pass a rolling realized-gap regime gate using recent close-to-open gaps, current-spot-to-break-even buffer and gap-gamma burden.
-10. **Broker feasibility is part of the state.** A defined-risk payoff does not eliminate RMS/auto-squareoff risk; new expiry-eve overnight entries require validated broker feasibility.
-11. **Every closed trade can become a calibration episode.** Store forecasts and outcomes separately from the live decision logic; use them to measure whether rules add value before changing thresholds.
+9. **Regime comes before trade geometry.** Classify whether the market is genuinely calm, transitioning, carrying latent jump risk, or already in active stress before approving overnight short gamma.
+10. **Low implied volatility can be deceptive.** A compressed VIX/IV state with elevated event or tail-gap hazard is `LATENT_JUMP_RISK`, not calm.
+11. **Recent opening-gap risk is state-dependent.** Carry must also pass a rolling realized-gap gate using recent close-to-open gaps, current-spot-to-break-even buffer and gap-gamma burden.
+12. **Broker feasibility is part of the state.** A defined-risk payoff does not eliminate RMS/auto-squareoff risk; new expiry-eve overnight entries require validated broker feasibility.
+13. **Every closed trade can become a calibration episode.** Store forecasts and outcomes separately from the live decision logic; use them to measure whether rules add value before changing thresholds.
 
 ## Modules
 
@@ -102,7 +104,13 @@ Create at least:
 
 Use probabilities only when defensible. If judgmental scenario weights are used, label them internally as subjective and never mix them with RND probabilities as though they were the same measure.
 
-### 6A. Overnight event-latency / broker-feasibility engine
+### 6A. Market-regime engine
+
+Before any actionable overnight carry decision, combine recent realized/gap state, option-implied state and fresh event/news hazard into one deterministic regime: `CALM_CARRY / TRANSITION / LATENT_JUMP_RISK / ACTIVE_STRESS / UNKNOWN`. See `regime-engine.md` and `scripts/classify_market_regime.py`.
+
+The classifier explicitly detects a **complacency gap**: event/tail hazard materially above implied-volatility stress. A low VIX must not overrule this mismatch. Severe/unknown regimes block new next-session-expiry overnight carry; `TRANSITION` tightens the overnight thresholds.
+
+### 6B. Overnight event-latency / broker-feasibility engine
 
 When the intended hold crosses market close, run the v2.1 overnight gate before candidate ranking or a carry decision. Track the next actionable exit, a rolling 20-30-open realized-gap regime, current-spot-to-break-even buffer, gap-gamma burden, untradeable-window events, broker feasibility, and full-reprice +/-1.0/1.5/2.0 straddle joint spot/IV stresses. See `overnight-carry-gate.md` and `scripts/evaluate_overnight_carry.py`.
 
