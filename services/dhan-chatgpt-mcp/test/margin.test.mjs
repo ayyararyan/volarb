@@ -19,6 +19,18 @@ function fixture({funds=100000, totals=[100,200,50000,20000], pending=false, sta
  return {broker,master,calls};
 }
 const run=(f,args=input)=>checkButterflyMargin(f.broker,f.master,args,{now:()=>time});
+test('paired-hedge preflight binds every prefix to actual executor order',async()=>{
+ const f=fixture(); const r=await run(f,{...input,entrySequence:'PAIRED_HEDGES'});
+ assert.equal(r.status,'PASS');
+ assert.equal(r.entrySequence,'PAIRED_HEDGES');
+ assert.deepEqual(r.sequence,['putWing','putBody','callWing','callBody']);
+ assert.deepEqual(f.calls.map(c=>c.map(l=>l.securityId)),[['1'],['1','3'],['1','3','2'],['1','3','2','4']]);
+ assert.deepEqual(f.calls[3].map(l=>l.transactionType),['BUY','SELL','BUY','SELL']);
+ assert.equal(r.reserveRupees,1000);
+});
+test('unsupported entry sequence fails closed instead of defaulting',async()=>{
+ assert.equal((await run(fixture(),{...input,entrySequence:'BODY_FIRST'})).status,'UNVERIFIED');
+});
 test('official SDK wire contract hits calculator only',async()=>{
  const d=new DhanClient({clientId:'fixture',accessToken:'fixture'});let call;
  d.request=async(...args)=>{call=args;return {};};await d.getBasketMargin([{securityId:'1'}]);

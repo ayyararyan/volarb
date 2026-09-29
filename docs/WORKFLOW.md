@@ -39,3 +39,11 @@ Use one table in [Mode A/B/C](../skill/butterfly-market-outlook/references/outpu
 ## 8. Software checks
 
 The packaging workflow runs all butterfly regressions, validates RV fixtures and packages all three skills. The service workflow installs locked dependencies and runs synthetic Node tests without Dhan credentials or browser sessions. Deployment and installed-skill refresh are separate explicit operations; GitHub is a source/journal destination, not live account state.
+
+## 9. Shadow day-workflow foundation — not live automation
+
+The [day-workflow source and 22-test suite](../services/day-workflow/README.md) simulate one selected butterfly, one lot total, and the owner’s ₹1,000 daily loss budget separately from the ₹1,000 free-cash reserve. Budget admission, executable liquidation P&L, duplicate/restart recovery, deadline events and completion are tested with synthetic evidence only. The budget is not a guaranteed realized-loss cap.
+
+LIVE mode is unconditionally rejected. Real market-data, executor authorization, scheduling, shared-writer accounting and journal-publication adapters remain unconnected. Timing defaults are shadow-test defaults, not adopted live policy. The [policy draft](AUTONOMOUS_EXECUTION_POLICY_DRAFT.md) remains inactive; publication does not amend the covenant or authorize orders.
+
+The MCP source adds `entrySequence: PAIRED_HEDGES` for put wing → put body → call wing → call body, preserving WINGS_FIRST by default. Require a fresh packet bound to the actual execution sequence and `reserveRupees: 1000`. Do not reuse a WINGS_FIRST result for the paired path. Local read-only discovery on 2026-09-29 still lacked this input; deployment of this patch was not verified. No service was restarted for publication.

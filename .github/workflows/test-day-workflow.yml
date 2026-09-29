@@ -1,0 +1,19 @@
+name: Test Shadow Day Workflow
+on:
+  push:
+    paths: ['services/day-workflow/**', 'skill/butterfly-market-outlook/**', '.github/workflows/test-day-workflow.yml']
+  pull_request:
+    paths: ['services/day-workflow/**', 'skill/butterfly-market-outlook/**', '.github/workflows/test-day-workflow.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  shadow-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Synthetic lifecycle and failure tests (no credentials or broker calls)
+        run: python -B -m unittest discover -s services/day-workflow -p 'test_*.py' -v

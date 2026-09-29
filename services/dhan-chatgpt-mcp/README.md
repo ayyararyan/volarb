@@ -142,7 +142,15 @@ The research `/mcp` now adds two **read-only** tools:
 - `dhan_calculate_basket_margin({legs})`: Dhan multi-order calculator including current positions/orders. Raw indicative requirement, never an affordability approval.
 - `dhan_check_butterfly_margin({symbol,expiry,lower,center,upper,lots,reserveRupees?,reservePercent?})`: resolves current contracts/lot sizes, checks funds/positions/orders and executable-side quote depth/time, then calls the calculator for all four wings-first prefixes. Returns `PASS`, `FAIL` or `UNVERIFIED`, peak vs final requirement, reserve and headroom. Omitted reserve means UNVERIFIED. If both reserve forms are supplied, the larger wins; percentage applies to available funds.
 
-No order endpoints are called. Entry-only; recenter/exit transitions are not simulated. Sequence is put wing buy, call wing buy, put body sell, call body sell. A different sequence needs a new preflight. Do not reuse this result for the separate executor's wing/body/wing/body sequence. Complete-stage estimates are indicative, not a guarantee against partial fills or RMS changes. The controller must still enforce strategy/liquidity/event gates and the 15:00 flat deadline.
+No order endpoints are called. Entry-only; recenter/exit transitions are not simulated. The default WINGS_FIRST sequence is put wing buy, call wing buy, put body sell, call body sell. A different sequence needs a new explicitly sequence-bound preflight; see PAIRED_HEDGES below. Complete-stage estimates are indicative, not a guarantee against partial fills or RMS changes. The controller must still enforce strategy/liquidity/event gates and the 15:00 flat deadline.
+
+**Source update, 29 September 2026 (not yet deployed):** optional
+`entrySequence: "PAIRED_HEDGES"` computes put wing → put body → call wing → call
+body prefixes, matching the executor. Omission retains `"WINGS_FIRST"` for existing
+callers. The returned `entrySequence`, `sequence` and `stages` bind the result to
+that path; a caller must verify them. Supply `reserveRupees: 1000` for the adopted
+cash reserve. This adds no orders, scheduler, risk-budget enforcement or live
+authorization. Refresh the MCP tool schema only after deliberate deployment.
 
 Account-inclusive reported totals are compared conservatively against free funds (utilised margin is **not** subtracted); existing positions may overstate the incremental requirement. Premium is not added again to Dhan's total. Pending orders, changed account state, stale/insufficient quote depth, zero/malformed margin, unavailable APIs or missing reserve all prevent PASS. Results expire after 30 seconds or immediately on account/price/quantity/sequence changes. No account credentials are returned by these tools.
 
@@ -160,7 +168,7 @@ Implemented in `src/butterfly-executor.mjs`. This is a four-leg **short iron but
 ### Endpoints and connection
 
 - Existing research endpoint remains `https://YOUR-NGROK-HOST.ngrok-free.dev/mcp` (no trading tools).
-- Authenticated executor: `https://outgoing-gender-hardening.ngrok-free.dev/execution/mcp`.
+- Authenticated executor: `https://YOUR-NGROK-HOST.ngrok-free.dev/execution/mcp`.
 - OAuth authorization-server metadata: `/.well-known/oauth-authorization-server`.
 - OAuth protected-resource metadata: `/.well-known/oauth-protected-resource/execution/mcp`.
 - Add a **separate OAuth-authenticated MCP connection** in ChatGPT using the executor URL; retain the existing research connection. OAuth supports DCR, S256 PKCE, one-hour access tokens, rotating seven-day refresh tokens, and revocation. Protocol handling uses the official MCP SDK. ChatGPT UI completion is not established by endpoint tests.
@@ -259,3 +267,7 @@ Validation on 2026-09-29: live browser web-token generation and private installa
 ## Repository publication boundary
 
 This is the source snapshot of the office-Mac service. Publishing it does not deploy, restart, enable execution, or change the live account. Dhandho remains research-only; Aryan executes. Credentials, private profiles, token captures, logs and operational execution state are intentionally excluded. The browser/PIN integration is office-Mac-specific; Linux CI runs synthetic tests, not live browser authentication.
+
+## Follow-up publication verification — 2026-09-29
+
+Local `/healthz` returned HTTP 200 and version 0.3.0. Read-only MCP tool discovery did **not** expose `entrySequence` in the running margin tool schema, so the paired-hedge patch is published source, not verified deployed functionality. No broker tool was called and no service restarted during this check. See [shadow day workflow](../day-workflow/README.md) for the new offline orchestrator and tests.

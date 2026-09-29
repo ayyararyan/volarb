@@ -157,7 +157,7 @@ function buildServer() {
 
   readOnlyTool(server, 'dhan_check_butterfly_margin', {
     title: 'Check butterfly entry affordability (no orders)',
-    description: 'Resolve exact index iron-butterfly contracts and lots; get fresh funds, positions, orders and executable quotes; calculate every wings-first sequence prefix via Dhan basket margin. Returns PASS/FAIL/UNVERIFIED with peak/final requirements and headroom. Requires explicit reserve for PASS. ENTRY ONLY; not recenter/exit simulation or trading approval. Never places orders.',
+    description: 'Resolve exact index iron-butterfly contracts and lots; get fresh funds, positions, orders and executable quotes; calculate every chosen entry-sequence prefix via Dhan basket margin. Default WINGS_FIRST; use entrySequence PAIRED_HEDGES to match the separate executor. Returns PASS/FAIL/UNVERIFIED with sequence-bound peak/final requirements and headroom. Requires explicit reserve for PASS. ENTRY ONLY; not recenter/exit simulation or trading approval. Never places orders.',
     inputSchema: butterflyMarginSchema
   }, args => checkButterflyMargin(dhan, instrumentMaster, args));
 

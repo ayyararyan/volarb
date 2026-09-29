@@ -19,6 +19,8 @@ export const butterflyMarginSchema = z.object({
   expiry: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   lower: positive, center: positive, upper: positive,
   lots: z.number().int().positive().max(100),
+  entrySequence: z.enum(['WINGS_FIRST', 'PAIRED_HEDGES']).default('WINGS_FIRST')
+    .describe('Bind preflight to the actual entry order. PAIRED_HEDGES matches the separate iron-butterfly executor.'),
   reserveRupees: z.number().finite().nonnegative().optional()
     .describe('Explicit user-approved free-cash reserve. Omission prevents PASS; zero must be explicitly approved.'),
   reservePercent: z.number().finite().min(0).max(100).optional()
@@ -71,9 +73,13 @@ async function resolveButterfly(master, input) {
   need(input.lower < input.center && input.center < input.upper, 'Require lower < center < upper');
   const rows = await master.getRows({ force: true });
   const exchange = input.symbol === 'SENSEX' ? 'BSE' : 'NSE';
-  // All protective wings first; do not use pending buys as filled hedges.
-  const specs = [['putWing', input.lower, 'PE', 'BUY'], ['callWing', input.upper, 'CE', 'BUY'],
-    ['putBody', input.center, 'PE', 'SELL'], ['callBody', input.center, 'CE', 'SELL']];
+  // Each short must follow its own fully filled protective wing in either path.
+  // This calculator models prefixes, not execution or partial-fill assurance.
+  const specs = input.entrySequence === 'PAIRED_HEDGES'
+    ? [['putWing', input.lower, 'PE', 'BUY'], ['putBody', input.center, 'PE', 'SELL'],
+       ['callWing', input.upper, 'CE', 'BUY'], ['callBody', input.center, 'CE', 'SELL']]
+    : [['putWing', input.lower, 'PE', 'BUY'], ['callWing', input.upper, 'CE', 'BUY'],
+       ['putBody', input.center, 'PE', 'SELL'], ['callBody', input.center, 'CE', 'SELL']];
   const legs = specs.map(([role, strike, type, side]) => {
     const matches = rows.filter(r => r.EXCH_ID === exchange && r.SEGMENT === 'D' && r.INSTRUMENT === 'OPTIDX'
       && r.UNDERLYING_SYMBOL === input.symbol && r.SM_EXPIRY_DATE?.slice(0,10) === input.expiry
@@ -107,6 +113,8 @@ export async function checkButterflyMargin(broker, master, args, { now = Date.no
     methodology: 'Maximum of Dhan account-inclusive basket totals across wings-first prefixes, compared conservatively with free funds. No subtraction of utilised margin, no additional premium charge on top of broker totals.' };
   try {
     const input = butterflyMarginSchema.parse(args);
+    output.entrySequence = input.entrySequence;
+    output.methodology = `Maximum of Dhan account-inclusive basket totals across ${input.entrySequence} prefixes, compared conservatively with free funds. No subtraction of utilised margin, no additional premium charge on top of broker totals.`;
     output.candidate = Object.fromEntries(['symbol', 'expiry', 'lower', 'center', 'upper', 'lots'].map(k => [k, input[k]]));
     const before = await account(broker);
     output.availableFundsRupees = before.available;
