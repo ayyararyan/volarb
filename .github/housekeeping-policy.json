@@ -8,7 +8,8 @@
     "docs",
     "market-outlook",
     "skill",
-    "trade-log"
+    "trade-log",
+    "services"
   ],
   "conventions": {
     "root": "Treat the current cleaned root layout as the baseline; new root entries should be intentionally classified.",

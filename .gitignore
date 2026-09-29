@@ -1,0 +1,13 @@
+# Private runtime and generated artifacts
+.env
+.env.*
+!.env.example
+.private/
+.logs/
+*.log
+node_modules/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.DS_Store
+dist/

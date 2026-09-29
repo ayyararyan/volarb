@@ -29,7 +29,7 @@ def package_skill(skill_path, output_dir=None):
 
     with zipfile.ZipFile(skill_filename, "w", zipfile.ZIP_DEFLATED) as zipf:
         for file_path in skill_path.rglob("*"):
-            if file_path.is_file():
+            if file_path.is_file() and not any(part in {"__pycache__", ".pytest_cache"} for part in file_path.parts) and file_path.suffix not in {".pyc", ".pyo"}:
                 arcname = file_path.relative_to(skill_path.parent)
                 zipf.write(file_path, arcname)
                 print(f"Added: {arcname}")

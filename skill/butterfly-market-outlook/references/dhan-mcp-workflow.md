@@ -63,6 +63,12 @@ For `CANDIDATE_INTRADAY`, the v2.5 controller requires a genuine fresh observati
 
 Do not repeatedly hammer the option-chain endpoint for HF sampling. The HF block is a futures/price feed problem; the option surface needs only start/end or decision-time snapshots.
 
+## 3C. Mandatory entry affordability
+
+Use `dhan_check_butterfly_margin(symbol, expiry, lower, center, upper, lots, reserveRupees?, reservePercent?)` for each exact finalist. It resolves contract IDs/lot sizes and checks account, executable quotes and all wings-first margin prefixes. Only fresh PASS is actionable for affordability; it is not strategy-risk approval or an execution guarantee. `dhan_calculate_basket_margin(legs)` exposes the raw indicative combined requirement but never approves affordability by itself. Both tools are read-only and include current positions/orders. Read `margin-affordability.md` for integration, conservative comparison semantics and recenter limitations.
+
+If only old tools exist, margin is UNVERIFIED. Do not substitute payoff maximum loss or sum standalone short-leg margins. Use verified Dhan basket UI evidence as a disclosed manual fallback, otherwise block entry.
+
 ## 4. Legacy v0.1 fallback
 
 If only the original Dhan tools exist:

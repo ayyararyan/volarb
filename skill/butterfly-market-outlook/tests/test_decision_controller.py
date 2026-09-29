@@ -82,7 +82,7 @@ def test_expiry_exit_precedes_recenter():
     assert out["terminal_gate"] == "EXPIRY_EXIT"
 
 
-def test_recenter_when_all_higher_gates_pass():
+def test_recenter_requires_verified_transition_not_entry_only_margin():
     out = decide({
         "mode": "OPEN_POSITION",
         "branch": "OPEN_INTRADAY",
@@ -90,7 +90,8 @@ def test_recenter_when_all_higher_gates_pass():
         "expiry_exit_gate": "PASS",
         "recenter_gate": "PASS",
     })
-    assert out["action"] == "RECENTRE"
+    assert out["action"] == "HOLD"
+    assert any("recenter blocked" in w for w in out["warnings"])
 
 
 def test_default_open_intraday_is_hold():
@@ -129,8 +130,12 @@ def test_candidate_survivors_return_candidates():
         "intraday_rv_confidence": "high",
         "hard_risk_gate": "PASS",
         "candidate_count": 3,
+        "candidate_ids": ["a", "b", "c"],
+        "candidate_margin_checks": {"a": fresh_margin()},
+        "candidate_specs": {"a": fresh_margin()["candidate"]},
     })
     assert out["action"] == "CANDIDATES"
+    assert out["margin_eligible_candidate_ids"] == ["a"]
 
 
 def test_required_news_filter_blocks_new_overnight_candidate():
@@ -205,3 +210,46 @@ def test_intraday_existing_marginal_warns_but_can_hold():
     })
     assert out["action"] == "HOLD"
     assert any("MARGINAL" in w for w in out["warnings"])
+
+
+def fresh_margin():
+    from datetime import datetime, timezone, timedelta
+    now = datetime.now(timezone.utc)
+    return {"candidate": {"symbol": "NIFTY", "expiry": "2026-10-06", "lower": 24000, "center": 25000, "upper": 26000, "lots": 1},
+            "status": "PASS", "scope": "ENTRY_ONLY", "blockers": [], "asof": now.isoformat(),
+            "validUntil": (now + timedelta(seconds=30)).isoformat(),
+            "availableFundsRupees": 100000, "peakRequiredRupees": 50000,
+            "reserveRupees": 1000, "headroomAfterReserveRupees": 49000}
+
+
+def test_missing_failed_stale_or_inconsistent_margin_cannot_approve():
+    base = {"mode": "CANDIDATE", "branch": "CANDIDATE_INTRADAY", "data_health": "HEALTHY",
+            "intraday_rv_state": "FAVOURABLE", "candidate_count": 1, "candidate_ids": ["a"],
+            "candidate_specs": {"a": fresh_margin()["candidate"]}}
+    for changes in ({"status": "FAIL"}, {"status": "UNVERIFIED"},
+                    {"asof": "2020-01-01T00:00:00Z"}, {"headroomAfterReserveRupees": 1},
+                    {"reserveRupees": -1}, {"peakRequiredRupees": float("nan")}, {"blockers": ["stale"]}):
+        out = decide({**base, "candidate_margin_checks": {"a": {**fresh_margin(), **changes}}})
+        assert out["action"] == "NO_TRADE"
+        assert out["terminal_gate"] == "MARGIN_AFFORDABILITY"
+    assert decide(base)["terminal_gate"] == "MARGIN_AFFORDABILITY"
+
+
+def test_margin_never_overrides_earlier_risk_gate_or_blocks_exit():
+    assert decide({"mode":"CANDIDATE", "branch":"CANDIDATE_INTRADAY", "data_health":"INVALID",
+                   "candidate_margin_checks":{"a":fresh_margin()}})["terminal_gate"] == "DATA_HEALTH"
+    assert decide({"mode":"OPEN_POSITION", "branch":"OPEN_INTRADAY", "expiry_exit_gate":"EXIT"})["action"] == "SQUARE_OFF"
+
+
+def test_recenter_accepts_only_transition_scoped_fresh_evidence():
+    base = {"mode": "OPEN_POSITION", "branch": "OPEN_INTRADAY", "recenter_gate": "PASS"}
+    assert decide({**base, "recenter_margin_check": fresh_margin()})["action"] == "HOLD"
+    assert decide({**base, "recenter_margin_check": {**fresh_margin(), "scope": "RECENTRE"}})["action"] == "RECENTRE"
+
+
+def test_margin_packet_must_match_exact_candidate_geometry_and_lots():
+    p = fresh_margin()
+    base = {"mode":"CANDIDATE", "branch":"CANDIDATE_INTRADAY", "data_health":"HEALTHY",
+            "intraday_rv_state":"FAVOURABLE", "candidate_count":1, "candidate_ids":["a"],
+            "candidate_margin_checks":{"a":p}, "candidate_specs":{"a":{**p["candidate"], "lots":2}}}
+    assert decide(base)["terminal_gate"] == "MARGIN_AFFORDABILITY"

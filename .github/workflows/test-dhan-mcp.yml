@@ -1,0 +1,24 @@
+name: Test Dhan MCP
+on:
+  push:
+    paths: ['services/dhan-chatgpt-mcp/**', '.github/workflows/test-dhan-mcp.yml']
+  pull_request:
+    paths: ['services/dhan-chatgpt-mcp/**', '.github/workflows/test-dhan-mcp.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/dhan-chatgpt-mcp
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: services/dhan-chatgpt-mcp/package-lock.json
+      - run: npm ci --ignore-scripts
+      - run: npm test

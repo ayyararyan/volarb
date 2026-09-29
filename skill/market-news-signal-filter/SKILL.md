@@ -1,3 +1,7 @@
+---
+name: market-news-signal-filter
+description: Filter financial news for Indian index butterfly decisions. Separates factual information, attention, uncertainty and transmission-channel hazards.
+---
 
 # Market News Signal Filter
 

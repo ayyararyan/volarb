@@ -1,33 +1,29 @@
 # volarb
 
-Research, decision logic, and trade journal for Indian index butterfly strategies.
+Research, decision logic, automation source and journals for NSE/BSE NIFTY, BANKNIFTY and SENSEX butterflies.
 
-The repository is the source of truth for **Butterfly Market Outlook v2.2**, used for NIFTY, BANKNIFTY, and SENSEX iron butterflies. The engine separates option-implied information from real-world path/event risk, classifies the market regime before overnight carry, and keeps the final trading decision deliberately small.
+## Current setup
+
+**Butterfly Market Outlook Engine v2.5**, with the live high-frequency realized-volatility/drift dependency, RND-mode bucket correction, and exact-candidate entry-margin verification.
+
+The personal covenant overrides generic engine carry branches: **intraday only, flat by 15:00 IST, no entry or recenter thereafter**. Dhandho researches; Aryan executes. Publishing source does not enable trading or monitoring.
 
 ## Layout
 
-- `skill/butterfly-market-outlook/` — production skill source, references, scripts, tests, and UI metadata.
-- `market-outlook/` — one append-only market-outlook journal per IST day.
-- `trade-log/` — executed-trade ledger, lifecycle records, post-trade episodes, and provenance snapshots.
-- `docs/WORKFLOW.md` — human-readable operating workflow.
-- `docs/DEVELOPMENT_HISTORY.md` — concise evolution of the engine.
-- `.github/` — skill validation, regression testing, and packaging workflow.
+- `skill/butterfly-market-outlook/` — controller, references, scripts and regressions.
+- `skill/intraday-realized-volatility-forecast/` — five-minute HF observation model and fixtures.
+- `skill/market-news-signal-filter/` — normalized event/news risk filter.
+- `services/dhan-chatgpt-mcp/` — office-Mac MCP, browser web-token recovery, margin preflight, optional separately gated execution code and synthetic tests.
+- `market-outlook/` — append-only daily research journals.
+- `trade-log/` — historical trade records; never fresh broker truth or a second live ledger.
+- `docs/WORKFLOW.md` — active personal operating workflow.
+- `docs/PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md` — governing covenant.
+- `.github/workflows/` — skill packaging, synthetic service checks and conservative housekeeping.
 
-## Operating rules
+## Boundaries
 
-1. **Data health before optimization.**
-2. **Market regime before overnight carry.** Low VIX alone is not evidence of a calm regime.
-3. **Risk-neutral is not real-world.** RND is pricing information, not a literal physical forecast.
-4. **Tail/event/gap risk outranks theta.**
-5. **Actual four-leg execution matters.**
-6. **Near expiry is a different problem.** Dynamic harvest, gamma, break-even buffer, and next-open risk dominate headline theta.
-7. **Intraday is the default in hostile regimes.** Overnight carry must explicitly pass regime, recent-gap, event-latency, broker/RMS, and full-reprice stress gates.
-8. **Learning is logged, not auto-fitted.** Threshold changes require review and regression testing.
+Fresh broker positions/orders and executable quotes precede recommendations. First terminal gate wins; attractive theta cannot override missing data or hard risk. Margin checks retain ₹1,000 free cash against peak entry-stage requirement; entry-only packets cannot approve an overlapping recenter. RND is a pricing measure, not a physical forecast.
 
-## Current engine
+Live financial accounting remains in the office-Mac VolArb `Trading/ledger/` shared-writer store. Credentials, PIN/mobile configuration, browser cookies, raw broker evidence and runtime logs stay local and are not published. Repository source updates do not automatically deploy to the service or refresh installed skills.
 
-**Butterfly Market Outlook v2.2 — regime-aware candidate engine**
-
-Regimes: `CALM_CARRY / TRANSITION / LATENT_JUMP_RISK / ACTIVE_STRESS / UNKNOWN`.
-
-The repository records research and trading process. It is not a promise of future performance.
+See [operating workflow](docs/WORKFLOW.md) and [service setup](services/dhan-chatgpt-mcp/README.md).

@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -20,6 +22,27 @@ SEVERE_NEW_OVERNIGHT_REGIMES = {"LATENT_JUMP_RISK", "ACTIVE_STRESS", "UNKNOWN"}
 def _status(data: Dict[str, Any], key: str, default: str = "PASS") -> str:
     value = data.get(key, default)
     return str(value).upper()
+
+
+def margin_pass(packet: Dict[str, Any], scope: str = "ENTRY_ONLY") -> bool:
+    """Accept a fresh, complete MCP entry preflight, never a bare status flag."""
+    try:
+        if packet.get("status") != "PASS" or packet.get("scope") != scope or packet.get("blockers") != []:
+            return False
+        now = datetime.now(timezone.utc)
+        asof = datetime.fromisoformat(packet["asof"].replace("Z", "+00:00"))
+        until = datetime.fromisoformat(packet["validUntil"].replace("Z", "+00:00"))
+        if not (0 <= (now - asof).total_seconds() <= 30 and now <= until
+                and 0 < (until - asof).total_seconds() <= 30):
+            return False
+        names = ("availableFundsRupees", "peakRequiredRupees", "reserveRupees", "headroomAfterReserveRupees")
+        values = [packet[n] for n in names]
+        if any(isinstance(v, bool) or not isinstance(v, (float, int)) or not math.isfinite(v) for v in values):
+            return False
+        available, peak, reserve, headroom = values
+        return peak > 0 and reserve >= 0 and headroom >= 0 and abs(available - peak - reserve - headroom) < 0.01
+    except (KeyError, TypeError, ValueError, AttributeError):
+        return False
 
 
 def decide(data: Dict[str, Any]) -> Dict[str, Any]:
@@ -122,7 +145,11 @@ def decide(data: Dict[str, Any]) -> Dict[str, Any]:
 
         recenter = _status(data, "recenter_gate", "NOT_APPLICABLE")
         if recenter == "PASS":
-            return _result("RECENTRE", "RECENTER", warnings)
+            # ENTRY_ONLY checks cannot authorize an overlapping close/reopen path.
+            # Reconcile closure first, then run a fresh candidate entry check.
+            if margin_pass(data.get("recenter_margin_check", {}), scope="RECENTRE"):
+                return _result("RECENTRE", "RECENTER", warnings)
+            warnings.append("recenter blocked: entry-only margin preflight does not verify close/reopen sequence; reassess exit independently")
 
         if branch == "OPEN_CARRY_GATE":
             return _result("CARRY", "DEFAULT", warnings)
@@ -131,7 +158,18 @@ def decide(data: Dict[str, Any]) -> Dict[str, Any]:
     candidate_count = int(data.get("candidate_count", 0) or 0)
     if candidate_count <= 0:
         return _result("NO_TRADE", "OPTIMIZER", warnings)
-    return _result("CANDIDATES", "OPTIMIZER", warnings)
+    checks = data.get("candidate_margin_checks", {})
+    candidate_ids = data.get("candidate_ids", [])
+    specs = data.get("candidate_specs", {})
+    eligible = [cid for cid in candidate_ids if isinstance(cid, str) and isinstance(checks, dict)
+                and isinstance(checks.get(cid), dict) and isinstance(specs, dict)
+                and isinstance(specs.get(cid), dict) and set(specs[cid]) == {"symbol", "expiry", "lower", "center", "upper", "lots"}
+                and specs[cid] == checks[cid].get("candidate") and margin_pass(checks[cid])]
+    if not eligible:
+        return _result("NO_TRADE", "MARGIN_AFFORDABILITY", warnings)
+    result = _result("CANDIDATES", "OPTIMIZER", warnings)
+    result["margin_eligible_candidate_ids"] = list(dict.fromkeys(eligible))
+    return result
 
 
 def _result(action: str, terminal_gate: str, warnings: List[str]) -> Dict[str, Any]:

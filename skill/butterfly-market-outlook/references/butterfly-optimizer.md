@@ -220,6 +220,10 @@ Keep components visible internally:
 
 Never relabel the combined score as a literal probability.
 
+## 13A. Broker affordability filter
+
+The optimizer script's numerical ranking is a **research shortlist**, not an executable recommendation. Before publishing finalists, apply `margin-affordability.md` through the controller to their actual contracts and exact lots. Eliminate FAIL/UNVERIFIED packets, rerank remaining eligible candidates and never assume margin scales linearly with lots or reuse a prior quote. Wider wings and theoretical max loss cannot substitute for Dhan margin. Do not silently reduce lots or narrow wings to force affordability.
+
 ## 14. Pareto optimization
 
 Remove dominated candidates before ranking.

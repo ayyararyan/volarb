@@ -158,7 +158,7 @@ Read `references/recentre-engine.md` and run `scripts/evaluate_recentre.py`.
 
 RECENTRE only if all existing recenter conditions pass. For intraday recentering, the new centre must also remain consistent with the HF RV/drift state; do not recenter into `UNFAVOURABLE`/insufficient short-gamma conditions.
 
-If pass -> **RECENTRE** and stop.
+If strategic recenter conditions pass, also require a fresh margin packet covering the **entire close/reopen transition**, not only the final new fly. Set `recenter_margin_check` with scope `RECENTRE` only from verified transition evidence. The current MCP preflight is ENTRY_ONLY and cannot produce this packet. Without transition verification, block RECENTRE, retain a warning and assess exit/hold independently; do not force HOLD against an earlier exit gate. After verified closure, evaluate any permitted re-entry as a new candidate.
 
 ## 10. Candidate optimization gate
 
@@ -175,7 +175,9 @@ For intraday candidates:
 
 If zero candidates survive -> **NO TRADE**.
 
-Otherwise return up to three ranked candidates and stop.
+Before returning executable candidates, read `references/margin-affordability.md` and run the Dhan preflight for each exact-sized finalist. Retain only fresh PASS packets; never reuse one fly's margin for another geometry or lot count. Bind packets to unique candidate IDs in `candidate_margin_checks`, supply `candidate_ids` in ranking order, and set `candidate_count` to the screened count. The controller returns only `margin_eligible_candidate_ids`. No fresh passes -> **NO TRADE**, terminal gate `MARGIN_AFFORDABILITY`.
+
+Otherwise return up to three margin-verified ranked candidates and stop. Missing reserve policy permits an indicative research result only, not an executable candidate.
 
 ## 11. Default action
 
@@ -232,11 +234,12 @@ if hard_event_tail_or_liquidity_override():
 if open_position and near_expiry and expiry_exit_gate_fails():
     return SQUARE_OFF
 
-if open_position and recenter_is_relevant() and recenter_gate_passes():
+if open_position and recenter_is_relevant() and recenter_gate_passes() and transition_margin_passes():
     return RECENTRE
 
 if not open_position:
     candidates = optimize_survivors(real_world_move_scale=rv.upper_forecast_sigma_move_points)
+    candidates = keep_fresh_margin_passes(candidates)
     return top_3(candidates) if candidates else NO_TRADE
 
 return CARRY if branch == OPEN_CARRY_GATE else HOLD
@@ -245,3 +248,5 @@ return CARRY if branch == OPEN_CARRY_GATE else HOLD
 ## Conflict rule
 
 If any other reference suggests a different order, **this file controls the order**.
+
+Exact candidate binding: supply `candidate_specs[id]` with exactly `symbol`, `expiry`, `lower`, `center`, `upper`, `lots`; it must equal the MCP packet's `candidate` object. A missing or mismatched binding is not eligible, even if the packet says PASS.

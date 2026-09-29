@@ -1,0 +1,28 @@
+{
+  "name": "dhan-chatgpt-mcp",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "description": "DhanHQ MCP research server with authenticated, hedge-aware iron-butterfly limit executor",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/server.mjs",
+    "dev": "node --watch src/server.mjs",
+    "test": "node --test test/*.test.mjs",
+    "auth:check": "node src/token-cli.mjs --check",
+    "auth:recover": "node src/token-cli.mjs --recover",
+    "auth:setup": "node src/login-setup.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/express": "latest",
+    "@modelcontextprotocol/node": "latest",
+    "@modelcontextprotocol/sdk": "1.31.0",
+    "@modelcontextprotocol/server": "latest",
+    "dotenv": "latest",
+    "express": "latest",
+    "playwright-core": "1.63.0",
+    "zod": "latest"
+  }
+}

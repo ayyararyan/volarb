@@ -41,7 +41,8 @@ Use the controller result as the final policy action. The language model may exp
 12. Treat intraday butterflies as the default operating mode; overnight carry must pass the regime, gap, broker, event-latency, and joint-stress gates.
 13. Delegate raw financial/news interpretation to the `market-news-signal-filter` skill and reuse one normalized news packet across all event-sensitive gates. Do not independently rescore the same articles inside this skill.
 14. For every fresh intraday candidate, require the `intraday-realized-volatility-forecast` child skill before theta/gamma ranking; attractive theta may never override a failed HF RV/drift gate.
-15. Persist every completed outlook, position review, and confirmed trade lifecycle event to `ayyararyan/volarb` when GitHub is writable.
+15. Before presenting any executable candidate, require a fresh Dhan basket/sequence affordability PASS for its exact contracts, lots and approved free-cash reserve. Maximum loss is not broker margin. Read `references/margin-affordability.md`; missing margin evidence blocks entry, never exits.
+16. Persist every completed outlook, position review, and confirmed trade lifecycle event to `ayyararyan/volarb` when GitHub is writable.
 
 ## Minimal acquisition workflow
 

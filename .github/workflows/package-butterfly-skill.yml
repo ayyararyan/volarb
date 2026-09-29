@@ -1,36 +1,36 @@
-name: Package Butterfly Skill
-
+name: Package Butterfly Skills
 on:
   push:
-    paths:
-      - 'skill/butterfly-market-outlook/**'
-      - '.github/skill-tools/**'
-      - '.github/workflows/package-butterfly-skill.yml'
+    paths: ['skill/**', '.github/skill-tools/**', '.github/workflows/package-butterfly-skill.yml']
+  pull_request:
+    paths: ['skill/**', '.github/skill-tools/**', '.github/workflows/package-butterfly-skill.yml']
   workflow_dispatch:
-
 permissions:
   contents: read
-
 jobs:
   package:
     runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install validator dependency
-        run: python -m pip install --disable-pip-version-check pyyaml
-      - name: Run overnight regression tests
-        run: python skill/butterfly-market-outlook/tests/test_v21_overnight.py
-      - name: Run regime regression tests
-        run: python skill/butterfly-market-outlook/tests/test_v22_regime.py
-      - name: Validate and package skill
-        run: python .github/skill-tools/package_skill.py skill/butterfly-market-outlook dist
-      - name: Upload skill.zip
-        uses: actions/upload-artifact@v4
+      - name: Install validation dependencies
+        run: python -m pip install --disable-pip-version-check pyyaml pytest
+      - name: Controller, overnight and regime regressions
+        run: python -m pytest -q skill/butterfly-market-outlook/tests
+      - name: RV fixture checks
+        run: python .github/skill-tools/check_rv_fixtures.py
+      - name: Validate and package all skills
+        run: |
+          for skill in butterfly-market-outlook intraday-realized-volatility-forecast market-news-signal-filter; do
+            python .github/skill-tools/package_skill.py "skill/$skill" "dist/$skill"
+          done
+      - uses: actions/upload-artifact@v4
         with:
-          name: butterfly-market-outlook-skill
-          path: dist/skill.zip
+          name: volarb-skills
+          path: dist/*/skill.zip
           if-no-files-found: error
           retention-days: 30
