@@ -11,3 +11,12 @@ __pycache__/
 .pytest_cache/
 .DS_Store
 dist/
+# Repository housekeeping
+Thumbs.db
+desktop.ini
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+*.swp
+*.swo
+*~
