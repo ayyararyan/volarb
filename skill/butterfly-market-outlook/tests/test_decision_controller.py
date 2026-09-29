@@ -125,6 +125,8 @@ def test_candidate_survivors_return_candidates():
         "mode": "CANDIDATE",
         "branch": "CANDIDATE_INTRADAY",
         "data_health": "HEALTHY",
+        "intraday_rv_state": "FAVOURABLE",
+        "intraday_rv_confidence": "high",
         "hard_risk_gate": "PASS",
         "candidate_count": 3,
     })
@@ -163,3 +165,43 @@ def test_stale_news_filter_is_warning_not_terminal_by_itself():
     })
     assert out["action"] == "CARRY"
     assert any("STALE_CALIBRATION" in w for w in out["warnings"])
+
+
+def test_intraday_candidate_requires_favourable_hf_rv():
+    out = decide({
+        "mode": "CANDIDATE",
+        "branch": "CANDIDATE_INTRADAY",
+        "data_health": "HEALTHY",
+        "intraday_rv_state": "MARGINAL",
+        "intraday_rv_confidence": "high",
+        "candidate_count": 3,
+    })
+    assert out["action"] == "NO_TRADE"
+    assert out["terminal_gate"] == "INTRADAY_RV_DRIFT"
+
+
+def test_intraday_existing_unfavourable_hf_rv_exits():
+    out = decide({
+        "mode": "OPEN_POSITION",
+        "branch": "OPEN_INTRADAY",
+        "intraday_rv_state": "UNFAVOURABLE",
+        "intraday_rv_confidence": "medium",
+        "hard_risk_gate": "PASS",
+        "expiry_exit_gate": "PASS",
+    })
+    assert out["action"] == "SQUARE_OFF"
+    assert out["terminal_gate"] == "INTRADAY_RV_DRIFT"
+
+
+def test_intraday_existing_marginal_warns_but_can_hold():
+    out = decide({
+        "mode": "OPEN_POSITION",
+        "branch": "OPEN_INTRADAY",
+        "intraday_rv_state": "MARGINAL",
+        "intraday_rv_confidence": "high",
+        "hard_risk_gate": "PASS",
+        "expiry_exit_gate": "PASS",
+        "recenter_gate": "FAIL",
+    })
+    assert out["action"] == "HOLD"
+    assert any("MARGINAL" in w for w in out["warnings"])

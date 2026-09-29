@@ -30,3 +30,13 @@ Use these sources as design rationale, not as live market data.
 The v2.4 regime layer is motivated by time variation in volatility and jump risk rather than a claim that one fixed regime model is structurally correct. Bollerslev and Todorov (2011) document large, time-varying rare-event compensation; Broadie, Chernov and Johannes (2009) emphasize jump-risk premia in market-neutral option returns; and Zhao et al. (2024) document pronounced clustering in overnight volatility across global equity markets. Cboe historical reviews likewise show long calm realized-volatility stretches favorable to short-premium strategies followed by abrupt regime breaks.
 
 Operational implication: classify realized/gap state and exogenous event hazard jointly with implied volatility. Low implied volatility with high external hazard is not a benign regime.
+
+## Intraday HF physical-RV gate (v2.5)
+
+The v2.5 intraday gate delegates short-horizon physical RV forecasting to `intraday-realized-volatility-forecast` before theta/gamma ranking. Its design is motivated by:
+
+- Chen, Mykland and Zhang (2014), *Estimating spot volatility with high-frequency financial data*: estimate the current spot-volatility state with explicit attention to microstructure noise rather than naively using every tick.
+- Corsi, Pirino and Reno (2010), *Threshold bipower variation and the impact of jumps on volatility forecasting*: separating continuous and jump variation reveals positive forecasting content of recent jumps for subsequent volatility.
+- Marked-Hawkes evidence on high-frequency price/variance jumps: jump activity can self-excite and cluster, motivating a conservative decaying jump-pressure reserve rather than treating jumps as independent noise.
+
+Operational implication: for a fresh intraday butterfly, require a dense local HF state estimate for the next 15-30 minute management horizon. Compare the resulting P-measure RV forecast with Q-measure IV only after the forecast is built, and reject the trade separately when the price/forward/RND centre is migrating.

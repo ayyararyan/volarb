@@ -1,15 +1,15 @@
-# Canonical Agent Decision Algorithm
+# Canonical Agent Decision Algorithm — v2.5
 
 This file is the **only control plane** for the butterfly workflow.
 
-Do not open all references at once. Start here, evaluate one gate at a time, and load only the reference required for the current gate. **The first terminal gate wins.** A later attractive metric, high theta, or prettier candidate must never override an earlier hard failure.
+Start here, evaluate one gate at a time, and load only the reference required for the current gate. **The first terminal gate wins.** A later attractive metric, high theta, or prettier candidate must never override an earlier hard failure.
 
 ## 0. Determine the branch
 
 Set exactly one branch:
 
 - `OPEN_INTRADAY`: live butterfly, before 14:45 IST, next intended review/exit is before market close.
-- `OPEN_CARRY_GATE`: live butterfly, 14:45 IST or later while the option market is actionable, or any earlier review explicitly considering an overnight hold.
+- `OPEN_CARRY_GATE`: live butterfly, 14:45 IST or later while actionable, or any earlier review explicitly considering overnight hold.
 - `LOCKED_OVERNIGHT`: live butterfly after the home option market has closed.
 - `CANDIDATE_INTRADAY`: no live butterfly; proposed trade will be closed the same session.
 - `CANDIDATE_OVERNIGHT`: no live butterfly; proposed trade crosses the home-market close.
@@ -27,8 +27,9 @@ Always establish:
 5. Actual four-leg liquidity for an existing or proposed iron fly.
 6. Intended holding horizon and next actionable exit.
 7. One normalized `market-news-signal-filter` packet for the current decision horizon whenever event/news state can affect the trade.
+8. For intraday candidate work, a fresh approximately five-minute HF price/futures block for the `intraday-realized-volatility-forecast` child skill.
 
-Read `references/news-signal-integration.md` before interpreting current news. Invoke the child skill once and reuse the packet; do not independently rescore raw articles in later gates. For any actionable overnight branch set `news_filter_required=true` in the regime snapshot.
+Read `references/news-signal-integration.md` before interpreting current news. Invoke the news child skill once and reuse the packet.
 
 Use `references/dhan-mcp-workflow.md` for Dhan acquisition and `references/exchange-surface-workflow.md` only when exchange validation/fallback is needed.
 
@@ -40,79 +41,90 @@ Run the surface diagnostics from `references/analysis-framework.md` and `scripts
 
 Classify `HEALTHY / DEGRADED / STALE / INVALID`.
 
-- Candidate branch: `INVALID` -> **NO TRADE**. `STALE` -> no executable candidate; at most a clearly labelled watchlist.
-- Existing position: do not manufacture surface probabilities from `INVALID/STALE` data. Continue only if actual position and executable leg data remain reliable enough for risk management; otherwise stop the analysis as data-limited.
+- Candidate branch: `INVALID` -> **NO TRADE**. `STALE` -> no executable candidate.
+- Existing position: continue only if actual position/executable leg data remain reliable enough for risk management.
 
-If this gate terminates, do not evaluate theta, regime, recentering, or optimization.
+If this gate terminates, do not evaluate HF RV, theta, regime, recentering, or optimization.
 
 ## 3. Post-close terminal gate
 
 If branch = `LOCKED_OVERNIGHT` -> **LOCKED_OVERNIGHT**.
 
-Do not issue a fresh CARRY/HOLD/RECENTRE/SQUARE OFF decision after the local market is already non-actionable. Build only the next-open contingency map.
+Do not issue a fresh executable decision after the local market is closed. Stop.
 
-Stop.
+## 4. Intraday HF realized-volatility / drift gate
 
-## 4. Overnight branch: normalize news, then classify regime
+Run this step for `CANDIDATE_INTRADAY`. Also run it for `OPEN_INTRADAY` on scheduled reviews when a fresh HF block is available, and especially after material path/surface change.
 
-Run this step only for `OPEN_CARRY_GATE` or `CANDIDATE_OVERNIGHT`. When building `controller_snapshot.json`, set `news_filter_required=true` and pass `news_filter_status` for any proposed overnight structure.
+Invoke `intraday-realized-volatility-forecast` for the exact next-review horizon, normally 15-30 minutes.
 
-First require the normalized child-skill news packet described in `references/news-signal-integration.md`. If it is `UNAVAILABLE` or `INVALID`, the regime must be `UNKNOWN` for a new overnight structure; never substitute ad hoc headline judgment. Existing positions continue conservatively with degraded/unknown event state.
+The child skill must:
 
-Then read `references/regime-engine.md`, build the regime snapshot including `news_filter`, and run:
+- observe a fresh approximately five-minute HF futures/price block;
+- estimate fast/slow local continuous variance;
+- separate recent jump pressure from continuous volatility;
+- diagnose directional/centre drift from price, futures, parity forward and RND median migration; treat a discrete RND-mode bucket shift as corroborative only, never as an independent hard drift trigger;
+- apply the same normalized near-horizon news/event packet;
+- compare jump-adjusted physical RV with same-horizon implied variance only after the physical forecast is built.
 
-```bash
-python scripts/classify_market_regime.py --input regime_snapshot.json --pretty
-```
+### New intraday candidate
+
+Require `short_gamma_state = FAVOURABLE` with actionable HF data.
+
+- `FAVOURABLE` -> continue.
+- `MARGINAL` -> **NO TRADE**.
+- `UNFAVOURABLE` -> **NO TRADE**.
+- `INSUFFICIENT_DATA` -> **NO TRADE**.
+
+Session OHLC or sparse snapshots alone may never pass this gate.
+
+### Existing intraday position
+
+- medium/high-confidence `UNFAVOURABLE` -> **SQUARE OFF**;
+- `MARGINAL` -> warning, continue to later risk/expiry/recenter gates and shorten next review;
+- `INSUFFICIENT_DATA` -> degraded evidence only; do not force an exit solely from missing HF data;
+- `FAVOURABLE` -> continue.
+
+When available, pass `upper_forecast_sigma_move_points` to candidate width/stress construction as the real-world next-review move scale.
+
+If this gate terminates, do not let high theta override it.
+
+## 5. Overnight branch: normalize news, then classify regime
+
+Run only for `OPEN_CARRY_GATE` or `CANDIDATE_OVERNIGHT`.
+
+Set `news_filter_required=true`. If the child news packet is `UNAVAILABLE` or `INVALID`, the regime must be `UNKNOWN` for a new overnight structure.
+
+Read `references/regime-engine.md` and run `scripts/classify_market_regime.py`.
 
 Use exactly one state:
 
 `CALM_CARRY / TRANSITION / LATENT_JUMP_RISK / ACTIVE_STRESS / UNKNOWN`
 
-For a **new entry, recenter, or rotation**:
+For a new entry/recenter/rotation:
 
-- `LATENT_JUMP_RISK` -> **NO TRADE** / do not recenter overnight.
-- `ACTIVE_STRESS` -> **NO TRADE** / do not recenter overnight.
-- `UNKNOWN` -> **NO TRADE** / do not recenter overnight.
-- `TRANSITION` -> continue, but use the tighter overnight thresholds.
+- `LATENT_JUMP_RISK`, `ACTIVE_STRESS`, or `UNKNOWN` -> **NO TRADE**;
+- `TRANSITION` -> continue with tighter thresholds;
 - `CALM_CARRY` -> continue.
 
-For an **existing position**, severe regimes do not automatically force an exit. They tighten the thresholds supplied to the overnight gate. Continue to Step 5.
+Existing positions continue conservatively to Step 6.
 
-## 5. Overnight branch: run the carry gates in fixed order
+## 6. Overnight branch: run carry gates in fixed order
 
-Read `references/overnight-carry-gate.md` and run `scripts/evaluate_overnight_carry.py` when inputs permit.
+Read `references/overnight-carry-gate.md` and run `scripts/evaluate_overnight_carry.py`.
 
 Evaluate in this exact order:
 
-1. **Recent-gap gate**
-   - New entry/recenter/rotation with <15 usable opens -> terminal **NO TRADE**.
-   - New entry/recenter/rotation with p90 absolute gap >= current-spot-to-nearest-break-even buffer -> terminal **NO TRADE**.
-   - New entry/recenter/rotation with expected gap-gamma drag >= same-state next-open harvest -> terminal **NO TRADE**.
-   - Existing position: a hard failure -> **SQUARE OFF** while the market is actionable; warnings alone continue.
+1. recent-gap gate;
+2. broker/RMS gate;
+3. event-latency gate;
+4. joint gap/IV stress gate.
 
-2. **Broker/RMS gate**
-   - New entry/recenter/rotation requires `PASS`; `UNKNOWN/WARN/FAIL` -> terminal **NO TRADE**.
-   - Existing position with an explicit unresolved auto-squareoff/RMS warning or `FAIL` -> **SQUARE OFF**.
-   - Existing `UNKNOWN` is degraded, not an automatic pass; continue only with that uncertainty explicit internally.
+Use the existing v2.4 terminal rules and regime-adjusted thresholds. If any gate terminates, stop. Do not proceed to theta or recenter optimization.
 
-3. **Event-latency gate**
-   - Derive latency severity from the normalized Market News Signal Filter packet; do not rescore raw articles here.
-   - High/critical event with no full next-open repricing -> terminal **NO TRADE** for new/recenter/rotation; **SQUARE OFF** for an existing actionable carry.
-   - High/critical event with `OCR_1_5 < 1.0` -> same terminal action.
-   - Medium event with `OCR_1_5 < 0.5` -> same terminal action.
+## 7. Hard event / tail / liquidity override
 
-4. **Joint gap/IV stress gate**
-   - Full-reprice +/-1.0, +/-1.5 and +/-2.0 ATM-straddle spot gaps with IV expansion.
-   - New/recenter/rotation with `OCR_1_5 < 0.5` -> terminal **NO TRADE**.
-   - Existing position with a failed overnight stress gate -> **SQUARE OFF**.
-   - Apply regime-adjusted OCR and break-even-buffer thresholds from `regime-engine.md`.
-
-If any gate terminates, stop. Do not proceed to theta or recenter optimization.
-
-## 6. Hard event / tail / liquidity override
-
-Evaluate the normalized Market News Signal Filter state, current path state, threatened break-even/wing, actual-leg execution quality, and surface instability. The news packet is evidence for this gate; raw headlines are not independently rescored.
+Evaluate normalized news state, current path state, threatened break-even/wing, actual-leg execution quality and surface instability.
 
 If a credible shock, materially threatened wing/break-even, or unusable execution makes the short-gamma state unacceptable:
 
@@ -121,101 +133,72 @@ If a credible shock, materially threatened wing/break-even, or unusable executio
 
 Stop.
 
-## 7. Expiry-exit gate for existing positions
+## 8. Expiry-exit gate for existing positions
 
-Run only when <=2 trading sessions remain, <=36 calendar hours remain, or it is expiry day.
+Run when <=2 trading sessions remain, <=36 calendar hours remain, or it is expiry day.
 
-Read `references/expiry-exit-algorithm.md` and run:
-
-```bash
-python scripts/evaluate_expiry_exit.py --input exit_snapshot.json --pretty
-```
+Read `references/expiry-exit-algorithm.md` and run `scripts/evaluate_expiry_exit.py`.
 
 Terminal rules include:
 
-- expiry day at/after 14:45 IST -> **SQUARE OFF** unless the user explicitly chose a settlement-hold policy;
-- `P* <= 0` -> **SQUARE OFF** unless a valid recenter policy clearly supersedes it;
+- expiry day at/after 14:45 IST -> **SQUARE OFF** unless explicit settlement-hold policy;
+- `P* <= 0` -> **SQUARE OFF** unless a valid recenter clearly supersedes it;
 - `DHS >= 85%` -> default **SQUARE OFF**;
-- `B/S < 0.5` while forward is moving toward the nearest break-even -> **SQUARE OFF**;
+- `B/S < 0.5` while forward moves toward the nearest break-even -> **SQUARE OFF**;
 - remaining harvest no longer compensates for gamma/path risk -> **SQUARE OFF**;
 - material IV/straddle expansion plus adverse centre/wing migration -> **SQUARE OFF**.
 
-If the expiry-exit engine says exit, stop.
+If exit is terminal, stop.
 
-## 8. Recenter gate for existing positions
+## 9. Recenter gate for existing positions
 
-Only evaluate RECENTRE if the current body/path alignment has materially changed and Steps 2-7 did not terminate.
+Only evaluate if body/path alignment materially changed and Steps 2-8 did not terminate.
 
-Read `references/recentre-engine.md` and run:
+Read `references/recentre-engine.md` and run `scripts/evaluate_recentre.py`.
 
-```bash
-python scripts/evaluate_recentre.py --input recenter_snapshot.json --pretty
-```
+RECENTRE only if all existing recenter conditions pass. For intraday recentering, the new centre must also remain consistent with the HF RV/drift state; do not recenter into `UNFAVOURABLE`/insufficient short-gamma conditions.
 
-RECENTRE only if all are true:
+If pass -> **RECENTRE** and stop.
 
-1. range-bound/choppy thesis survives;
-2. data and execution are adequate;
-3. new body materially improves alignment and/or tail/path risk;
-4. close+reopen friction is acceptable;
-5. enough time remains to re-harvest carry;
-6. event/path state is not worse;
-7. if the recenter crosses market close, the overnight gates for the **new** structure also pass.
-
-If the recenter gate passes -> **RECENTRE** and stop.
-
-Otherwise continue.
-
-## 9. Candidate optimization gate
+## 10. Candidate optimization gate
 
 Run only for candidate branches after all earlier hard gates pass.
 
-Read `references/butterfly-optimizer.md` and run:
+Read `references/butterfly-optimizer.md` and run `scripts/optimize_butterflies.py`.
 
-```bash
-python scripts/optimize_butterflies.py --input snapshot.json --pretty
-```
+For intraday candidates:
 
-Rules:
-
-- wide symmetric iron butterflies by default;
-- use actual four-leg execution quotes and live Greeks when available;
-- remove hard-gate failures before ranking;
-- remove Pareto-dominated candidates;
-- rank survivors on theta efficiency, low carry burden, low combined tail/path risk, and usable liquidity.
+- the HF RV gate has already passed;
+- use actual four-leg quotes/Greeks;
+- use `upper_forecast_sigma_move_points` as the real-world next-review move scale when available;
+- theta efficiency ranks only among candidates that survived the RV/drift/path gates.
 
 If zero candidates survive -> **NO TRADE**.
 
 Otherwise return up to three ranked candidates and stop.
 
-## 10. Default action if no earlier gate terminated
+## 11. Default action
 
 - `OPEN_INTRADAY` -> **HOLD**.
 - `OPEN_CARRY_GATE` -> **CARRY**.
-- Candidate branch -> ranked candidates from Step 9.
+- Candidate branch -> ranked candidates from Step 10.
 
-There is no discretionary final "overall judgment" after this step. The controller is the judgment policy.
+There is no discretionary final overall judgment.
 
-## 11. Review timing
+## 12. Review timing
 
-For HOLD/CARRY, choose the earliest meaningful next review from:
+For HOLD/CARRY choose the earliest meaningful next review from event timing, expiry gamma cadence, 14:45 carry gate/close and state-change urgency.
 
-1. next scheduled decision-relevant event;
-2. next price-discovery session;
-3. expiry-gamma cadence;
-4. 14:45 carry gate / market close;
-5. material state-change urgency.
+A `MARGINAL` intraday RV state should normally shorten review cadence to about 10-20 minutes when actionable.
 
-Use `references/output-template.md` for exact formatting.
+## 13. Persist, then answer
 
-## 12. Persist, then answer
+After the action is fixed:
 
-After the final action is fixed:
+1. persist the review/trade event using `references/repo-logging.md`, including the compact HF RV packet when it was used;
+2. emit the minimal user-facing table.
 
-1. persist the review/trade event using `references/repo-logging.md`;
-2. then emit the minimal one-table user-facing answer.
-
-Logging is a side effect and may never change the decision.
+Logging may never alter the decision.
 
 ---
 
@@ -232,17 +215,16 @@ if candidate and data_health in {INVALID, STALE}:
 if branch == LOCKED_OVERNIGHT:
     return LOCKED_OVERNIGHT
 
-if branch crosses market close:
-    require_news_filter_for_overnight(news)
-    regime = classify_regime(news_filter=news)
-
-    if proposed_structure_is_new_or_recentered and regime in {LATENT_JUMP_RISK, ACTIVE_STRESS, UNKNOWN}:
+if branch in {CANDIDATE_INTRADAY, OPEN_INTRADAY}:
+    rv = intraday_realized_volatility_forecast(hf_5m_block, news)
+    if candidate and rv.short_gamma_state != FAVOURABLE:
         return NO_TRADE
+    if open_position and rv.short_gamma_state == UNFAVOURABLE and rv.confidence in {medium, high}:
+        return SQUARE_OFF
 
-    for gate in [RECENT_GAP, BROKER_RMS, EVENT_LATENCY, JOINT_GAP_IV_STRESS]:
-        result = evaluate(gate)
-        if result is terminal:
-            return terminal_action_for(branch, result)
+if branch crosses market close:
+    regime = classify_regime(news)
+    run overnight gates in fixed order
 
 if hard_event_tail_or_liquidity_override():
     return SQUARE_OFF if open_position else NO_TRADE
@@ -254,7 +236,7 @@ if open_position and recenter_is_relevant() and recenter_gate_passes():
     return RECENTRE
 
 if not open_position:
-    candidates = optimize_survivors()
+    candidates = optimize_survivors(real_world_move_scale=rv.upper_forecast_sigma_move_points)
     return top_3(candidates) if candidates else NO_TRADE
 
 return CARRY if branch == OPEN_CARRY_GATE else HOLD
@@ -262,4 +244,4 @@ return CARRY if branch == OPEN_CARRY_GATE else HOLD
 
 ## Conflict rule
 
-If any other reference appears to suggest a different order, **this file controls the order**. Other references define calculations and thresholds; they do not override controller precedence.
+If any other reference suggests a different order, **this file controls the order**.

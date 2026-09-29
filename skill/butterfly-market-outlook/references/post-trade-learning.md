@@ -1,83 +1,83 @@
-# Post-Trade Learning and Calibration
+# Post-Trade Learning and Calibration — v2.5
 
-The live agent must remain deterministic and auditable. "Learning" means measuring past forecasts/rules and proposing reviewed changes; it does not mean silently modifying thresholds after a few trades.
+The live agent must remain deterministic and auditable. "Learning" means measuring forecast/rule performance and proposing reviewed changes; it does not mean silently modifying thresholds after a few trades.
 
-## Episode schema
+## Episode additions
 
-Store one record only after a trade is fully closed:
+For every fully closed trade, preserve the existing execution/P&L fields and add the following when available.
 
 ```json
 {
-  "trade_id": "local-non-sensitive-id",
-  "symbol": "NIFTY",
-  "entry_time_ist": "ISO-8601",
-  "exit_time_ist": "ISO-8601",
-  "expiry": "YYYY-MM-DD",
-  "lower": 0,
-  "center": 0,
-  "upper": 0,
-  "entry_credit": 0.0,
-  "entry_rnd_median": 0.0,
-  "entry_rnd_p_outside_wings": 0.0,
-  "path_expected_center": null,
-  "path_prob_inside_wings": null,
-  "actual_expiry_or_exit_spot": 0.0,
-  "actual_outside_wings": false,
-  "realized_pnl_points": 0.0,
-  "max_open_profit_points": null,
+  "entry_regime": null,
+  "entry_break_even_to_straddle": null,
+  "entry_forward_to_body_straddles": null,
+  "entry_rnd_median_to_body_straddles": null,
+  "intraday_rv_entry": {
+    "horizon_minutes": null,
+    "hf_quality": null,
+    "continuous_rv_forecast_ann": null,
+    "jump_adjusted_rv_forecast_ann": null,
+    "upper_rv_forecast_ann": null,
+    "implied_vol_anchor_ann": null,
+    "forecast_sigma_move_points": null,
+    "upper_forecast_sigma_move_points": null,
+    "fast_slow_variance_ratio": null,
+    "jump_state": null,
+    "jump_pressure_variance": null,
+    "drift_risk": null,
+    "directional_efficiency": null,
+    "center_migration_straddles": null,
+    "mode_migration_straddles": null,
+    "mode_bucket_warning": null,
+    "short_gamma_state": null,
+    "confidence": null
+  },
+  "max_observed_open_profit_points": null,
+  "max_observed_open_loss_points": null,
   "max_profit_giveback_points": null,
+  "max_spot_excursion_straddles": null,
+  "max_forward_excursion_straddles": null,
+  "max_rnd_center_migration_straddles": null,
+  "minimum_break_even_to_straddle": null,
+  "realized_variance_over_forecast_horizon": null,
+  "rv_forecast_error_variance": null,
   "recentered": false,
   "recenter_incremental_pnl_points": null,
-  "estimated_slippage_points": null,
-  "actual_slippage_points": null,
-  "dominant_exit_reason": "harvest|gamma|event|alignment|liquidity|broker|other",
-  "news_filter": {
-    "calibration_asof": null,
-    "calibration_status": null,
-    "aggregate_state": null,
-    "dominant_channels": [],
-    "max_gap_risk": null,
-    "max_butterfly_relevance": null,
-    "max_latency_severity": null
-  },
-  "overnight_carry": {
-    "next_actionable_exit_ist": null,
-    "untradeable_window_hours": null,
-    "broker_feasibility": null,
-    "broker_auto_squareoff_warning": null,
-    "max_latency_event_severity": null,
-    "same_state_open_pnl_points": null,
-    "worst_1_5_straddle_open_pnl_points": null,
-    "worst_2_0_straddle_open_pnl_points": null,
-    "ocr_1_5": null,
-    "actual_open_gap_in_prior_straddles": null
-  }
+  "dominant_exit_reason": "harvest|gamma|event|alignment|liquidity|broker|rv|drift|other"
 }
 ```
 
-## What to measure
+Use **maximum observed** profit/loss unless a continuous broker history proves the true extrema.
 
-- centre forecast absolute error;
-- child news-filter hazard bucket versus realized opening-gap percentile, without changing the original information-quality labels;
-- frequency and severity of tail misses;
-- Brier score only for **explicit real-world probabilities**;
-- RND wing-mass frequency as a pricing diagnostic, not a claim that it should calibrate one-for-one to physical outcomes;
+## Forecast validation
+
+For each HF RV forecast that has an exact horizon:
+
+1. freeze the forecast at timestamp `t`;
+2. after horizon `H` elapses, calculate realized variance only over `[t, t+H]`;
+3. record forecast central/upper variance and realized variance;
+4. record whether the realized path contained a detected jump and the realized centre migration;
+5. never use the subsequent realized outcome as an input to the original forecast.
+
+Measure over time:
+
+- central RV forecast bias/error;
+- upper-band exceedance frequency;
+- error conditional on `QUIET`, `RECENT_JUMP`, and `SELF_EXCITING` states;
+- error conditional on fast/slow variance ratio;
+- performance by index and DTE;
+- P&L by entry `short_gamma_state`, drift state and BE/straddle ratio;
+- profit give-back after maximum observed open P&L;
 - execution slippage versus estimate;
-- profit give-back after maximum open P&L;
-- recenter incremental P&L only when a defensible counterfactual is available;
-- performance by days-to-expiry and regime;
-- overnight next-open forecast error, gap in prior-close straddle units, event-latency misses, and broker/RMS warning frequency when the v2.4 overnight gate was active.
+- recenter incremental P&L only with defensible counterfactuals.
 
 ## Threshold changes
 
 Do not revise live gates from isolated outcomes. Require:
-- a meaningful sample across regimes;
-- evidence that a rule is systematically miscalibrated;
-- an explicit human-approved change;
-- regression tests against historical episodes before packaging a new skill version.
 
-Run:
+- a meaningful forecast/trade sample across regimes and indices;
+- evidence of systematic miscalibration;
+- explicit human approval;
+- regression tests before packaging a new skill version.
 
-```bash
-python scripts/summarize_trade_log.py --input episodes.jsonl --pretty
-```
+Do not conclude that one index is structurally superior from a tiny sample; let its live RV/IV/drift state determine eligibility.

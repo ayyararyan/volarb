@@ -69,6 +69,7 @@ Append one section in chronological order:
 | Data health | HEALTHY / DEGRADED / STALE / INVALID |
 | Key surface state | short skew/IV/RND description |
 | Key path/event state | short real-world risk description |
+| Intraday HF RV state | when used: horizon, HF quality, continuous/jump-adjusted/upper RV, IV anchor, jump state, drift state, short-gamma state |
 | News filter | calibration status/as-of, aggregate state, dominant channels, max gap risk/latency when material |
 | Position economics | bankable P&L, dynamic harvest, Greeks or other decision-critical metrics when available |
 | Why | the concrete reason behind the final decision |
@@ -83,6 +84,7 @@ Append one section in chronological order:
 - Record only details useful for later research/calibration.
 - Keep risk-neutral and real-world probabilities conceptually separate.
 - Record only compact Market News Signal Filter outputs; never dump the raw article corpus or headline list.
+- When the intraday HF RV gate is used, persist its compact packet and later append the realized variance over the exact forecast horizon when available; do not store raw tick data in GitHub.
 - When the overnight gate is active, record next-actionable-exit horizon, broker feasibility/warning status, child-filter latency severity, same-state open harvest, 1.5S/2.0S stress P&L and OCR_1_5 when available.
 ```
 
@@ -174,6 +176,8 @@ Recommended structure:
 
 ## Entry
 - timestamp
+- entry regime / BE-to-straddle / centre alignment when available
+- compact intraday HF RV packet when used
 - expiry
 - geometry
 - quantity

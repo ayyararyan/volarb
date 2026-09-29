@@ -1,5 +1,9 @@
+---
+name: butterfly-market-outlook
+description: Analyze, optimize, manage, and journal Indian index option butterflies using Dhan when available, full option surfaces, Greeks/OI/bid-ask, risk-neutral distributions, a five-minute high-frequency intraday realized-volatility/drift gate, deterministic regime/overnight/expiry/recenter diagnostics, and the calibrated Market News Signal Filter for current event risk. Use for checking an open NIFTY/BANKNIFTY/SENSEX butterfly, deciding HOLD/RECENTRE/SQUARE OFF or CARRY, searching for a wide butterfly, reviewing near-expiry or overnight risk, or recording butterfly market outlooks and trade/position history to the connected volarb GitHub repository.
+---
 
-# Butterfly Market Outlook — Engine v2.4 Controller
+# Butterfly Market Outlook — Engine v2.5 Controller
 
 Treat every request as an options risk-desk decision, not generic market commentary. Use Asia/Kolkata time.
 
@@ -36,7 +40,8 @@ Use the controller result as the final policy action. The language model may exp
 11. Never manufacture quotes, IV, Greeks, probabilities, events, fills, margins, or position data.
 12. Treat intraday butterflies as the default operating mode; overnight carry must pass the regime, gap, broker, event-latency, and joint-stress gates.
 13. Delegate raw financial/news interpretation to the `market-news-signal-filter` skill and reuse one normalized news packet across all event-sensitive gates. Do not independently rescore the same articles inside this skill.
-14. Persist every completed outlook, position review, and confirmed trade lifecycle event to `ayyararyan/volarb` when GitHub is writable.
+14. For every fresh intraday candidate, require the `intraday-realized-volatility-forecast` child skill before theta/gamma ranking; attractive theta may never override a failed HF RV/drift gate.
+15. Persist every completed outlook, position review, and confirmed trade lifecycle event to `ayyararyan/volarb` when GitHub is writable.
 
 ## Minimal acquisition workflow
 
@@ -50,7 +55,8 @@ Before running decision gates, establish only what is needed:
 - actual/proposed leg liquidity;
 - near-expiry activation state;
 - whether the proposed hold crosses market close;
-- one normalized Market News Signal Filter packet for the decision horizon whenever current event/news state can affect the trade.
+- one normalized Market News Signal Filter packet for the decision horizon whenever current event/news state can affect the trade;
+- for intraday candidate work, a fresh approximately five-minute HF price/futures block suitable for `intraday-realized-volatility-forecast`.
 
 For current news/event interpretation, read `references/news-signal-integration.md` and invoke the `market-news-signal-filter` skill once for the decision horizon. Raw articles belong to the child skill; the butterfly engine consumes only its normalized packet.
 
@@ -85,6 +91,18 @@ Classify `HEALTHY / DEGRADED / STALE / INVALID` and keep the RND explicitly unde
 ### News-signal gate
 
 For every fresh outlook whose decision can be affected by current events, read `references/news-signal-integration.md`. Invoke `market-news-signal-filter` once and normalize its output before regime/event/path analysis. For any actionable overnight decision, set `news_filter_required=true`; unavailable/invalid filtering must not be silently interpreted as benign.
+
+### Intraday HF RV / drift gate
+
+For `CANDIDATE_INTRADAY`, and for `OPEN_INTRADAY` reviews when the path state has materially changed, invoke `intraday-realized-volatility-forecast` before theta/gamma interpretation.
+
+The child skill must forecast the next management horizon (normally 15-30 minutes) from a fresh approximately five-minute high-frequency block, separate continuous RV from recent jump pressure, diagnose drift/centre migration, and only then compare physical RV with IV. Treat RND mode migration as corroborative/bucketed evidence; an isolated one-strike mode change may not independently fail the drift gate.
+
+- New intraday entry requires `short_gamma_state = FAVOURABLE`.
+- `MARGINAL`, `UNFAVOURABLE`, or `INSUFFICIENT_DATA` blocks a new entry.
+- For an existing intraday fly, a medium/high-confidence `UNFAVOURABLE` state is an exit-level signal; `MARGINAL` shortens the next review; insufficient HF data is degraded evidence, not an automatic exit.
+
+Pass the child's `upper_forecast_sigma_move_points` into candidate width/stress construction when available. Session OHLC alone may never create a favourable new-entry state.
 
 ### Market-regime gate
 
@@ -252,6 +270,7 @@ Before answering verify:
 
 - `references/decision-algorithm.md` controlled the sequence;
 - current raw news was delegated to `market-news-signal-filter` and one normalized packet was reused;
+- intraday candidate work used the HF RV/drift child skill before theta ranking;
 - branch and current IST session are correct;
 - Dhan position truth was checked when relevant;
 - one coherent chain snapshot was reused;

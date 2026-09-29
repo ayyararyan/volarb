@@ -1,4 +1,4 @@
-# Butterfly Engine v2.4 Controller Architecture
+# Butterfly Engine v2.5 Controller Architecture
 
 ## Module 0 - canonical decision controller
 
@@ -16,12 +16,13 @@ This is the control architecture behind every live butterfly review and candidat
 6. **Execution is part of strategy economics.** Use the actual iron-fly legs (lower put, body call+put, upper call) for bid/ask, OI, volume, slippage and live Greeks.
 7. **Near expiry, remaining harvest matters more than headline theta.** Apply the Dynamic Harvest Saturation / remaining-harvest-versus-gamma framework.
 8. **Overnight carry is a next-exit problem.** When the home market will be closed, model next-actionable-exit MTM under joint gap/IV/execution stress before theta optimization.
-9. **Regime comes before trade geometry.** Classify whether the market is genuinely calm, transitioning, carrying latent jump risk, or already in active stress before approving overnight short gamma.
-10. **Low implied volatility can be deceptive.** A compressed VIX/IV state with elevated event or tail-gap hazard is `LATENT_JUMP_RISK`, not calm.
-11. **Recent opening-gap risk is state-dependent.** Carry must also pass a rolling realized-gap gate using recent close-to-open gaps, current-spot-to-break-even buffer and gap-gamma burden.
-12. **Broker feasibility is part of the state.** A defined-risk payoff does not eliminate RMS/auto-squareoff risk; new expiry-eve overnight entries require validated broker feasibility.
-13. **News interpretation is a child-skill responsibility.** Current raw news is classified once by `market-news-signal-filter`; the parent reuses its normalized packet and never independently re-scores the same headlines.
-14. **Every closed trade can become a calibration episode.** Store forecasts and outcomes separately from the live decision logic; use them to measure whether rules add value before changing thresholds.
+9. **For intraday candidates, physical RV/drift comes before trade geometry.** Require a fresh approximately five-minute HF state forecast for the next 15-30 minutes before theta/gamma ranking.
+10. **Regime comes before overnight trade geometry.** Classify whether the market is genuinely calm, transitioning, carrying latent jump risk, or already in active stress before approving overnight short gamma.
+11. **Low implied volatility can be deceptive.** A compressed VIX/IV state with elevated event or tail-gap hazard is `LATENT_JUMP_RISK`, not calm.
+12. **Recent opening-gap risk is state-dependent.** Carry must also pass a rolling realized-gap gate using recent close-to-open gaps, current-spot-to-break-even buffer and gap-gamma burden.
+13. **Broker feasibility is part of the state.** A defined-risk payoff does not eliminate RMS/auto-squareoff risk; new expiry-eve overnight entries require validated broker feasibility.
+14. **News interpretation is a child-skill responsibility.** Current raw news is classified once by `market-news-signal-filter`; the parent reuses its normalized packet and never independently re-scores the same headlines.
+15. **Every closed trade can become a calibration episode.** Store forecasts and outcomes separately from the live decision logic; use them to measure whether rules add value before changing thresholds.
 
 ## Modules
 
@@ -112,6 +113,14 @@ Create at least:
 
 Use probabilities only when defensible. If judgmental scenario weights are used, label them internally as subjective and never mix them with RND probabilities as though they were the same measure.
 
+
+### 6A. Intraday HF realized-volatility / drift engine
+
+Before any fresh `CANDIDATE_INTRADAY` reaches theta ranking, invoke `intraday-realized-volatility-forecast` on a fresh approximately five-minute futures/price block for the exact next-review horizon. The child estimates fast/slow continuous variance, recent jump pressure, same-horizon physical RV versus IV, and centre drift.
+
+New intraday candidates require `FAVOURABLE`; `MARGINAL`, `UNFAVOURABLE`, or insufficient HF data terminate entry. Existing intraday positions treat medium/high-confidence `UNFAVOURABLE` as an exit-level signal and `MARGINAL` as a tighter-review state.
+
+The HF child packet is P-measure state. Keep it separate from the RND/Q-measure surface. Pass its upper forecast move into width/stress construction after the gate passes.
 
 ### 6A. Market-regime engine
 

@@ -1,4 +1,4 @@
-# Canonical MarketState
+# Canonical MarketState — v2.5
 
 Use one state object per decision pass. It is an internal contract between modules, not a user-facing artifact.
 
@@ -10,7 +10,7 @@ Use one state object per decision pass. It is an internal contract between modul
     "asof_ist": "ISO-8601",
     "mode": "open_position|candidate_search",
     "session": "preopen|open|postclose|overnight|weekend",
-    "holding_horizon_hours": 24.0,
+    "holding_horizon_hours": 0.5,
     "next_actionable_exit_ist": null,
     "untradeable_window_hours": null
   },
@@ -54,6 +54,31 @@ Use one state object per decision pass. It is an internal contract between modul
     "dominant_channels": [],
     "direction": "risk-on|risk-off|mixed|unknown"
   },
+  "intraday_rv": {
+    "status": "CURRENT|LOW_CONFIDENCE|INSUFFICIENT_HF_DATA|INVALID|null",
+    "hf_quality": "PASS|DEGRADED|FAIL|null",
+    "horizon_minutes": null,
+    "continuous_rv_forecast_ann": null,
+    "jump_adjusted_rv_forecast_ann": null,
+    "upper_rv_forecast_ann": null,
+    "implied_vol_anchor_ann": null,
+    "forecast_horizon_variance": null,
+    "upper_forecast_horizon_variance": null,
+    "implied_horizon_variance": null,
+    "forecast_sigma_move_points": null,
+    "upper_forecast_sigma_move_points": null,
+    "fast_slow_variance_ratio": null,
+    "jump_state": "QUIET|RECENT_JUMP|SELF_EXCITING|null",
+    "jump_pressure_variance": null,
+    "drift_risk": "LOW|MEDIUM|HIGH|UNKNOWN|null",
+    "directional_efficiency": null,
+    "center_migration_straddles": null,
+    "mode_migration_straddles": null,
+    "mode_bucket_warning": null,
+    "hf_regime_state": "QUIET_EDGE|VOL_EDGE_WITH_JUMP_RISK|DRIFTING|RV_TOO_HIGH|EVENT_RISK|INSUFFICIENT_HF_DATA|null",
+    "short_gamma_state": "FAVOURABLE|MARGINAL|UNFAVOURABLE|INSUFFICIENT_DATA|null",
+    "confidence": "low|medium|high|null"
+  },
   "market_regime": {
     "state": "CALM_CARRY|TRANSITION|LATENT_JUMP_RISK|ACTIVE_STRESS|UNKNOWN",
     "confidence": "low|medium|high",
@@ -62,36 +87,18 @@ Use one state object per decision pass. It is an internal contract between modul
     "event_hazard": null,
     "complacency_gap": null
   },
-  "event_clock": [
-    {
-      "time_ist": "ISO-8601 or null",
-      "kind": "scheduled|unscheduled",
-      "name": "event",
-      "severity": "low|medium|high|critical",
-      "channels": ["equity", "oil", "fx", "rates"],
-      "priced_by_surface": true,
-      "inside_untradeable_window": false
-    }
-  ],
+  "event_clock": [],
   "path": {
     "regime": "range_bound|choppy|directional_up|directional_down|event_jump|uncertain",
     "expected_center": null,
     "confidence": "low|medium|high",
-    "scenarios": [
-      {
-        "label": "base",
-        "spot": null,
-        "probability": null,
-        "iv_shift_vp": 0.0,
-        "source": "judgmental|model|market"
-      }
-    ]
+    "scenarios": []
   },
   "overnight_carry": {
     "active": false,
-    "market_regime_state": "CALM_CARRY|TRANSITION|LATENT_JUMP_RISK|ACTIVE_STRESS|UNKNOWN|null",
-    "operational_state": "ACTIONABLE|LOCKED_OVERNIGHT|null",
-    "broker_feasibility": "PASS|UNKNOWN|WARN|FAIL|null",
+    "market_regime_state": null,
+    "operational_state": null,
+    "broker_feasibility": null,
     "broker_auto_squareoff_warning": false,
     "same_state_open_pnl": null,
     "worst_1_0_straddle_open_pnl": null,
@@ -124,13 +131,13 @@ Use one state object per decision pass. It is an internal contract between modul
 
 ## Rules
 
-- Populate only fields supported by current evidence; use `null`, not guesses.
-- Populate `news_filter` from `market-news-signal-filter` once per decision horizon; never place raw article dumps in MarketState.
-- Keep RND fields and path scenario probabilities conceptually separate.
-- A previous state may come from an earlier review in the same conversation. If unavailable, initialize without inventing history.
-- Do not persist sensitive account identifiers in the state.
-- Use `scripts/compare_market_states.py` when both previous and current states are available.
-- A newly unpriced high/critical event combined with an `event_jump` regime must produce at least an elevated review state (normally <=30 minutes) unless the decision layer already chooses RECENTRE/SQUARE OFF/NO TRADE.
-- If the intended hold crosses market close, set `news_filter_required=true` in the regime snapshot. `UNAVAILABLE/INVALID` filtering cannot be interpreted as calm.
-- If the intended hold crosses market close with <=2 sessions to expiry, populate `overnight_carry` and the next-actionable-exit horizon before theta/carry interpretation.
-- A post-close open position has `operational_state=LOCKED_OVERNIGHT`; do not log a fresh executable carry decision while the home option market is closed.
+- Populate only evidence-supported fields; use `null`, not guesses.
+- Populate `news_filter` once from `market-news-signal-filter`.
+- For a fresh intraday candidate, populate `intraday_rv` from `intraday-realized-volatility-forecast` before candidate optimization.
+- Session OHLC or sparse snapshots may not be represented as `intraday_rv.short_gamma_state=FAVOURABLE`.
+- Keep RND, physical RV forecast and path scenario probabilities conceptually separate.
+- For an intraday candidate, `UNFAVOURABLE`, `MARGINAL`, or `INSUFFICIENT_DATA` terminates new entry before theta ranking.
+- For an existing intraday position, medium/high-confidence `UNFAVOURABLE` is exit-level; `MARGINAL` shortens review cadence.
+- A previous state may come from an earlier review; never invent missing history.
+- Do not persist sensitive account identifiers.
+- If intended hold crosses market close, populate the overnight fields and use the overnight control path instead.

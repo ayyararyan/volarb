@@ -1,0 +1,13 @@
+interface:
+  display_name: Intraday RV Forecaster
+  short_description: Forecast 15-30 minute physical RV from a fresh 5-minute HF state,
+    jumps, drift, and IV-RV edge.
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true

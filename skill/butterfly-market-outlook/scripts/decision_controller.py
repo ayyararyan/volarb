@@ -48,6 +48,18 @@ def decide(data: Dict[str, Any]) -> Dict[str, Any]:
     if branch == "LOCKED_OVERNIGHT":
         return _result("LOCKED_OVERNIGHT", "POST_CLOSE", warnings)
 
+    if branch in {"OPEN_INTRADAY", "CANDIDATE_INTRADAY"}:
+        rv_state = str(data.get("intraday_rv_state", "INSUFFICIENT_DATA")).upper()
+        rv_conf = str(data.get("intraday_rv_confidence", "low")).lower()
+        if mode == "CANDIDATE" and rv_state != "FAVOURABLE":
+            return _result("NO_TRADE", "INTRADAY_RV_DRIFT", warnings)
+        if mode == "OPEN_POSITION" and rv_state == "UNFAVOURABLE" and rv_conf in {"medium", "high"}:
+            return _result("SQUARE_OFF", "INTRADAY_RV_DRIFT", warnings)
+        if rv_state == "MARGINAL":
+            warnings.append("intraday_rv_state=MARGINAL; shorten next review")
+        elif rv_state in {"INSUFFICIENT_DATA", "UNKNOWN"}:
+            warnings.append("intraday_rv_state=INSUFFICIENT_DATA; do not interpret missing HF data as benign")
+
     crosses_close = branch in {"OPEN_CARRY_GATE", "CANDIDATE_OVERNIGHT"}
     if crosses_close:
         regime = str(data.get("market_regime", "UNKNOWN")).upper()

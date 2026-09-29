@@ -1,4 +1,4 @@
-# Wide Butterfly Optimizer — Engine v2.4 Candidate
+# Wide Butterfly Optimizer — Engine v2.5 Candidate
 
 Use this reference for **new butterfly search/optimization**. The optimizer is for wide symmetric **short iron butterflies** by default, evaluated through their payoff-equivalent long-fly debit where useful.
 
@@ -8,14 +8,15 @@ The user-facing output remains only `Rank | Butterfly | Why` or one `NO TRADE` r
 
 Candidate selection is a constrained multi-objective problem:
 
-1. maximize useful carry/theta over the intended holding horizon;
-2. minimize carry burden: equivalent debit/capital at risk plus realistic execution friction;
-3. minimize **combined tail risk** from:
+1. require a valid real-world short-horizon volatility/path state before considering carry;
+2. maximize useful carry/theta over the intended holding horizon;
+3. minimize carry burden: equivalent debit/capital at risk plus realistic execution friction;
+4. minimize **combined tail risk** from:
    - option-implied RND geometry/pricing risk; and
    - separate real-world event/path stress sourced from the normalized Market News Signal Filter packet;
-4. require robust liquidity in **all actual iron-fly legs**;
-5. align the body with parity forward, option-implied centre and real-world path centre unless the user explicitly wants a directional fly;
-6. when the holding interval crosses market close, pass the v2.4 next-open event/broker/stress gate before final ranking.
+5. require robust liquidity in **all actual iron-fly legs**;
+6. align the body with parity forward, option-implied centre and real-world path centre unless the user explicitly wants a directional fly;
+7. for intraday candidates, require the v2.5 HF RV/drift gate before ranking; when the holding interval crosses market close, pass the v2.4 next-open event/broker/stress gate before final ranking.
 
 Theoretical maximum loss is descriptive. It is not the tail-risk objective.
 
@@ -59,7 +60,9 @@ Use exchange futures as a cross-check, not a reason to average contradictory tim
 
 Default minimum half-width:
 
-`max(user minimum, 1.25 * ATM straddle, 1.5% * spot, 0.90 * expiry 1-sigma move, 1.25 * horizon expected move when supplied)`
+`max(user minimum, 1.25 * ATM straddle, 1.5% * spot, 0.90 * expiry 1-sigma move, 1.25 * real-world next-review move when supplied)`
+
+For intraday candidates, the preferred real-world move input is `upper_forecast_sigma_move_points` from `intraday-realized-volatility-forecast`. Do not substitute a historical average when a current HF forecast exists.
 
 Round up to the listed strike interval.
 
@@ -120,6 +123,8 @@ For each candidate calculate at least:
 
 ## 9. Carry/theta
 
+For `CANDIDATE_INTRADAY`, reach this section only after the HF RV/drift child skill returned `FAVOURABLE`. Theta is a ranking variable among survivors, never a reason to override a failed physical-RV or drift gate.
+
 Do not rank by the body option's theta.
 
 Prefer **same-state carry** over the user's intended carry interval:
@@ -139,6 +144,15 @@ Useful normalized metric:
 `theta efficiency = same-state carry / equivalent debit`.
 
 ## 10. Real-world path overlay
+
+For intraday work, build the real-world short-horizon move scale from the HF RV packet first. At minimum retain:
+
+- jump-adjusted central forecast move;
+- upper forecast sigma move;
+- drift state;
+- jump state.
+
+Use the upper forecast move as the conservative next-review stress scale for width selection and optional +/-1.0 and +/-1.5 forecast-move repricing. Keep this P-measure state separate from the RND.
 
 When the market-outlook layer supplies scenarios, pass them as `path_scenarios`:
 

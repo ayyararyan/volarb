@@ -49,6 +49,20 @@ After fallback:
 - never guess an ID; use only the resolver result;
 - if the fallback also fails, use BSE official data and mark Dhan surface availability degraded.
 
+
+## 3B. High-frequency intraday RV acquisition
+
+The ordinary Dhan option-surface and market-quote tools are snapshot interfaces. A single quote or session OHLC is **not** a five-minute HF block.
+
+For `CANDIDATE_INTRADAY`, the v2.5 controller requires a genuine fresh observation block for `intraday-realized-volatility-forecast`:
+
+- prefer a supported streaming/polling source for liquid index futures at roughly 1-2 second cadence;
+- the child skill will aggregate to roughly 5-second efficient-price observations;
+- if the available connector cannot provide enough observations across about five minutes, return the RV gate as insufficient and block a new entry rather than substituting whole-session OHLC;
+- continue to use Dhan for position truth and option-surface/IV/forward state.
+
+Do not repeatedly hammer the option-chain endpoint for HF sampling. The HF block is a futures/price feed problem; the option surface needs only start/end or decision-time snapshots.
+
 ## 4. Legacy v0.1 fallback
 
 If only the original Dhan tools exist:
