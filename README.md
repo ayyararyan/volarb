@@ -28,3 +28,14 @@ Fresh broker positions/orders and executable quotes precede recommendations. Fir
 Live financial accounting remains in the office-Mac VolArb `Trading/ledger/` shared-writer store. Credentials, PIN/mobile configuration, browser cookies, raw broker evidence and runtime logs stay local and are not published. Repository source updates do not automatically deploy to the service or refresh installed skills.
 
 See [operating workflow](docs/WORKFLOW.md) and [service setup](services/dhan-chatgpt-mcp/README.md).
+
+## Portable agent kit
+
+See [setup and diagnostics](docs/AGENT_KIT.md) and the [dependency inventory](docs/DEPENDENCY_INVENTORY.md).
+The kit packages source, all three skills, the Dhandho profile, canonical accounting
+writers and explicit read-only acquisition. Separate source/workspace/private-data
+paths replace machine-specific runtime paths. Hash-locked Python and locked Node
+dependencies install through `python3.12 tools/volarb.py setup`. Default SHADOW;
+no service start, broker calls, ledger creation, schedules or execution activation.
+`doctor` diagnoses gaps; `package` builds a source-only reusable archive.
+Existing office-Mac deployment is unchanged; private state restoration is separate.

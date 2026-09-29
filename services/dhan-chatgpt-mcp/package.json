@@ -5,7 +5,8 @@
   "type": "module",
   "description": "DhanHQ MCP research server with authenticated, hedge-aware iron-butterfly limit executor",
   "engines": {
-    "node": ">=20"
+    "node": ">=26.5.0 <27",
+    "npm": ">=11.17.0 <12"
   },
   "scripts": {
     "start": "node src/server.mjs",
@@ -16,13 +17,14 @@
     "auth:setup": "node src/login-setup.mjs"
   },
   "dependencies": {
-    "@modelcontextprotocol/express": "latest",
-    "@modelcontextprotocol/node": "latest",
+    "@modelcontextprotocol/express": "2.0.0",
+    "@modelcontextprotocol/node": "2.0.0",
     "@modelcontextprotocol/sdk": "1.31.0",
-    "@modelcontextprotocol/server": "latest",
-    "dotenv": "latest",
-    "express": "latest",
+    "@modelcontextprotocol/server": "2.0.0",
+    "dotenv": "18.0.1",
+    "express": "5.2.1",
     "playwright-core": "1.63.0",
-    "zod": "latest"
-  }
+    "zod": "4.6.5"
+  },
+  "packageManager": "npm@11.17.0"
 }

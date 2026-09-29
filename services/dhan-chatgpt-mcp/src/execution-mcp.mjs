@@ -1,3 +1,4 @@
+import { runtimePaths } from './runtime-paths.mjs';
 import * as z from 'zod/v4';
 import { timingSafeEqual } from 'node:crypto';
 import { readFileSync, statSync, mkdirSync, writeFileSync, rmdirSync, unlinkSync } from 'node:fs';
@@ -75,7 +76,7 @@ export function buildExecutionServer(executor, readiness, enabled) {
   return server;
 }
 export function createExecutor({ broker, master, env = process.env }) {
-  const dir = env.DHAN_EXECUTION_STATE_DIR || join(process.cwd(), '.private', 'execution');
+  const dir = env.DHAN_EXECUTION_STATE_DIR || runtimePaths(env).execution;
   const token = loadExecutionToken(env.MCP_EXECUTION_TOKEN_FILE);
   const enabled = env.DHAN_EXECUTION_ENABLED === 'true';
   if (enabled && !token) throw new Error('Cannot enable execution without authenticated endpoint');

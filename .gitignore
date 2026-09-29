@@ -20,3 +20,7 @@ desktop.ini
 *.swp
 *.swo
 *~
+
+# Portable kit environments and local installation state
+.venv/
+.volarb/

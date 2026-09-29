@@ -2,7 +2,9 @@
 set -Eeuo pipefail
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LOG_DIR="$PROJECT_DIR/.logs"
+RUNTIME_DIR="${DHAN_RUNTIME_DIR:-${VOLARB_DATA_DIR:-$HOME/.local/share/volarb}/dhan}"
+export DHAN_RUNTIME_DIR="$RUNTIME_DIR"
+LOG_DIR="$RUNTIME_DIR/.logs"
 
 LOCAL_HEALTH_URL="http://127.0.0.1:3000/healthz"
 NGROK_DOMAIN="${NGROK_DOMAIN:?Set NGROK_DOMAIN privately before starting the tunnel}"
@@ -59,14 +61,14 @@ if [ ! -f package.json ]; then
   exit 1
 fi
 
-if [ ! -f .env ]; then
-  log "Error: .env not found in $PROJECT_DIR"
+if [ ! -f "$RUNTIME_DIR/.env" ]; then
+  log "Error: .env not found in $RUNTIME_DIR"
   exit 1
 fi
 
 if [ ! -d node_modules ]; then
-  log "node_modules not found; running npm install..."
-  npm install
+  log "node_modules not found; running locked npm ci..."
+  npm ci --ignore-scripts --no-audit --no-fund
 fi
 
 log "Starting Dhan MCP..."
@@ -124,15 +126,15 @@ if [ -n "$STALE_PIDS" ]; then
   sleep 1
 fi
 
-if ! ngrok config check --config "$PROJECT_DIR/.private/ngrok.yml" >/dev/null 2>&1; then
+if ! ngrok config check --config "$RUNTIME_DIR/.private/ngrok.yml" >/dev/null 2>&1; then
   log "Error: ngrok configuration is invalid."
-  ngrok config check --config "$PROJECT_DIR/.private/ngrok.yml" || true
+  ngrok config check --config "$RUNTIME_DIR/.private/ngrok.yml" || true
   exit 1
 fi
 
 : > "$NGROK_LOG"
 log "Starting ngrok..."
-ngrok http 3000 --config "$PROJECT_DIR/.private/ngrok.yml" \
+ngrok http 3000 --config "$RUNTIME_DIR/.private/ngrok.yml" \
   --url "$PUBLIC_BASE_URL" \
   --log stdout \
   --log-level info \

@@ -1,0 +1,98 @@
+{
+  "format": "volarb.agent-kit.v1",
+  "version": "0.1.0",
+  "runtimes": {
+    "python": "3.12.13",
+    "node": "26.5.0",
+    "npm": "11.17.0",
+    "openclaw": "2026.9.5"
+  },
+  "platforms": [
+    "Darwin",
+    "Linux"
+  ],
+  "windows": "Use WSL2; native Windows is not supported (POSIX locks and file permissions).",
+  "skills": [
+    "butterfly-market-outlook",
+    "intraday-realized-volatility-forecast",
+    "market-news-signal-filter"
+  ],
+  "profiles": [
+    "dhandho"
+  ],
+  "modes": [
+    "shadow",
+    "read-only"
+  ],
+  "default_mode": "shadow",
+  "required_capabilities": [
+    "file read/write",
+    "shell",
+    "current news search",
+    "selected model provider"
+  ],
+  "optional_integrations": {
+    "openclaw": {
+      "version": "2026.9.5",
+      "registration": "explicit --register-agent; no channel bindings or scheduled jobs"
+    },
+    "browser": {
+      "platform": "Darwin",
+      "version_policy": "host Chrome; detect binary, human login may be required",
+      "enabled_by_default": false
+    },
+    "ngrok": {
+      "purpose": "optional remote MCP tunnel",
+      "required": false
+    },
+    "github_cli": {
+      "purpose": "sanitized journal publication",
+      "required_for_offline_setup": false
+    },
+    "clawlink-plugin": {
+      "observed_version": "0.3.6",
+      "required": false,
+      "purpose": "optional external-app connectors"
+    }
+  },
+  "secret_keys": [
+    "DHAN_CLIENT_ID",
+    "DHAN_ACCESS_TOKEN",
+    "DHAN_PIN_FILE"
+  ],
+  "private_state": [
+    "dhan/.env",
+    "dhan/.private",
+    "Trading/ledger",
+    "Trading/snapshots",
+    "agent memory and provider credentials"
+  ],
+  "defaults": {
+    "execution_enabled": false,
+    "browser_recovery_enabled": false,
+    "schedules_enabled": false,
+    "start_services": false
+  },
+  "package_roots": [
+    "agent-kit",
+    "tools",
+    "tests",
+    "skill",
+    "services",
+    ".github/skill-tools"
+  ],
+  "package_files": [
+    "README.md",
+    ".python-version",
+    ".node-version",
+    "requirements.in",
+    "requirements.lock",
+    "requirements-dev.in",
+    "requirements-dev.lock",
+    "docs/AGENT_KIT.md",
+    "docs/DEPENDENCY_INVENTORY.md",
+    "docs/PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md",
+    "docs/AUTONOMOUS_EXECUTION_POLICY_DRAFT.md",
+    "docs/WORKFLOW.md"
+  ]
+}

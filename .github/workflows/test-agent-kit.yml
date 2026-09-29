@@ -1,0 +1,39 @@
+name: Validate Portable Agent Kit
+on:
+  push:
+    paths: ['agent-kit/**', 'tools/**', 'tests/**', 'services/**', 'skill/**', 'requirements*', '.python-version', '.node-version', '.github/workflows/test-agent-kit.yml']
+  pull_request:
+    paths: ['agent-kit/**', 'tools/**', 'tests/**', 'services/**', 'skill/**', 'requirements*', '.python-version', '.node-version', '.github/workflows/test-agent-kit.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  kit:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.13'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26.5.0'
+      - run: npm install --global npm@11.17.0 --ignore-scripts
+      - name: Install twice into isolated directories
+        run: |
+          python3.12 tools/volarb.py setup --dev --data-dir "$RUNNER_TEMP/volarb-data" --workspace "$RUNNER_TEMP/volarb-workspace"
+          python3.12 tools/volarb.py setup --dev --data-dir "$RUNNER_TEMP/volarb-data" --workspace "$RUNNER_TEMP/volarb-workspace"
+      - name: Installer, preservation and private-package regressions
+        run: .venv/bin/python -B -m unittest discover -s tests -v
+      - name: Offline diagnostics (broker credentials intentionally absent)
+        run: python3.12 tools/volarb.py doctor --config "$RUNNER_TEMP/volarb-data/config.json"
+      - name: Package reusable source (not a private-state backup)
+        run: python3.12 tools/volarb.py package --output dist/volarb-agent-kit-0.1.0.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: volarb-agent-kit
+          path: dist/volarb-agent-kit-0.1.0.zip
+          if-no-files-found: error
+          retention-days: 30

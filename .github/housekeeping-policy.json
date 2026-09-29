@@ -9,7 +9,16 @@
     "market-outlook",
     "skill",
     "trade-log",
-    "services"
+    "services",
+    "agent-kit",
+    "tools",
+    "tests",
+    ".python-version",
+    ".node-version",
+    "requirements.in",
+    "requirements.lock",
+    "requirements-dev.in",
+    "requirements-dev.lock"
   ],
   "conventions": {
     "root": "Treat the current cleaned root layout as the baseline; new root entries should be intentionally classified.",

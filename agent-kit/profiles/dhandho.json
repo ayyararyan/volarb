@@ -1,0 +1,22 @@
+{
+  "name": "Dhandho",
+  "owner": "Aryan",
+  "timezone": "Asia/Kolkata",
+  "execution": "manual_owner_only",
+  "limits": {
+    "selected_butterflies": 1,
+    "lots_total": 1,
+    "daily_loss_budget_rupees": 1000,
+    "free_cash_reserve_rupees": 1000,
+    "intraday_only": true,
+    "flat_by": "15:00",
+    "entry_or_recenter_at_or_after_flat_by": false
+  },
+  "budget_note": "Daily loss budget is not a guaranteed realized-loss cap; cash reserve is separate.",
+  "risk_policy": "docs/PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md",
+  "accounting": "one canonical external data directory; same cycle through adjustments; no invented fills",
+  "output": "repository output-template.md Mode A/B/C for market decisions",
+  "news": "invoke market-news-signal-filter once per horizon",
+  "journals": "publish sanitized completed market reviews to ayyararyan/volarb main; no raw evidence or secrets",
+  "automation": "inactive; installation never activates trading or monitoring"
+}

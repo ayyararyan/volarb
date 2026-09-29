@@ -5,8 +5,7 @@ import { execFileSync, spawn } from 'node:child_process';
 import { chromium } from 'playwright-core';
 import { AuthError, privateRead, claims, needsRecovery, verifyProfile } from './web-token.mjs';
 
-const PIN_FILE = '/Users/maheit/Projects/VolArb/.env';
-const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+import { browserSettings } from './runtime-paths.mjs';
 const ORIGINS = new Set(['https://web.dhan.co', 'https://login.dhan.co']);
 function guard(page) {
   if (!ORIGINS.has(new URL(page.url()).origin)) throw new AuthError('UNEXPECTED_LOGIN_ORIGIN');
@@ -45,7 +44,9 @@ export async function login(page, root) {
     // Require an explicit PIN-labelled page; never fill an OTP/password form by guessing.
     if (/\bPIN\b/i.test(visibleText)) {
       if (pinSubmitted) { await page.waitForTimeout(500); continue; }
-      const pin = dotenv.parse(privateRead(PIN_FILE)).DHAN_PIN;
+      const { pinFile } = browserSettings();
+      if (!pinFile) throw new AuthError('DHAN_PIN_FILE_NOT_CONFIGURED');
+      const pin = dotenv.parse(privateRead(pinFile)).DHAN_PIN;
       if (!/^\d{6}$/.test(pin || '')) throw new AuthError('SAVED_PIN_MISSING_OR_INVALID');
       const single = page.locator('input[type="password"]:visible, input[type="tel"][maxlength="6"]:visible');
       const digits = page.locator('input[maxlength="1"]:visible, input[type="tel"]:visible, input[type="password"]:visible');
@@ -62,26 +63,27 @@ export async function login(page, root) {
   throw new AuthError('LOGIN_NOT_COMPLETED_IN_BROWSER');
 }
 export async function captureWebToken({ root, clientId, until, cleanupOnly = false, keepToken }) {
-  // Office-Mac loopback only. This dedicated profile is never synced or sent elsewhere.
+  const settings = browserSettings();
+  // macOS loopback only. This dedicated profile is never synced or sent elsewhere.
   const profile = path.join(root, '.private', 'dhan-browser');
   fs.mkdirSync(profile, { recursive: true, mode: 0o700 }); fs.chmodSync(profile, 0o700);
   let browser, context, owned = false, succeeded = false;
   try {
     try {
-      browser = await chromium.connectOverCDP('http://127.0.0.1:18802', { timeout: 1500 });
+      browser = await chromium.connectOverCDP(settings.endpoint, { timeout: 1500 });
       context = browser.contexts()[0];
       // Only attach if this is the explicitly owned dedicated office-Mac profile.
-      const pid = execFileSync('/usr/sbin/lsof', ['-tiTCP:18802', '-sTCP:LISTEN'], { encoding: 'utf8' }).trim();
+      const pid = execFileSync('/usr/sbin/lsof', [`-tiTCP:${settings.port}`, '-sTCP:LISTEN'], { encoding: 'utf8' }).trim();
       if (!/^\d+$/.test(pid)) throw new AuthError('BROWSER_PROFILE_MISMATCH');
       const command = execFileSync('/bin/ps', ['-p', pid, '-o', 'command='], { encoding: 'utf8' });
       if (!command.includes(`--user-data-dir=${profile}`)) throw new AuthError('BROWSER_PROFILE_MISMATCH');
     } catch (e) {
       if (browser) throw e;
-      const child = spawn(CHROME, [`--user-data-dir=${profile}`, '--remote-debugging-port=18802', '--remote-debugging-address=127.0.0.1', '--no-first-run', '--no-default-browser-check', 'https://web.dhan.co/'], { detached: true, stdio: 'ignore' });
+      const child = spawn(settings.chrome, [`--user-data-dir=${profile}`, `--remote-debugging-port=${settings.port}`, '--remote-debugging-address=127.0.0.1', '--no-first-run', '--no-default-browser-check', 'https://web.dhan.co/'], { detached: true, stdio: 'ignore' });
       child.unref(); owned = true;
       for (let i = 0; i < 20 && !browser; i++) {
         await new Promise(r => setTimeout(r, 250));
-        try { browser = await chromium.connectOverCDP('http://127.0.0.1:18802', { timeout: 500 }); } catch {}
+        try { browser = await chromium.connectOverCDP(settings.endpoint, { timeout: 500 }); } catch {}
       }
       if (!browser) throw new AuthError('OFFICE_BROWSER_START_FAILED');
       context = browser.contexts()[0];

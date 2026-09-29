@@ -1,0 +1,209 @@
+{
+  "format": "volarb.master-policy.v1",
+  "mode": "READ_ONLY_DECISION",
+  "timezone": "Asia/Kolkata",
+  "first_terminal_rule_wins": true,
+  "limits": {
+    "lots": 1,
+    "max_cycles": 1,
+    "daily_loss_rupees": 1000,
+    "reserve_rupees": 1000,
+    "entry_cutoff": "14:30",
+    "exit_start": "14:45",
+    "flat_deadline": "15:00"
+  },
+  "timing_status": "14:30 entry cutoff and 14:45 exit start are conservative implementation defaults; 15:00 deadline is adopted policy",
+  "capabilities": {
+    "place_orders": false,
+    "modify_orders": false,
+    "cancel_orders": false,
+    "schedule_jobs": false,
+    "write_financial_ledger": false
+  },
+  "token_policy": {
+    "source": "DHAN_WEB",
+    "application": "Dusty",
+    "reuse_valid": true,
+    "minimum_remaining_minutes": 120,
+    "recovery_attempts_per_pass": 1,
+    "recovery_cooldown_seconds": 300,
+    "network_error_is_token_expiry": false,
+    "secrets_in_output": false
+  },
+  "rules": [
+    {
+      "id": "AUTH",
+      "handler": "auth",
+      "on_terminal": "VERIFY_TOKEN | RECOVER_WEB_TOKEN | AUTH_HANDOFF"
+    },
+    {
+      "id": "ACCOUNT",
+      "handler": "account",
+      "on_terminal": "ACQUIRE_ACCOUNT | RECONCILE_ORDERS"
+    },
+    {
+      "id": "SESSION",
+      "handler": "session",
+      "on_terminal": "VERIFY_SESSION | LOCKED_OVERNIGHT | NO_TRADE"
+    },
+    {
+      "id": "EXIT_DEADLINE",
+      "handler": "deadline",
+      "on_terminal": "SQUARE_OFF"
+    },
+    {
+      "id": "OWNERSHIP",
+      "handler": "ownership",
+      "on_terminal": "RECONCILE_POSITION"
+    },
+    {
+      "id": "LOSS",
+      "handler": "loss",
+      "on_terminal": "SQUARE_OFF"
+    },
+    {
+      "id": "MANDATE",
+      "handler": "mandate",
+      "on_terminal": "ACTIVATE_DAY | STOP | WAIT_REVIEW | NO_TRADE"
+    },
+    {
+      "id": "RESEARCH",
+      "handler": "research",
+      "on_terminal": "HOLD | SQUARE_OFF | NO_TRADE | CANDIDATE_VALIDATED | NEED_EVIDENCE"
+    }
+  ],
+  "research_order": [
+    "DATA_HEALTH",
+    "HF_RV_DRIFT",
+    "HARD_EVENT_TAIL_LIQUIDITY",
+    "EXPIRY_EXIT",
+    "CANDIDATE_VALIDATION",
+    "EXACT_MARGIN"
+  ],
+  "effects": {
+    "RECOVER_WEB_TOKEN": {
+      "adapter": "existing Dhan Web recovery skill",
+      "dispatch": "agent_handoff",
+      "after": [
+        "verify profile identity",
+        "reacquire positions and orders",
+        "discard pre-recovery quotes"
+      ]
+    },
+    "HOLD": {
+      "adapter": "scheduler",
+      "dispatch": "disabled",
+      "next_review_required": true
+    },
+    "SQUARE_OFF": {
+      "adapter": "executor",
+      "dispatch": "disabled",
+      "handoff": "Aryan executes; reconcile actual fills and remaining orders"
+    },
+    "CANDIDATE_VALIDATED": {
+      "adapter": "executor",
+      "dispatch": "disabled",
+      "requirements": [
+        "explicit daily activation",
+        "effective execution permission",
+        "fresh revalidation",
+        "verified deadline jobs",
+        "broker readiness"
+      ]
+    },
+    "CLOSURE": {
+      "requirements": [
+        "verified zero position",
+        "no outstanding orders",
+        "deduplicated actual fills",
+        "shared-writer reconciliation",
+        "sanitized journal published",
+        "cancel only day-owned jobs"
+      ],
+      "dispatch": "local accounting adapter available explicitly; publisher and job cleanup remain unconnected"
+    },
+    "STOP": {
+      "dispatch": "none",
+      "required_followup": [
+        "workflow_accounting.py --commit-cycle with existing cycle and parent review",
+        "publish sanitized journal using existing authorized workflow",
+        "cancel only verified day-owned jobs if any"
+      ],
+      "not_automatic": true
+    }
+  },
+  "adapter_contracts": {
+    "auth": {
+      "input": "auth: status, asof, profile_verified, expires_at, attempts_this_pass, last_attempt_at",
+      "provider": "existing token-cli.mjs / Dhan Web recovery skill",
+      "dispatch": "not automatic"
+    },
+    "account": {
+      "input": "account_manifest",
+      "provider": "day_workflow.py --capture position (account plus held-leg quotes)",
+      "freshness_seconds": 30,
+      "unknown_is_flat": false
+    },
+    "hf": {
+      "input": "research.indices[SYMBOL].hf_manifest plus current/surface input",
+      "provider": "node services/dhan-chatgpt-mcp/src/workflow-data-cli.mjs --scope hf (with configured data directory)",
+      "duration_seconds": 300,
+      "sample_interval_seconds": 2,
+      "final_sample_max_age_seconds": 10,
+      "dispatch": "explicit bounded acquisition only"
+    },
+    "news": {
+      "input": "research.news",
+      "provider": "packaged market-news-signal-filter skill",
+      "invocations_per_horizon": 1,
+      "raw_news_interpretation": "agent skill, not a Python keyword classifier",
+      "required": [
+        "asof",
+        "valid_until",
+        "horizon_minutes",
+        "source_refs",
+        "normalized"
+      ],
+      "dispatch": "agent must invoke child skill and supply packet"
+    },
+    "candidates": {
+      "input": "research.indices[SYMBOL].candidates",
+      "provider": "current-only wide selection / optimizer plus exact leg resolver and Dhan margin preflight",
+      "required": [
+        "spec",
+        "lot_size",
+        "legs",
+        "limits",
+        "roundtrip_cost_bound_rupees",
+        "margin",
+        "wide_selection_verified",
+        "evidence_ref"
+      ],
+      "margin_arguments": {
+        "reserveRupees": 1000,
+        "entrySequence": "PAIRED_HEDGES"
+      },
+      "dispatch": "candidate acquisition and selection remain agent-supplied; validation runs in code"
+    },
+    "research_engine": {
+      "provider": "workflow_decision.compose -> adopted HF model + v2.5 controller",
+      "config_overrides": false
+    },
+    "ownership_accounting": {
+      "status": "connected_for_explicit_canonical_intraday_cycles",
+      "provider": "workflow_accounting.py",
+      "input": "cycle_id plus fresh account_manifest; cycle linkage and lot metadata must already exist in canonical tradelog.csv",
+      "ownership_inference": false,
+      "on_mismatch": "RECONCILE_POSITION",
+      "on_partial_exit": "RECONCILE_POSITION",
+      "pnl": "deduplicated full-cycle fills plus executable-side held-leg quotes, complete recorded costs and separately evidenced remaining exit-cost bound",
+      "unknown_costs": "never zero; blocks HOLD but does not override independently supported exits",
+      "commit": "explicit --commit-fills or --commit-cycle; evaluate() never writes",
+      "closure": "zero residual positions and no orders; same cycle, one summary row; no automatic re-entry"
+    },
+    "publication": {
+      "status": "not_connected",
+      "rule": "record each actual review through existing shared writer and publish sanitized journal before delivering research; logging failure never delays exit handoff"
+    }
+  }
+}

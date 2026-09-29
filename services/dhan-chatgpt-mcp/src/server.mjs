@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import './runtime-paths.mjs';
 import { ensureToken, invalidateTokenCache } from './web-token.mjs';
 import { installExecutionOAuth } from './execution-oauth.mjs';
 import { join } from 'node:path';
@@ -47,7 +47,12 @@ function createDhanClient() {
   return new DhanClient({
     clientId: process.env.DHAN_CLIENT_ID,
     accessToken: process.env.DHAN_ACCESS_TOKEN,
-    tokenProvider: async () => (await ensureToken({ allowBrowser: true })).token,
+    tokenProvider: async () => {
+      if (process.env.VOLARB_OBSERVE_ENABLED !== 'true') throw new Error('READ_ONLY_PROFILE_REQUIRED');
+      const receipt = await ensureToken({ allowBrowser: process.env.DHAN_BROWSER_RECOVERY_ENABLED === 'true' });
+      if (receipt.status !== 'VALID') throw new Error('WEB_TOKEN_REQUIRED');
+      return receipt.token;
+    },
     onAuthRejected: invalidateTokenCache
   });
 }

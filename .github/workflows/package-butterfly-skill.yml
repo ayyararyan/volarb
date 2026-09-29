@@ -1,9 +1,9 @@
 name: Package Butterfly Skills
 on:
   push:
-    paths: ['skill/**', '.github/skill-tools/**', '.github/workflows/package-butterfly-skill.yml']
+    paths: ['requirements*.lock', 'skill/**', '.github/skill-tools/**', '.github/workflows/package-butterfly-skill.yml']
   pull_request:
-    paths: ['skill/**', '.github/skill-tools/**', '.github/workflows/package-butterfly-skill.yml']
+    paths: ['requirements*.lock', 'skill/**', '.github/skill-tools/**', '.github/workflows/package-butterfly-skill.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -16,9 +16,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.12.13'
       - name: Install validation dependencies
-        run: python -m pip install --disable-pip-version-check pyyaml pytest
+        run: |
+          python -m pip install --disable-pip-version-check --require-hashes --only-binary=:all: -r requirements-dev.lock
       - name: Controller, overnight and regime regressions
         run: python -m pytest -q skill/butterfly-market-outlook/tests
       - name: RV fixture checks

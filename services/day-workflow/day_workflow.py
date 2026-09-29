@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Offline day-workflow runner. No network, broker orders, real jobs or live ledger writes.
+"""Shadow workflow plus explicit, separate read-only observation commands.
 
 The output is a durable SHADOW outbox for integration testing, not authorization.
 Normalized research comes from the adopted controller, never a replacement model.
+Only --capture performs network reads. Observed data never enters synthetic fills.
 """
 from __future__ import annotations
 import argparse
@@ -23,8 +24,8 @@ IST = ZoneInfo('Asia/Kolkata')
 INDICES = {'NIFTY', 'BANKNIFTY', 'SENSEX'}
 ROLES = ('putWing', 'putBody', 'callWing', 'callBody')
 SIGNS = dict(zip(ROLES, (1, -1, 1, -1)))
-# Publication copy resolves the controller within this checkout, not the host Drive.
-SOURCE = Path(__file__).resolve().parents[2] / 'skill/butterfly-market-outlook/scripts/decision_controller.py'
+from volarb_paths import SOURCE_ROOT
+SOURCE = SOURCE_ROOT / 'skill/butterfly-market-outlook/scripts/decision_controller.py'
 POLICY = {'mode': 'SHADOW', 'lots': 1, 'daily_loss_rupees': 1000,
           'reserve_rupees': 1000, 'max_cycles': 1,
           'entry_cutoff': '14:30', 'exit_start': '14:45', 'flat_deadline': '15:00',
@@ -415,9 +416,27 @@ def run(directory, packet):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('--state-dir', required=True)
-    ap.add_argument('--input', required=True)
+    ap.add_argument('--state-dir')
+    mode = ap.add_mutually_exclusive_group(required=True)
+    mode.add_argument('--input')
+    mode.add_argument('--decide', help='Run read-only master policy on a decision packet; no effects')
+    mode.add_argument('--observe', help='Verify a local read-only Dhan evidence manifest; no network')
+    mode.add_argument('--capture', choices=['account', 'market', 'position'], help='One-shot read-only Dhan acquisition; no orders')
     args = ap.parse_args()
+    if args.decide:
+        need(args.state_dir is None, 'Decision support cannot write shadow state')
+        from master_workflow import evaluate
+        from workflow_observation import decode
+        result = evaluate(decode(Path(args.decide).read_text()))
+        print(json.dumps(result, indent=2))
+        return 2 if result['action'] in {'NEED_EVIDENCE', 'AUTH_HANDOFF'} else 0
+    if args.capture or args.observe:
+        need(args.state_dir is None, 'Observed data cannot write synthetic workflow state')
+        from workflow_observation import capture, assess_manifest
+        receipt = capture(args.capture) if args.capture else assess_manifest(args.observe)
+        print(json.dumps(receipt, indent=2))
+        return 0 if receipt['status'] == 'READ_ONLY_INPUT_CONNECTED' else 2
+    need(args.state_dir is not None, '--state-dir is required for synthetic --input')
     result = run(args.state_dir, json.loads(Path(args.input).read_text()))
     print(json.dumps({'mode': 'SHADOW', 'phase': result['phase'], 'blocker': result.get('last_blocker'),
                       'state_dir': str(Path(args.state_dir).resolve()), 'orders_sent': False,

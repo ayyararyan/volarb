@@ -1,10 +1,10 @@
-# Day workflow — SHADOW ONLY
+# Day workflow — SHADOW simulation and explicit read-only adapters
 
 
 Implemented in `day_workflow.py`, with tests in `test_day_workflow.py`.
 This is an offline, evidence-packet-driven state machine, **not the completed live
-automation**. It has no network client, order dispatcher, Gateway scheduler client,
-or production-ledger writer. Its `SIMULATE_*`, `SCHEDULE_SIMULATION`,
+automation**. The SHADOW branch has no network client or effects dispatcher. Separately invoked
+read-only capture and canonical accounting adapters are now packaged alongside it. Its `SIMULATE_*`, `SCHEDULE_SIMULATION`,
 `JOURNAL_SIMULATION` and `ACCOUNTING_SIMULATION` outbox entries are inert test
 artifacts. They must never be reported as placed orders, installed reminders,
 published journals, actual trades or protective monitoring.
@@ -61,16 +61,29 @@ Input requires `mode: SHADOW`, mandate `day`, unique `event_id`, timezone-aware
 mode is rejected unconditionally. Never use actual broker receipts as synthetic
 fixtures. No `risk_limits.json` or alternate financial ledger is created.
 
-**Remaining work before any live capability:** real read-only account/contract/
-news/HF acquisition and packet binding; authenticated day-scoped executor bridge
-with independently enforced limits (not auto-confirming its current manual plan
-contract); verified OpenClaw job registration/delivery and missed-run recovery;
-broker-evidence-to-shared-writer accounting; sanitized GitHub journal publisher;
-adopted timing/price/cost policy; administrator-resolved instruction boundary and
-broker readiness. These adapters are not supplied by the shadow runner. Do not
-activate the executor just because its source tests pass. The MCP sequence patch
-is source-only until deliberately deployed/restarted and rediscovered.
+## Packaged read-only/accounting adapters
 
-## Source and publication boundary
+`master_workflow.py`, `workflow_decision.py` and `workflow_observation.py` compose
+verified account, HF, news and candidate evidence. `workflow_accounting.py` uses
+`trade_ledger.py`, `review_scorecard.py` and `simple_ledger.py` for explicit canonical
+fill/cycle commits; evaluating decisions alone never writes the financial ledger.
+`--capture account|market|position` is a separate read-only operation, disabled
+unless `VOLARB_OBSERVE_ENABLED=true`. No credentials are included.
 
-Copied from the office-Mac `Trading/code/day_workflow.py` and its unittest suite. The only source adaptation is repository-relative controller resolution so tests use the checked-out controller in Linux CI. No live deployment files, credentials, synthetic state output or financial ledger were copied. The [execution policy draft](../../docs/AUTONOMOUS_EXECUTION_POLICY_DRAFT.md) is inactive and grants no authority.
+`volarb_paths.py` binds source to the checkout and all private data to
+`VOLARB_DATA_DIR` (default `~/.local/share/volarb`). Do not substitute historical
+repository trade logs for the authoritative `Trading/ledger` store. Existing
+financial state must be restored separately; setup does not initialize it.
+
+Pure wide-selection/tail-stress helpers and shadow forecast/audit helpers are also
+packaged. They do not activate historical research or override the first-terminal
+controller. The [agent kit guide](../../docs/AGENT_KIT.md) explains setup and use.
+
+**Still not implemented/activated by this kit:** agent-driven end-to-end current
+news/candidate acquisition, automatic scheduler/delivery and deadline recovery,
+live order dispatch authorization, automated journal publication, encrypted
+state restoration and a real second-device migration rehearsal. The executor
+source remains disabled and the execution policy draft remains inactive.
+
+Source provenance is in `agent-kit/source-inventory.json`. Synthetic tests use
+temporary accounting stores; no live financial records or credentials were copied.

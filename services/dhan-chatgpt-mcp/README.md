@@ -1,3 +1,11 @@
+> **Portable kit update — 2026-09-29:** See [agent kit setup](../../docs/AGENT_KIT.md).
+> Runtime state now defaults to `$VOLARB_DATA_DIR/dhan` (default data root
+> `~/.local/share/volarb`), not this source directory. Set `DHAN_RUNTIME_DIR`
+> explicitly to reuse an existing private MCP state directory. Browser recovery
+> is opt-in/macOS-only, with `DHAN_PIN_FILE` supplied privately. Setup never starts
+> the service or activates execution. Machine paths and deployment verification
+> below are historical records, not portable installation instructions.
+
 # Dhan ChatGPT MCP v0.3
 
 MCP server with a read-only research endpoint connecting ChatGPT to DhanHQ API v2, with index-symbol resolution and option-surface analytics for NIFTY, BANKNIFTY and SENSEX.
@@ -23,7 +31,7 @@ The original `/mcp` endpoint remains read-only. A separate authenticated `/execu
 ## Install / upgrade
 
 ```bash
-npm install
+npm ci --ignore-scripts
 cp .env.example .env
 ```
 

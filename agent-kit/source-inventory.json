@@ -1,0 +1,605 @@
+{
+  "asof": "2026-09-29",
+  "scope": "source only; no private runtime copied",
+  "imported_components": [
+    {
+      "source_component": "local Trading/code/day_workflow.py",
+      "destination": "services/day-workflow/day_workflow.py",
+      "source_sha256": "b5ab8e92bbd596b55c0a74375da590ad04fdc78e606d72775b99fa44cdb03618"
+    },
+    {
+      "source_component": "local Trading/code/decision_table.py",
+      "destination": "services/day-workflow/decision_table.py",
+      "source_sha256": "4b1f930255bb123db1aad2c162073658adb9e6be2c4d308a572900f00994c7db"
+    },
+    {
+      "source_component": "local Trading/code/forecast_shadow.py",
+      "destination": "services/day-workflow/forecast_shadow.py",
+      "source_sha256": "99892fd7406571f5e2f2007b47ddf99779f609273cf3e1cfba531937282d5ad6"
+    },
+    {
+      "source_component": "local Trading/code/master_workflow.py",
+      "destination": "services/day-workflow/master_workflow.py",
+      "source_sha256": "a2799c28d1ceb017172c76be2ed6e59e1dd3d74bf03001ab8c293b49474f1177"
+    },
+    {
+      "source_component": "local Trading/code/review_scorecard.py",
+      "destination": "services/day-workflow/review_scorecard.py",
+      "source_sha256": "fd3ede4591785b2b472a0dae5d27b802f311cd2d9b5c5effb90680c9e92d376e"
+    },
+    {
+      "source_component": "local Trading/code/robust_tail_selection.py",
+      "destination": "services/day-workflow/robust_tail_selection.py",
+      "source_sha256": "8a6caa882e748bfc2019b09ba798bd6d1d3ddb382508c0fd3eadccb386d3e7a9"
+    },
+    {
+      "source_component": "local Trading/code/simple_ledger.py",
+      "destination": "services/day-workflow/simple_ledger.py",
+      "source_sha256": "2694ca9fa17c4f8db4f036f2aefcb06a774bf6d7a8fc51fa223ab7109fbddd0e"
+    },
+    {
+      "source_component": "local Trading/code/test_day_workflow.py",
+      "destination": "services/day-workflow/test_day_workflow.py",
+      "source_sha256": "2db35e11e118cd52894214ab8d44852ad1ba4afdaf9d73a94eb06b36bb61227b"
+    },
+    {
+      "source_component": "local Trading/code/test_master_workflow.py",
+      "destination": "services/day-workflow/test_master_workflow.py",
+      "source_sha256": "02bbcdd5df1e5a169619645ac75b77cd0b3d79ccaaf7cfc4a45c6422431c0552"
+    },
+    {
+      "source_component": "local Trading/code/test_review_json_storage.py",
+      "destination": "services/day-workflow/test_review_json_storage.py",
+      "source_sha256": "73e17a08ff61bb86836b8a69252c9f93a1ae5c2447fc97458df9776fdfad5a52"
+    },
+    {
+      "source_component": "local Trading/code/test_review_pipeline.py",
+      "destination": "services/day-workflow/test_review_pipeline.py",
+      "source_sha256": "450080a7ebfd78dff1ae37a8bca2b5acad6b7a2828a9f611adbd5df0803af7ed"
+    },
+    {
+      "source_component": "local Trading/code/test_robust_tail_selection.py",
+      "destination": "services/day-workflow/test_robust_tail_selection.py",
+      "source_sha256": "a36b60303104fb38dc90e1c20bf5a55551eb3102f6f04a2902d7c584aeadb160"
+    },
+    {
+      "source_component": "local Trading/code/test_simple_ledger.py",
+      "destination": "services/day-workflow/test_simple_ledger.py",
+      "source_sha256": "bee2614db534caa90cbffb1348c9349166e45ee0cc392c86beb0ee3db370f113"
+    },
+    {
+      "source_component": "local Trading/code/test_trade_ledger.py",
+      "destination": "services/day-workflow/test_trade_ledger.py",
+      "source_sha256": "0e000384541285be04f50e9d020ceecbbe6d1553f862d271c8f4654d5bd79f90"
+    },
+    {
+      "source_component": "local Trading/code/test_wide_butterfly_selector.py",
+      "destination": "services/day-workflow/test_wide_butterfly_selector.py",
+      "source_sha256": "ce5eacd68d923a799d8afa051400b933333d2bb7a47d23331ac194bc4c978c97"
+    },
+    {
+      "source_component": "local Trading/code/test_workflow_accounting.py",
+      "destination": "services/day-workflow/test_workflow_accounting.py",
+      "source_sha256": "297bf073e11510817b8559e0cbc4b10ccacfd6a3672b70ad209ebb78b113d6ce"
+    },
+    {
+      "source_component": "local Trading/code/test_workflow_observation.py",
+      "destination": "services/day-workflow/test_workflow_observation.py",
+      "source_sha256": "bedc6333dad693471ae418a064aac65d5d2545ec7d81738c5eeed5b3733ca676"
+    },
+    {
+      "source_component": "local Trading/code/trade_ledger.py",
+      "destination": "services/day-workflow/trade_ledger.py",
+      "source_sha256": "ede84746c787c9466f261369ba212790240905e165133754e71546cfca683634"
+    },
+    {
+      "source_component": "local Trading/code/wide_butterfly_selector.py",
+      "destination": "services/day-workflow/wide_butterfly_selector.py",
+      "source_sha256": "236744b0ce02b7b17e3a1476af3f0210da940ff6ae5c9bdab73c54650ad41bdd"
+    },
+    {
+      "source_component": "local Trading/code/workflow_accounting.py",
+      "destination": "services/day-workflow/workflow_accounting.py",
+      "source_sha256": "3b4c027a748120ff2c60569cfd2175c31c31f1c0438d06684c59af7f5d8522a9"
+    },
+    {
+      "source_component": "local Trading/code/workflow_decision.py",
+      "destination": "services/day-workflow/workflow_decision.py",
+      "source_sha256": "3075b3102c9a85e3940a2461b001e984258029d147ed97b1b5504c4feded7a87"
+    },
+    {
+      "source_component": "local Trading/code/workflow_observation.py",
+      "destination": "services/day-workflow/workflow_observation.py",
+      "source_sha256": "3b75da3919c3ec61b1583720096cc1e48a08178d8e4dab5c238fcff65553bc0d"
+    },
+    {
+      "source_component": "local Dhan MCP/src/workflow-data-cli.mjs",
+      "destination": "services/dhan-chatgpt-mcp/src/workflow-data-cli.mjs",
+      "source_sha256": "68b391582ae209d1bee81f5798b4951b0ccd1ff7b523c3f96ec38586962755df"
+    },
+    {
+      "source_component": "local Dhan MCP/src/workflow-data.mjs",
+      "destination": "services/dhan-chatgpt-mcp/src/workflow-data.mjs",
+      "source_sha256": "3ba5ae2d8d278dbba1acbd7e329a687bdefd6c81c3eff3e8b97f25fbbb501702"
+    },
+    {
+      "source_component": "local Dhan MCP/src/workflow-hf.mjs",
+      "destination": "services/dhan-chatgpt-mcp/src/workflow-hf.mjs",
+      "source_sha256": "a7521fa92a09219f62fa2096d8a3a743082bcd2abd13c697384ca874affdf1be"
+    }
+  ],
+  "excluded": [
+    "legacy SSH login and outcome adapters; require separate replacement/retirement",
+    "dated historical runner scripts and snapshots",
+    "all credentials, browser state, ledgers and private evidence",
+    "machine-global plugins unrelated to trading",
+    "live scheduler payloads and provider credentials"
+  ],
+  "python_source_inventory": [
+    {
+      "file": "compare_banknifty_wings.py",
+      "imports": [
+        "csv",
+        "datetime",
+        "json",
+        "math",
+        "pathlib",
+        "zoneinfo"
+      ],
+      "disposition": "excluded_legacy_host_adapter_or_dated_runner"
+    },
+    {
+      "file": "day_workflow.py",
+      "imports": [
+        "__future__",
+        "argparse",
+        "copy",
+        "datetime",
+        "fcntl",
+        "hashlib",
+        "importlib",
+        "json",
+        "master_workflow",
+        "math",
+        "os",
+        "pathlib",
+        "sys",
+        "tempfile",
+        "workflow_observation",
+        "zoneinfo"
+      ],
+      "disposition": "packaged"
+    },
+    {
+      "file": "decision_table.py",
+      "imports": [
+        "json",
+        "review_scorecard",
+        "sys"
+      ],
+      "disposition": "packaged"
+    },
+    {
+      "file": "dhan_login.py",
+      "imports": [
+        "argparse",
+        "json",
+        "pathlib",
+        "shlex",
+        "subprocess"
+      ],
+      "disposition": "excluded_legacy_host_adapter_or_dated_runner"
+    },
+    {
+      "file": "dhan_login_remote.py",
+      "imports": [
+        "credentials_store",
+        "dhan_token",
+        "json",
+        "pathlib",
+        "sys"
+      ],
+      "disposition": "excluded_legacy_host_adapter_or_dated_runner"
+    },
+    {
+      "file": "forecast_shadow.py",
+      "imports": [
+        "decision_table",
+        "json",
+        "math",
+        "review_scorecard",
+        "statistics",
+        "sys"
+      ],
+      "disposition": "packaged"
+    },
+    {
+      "file": "master_workflow.py",
+      "imports": [
+        "argparse",
+        "datetime",
+        "day_workflow",
+        "json",
+        "pathlib",
+        "trade_ledger",
+        "workflow_accounting",
+        "workflow_decision",
+        "workflow_observation"
+      ],
+      "disposition": "packaged"
+    },
+    {
+      "file": "outcome_collector.py",
+      "imports": [
+        "datetime",
+        "fcntl",
+        "forecast_shadow",
+        "hashlib",
+        "json",
+        "math",
+        "pathlib",
+        "review",
+        "review_scorecard",
+        "subprocess",
+        "sys",
+        "time",
+        "zoneinfo"
+      ],
+      "disposition": "excluded_legacy_host_adapter_or_dated_runner"
+    },
+    {
+      "file": "review.py",
+      "imports": [
+        "argparse",
+        "copy",
+        "datetime",
+        "decision_table",
+        "dhan_login",
+        "forecast_shadow",
+        "hashlib",
+        "json",
+        "os",
+        "outcome_collector",
+        "pathlib",
+        "review_scorecard",
+        "subprocess",
+        "sys",
+        "tempfile",
+        "zoneinfo"
+      ],
+      "disposition": "excluded_legacy_host_adapter_or_dated_runner"
+    },
+    {
+      "file": "review_scorecard.py",
+      "imports": [
+        "argparse",
+        "datetime",
+        "fcntl",
+        "json",
+        "math",
+        "os",
+        "pathlib",
+        "simple_ledger",
+        "statistics",
+        "sys",
+        "tempfile",
+        "zoneinfo"
+      ],
+      "disposition": "packaged"
+    },
+    {
+      "file": "robust_tail_selection.py",
+      "imports": [
+        "argparse",
+        "csv",
+        "datetime",
+        "json",
+        "math",
+        "numpy",
+        "pathlib",
+        "statistics"
+      ],
+      "disposition": "packaged"
+    },
+    {
+      "file": "run_banknifty_current_selection.py",
+      "imports": [
+        "argparse",
+        "copy",
+        "datetime",
+        "hashlib",
+        "json",
+        "math",
+        "pathlib",
+        "statistics",
+        "wide_butterfly_selector"
+      ],
+      "disposition": "excluded_legacy_host_adapter_or_dated_runner"
+    },
+    {
+      "file": "run_weekend_review_20260919.py",
+      "imports": [
+        "datetime",
+        "decision_table",
+        "forecast_shadow",
+        "json",
+        "math",
+        "pathlib",
+        "review_scorecard",
+        "zoneinfo"
+      ],
+      "disposition": "excluded_legacy_host_adapter_or_dated_runner"
+    },
+    {
+      "file": "simple_ledger.py",
+      "imports": [
+        "argparse",
+        "csv",
+        "datetime",
+        "decimal",
+        "fcntl",
+        "io",
+        "json",
+        "os",
+        "pathlib",
+        "review_scorecard",
+        "tempfile",
+        "trade_ledger",
+        "zoneinfo"
+      ],
+      "disposition": "packaged"
+    },
+    {
+      "file": "test_day_workflow.py",
+      "imports": [
+        "copy",
+        "datetime",
+        "day_workflow",
+        "fcntl",
+        "json",
+        "pathlib",
+        "tempfile",
+        "unittest"
+      ],
+      "disposition": "packaged"
+    },
+    {
+      "file": "test_dhan_login.py",
+      "imports": [
+        "dhan_login",
+        "dhan_login_remote",
+        "json",
+        "pathlib",
+        "review",
+        "types",
+        "unittest"
+      ],
+      "disposition": "excluded_legacy_host_adapter_or_dated_runner"
+    },
+    {
+      "file": "test_master_workflow.py",
+      "imports": [
+        "copy",
+        "datetime",
+        "day_workflow",
+        "json",
+        "master_workflow",
+        "pathlib",
+        "tempfile",
+        "test_day_workflow",
+        "test_workflow_observation",
+        "unittest",
+        "workflow_decision"
+      ],
+      "disposition": "packaged"
+    },
+    {
+      "file": "test_review_entrypoint.py",
+      "imports": [
+        "copy",
+        "datetime",
+        "json",
+        "outcome_collector",
+        "review",
+        "review_scorecard",
+        "test_review_pipeline",
+        "unittest"
+      ],
+      "disposition": "excluded_legacy_host_adapter_or_dated_runner"
+    },
+    {
+      "file": "test_review_json_storage.py",
+      "imports": [
+        "copy",
+        "io",
+        "json",
+        "review_scorecard",
+        "unittest"
+      ],
+      "disposition": "packaged"
+    },
+    {
+      "file": "test_review_pipeline.py",
+      "imports": [
+        "copy",
+        "decision_table",
+        "forecast_shadow",
+        "json",
+        "math",
+        "review_scorecard",
+        "unittest"
+      ],
+      "disposition": "packaged"
+    },
+    {
+      "file": "test_robust_tail_selection.py",
+      "imports": [
+        "math",
+        "numpy",
+        "robust_tail_selection",
+        "unittest"
+      ],
+      "disposition": "packaged"
+    },
+    {
+      "file": "test_simple_ledger.py",
+      "imports": [
+        "copy",
+        "json",
+        "pathlib",
+        "review_scorecard",
+        "simple_ledger",
+        "unittest"
+      ],
+      "disposition": "packaged"
+    },
+    {
+      "file": "test_trade_ledger.py",
+      "imports": [
+        "hashlib",
+        "json",
+        "pathlib",
+        "subprocess",
+        "sys",
+        "tempfile",
+        "trade_ledger",
+        "unittest"
+      ],
+      "disposition": "packaged"
+    },
+    {
+      "file": "test_wide_butterfly_selector.py",
+      "imports": [
+        "copy",
+        "random",
+        "unittest",
+        "wide_butterfly_selector"
+      ],
+      "disposition": "packaged"
+    },
+    {
+      "file": "test_workflow_accounting.py",
+      "imports": [
+        "copy",
+        "csv",
+        "datetime",
+        "day_workflow",
+        "json",
+        "master_workflow",
+        "pathlib",
+        "review_scorecard",
+        "simple_ledger",
+        "tempfile",
+        "test_master_workflow",
+        "test_workflow_observation",
+        "trade_ledger",
+        "unittest",
+        "workflow_accounting"
+      ],
+      "disposition": "packaged"
+    },
+    {
+      "file": "test_workflow_observation.py",
+      "imports": [
+        "copy",
+        "datetime",
+        "day_workflow",
+        "hashlib",
+        "json",
+        "os",
+        "pathlib",
+        "subprocess",
+        "tempfile",
+        "unittest",
+        "uuid",
+        "workflow_observation"
+      ],
+      "disposition": "packaged"
+    },
+    {
+      "file": "trade_ledger.py",
+      "imports": [
+        "__future__",
+        "argparse",
+        "contextlib",
+        "csv",
+        "datetime",
+        "decimal",
+        "fcntl",
+        "hashlib",
+        "io",
+        "json",
+        "os",
+        "pathlib",
+        "re",
+        "sys",
+        "tempfile"
+      ],
+      "disposition": "packaged"
+    },
+    {
+      "file": "wide_butterfly_selector.py",
+      "imports": [
+        "argparse",
+        "bisect",
+        "csv",
+        "datetime",
+        "hashlib",
+        "json",
+        "math",
+        "pathlib"
+      ],
+      "disposition": "packaged"
+    },
+    {
+      "file": "workflow_accounting.py",
+      "imports": [
+        "argparse",
+        "datetime",
+        "day_workflow",
+        "decimal",
+        "fcntl",
+        "hashlib",
+        "json",
+        "pathlib",
+        "review_scorecard",
+        "simple_ledger",
+        "trade_ledger",
+        "workflow_observation"
+      ],
+      "disposition": "packaged"
+    },
+    {
+      "file": "workflow_decision.py",
+      "imports": [
+        "copy",
+        "datetime",
+        "day_workflow",
+        "hashlib",
+        "hmac",
+        "importlib",
+        "pathlib",
+        "sys",
+        "workflow_observation"
+      ],
+      "disposition": "packaged"
+    },
+    {
+      "file": "workflow_observation.py",
+      "imports": [
+        "__future__",
+        "datetime",
+        "hashlib",
+        "hmac",
+        "json",
+        "math",
+        "os",
+        "pathlib",
+        "stat",
+        "subprocess",
+        "uuid"
+      ],
+      "disposition": "packaged"
+    }
+  ]
+}

@@ -1,10 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import dotenv from 'dotenv';
 
-export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+import { RUNTIME } from './runtime-paths.mjs';
+export const ROOT = RUNTIME.root;
 export class AuthError extends Error {
   constructor(code) { super(code); this.name = 'AuthError'; this.code = code; }
 }
