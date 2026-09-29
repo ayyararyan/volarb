@@ -212,6 +212,44 @@ def test_intraday_existing_marginal_warns_but_can_hold():
     assert any("MARGINAL" in w for w in out["warnings"])
 
 
+def test_unfavourable_rv_exits_before_expiry_and_recenter():
+    for confidence in ("medium", "high"):
+        out = decide({
+            "mode": "OPEN_POSITION", "branch": "OPEN_INTRADAY",
+            "intraday_rv_state": "UNFAVOURABLE",
+            "intraday_rv_confidence": confidence,
+            "expiry_exit_gate": "EXIT", "recenter_gate": "PASS",
+            "recenter_margin_check": {**fresh_margin(), "scope": "RECENTRE"},
+        })
+        assert out["action"] == "SQUARE_OFF"
+        assert out["terminal_gate"] == "INTRADAY_RV_DRIFT"
+
+
+def test_low_confidence_unfavourable_rv_continues_to_other_risk_gates():
+    base = {
+        "mode": "OPEN_POSITION", "branch": "OPEN_INTRADAY",
+        "intraday_rv_state": "UNFAVOURABLE", "intraday_rv_confidence": "low",
+        "hard_risk_gate": "PASS", "expiry_exit_gate": "PASS", "recenter_gate": "FAIL",
+    }
+    assert decide(base)["action"] == "HOLD"
+    out = decide({**base, "hard_risk_gate": "FAIL"})
+    assert out["action"] == "SQUARE_OFF"
+    assert out["terminal_gate"] == "HARD_EVENT_TAIL_LIQUIDITY"
+
+
+def test_missing_hf_data_neither_forces_exit_nor_overrides_expiry_exit():
+    base = {
+        "mode": "OPEN_POSITION", "branch": "OPEN_INTRADAY",
+        "hard_risk_gate": "PASS", "expiry_exit_gate": "PASS", "recenter_gate": "FAIL",
+    }
+    out = decide(base)
+    assert out["action"] == "HOLD"
+    assert any("INSUFFICIENT_DATA" in warning for warning in out["warnings"])
+    out = decide({**base, "expiry_exit_gate": "EXIT"})
+    assert out["action"] == "SQUARE_OFF"
+    assert out["terminal_gate"] == "EXPIRY_EXIT"
+
+
 def fresh_margin():
     from datetime import datetime, timezone, timedelta
     now = datetime.now(timezone.utc)

@@ -81,6 +81,7 @@ Session OHLC or sparse snapshots alone may never pass this gate.
 ### Existing intraday position
 
 - medium/high-confidence `UNFAVOURABLE` -> **SQUARE OFF**;
+- low-confidence `UNFAVOURABLE` -> this gate alone does **not** force an exit; continue to the remaining risk gates, without treating low confidence as evidence of safety;
 - `MARGINAL` -> warning, continue to later risk/expiry/recenter gates and shorten next review;
 - `INSUFFICIENT_DATA` -> degraded evidence only; do not force an exit solely from missing HF data;
 - `FAVOURABLE` -> continue.
@@ -88,6 +89,18 @@ Session OHLC or sparse snapshots alone may never pass this gate.
 When available, pass `upper_forecast_sigma_move_points` to candidate width/stress construction as the real-world next-review move scale.
 
 If this gate terminates, do not let high theta override it.
+
+### How drift changes an exit check
+
+The child maps `HIGH` drift to `UNFAVOURABLE` when its HF data and IV anchor are available. Pass the child's `short_gamma_state` and `confidence` as the controller's `intraday_rv_state` and `intraday_rv_confidence`. The exact drift diagnostics and thresholds are in the [RV methodology](../../intraday-realized-volatility-forecast/references/methodology.md#6-drift--centre-stability).
+
+For `OPEN_INTRADAY`, a medium/high-confidence unfavourable state terminates at `INTRADAY_RV_DRIFT`, before expiry-harvest or recenter evaluation. Current profit, positive theta, being inside expiry break-evens, or a proposed replacement cannot overturn that exit. For example, an otherwise profitable position still receives `SQUARE_OFF` at this gate; no loss or break-even breach is required first.
+
+`MARGINAL`, `FAVOURABLE`, missing HF data, or a low-confidence unfavourable state does not itself establish HOLD. Complete all applicable later gates with validated inputs. The controller consumes normalized evidence, not raw account/market data; its defaults are not proof that omitted checks passed. A marginal state normally means a 10-20 minute next review only if continued holding survives the other checks.
+
+This is a conservative rule-based exit, not a calibrated proof that closing has higher expected P&L. Drift measures absolute market/centre movement, not signed movement relative to the held body: movement back toward the body may initially help the position and still fail the market-wide drift rule. Low drift likewise cannot guarantee profitable holding. The actual-leg Greeks, costs, liquidity and remaining reward belong to the later position-specific checks.
+
+The [personal covenant](../../../docs/PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md) remains stricter than generic branch outputs: intraday only, flat by 15:00 IST, no entry/recenter thereafter. Apply it even when the generic controller changes to `OPEN_CARRY_GATE` at 14:45. Recommendations are for Aryan to execute; this gate neither places orders nor configures monitoring or review reminders.
 
 ## 5. Overnight branch: normalize news, then classify regime
 

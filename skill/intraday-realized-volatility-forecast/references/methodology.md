@@ -156,6 +156,8 @@ Track RND mode separately as `mode_migration_straddles`. The mode is an argmax o
 
 ### Drift classification
 
+Require at least two available diagnostics among directional efficiency, sigma displacement, price displacement and primary centre migration. With fewer than two, return `UNKNOWN`, not `LOW`. Once that availability requirement is met, any single HIGH threshold below is sufficient; not every diagnostic must be high.
+
 `LOW` when all available diagnostics are mild:
 
 - `Z_move <= 1.0`;
@@ -171,6 +173,8 @@ Track RND mode separately as `mode_migration_straddles`. The mode is an argmax o
 - primary centre migration >=0.50 straddles.
 
 Otherwise `MEDIUM`.
+
+These are absolute movement diagnostics: a drift detector, not a calibrated forecast of the next signed price move or of the held butterfly's directional P&L. Thresholds are operational assumptions, not validated probabilities. An isolated mode-bucket warning is not one of the four primary diagnostics above.
 
 ## 7. Exogenous event/jump override
 
@@ -189,6 +193,8 @@ Use model-free implied volatility when the parent supplies it; otherwise use cur
 For horizon `H`:
 
 `IVAR_Q_H = IV_anchor^2 * H / annual_minutes`.
+
+This is a same-horizon scaling proxy using **current** option-implied volatility, not a separate forecast of future IV or the future option surface. It does not by itself model intraday IV/skew repricing or convert a variance gap into expected butterfly profit. The upper RV band is an operational risk allowance, not a statistically calibrated confidence interval.
 
 Compare:
 
@@ -217,6 +223,10 @@ Define robust edge only when:
 `UNFAVOURABLE` applies when central jump-adjusted RV >= IV, drift HIGH, or event override is active.
 
 `INSUFFICIENT_DATA` applies when the HF block fails the acquisition/quality gate.
+
+Implementation precedence matters: a failed HF block returns insufficient data first; after a usable physical estimate, a missing IV anchor also returns insufficient data before event/drift classification. With those inputs available, event override precedes HIGH drift, which precedes the central RV-IV comparison. A favourable state additionally requires no developing event warning. Missing data never implies that an event or drift hazard is absent.
+
+The parent owns the action: see [the intraday exit mapping](../../butterfly-market-outlook/references/decision-algorithm.md#how-drift-changes-an-exit-check). Forecast outcomes are scored over the exact recorded horizon against realized variance and centre migration for later human-reviewed calibration; they are not awaited before today's decision and do not silently retune live thresholds.
 
 ## 10. No-action fallback
 
