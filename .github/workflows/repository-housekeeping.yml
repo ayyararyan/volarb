@@ -8,7 +8,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 concurrency:
   group: repository-housekeeping
@@ -22,6 +21,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v7
         with:
+          ref: main
           fetch-depth: 0
 
       - name: Run conservative housekeeping
@@ -184,33 +184,43 @@ jobs:
             echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Publish housekeeping branch
+      - name: Merge housekeeping into main and delete cleanup branch
         if: steps.changes.outputs.changed == 'true'
         shell: bash
         run: |
+          set -euo pipefail
           BRANCH="automation/repository-housekeeping"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Replace only the automation-owned branch, and only if it has not
+          # changed since this run inspected it.
+          OLD_HEAD=$(git ls-remote --heads origin "refs/heads/$BRANCH" | cut -f1)
           git switch -C "$BRANCH"
           git add -A
           git commit -m "chore: automated repository housekeeping"
-          git push --force origin "HEAD:$BRANCH"
+          CLEANUP_HEAD=$(git rev-parse HEAD)
+          git push --force-with-lease="refs/heads/$BRANCH:$OLD_HEAD" origin "HEAD:refs/heads/$BRANCH"
 
-      - name: Open or refresh housekeeping pull request
-        if: steps.changes.outputs.changed == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          BRANCH="automation/repository-housekeeping"
-          BASE="${{ github.event.repository.default_branch }}"
-          if gh pr view "$BRANCH" --json number >/dev/null 2>&1; then
-            echo "Housekeeping pull request already exists and has been refreshed."
-          else
-            gh pr create \
-              --base "$BASE" \
-              --head "$BRANCH" \
-              --title "chore: automated repository housekeeping" \
-              --body "Daily conservative housekeeping. Only unmistakable OS/editor/cache artifacts and safe ignore rules are changed automatically. Structural or naming suggestions remain review-only in the Actions summary." \
-            || echo "Could not open a PR automatically. The housekeeping branch was still pushed; enable Actions pull-request creation in repository settings if desired."
+          # Merge against fresh main. Retry one rejected push to accommodate
+          # another writer; conflicts/failures leave the cleanup branch intact.
+          MERGED=false
+          for ATTEMPT in 1 2; do
+            git fetch origin main
+            git switch -C housekeeping-integration FETCH_HEAD
+            git merge --no-edit "$CLEANUP_HEAD"
+            if git push origin HEAD:refs/heads/main; then
+              MERGED=true
+              break
+            fi
+          done
+          if [ "$MERGED" != true ]; then
+            echo "Could not publish cleanup to main; retaining $BRANCH." >&2
+            exit 1
           fi
+
+          git fetch origin main
+          git merge-base --is-ancestor "$CLEANUP_HEAD" FETCH_HEAD
+          # A lease also prevents deleting someone else's newer branch update.
+          git push --force-with-lease="refs/heads/$BRANCH:$CLEANUP_HEAD" origin ":refs/heads/$BRANCH"
+          echo "Cleanup merged into main; $BRANCH deleted." >> "$GITHUB_STEP_SUMMARY"
