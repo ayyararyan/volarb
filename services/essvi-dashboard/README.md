@@ -1,4 +1,4 @@
-# NIFTY eSSVI + HAR-RV dashboard
+# Realized Variance Dashboard
 
 Local dashboard: **http://127.0.0.1:8770/**. The minimal dark-mode view shows fitted ATM IV,
 1/5/22-session HAR forecast RV, the 5-session Q ratio, and an interactive eSSVI
