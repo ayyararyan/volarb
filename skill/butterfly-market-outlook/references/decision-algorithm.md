@@ -1,4 +1,4 @@
-# Canonical Agent Decision Algorithm — v2.5
+# Canonical Agent Decision Algorithm — v2.6
 
 This file is the **only control plane** for the butterfly workflow.
 
@@ -52,6 +52,28 @@ If branch = `LOCKED_OVERNIGHT` -> **LOCKED_OVERNIGHT**.
 
 Do not issue a fresh executable decision after the local market is closed. Stop.
 
+## 3a. Daily loss-budget gate
+
+Supply `daily_loss_budget_rupees` (owner policy, currently 1,000) and `session_loss_rupees` = today's realized loss plus the bankable executable-close loss of any open structure, as a positive number.
+
+- `session_loss_rupees >= daily_loss_budget_rupees`: existing position -> **SQUARE OFF**; candidate -> **NO TRADE**. Terminal gate `LOSS_BUDGET`.
+- Either value missing: warning only for an existing position; the review must state that the budget was not evaluated. A new structure should not be proposed without both values.
+
+The budget is a decision rule, not a broker-side stop. It does not cap realized loss through slippage.
+
+## 3b. Session variance-risk-premium gate (candidates only)
+
+Read `references/session-vrp-gate.md` and run `scripts/evaluate_session_vrp.py` against the local IV/HAR dashboard state.
+
+- `FAVOURABLE` -> continue.
+- `UNFAVOURABLE` or `UNKNOWN` (including a missing field) -> **NO TRADE**, terminal gate `SESSION_VRP`.
+
+This gate never forces an exit of an existing position. Without a session-level premium there is nothing to harvest, so no HF block, optimizer run or margin check is performed.
+
+## 3c. Re-entry gate (candidates only)
+
+If a butterfly was squared off earlier in the same session, set `re_entry_after_square_off=true`. A new candidate then requires `fresh_candidate_pass=true`, meaning a complete new pass through every gate in this file with fresh evidence. Otherwise -> **NO TRADE**, terminal gate `RE_ENTRY_REQUIRES_FRESH_PASS`. Re-entry inherits the session loss already incurred under Step 3a.
+
 ## 4. Intraday HF realized-volatility / drift gate
 
 Run this step for `CANDIDATE_INTRADAY`. Also run it for `OPEN_INTRADAY` on scheduled reviews when a fresh HF block is available, and especially after material path/surface change.
@@ -60,7 +82,8 @@ Invoke `intraday-realized-volatility-forecast` for the exact next-review horizon
 
 The child skill must:
 
-- observe a fresh approximately five-minute HF futures/price block;
+- observe a fresh approximately five-minute HF futures/price block whose newest quote is no older than 120 seconds against the supplied decision clock (`asof`); a stale or clockless block returns `INSUFFICIENT_DATA`;
+- receive one normalized news packet; without a packet the state is capped at `MARGINAL` and can never authorize a new entry;
 - estimate fast/slow local continuous variance;
 - separate recent jump pressure from continuous volatility;
 - diagnose directional/centre drift from price, futures, parity forward and RND median migration; treat a discrete RND-mode bucket shift as corroborative only, never as an independent hard drift trigger;
@@ -229,6 +252,15 @@ if candidate and data_health in {INVALID, STALE}:
 
 if branch == LOCKED_OVERNIGHT:
     return LOCKED_OVERNIGHT
+
+if session_loss_rupees >= daily_loss_budget_rupees:
+    return SQUARE_OFF if open_position else NO_TRADE
+
+if candidate:
+    if session_vrp_state != FAVOURABLE:
+        return NO_TRADE
+    if re_entry_after_square_off and not fresh_candidate_pass:
+        return NO_TRADE
 
 if branch in {CANDIDATE_INTRADAY, OPEN_INTRADAY}:
     rv = intraday_realized_volatility_forecast(hf_5m_block, news)

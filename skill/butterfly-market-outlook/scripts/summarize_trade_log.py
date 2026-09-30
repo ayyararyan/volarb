@@ -1,11 +1,19 @@
 #!/usr/bin/env python3
 """Summarize closed butterfly episodes for calibration review.
 
-Accepts JSONL or a JSON array. It measures outcomes; it never changes live thresholds.
+Accepts the repository ``trade-log/trades.csv``, JSONL, or a JSON array.
+It measures outcomes; it never changes live thresholds.
+
+CSV rows are mapped to episode fields: realized points are
+``entry_credit_points - exit_cost_points`` when both are present, otherwise
+``realized_pnl_inr / quantity``. Rows without a numeric realized P&L are
+counted but excluded from averages.
 """
 import argparse
+import csv
 import json
 import math
+from datetime import datetime
 from pathlib import Path
 
 
@@ -21,10 +29,44 @@ def avg(xs):
     return sum(xs) / len(xs) if xs else None
 
 
+def _minutes_between(opened, closed):
+    fmt = "%Y-%m-%d %H:%M:%S"
+    try:
+        a = datetime.strptime(str(opened).replace(" IST", "").strip(), fmt)
+        b = datetime.strptime(str(closed).replace(" IST", "").strip(), fmt)
+    except ValueError:
+        return None
+    return (b - a).total_seconds() / 60.0
+
+
+def csv_row_to_episode(row):
+    credit, cost, qty, inr = (f(row.get(k)) for k in ("entry_credit_points", "exit_cost_points", "quantity", "realized_pnl_inr"))
+    points = None
+    if credit is not None and cost is not None:
+        points = credit - cost
+    elif inr is not None and qty:
+        points = inr / qty
+    return {
+        "trade_id": row.get("trade_id"),
+        "instrument": row.get("instrument"),
+        "strategy": row.get("strategy"),
+        "status": row.get("status"),
+        "provenance": row.get("provenance"),
+        "realized_pnl_points": points,
+        "realized_pnl_inr": inr,
+        "quantity": qty,
+        "hold_minutes": _minutes_between(row.get("opened_at_ist"), row.get("closed_at_ist")),
+        "broker_confirmed": str(row.get("provenance", "")).lower().startswith("dhan"),
+    }
+
+
 def load(path):
-    text = Path(path).read_text().strip()
+    p = Path(path)
+    text = p.read_text().strip()
     if not text:
         return []
+    if p.suffix.lower() == ".csv" or text.startswith("trade_id,"):
+        return [csv_row_to_episode(r) for r in csv.DictReader(text.splitlines())]
     if text.startswith("["):
         return json.loads(text)
     return [json.loads(line) for line in text.splitlines() if line.strip()]
@@ -66,10 +108,34 @@ def summarize(rows):
         if ri is not None:
             recenter_inc.append(ri)
 
+    inr = [f(r.get("realized_pnl_inr")) for r in rows]
+    inr2 = [x for x in inr if x is not None]
+    wins_inr = [x for x in inr2 if x > 0]
+    losses_inr = [x for x in inr2 if x < 0]
+    confirmed = [r for r in rows if r.get("broker_confirmed")]
+    confirmed_inr = [f(r.get("realized_pnl_inr")) for r in confirmed]
+    confirmed_inr = [x for x in confirmed_inr if x is not None]
+    by_instrument = {}
+    for r in rows:
+        key = r.get("instrument") or "UNKNOWN"
+        v = f(r.get("realized_pnl_inr"))
+        if v is not None:
+            by_instrument.setdefault(key, []).append(v)
+    hold = [f(r.get("hold_minutes")) for r in rows]
+
     return {
         "episodes": len(rows),
         "average_realized_pnl_points": avg(pnl2),
         "win_rate": (sum(1 for x in pnl2 if x > 0) / len(pnl2)) if pnl2 else None,
+        "total_gross_realized_inr": sum(inr2) if inr2 else None,
+        "total_gross_realized_inr_broker_confirmed_only": sum(confirmed_inr) if confirmed_inr else None,
+        "average_win_inr": avg(wins_inr),
+        "average_loss_inr": avg(losses_inr),
+        "loss_to_win_ratio": (abs(avg(losses_inr)) / avg(wins_inr)) if wins_inr and losses_inr else None,
+        "largest_loss_inr": min(losses_inr) if losses_inr else None,
+        "gross_by_instrument_inr": {k: sum(v) for k, v in sorted(by_instrument.items())},
+        "average_hold_minutes": avg(hold),
+        "charges_note": "All INR figures are gross before brokerage, exchange charges, GST and STT; net is unknown until reconciled in the local ledger.",
         "average_path_center_absolute_error_points": avg(center_err),
         "actual_outside_wings_frequency": avg(outside_rate),
         "rnd_wing_mass_brier_descriptive_only": avg(rnd_brier),

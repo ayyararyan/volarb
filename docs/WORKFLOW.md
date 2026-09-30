@@ -1,6 +1,6 @@
-# Butterfly VolArb Operating Workflow — Engine v2.5
+# Butterfly VolArb Operating Workflow — Engine v2.6
 
-Updated 2026-09-29. The [personal covenant](PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md) overrides generic CARRY eligibility. The [decision algorithm](../skill/butterfly-market-outlook/references/decision-algorithm.md) controls engine ordering.
+Updated 2026-09-30. For the day-by-day sequence read [DAILY_OPERATING_ALGORITHM.md](DAILY_OPERATING_ALGORITHM.md) first; this file records the standing rules behind it. The [personal covenant](PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md) overrides generic CARRY eligibility. The [decision algorithm](../skill/butterfly-market-outlook/references/decision-algorithm.md) controls engine ordering.
 
 ## 1. Scope and clock
 
@@ -10,13 +10,17 @@ NIFTY, BANKNIFTY and SENSEX; Asia/Kolkata. Intraday only, flat by 15:00 IST, wit
 
 Use [local web-token recovery](../services/dhan-chatgpt-mcp/README.md#office-mac-browser-token-recovery--2026-09-29) before broker access. Reuse a suitable token; recover missing/expired/rejected or short-lived tokens through Dhan Web. Verify identity before atomically updating the private MCP `.env`. No personal-Mac access or TOTP token generation. Revoke expired/superseded Dusty tokens only after replacement verification; preserve unrelated active keys. Human OTP/CAPTCHA challenges remain human steps. Close task-owned browser tabs/windows when finished, preserving cookies and unrelated tabs.
 
+## 2a. Session variance-risk-premium screen
+
+Before any candidate search, run `skill/butterfly-market-outlook/scripts/evaluate_session_vrp.py` against the local IV/HAR dashboard (`http://127.0.0.1:8770/api/state`). Only `FAVOURABLE` permits a candidate search that day. `UNFAVOURABLE` and `UNKNOWN` are journaled as blocked checks. This gate never forces an exit. See [session-vrp-gate.md](../skill/butterfly-market-outlook/references/session-vrp-gate.md).
+
 ## 3. Establish fresh truth
 
 Read positions AND outstanding orders. Reconcile signed units, contract identity, expiry and partial fills. Account failure is unknown exposure, never verified flatness or HOLD. Obtain one coherent relevant-expiry chain plus timestamped executable-side quotes and actual-leg liquidity. Do not use journals as account truth.
 
 ## 4. Run the first-terminal-gate controller
 
-Invoke the news filter once per relevant horizon and reuse the normalized packet. Apply data health and post-close gates before later analysis. For intraday RV/drift, use the child skill's fresh approximately five-minute HF block for the next 15–30-minute horizon; session OHLC/prior-day RV cannot substitute. Discrete RND-mode bucket migration is corroborative only.
+Supply `daily_loss_budget_rupees` (1,000) and `session_loss_rupees` (today's realized loss plus bankable loss of any open structure) to every controller run; budget exhaustion is terminal. A same-session re-entry after a square-off requires a fresh complete pass (`re_entry_after_square_off`, `fresh_candidate_pass`). Run the five-minute HF sampler as a local process on the office Mac, never through a remote node exec; build the forecaster input with `build_rv_input.py`, always with `asof`, the IV anchor and the news packet. Invoke the news filter once per relevant horizon and reuse the normalized packet. Apply data health and post-close gates before later analysis. For intraday RV/drift, use the child skill's fresh approximately five-minute HF block for the next 15–30-minute horizon; session OHLC/prior-day RV cannot substitute. Discrete RND-mode bucket migration is corroborative only.
 
 A new intraday candidate needs actionable FAVOURABLE RV/drift. For existing positions, medium/high-confidence UNFAVOURABLE is an exit signal; MARGINAL shortens the review window, and missing HF data alone does not force an exit. Hard event/tail/liquidity risk, expiry exit, recenter and optimization follow the canonical algorithm. Generic overnight branches are not permission to override the personal intraday covenant.
 
@@ -35,6 +39,10 @@ Score prior forecasts and compare actions after costs under the local internal r
 ## 7. Reply and execution boundary
 
 Use one table in [Mode A/B/C](../skill/butterfly-market-outlook/references/output-template.md), with no outside prose unless explanation is requested. State the next decision window before the exit deadline without implying a reminder. Aryan executes; Dhandho never places/modifies/cancels orders. Source publication does not activate the optional executor, a scheduler, or monitoring.
+
+## 7a. Adjustments
+
+No self-directed rolls. RECENTRE exists only as a controller output backed by a verified close/reopen transition margin packet; the current preflight is entry-only, so in practice the open-position answers are HOLD or SQUARE OFF. A wrong body is a SQUARE OFF, followed if warranted by a fresh candidate pass, not a roll.
 
 ## 8. Software checks
 

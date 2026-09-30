@@ -4,7 +4,9 @@ Research, decision logic, automation source and journals for NSE/BSE NIFTY, BANK
 
 ## Current setup
 
-**Butterfly Market Outlook Engine v2.5**, with the live high-frequency realized-volatility/drift dependency, RND-mode bucket correction, and exact-candidate entry-margin verification.
+**Butterfly Market Outlook Engine v2.6**, with a session variance-risk-premium gate, a daily loss-budget gate, a same-session re-entry gate, the live high-frequency realized-volatility/drift dependency (now with decision-clock freshness and mandatory news-packet validation), RND-mode bucket correction, and exact-candidate entry-margin verification.
+
+**Start here on a trading day:** [docs/DAILY_OPERATING_ALGORITHM.md](docs/DAILY_OPERATING_ALGORITHM.md).
 
 The personal covenant overrides generic engine carry branches: **intraday only, flat by 15:00 IST, no entry or recenter thereafter**. Dhandho researches; Aryan executes. Publishing source does not enable trading or monitoring.
 
@@ -17,7 +19,8 @@ The personal covenant overrides generic engine carry branches: **intraday only, 
 - `services/day-workflow/` — offline SHADOW state machine and lifecycle/failure tests; no live orders or jobs.
 - `market-outlook/` — append-only daily research journals.
 - `trade-log/` — historical trade records; never fresh broker truth or a second live ledger.
-- `docs/WORKFLOW.md` — active personal operating workflow.
+- `docs/DAILY_OPERATING_ALGORITHM.md` — the one-page daily sequence and gate order.
+- `docs/WORKFLOW.md` — standing operating rules behind that sequence.
 - `docs/PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md` — governing covenant.
 - `.github/workflows/` — skill packaging, synthetic service checks and conservative housekeeping.
 

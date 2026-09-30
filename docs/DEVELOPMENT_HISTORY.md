@@ -76,3 +76,20 @@ The engine now distinguishes:
 - `UNKNOWN`.
 
 A low VIX no longer qualifies as evidence of a calm regime when realized tail gaps or exogenous event hazard remain elevated. Intraday butterflies remain possible in hostile regimes, but overnight carry must pass the regime layer before ordinary theta/carry ranking.
+
+
+## 2026-09-30 — Session VRP gate, loss budget, validation fixes (v2.6)
+
+Two NIFTY iron-fly cycles were traded after a NO TRADE decision and while the local IV/HAR dashboard showed implied volatility below the HAR realized-volatility forecast. Gross result −₹1,969.50 on 22 fills. The engine had no session-level premium input and no loss-budget input, and three tooling defects were found during the audit.
+
+Changes:
+
+- **Session VRP gate.** `scripts/evaluate_session_vrp.py` consumes the dashboard `/api/state` and returns FAVOURABLE / UNFAVOURABLE / UNKNOWN; the controller blocks candidates at `SESSION_VRP` unless FAVOURABLE. Unknown is never benign.
+- **Loss-budget gate.** `daily_loss_budget_rupees` and `session_loss_rupees` drive a terminal `LOSS_BUDGET` gate (SQUARE OFF / NO TRADE); missing inputs warn.
+- **Re-entry gate.** A candidate after a same-session square-off requires a fresh full pass.
+- **RV forecaster validation.** Decision clock (`asof`) with 120-second freshness, future-skew rejection, surface-snapshot alignment, mandatory news packet (capped at MARGINAL when missing), consistent low-confidence INSUFFICIENT_DATA without an IV anchor. Fixture checker extended with five negative cases. `build_rv_input.py` converts office-Mac sampler evidence into forecaster input.
+- **MCP.** `dhan_get_butterfly_state` normalizes Dhan's timestamped position expiry to `YYYY-MM-DD` before the chain call; the Invalid Expiry Date failure on every open-position review is fixed and covered by a test.
+- **Trade-log summariser** reads `trade-log/trades.csv` and reports gross INR statistics including a broker-confirmed-only total.
+- **Documentation.** `docs/DAILY_OPERATING_ALGORITHM.md` is the single daily sequence; decision-algorithm.md is v2.6.
+
+Not changed: thresholds in the optimizer, expiry-exit or overnight engines; the covenant; live execution remains disabled.

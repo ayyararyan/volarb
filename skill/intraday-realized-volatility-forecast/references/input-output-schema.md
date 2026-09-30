@@ -5,6 +5,7 @@
 ```json
 {
   "symbol": "BANKNIFTY",
+  "asof": "2026-09-29T13:50:05+05:30",
   "horizon_minutes": 30,
   "hf_quotes": [
     {"timestamp":"2026-09-29T13:45:00+05:30","bid":54290.0,"ask":54292.0},
@@ -52,12 +53,21 @@
     "fast_window_seconds": 90,
     "jump_threshold_sigma": 4.0,
     "volatility_decay_minutes": 15,
-    "jump_decay_minutes": 30
+    "jump_decay_minutes": 30,
+    "max_hf_age_seconds": 120,
+    "max_future_skew_seconds": 60,
+    "max_surface_snapshot_gap_seconds": 900
   }
 }
 ```
 
 ## Field conventions
+
+- `asof` is the decision clock (offset-aware ISO 8601). If omitted the script uses the wall clock, so replaying an old block without `asof` correctly fails freshness. The newest HF quote must be within `max_hf_age_seconds` (default 120) of `asof` and not more than `max_future_skew_seconds` ahead of it; otherwise the result is `INSUFFICIENT_HF_DATA` with `diagnostics.freshness.reason` set to `HF_BLOCK_STALE` or `HF_TIMESTAMPS_AHEAD_OF_ASOF`.
+- `news_filter` must be a normalized `market-news-signal-filter` packet. If it is missing, empty, or has `status` UNAVAILABLE/INVALID, the output reports `news_packet_status: "MISSING"` and `short_gamma_state` is capped at `MARGINAL`. A new entry is therefore impossible without a packet.
+- `surface_snapshots` outside the HF window by more than `max_surface_snapshot_gap_seconds` are dropped; with fewer than two aligned snapshots the confidence is downgraded because centre migration is unobserved.
+- A missing IV anchor returns `status: "INSUFFICIENT_DATA"` with `confidence: "low"`.
+- Build the input from the office-Mac sampler evidence with `scripts/build_rv_input.py`.
 
 - Prefer bid/ask midpoint. If only `price` is supplied, use it.
 - `hf_quotes` must belong to the current observation block only.
@@ -72,7 +82,12 @@ The script returns, among other diagnostics:
 
 ```json
 {
-  "hf_quality":"PASS|DEGRADED|FAIL",
+  "status":"CURRENT|INSUFFICIENT_HF_DATA|INSUFFICIENT_DATA|LOW_CONFIDENCE",
+  "asof":"...",
+  "hf_newest_timestamp":"...",
+  "hf_age_seconds":0.0,
+  "news_packet_status":"PRESENT|MISSING",
+  "hf_quality":"PASS|DEGRADED|FAIL|STALE",
   "hf_regime_state":"QUIET_EDGE|VOL_EDGE_WITH_JUMP_RISK|DRIFTING|RV_TOO_HIGH|EVENT_RISK|INSUFFICIENT_HF_DATA",
   "short_gamma_state":"FAVOURABLE|MARGINAL|UNFAVOURABLE|INSUFFICIENT_DATA",
   "continuous_rv_forecast_ann":0.0,

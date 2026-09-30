@@ -26,6 +26,7 @@ def test_new_overnight_latent_jump_is_blocked():
         "mode": "CANDIDATE",
         "branch": "CANDIDATE_OVERNIGHT",
         "data_health": "HEALTHY",
+        "session_vrp_state": "FAVOURABLE",
         "market_regime": "LATENT_JUMP_RISK",
         "proposed_new_structure": True,
     })
@@ -38,6 +39,7 @@ def test_candidate_requires_broker_pass():
         "mode": "CANDIDATE",
         "branch": "CANDIDATE_OVERNIGHT",
         "data_health": "HEALTHY",
+        "session_vrp_state": "FAVOURABLE",
         "market_regime": "CALM_CARRY",
         "recent_gap_gate": "PASS",
         "broker_rms_gate": "UNKNOWN",
@@ -126,6 +128,7 @@ def test_candidate_survivors_return_candidates():
         "mode": "CANDIDATE",
         "branch": "CANDIDATE_INTRADAY",
         "data_health": "HEALTHY",
+        "session_vrp_state": "FAVOURABLE",
         "intraday_rv_state": "FAVOURABLE",
         "intraday_rv_confidence": "high",
         "hard_risk_gate": "PASS",
@@ -143,6 +146,7 @@ def test_required_news_filter_blocks_new_overnight_candidate():
         "mode": "CANDIDATE",
         "branch": "CANDIDATE_OVERNIGHT",
         "data_health": "HEALTHY",
+        "session_vrp_state": "FAVOURABLE",
         "news_filter_required": True,
         "news_filter_status": "UNAVAILABLE",
         "market_regime": "CALM_CARRY",
@@ -177,6 +181,7 @@ def test_intraday_candidate_requires_favourable_hf_rv():
         "mode": "CANDIDATE",
         "branch": "CANDIDATE_INTRADAY",
         "data_health": "HEALTHY",
+        "session_vrp_state": "FAVOURABLE",
         "intraday_rv_state": "MARGINAL",
         "intraday_rv_confidence": "high",
         "candidate_count": 3,
@@ -262,6 +267,7 @@ def fresh_margin():
 
 def test_missing_failed_stale_or_inconsistent_margin_cannot_approve():
     base = {"mode": "CANDIDATE", "branch": "CANDIDATE_INTRADAY", "data_health": "HEALTHY",
+            "session_vrp_state": "FAVOURABLE",
             "intraday_rv_state": "FAVOURABLE", "candidate_count": 1, "candidate_ids": ["a"],
             "candidate_specs": {"a": fresh_margin()["candidate"]}}
     for changes in ({"status": "FAIL"}, {"status": "UNVERIFIED"},
@@ -288,6 +294,74 @@ def test_recenter_accepts_only_transition_scoped_fresh_evidence():
 def test_margin_packet_must_match_exact_candidate_geometry_and_lots():
     p = fresh_margin()
     base = {"mode":"CANDIDATE", "branch":"CANDIDATE_INTRADAY", "data_health":"HEALTHY",
+            "session_vrp_state":"FAVOURABLE",
             "intraday_rv_state":"FAVOURABLE", "candidate_count":1, "candidate_ids":["a"],
             "candidate_margin_checks":{"a":p}, "candidate_specs":{"a":{**p["candidate"], "lots":2}}}
     assert decide(base)["terminal_gate"] == "MARGIN_AFFORDABILITY"
+
+
+def test_candidate_requires_favourable_session_vrp_before_hf_gate():
+    base = {"mode": "CANDIDATE", "branch": "CANDIDATE_INTRADAY", "data_health": "HEALTHY",
+            "intraday_rv_state": "FAVOURABLE", "intraday_rv_confidence": "high",
+            "candidate_count": 1, "candidate_ids": ["a"],
+            "candidate_margin_checks": {"a": fresh_margin()}, "candidate_specs": {"a": fresh_margin()["candidate"]}}
+    for state in ("UNFAVOURABLE", "UNKNOWN", None):
+        payload = dict(base)
+        if state is not None:
+            payload["session_vrp_state"] = state
+        out = decide(payload)
+        assert out["action"] == "NO_TRADE"
+        assert out["terminal_gate"] == "SESSION_VRP"
+    assert decide({**base, "session_vrp_state": "FAVOURABLE"})["action"] == "CANDIDATES"
+
+
+def test_session_vrp_never_forces_exit_of_open_position():
+    out = decide({"mode": "OPEN_POSITION", "branch": "OPEN_INTRADAY", "session_vrp_state": "UNFAVOURABLE",
+                  "hard_risk_gate": "PASS", "expiry_exit_gate": "PASS", "recenter_gate": "FAIL"})
+    assert out["action"] == "HOLD"
+
+
+def test_loss_budget_exhausted_exits_open_position_and_blocks_candidate():
+    out = decide({"mode": "OPEN_POSITION", "branch": "OPEN_INTRADAY",
+                  "daily_loss_budget_rupees": 1000, "session_loss_rupees": 1000,
+                  "intraday_rv_state": "FAVOURABLE", "hard_risk_gate": "PASS", "expiry_exit_gate": "PASS"})
+    assert out["action"] == "SQUARE_OFF"
+    assert out["terminal_gate"] == "LOSS_BUDGET"
+    out = decide({"mode": "CANDIDATE", "branch": "CANDIDATE_INTRADAY", "data_health": "HEALTHY",
+                  "daily_loss_budget_rupees": 1000, "session_loss_rupees": 1200.5,
+                  "session_vrp_state": "FAVOURABLE", "intraday_rv_state": "FAVOURABLE"})
+    assert out["action"] == "NO_TRADE"
+    assert out["terminal_gate"] == "LOSS_BUDGET"
+
+
+def test_loss_budget_below_limit_or_missing_only_warns():
+    base = {"mode": "OPEN_POSITION", "branch": "OPEN_INTRADAY", "hard_risk_gate": "PASS",
+            "expiry_exit_gate": "PASS", "recenter_gate": "FAIL"}
+    out = decide({**base, "daily_loss_budget_rupees": 1000, "session_loss_rupees": 400})
+    assert out["action"] == "HOLD"
+    assert not any("loss budget not evaluated" in w for w in out["warnings"])
+    out = decide(base)
+    assert out["action"] == "HOLD"
+    assert any("loss budget not evaluated" in w for w in out["warnings"])
+    out = decide({**base, "daily_loss_budget_rupees": "abc", "session_loss_rupees": -5})
+    assert out["action"] == "HOLD"
+
+
+def test_loss_budget_precedes_rv_and_data_health_precedes_loss_budget():
+    out = decide({"mode": "CANDIDATE", "branch": "CANDIDATE_INTRADAY", "data_health": "INVALID",
+                  "daily_loss_budget_rupees": 1000, "session_loss_rupees": 5000})
+    assert out["terminal_gate"] == "DATA_HEALTH"
+    out = decide({"mode": "OPEN_POSITION", "branch": "LOCKED_OVERNIGHT",
+                  "daily_loss_budget_rupees": 1000, "session_loss_rupees": 5000})
+    assert out["action"] == "LOCKED_OVERNIGHT"
+
+
+def test_re_entry_after_square_off_requires_fresh_candidate_pass():
+    base = {"mode": "CANDIDATE", "branch": "CANDIDATE_INTRADAY", "data_health": "HEALTHY",
+            "session_vrp_state": "FAVOURABLE", "intraday_rv_state": "FAVOURABLE",
+            "candidate_count": 1, "candidate_ids": ["a"],
+            "candidate_margin_checks": {"a": fresh_margin()}, "candidate_specs": {"a": fresh_margin()["candidate"]},
+            "re_entry_after_square_off": True}
+    out = decide(base)
+    assert out["action"] == "NO_TRADE" and out["terminal_gate"] == "RE_ENTRY_REQUIRES_FRESH_PASS"
+    assert decide({**base, "fresh_candidate_pass": True})["action"] == "CANDIDATES"

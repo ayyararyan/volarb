@@ -45,6 +45,16 @@ def margin_pass(packet: Dict[str, Any], scope: str = "ENTRY_ONLY") -> bool:
         return False
 
 
+def _rupees(value: Any) -> Any:
+    if isinstance(value, bool) or value is None:
+        return None
+    try:
+        v = float(value)
+    except (TypeError, ValueError):
+        return None
+    return v if math.isfinite(v) and v >= 0 else None
+
+
 def decide(data: Dict[str, Any]) -> Dict[str, Any]:
     mode = str(data.get("mode", "")).upper()
     branch = str(data.get("branch", "")).upper()
@@ -70,6 +80,26 @@ def decide(data: Dict[str, Any]) -> Dict[str, Any]:
 
     if branch == "LOCKED_OVERNIGHT":
         return _result("LOCKED_OVERNIGHT", "POST_CLOSE", warnings)
+
+    # Owner daily loss budget. Loss is positive rupees; realized plus bankable
+    # (executable-close) P&L for the current session. Missing evidence is a
+    # warning for an open position and a block for a new structure.
+    budget = _rupees(data.get("daily_loss_budget_rupees"))
+    session_loss = _rupees(data.get("session_loss_rupees"))
+    if budget is not None and session_loss is not None and session_loss >= budget:
+        action = "NO_TRADE" if mode == "CANDIDATE" else "SQUARE_OFF"
+        return _result(action, "LOSS_BUDGET", warnings)
+    if budget is None or session_loss is None:
+        warnings.append("loss budget not evaluated: supply daily_loss_budget_rupees and session_loss_rupees")
+
+    if mode == "CANDIDATE":
+        # Session-level variance risk premium. A new butterfly exists to harvest
+        # VRP; without evidence of a premium there is nothing to harvest.
+        vrp_state = str(data.get("session_vrp_state", "UNKNOWN")).upper()
+        if vrp_state != "FAVOURABLE":
+            return _result("NO_TRADE", "SESSION_VRP", warnings)
+        if bool(data.get("re_entry_after_square_off", False)) and not bool(data.get("fresh_candidate_pass", False)):
+            return _result("NO_TRADE", "RE_ENTRY_REQUIRES_FRESH_PASS", warnings)
 
     if branch in {"OPEN_INTRADAY", "CANDIDATE_INTRADAY"}:
         rv_state = str(data.get("intraday_rv_state", "INSUFFICIENT_DATA")).upper()

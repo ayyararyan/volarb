@@ -442,6 +442,11 @@ export function nearestExpiry(expiries, index = 0) {
   return dates[Math.min(Math.max(index, 0), dates.length - 1)];
 }
 
+export function normalizeExpiryDate(value) {
+  const match = /^\s*(\d{4}-\d{2}-\d{2})/.exec(String(value ?? ''));
+  return match ? match[1] : String(value ?? '');
+}
+
 export function inferIronButterfly(positions, canonicalSymbol) {
   const token = String(canonicalSymbol).toUpperCase();
   const legs = (positions ?? []).filter((p) => {
@@ -450,9 +455,11 @@ export function inferIronButterfly(positions, canonicalSymbol) {
   });
   if (!legs.length) return null;
 
+  // Dhan position rows carry drvExpiryDate as "YYYY-MM-DD HH:MM:SS"; the option-chain
+  // API requires a bare YYYY-MM-DD, otherwise it rejects with "Invalid Expiry Date".
   const byExpiry = new Map();
   for (const leg of legs) {
-    const exp = leg.drvExpiryDate;
+    const exp = normalizeExpiryDate(leg.drvExpiryDate);
     if (!byExpiry.has(exp)) byExpiry.set(exp, []);
     byExpiry.get(exp).push(leg);
   }

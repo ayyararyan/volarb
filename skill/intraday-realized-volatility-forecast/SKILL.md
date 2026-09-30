@@ -19,6 +19,9 @@ This skill is designed for intraday short-gamma decisions. It is a live state fo
 6. A recent jump does not imply another jump with certainty. Treat it as evidence of an elevated conditional volatility/jump state and decay its influence through time.
 7. Treat futures/parity forward as carry/arbitrage references. Use their migration, not their level, as a centre-stability diagnostic.
 8. If the high-frequency block is incomplete or noisy, return `INSUFFICIENT_HF_DATA` or low confidence rather than inventing precision.
+10. Always pass the decision clock as `asof`. A block whose newest quote is older than 120 seconds against `asof` is stale and returns `INSUFFICIENT_HF_DATA`; the script never assesses freshness only against itself.
+11. Always pass the normalized news packet. Without it the exogenous-jump channel is unobserved and the state is capped at `MARGINAL`; it can never be `FAVOURABLE`.
+12. Run the five-minute sampler as a local process on the office Mac and convert its evidence with `scripts/build_rv_input.py`.
 9. The parent butterfly skill owns geometry, liquidity, margin, break-even and final trade decisions.
 
 Read `references/methodology.md` before forecasting. Read `references/input-output-schema.md` before constructing script input. Read `references/research-basis.md` when explaining or modifying the model.
@@ -55,10 +58,15 @@ If the available connector can only provide isolated snapshots or session OHLC a
 ### 3. Run the deterministic HF forecaster
 
 ```bash
+python scripts/build_rv_input.py --hf-evidence hf-evidence.json --symbol NIFTY \
+  --spot 22714.45 --atm-iv 0.118 --atm-straddle 300.0 --news-packet news.json \
+  --horizon-minutes 30 --asof 2026-09-30T09:45:00+05:30 --output snapshot.json
 python scripts/forecast_intraday_rv.py --input snapshot.json --pretty
 ```
 
 The script:
+
+0. checks the block's freshness against `asof` and the presence of the news packet and IV anchor before anything else;
 
 1. cleans raw HF quotes and uses mid prices when bid/ask are available;
 2. aggregates noisy raw observations to approximately 5-second buckets;
@@ -161,6 +169,7 @@ references/input-output-schema.md
 references/methodology.md
 references/research-basis.md
 scripts/forecast_intraday_rv.py
+scripts/build_rv_input.py
 scripts/test_stable.json
 scripts/test_jump.json
 scripts/test_trend.json

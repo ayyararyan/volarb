@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { canonicalIndexSymbol, parseCsv, InstrumentMaster } from '../src/instrument-master.mjs';
-import { analyzeOptionSurface, inferIronButterfly, normalizeDhanChain } from '../src/surface-analytics.mjs';
+import { analyzeOptionSurface, inferIronButterfly, normalizeDhanChain, normalizeExpiryDate } from '../src/surface-analytics.mjs';
 
 test('canonical aliases resolve', () => {
   assert.equal(canonicalIndexSymbol('NIFTY 50'), 'NIFTY');
@@ -95,4 +95,20 @@ test('current iron butterfly is reconstructed from positions', () => {
   assert.equal(fly.right_width, 700);
   assert.ok(Math.abs(fly.entry_credit_points - 236.1) < 1e-9);
   assert.ok(Math.abs(fly.equivalent_long_fly_debit_points - 463.9) < 1e-9);
+});
+
+test('timestamped Dhan expiry is normalized to YYYY-MM-DD for the chain API', () => {
+  assert.equal(normalizeExpiryDate('2026-10-06 14:30:00'), '2026-10-06');
+  assert.equal(normalizeExpiryDate('2026-10-06'), '2026-10-06');
+  const positions = [
+    { tradingSymbol: 'NIFTY-Oct2026-22150-PE', netQty: 65, drvExpiryDate: '2026-10-06 14:30:00', drvOptionType: 'PUT', drvStrikePrice: 22150, buyAvg: 17.15, sellAvg: 0 },
+    { tradingSymbol: 'NIFTY-Oct2026-22700-PE', netQty: -65, drvExpiryDate: '2026-10-06 14:30:00', drvOptionType: 'PUT', drvStrikePrice: 22700, buyAvg: 0, sellAvg: 130.6 },
+    { tradingSymbol: 'NIFTY-Oct2026-22700-CE', netQty: -65, drvExpiryDate: '2026-10-06 14:30:00', drvOptionType: 'CALL', drvStrikePrice: 22700, buyAvg: 0, sellAvg: 180.3 },
+    { tradingSymbol: 'NIFTY-Oct2026-23250-CE', netQty: 65, drvExpiryDate: '2026-10-06 14:30:00', drvOptionType: 'CALL', drvStrikePrice: 23250, buyAvg: 15.65, sellAvg: 0 }
+  ];
+  const fly = inferIronButterfly(positions, 'NIFTY');
+  assert.equal(fly.recognized, true);
+  assert.equal(fly.expiry, '2026-10-06');
+  assert.equal(fly.center, 22700);
+  assert.ok(Math.abs(fly.entry_credit_points - 278.1) < 1e-9);
 });

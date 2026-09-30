@@ -279,3 +279,9 @@ This is the source snapshot of the office-Mac service. Publishing it does not de
 ## Follow-up publication verification — 2026-09-29
 
 Local `/healthz` returned HTTP 200 and version 0.3.0. Read-only MCP tool discovery did **not** expose `entrySequence` in the running margin tool schema, so the paired-hedge patch is published source, not verified deployed functionality. No broker tool was called and no service restarted during this check. See [shadow day workflow](../day-workflow/README.md) for the new offline orchestrator and tests.
+
+
+## Fixes — 2026-09-30
+
+- `dhan_get_butterfly_state` normalizes Dhan's timestamped position expiry (`YYYY-MM-DD HH:MM:SS`) to `YYYY-MM-DD` before the option-chain call. Previously every open-position review failed with `Invalid Expiry Date`. Covered by `test/core.test.mjs`.
+- The five-minute HF sampler (`node src/workflow-data-cli.mjs --scope hf`) must be started as a local process on the office Mac. Launching it through a remote node exec is refused before sampling begins. Convert its evidence for the RV forecaster with the RV skill's `scripts/build_rv_input.py`.

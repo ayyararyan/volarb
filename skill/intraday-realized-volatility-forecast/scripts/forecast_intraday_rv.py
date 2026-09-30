@@ -11,7 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from statistics import median
 from typing import Any, Dict, Iterable, List, Optional, Tuple
@@ -359,6 +359,37 @@ def drift_diagnostics(points: List[Tuple[datetime, float]], rs: List[float], v_s
     }
 
 
+def news_packet_present(news: Any) -> bool:
+    """A normalized market-news-signal-filter packet must exist and be usable.
+
+    Missing event evidence is never benign: without a packet the forecaster may
+    still describe the diffusion state, but it may not return FAVOURABLE.
+    """
+    if not isinstance(news, dict) or not news:
+        return False
+    status = str(news.get("status", "")).upper()
+    if status in {"UNAVAILABLE", "INVALID", "MISSING"}:
+        return False
+    return any(k in news for k in ("aggregate_state", "max_butterfly_relevance", "max_latency_severity"))
+
+
+def hf_freshness(points: List[Tuple[datetime, float]], asof: datetime, max_age_seconds: float, max_future_seconds: float) -> Dict[str, Any]:
+    """Age the HF block against the decision clock, not only against itself."""
+    if not points:
+        return {"status": "FAIL", "reason": "NO_HF_POINTS", "asof": asof.isoformat()}
+    newest = points[-1][0]
+    age = (asof - newest).total_seconds()
+    out = {"asof": asof.isoformat(), "newest_timestamp": newest.isoformat(), "age_seconds": age,
+           "max_age_seconds": max_age_seconds}
+    if age < -max_future_seconds:
+        out.update(status="FAIL", reason="HF_TIMESTAMPS_AHEAD_OF_ASOF")
+    elif age > max_age_seconds:
+        out.update(status="FAIL", reason="HF_BLOCK_STALE")
+    else:
+        out.update(status="PASS", reason=None)
+    return out
+
+
 def news_state(news: Dict[str, Any]) -> Tuple[bool, bool, Dict[str, str]]:
     news = news or {}
     agg = str(news.get("aggregate_state", "UNKNOWN")).upper()
@@ -384,6 +415,12 @@ def evaluate(x: Dict[str, Any]) -> Dict[str, Any]:
     if tau_v is None:
         tau_v = clamp(horizon / 2.0, 5.0, 20.0)
     tau_j = finite(cfg.get("jump_decay_minutes")) or 30.0
+    max_hf_age = finite(cfg.get("max_hf_age_seconds")) or 120.0
+    max_future = finite(cfg.get("max_future_skew_seconds")) or 60.0
+    max_snapshot_gap = finite(cfg.get("max_surface_snapshot_gap_seconds")) or 900.0
+    asof = parse_ts(x.get("asof")) or datetime.now(timezone.utc)
+    if asof.tzinfo is None:
+        raise ValueError("asof must be offset-aware ISO 8601")
 
     current = x.get("current") or {}
     spot = finite(current.get("spot"))
@@ -395,18 +432,29 @@ def evaluate(x: Dict[str, Any]) -> Dict[str, Any]:
     agg = restrict_window(aggregate_quotes(raw, bucket_seconds), observation_minutes)
     quality, qdiag = hf_quality(agg)
     rs, dts, ages = path_returns(agg)
+    freshness = hf_freshness(agg, asof, max_hf_age, max_future)
+    qdiag["freshness"] = freshness
+    news_present = news_packet_present(x.get("news_filter"))
+    qdiag["news_packet_status"] = "PRESENT" if news_present else "MISSING"
 
-    if quality == "FAIL":
+    if quality == "FAIL" or freshness["status"] != "PASS":
+        why = (
+            "A genuine approximately five-minute high-frequency block is required for an actionable short-horizon RV forecast."
+            if quality == "FAIL"
+            else f"The HF block is not fresh relative to the decision clock ({freshness['reason']}); a stale block can never authorize short gamma."
+        )
         return {
             "status": "INSUFFICIENT_HF_DATA",
             "symbol": symbol,
             "horizon_minutes": horizon,
-            "hf_quality": quality,
+            "asof": asof.isoformat(),
+            "hf_quality": quality if quality != "PASS" else "STALE",
             "hf_regime_state": "INSUFFICIENT_HF_DATA",
             "short_gamma_state": "INSUFFICIENT_DATA",
             "confidence": "low",
+            "news_packet_status": qdiag["news_packet_status"],
             "ohlc_diagnostic_rv_ann": ohlc_diagnostic(x.get("session_ohlc") or {}),
-            "why": "A genuine approximately five-minute high-frequency block is required for an actionable short-horizon RV forecast.",
+            "why": why,
             "diagnostics": qdiag,
         }
 
@@ -417,10 +465,12 @@ def evaluate(x: Dict[str, Any]) -> Dict[str, Any]:
             "status": "INSUFFICIENT_HF_DATA",
             "symbol": symbol,
             "horizon_minutes": horizon,
+            "asof": asof.isoformat(),
             "hf_quality": quality,
             "hf_regime_state": "INSUFFICIENT_HF_DATA",
             "short_gamma_state": "INSUFFICIENT_DATA",
             "confidence": "low",
+            "news_packet_status": qdiag["news_packet_status"],
             "why": "The HF block contains too little usable continuous variation after cleaning/jump separation.",
             "diagnostics": qdiag,
         }
@@ -460,8 +510,25 @@ def evaluate(x: Dict[str, Any]) -> Dict[str, Any]:
     robust_edge = bool(implied_ivar is not None and upper_ivar < implied_ivar)
     central_edge = bool(implied_ivar is not None and total_ivar < implied_ivar)
 
-    drift = drift_diagnostics(agg, rs, v_slow, straddle, x.get("surface_snapshots") or [])
+    window_start = agg[0][0]
+    window_end = agg[-1][0]
+    aligned_snaps = []
+    dropped_snaps = 0
+    for snap in x.get("surface_snapshots") or []:
+        ts = parse_ts(snap.get("timestamp")) if isinstance(snap, dict) else None
+        if ts is None or ts < window_start - timedelta(seconds=max_snapshot_gap) or ts > window_end + timedelta(seconds=max_snapshot_gap):
+            dropped_snaps += 1
+            continue
+        aligned_snaps.append(snap)
+    qdiag["surface_snapshots_used"] = len(aligned_snaps)
+    qdiag["surface_snapshots_dropped_unaligned"] = dropped_snaps
+    drift = drift_diagnostics(agg, rs, v_slow, straddle, aligned_snaps)
     override, developing, ndiag = news_state(x.get("news_filter") or {})
+    ndiag["packet_status"] = "PRESENT" if news_present else "MISSING"
+    if not news_present:
+        # No normalized event packet: the diffusion forecast stands, but the
+        # exogenous-jump channel is unobserved, so FAVOURABLE is not allowed.
+        developing = True
 
     if quality == "PASS" and len(rs) >= 50:
         confidence = "high"
@@ -469,6 +536,10 @@ def evaluate(x: Dict[str, Any]) -> Dict[str, Any]:
         confidence = "medium"
     if drift["drift_risk"] == "UNKNOWN":
         confidence = downgrade(confidence)
+    if len(aligned_snaps) < 2:
+        # Price-path drift alone cannot see forward/RND centre migration.
+        confidence = downgrade(confidence)
+        qdiag["surface_alignment_warning"] = "fewer than two surface snapshots aligned with the HF window; centre migration unobserved"
 
     ratio = total_ann / implied if total_ann is not None and implied is not None and implied > 0 else None
     variance_edge_ann2 = implied * implied - total_ann * total_ann if total_ann is not None and implied is not None else None
@@ -476,7 +547,8 @@ def evaluate(x: Dict[str, Any]) -> Dict[str, Any]:
     if implied is None:
         short = "INSUFFICIENT_DATA"
         hf_state = "INSUFFICIENT_HF_DATA"
-        status = "LOW_CONFIDENCE"
+        status = "INSUFFICIENT_DATA"
+        confidence = "low"
         why = "HF physical RV was estimated, but no current implied-volatility anchor was available."
     elif override:
         short = "UNFAVOURABLE"
@@ -505,6 +577,8 @@ def evaluate(x: Dict[str, Any]) -> Dict[str, Any]:
             hf_state = "DRIFTING"
         status = "CURRENT" if confidence != "low" else "LOW_CONFIDENCE"
         why = "The central RV-IV edge is positive, but jump pressure, drift, events, or forecast uncertainty prevents a robust short-gamma signal."
+        if not news_present:
+            why = "Physical RV is below IV, but no normalized market-news-signal-filter packet was supplied; the event channel is unobserved, so the state is capped at MARGINAL."
 
     sigma_move = spot * math.sqrt(total_ivar) if total_ivar > 0 else None
     upper_sigma_move = spot * math.sqrt(upper_ivar) if upper_ivar > 0 else None
@@ -513,10 +587,14 @@ def evaluate(x: Dict[str, Any]) -> Dict[str, Any]:
         "status": status,
         "symbol": symbol,
         "horizon_minutes": horizon,
+        "asof": asof.isoformat(),
+        "hf_newest_timestamp": freshness.get("newest_timestamp"),
+        "hf_age_seconds": freshness.get("age_seconds"),
         "hf_quality": quality,
         "hf_regime_state": hf_state,
         "short_gamma_state": short,
         "confidence": confidence,
+        "news_packet_status": "PRESENT" if news_present else "MISSING",
         "continuous_rv_forecast_ann": cont_ann,
         "jump_adjusted_rv_forecast_ann": total_ann,
         "physical_rv_band_ann": [lower_ann, upper_ann],

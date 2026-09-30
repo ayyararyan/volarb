@@ -128,3 +128,12 @@ When Dhan is connected:
 - **Overnight news:** delegate raw-news interpretation to `market-news-signal-filter` via `news-signal-integration.md`; use cross-assets as live confirmation.
 
 If Dhan and an official exchange page materially disagree, check timestamps and market status before trusting either. Do not average contradictory stale/live values.
+
+
+## Expiry normalization — 2026-09-30
+
+Dhan position rows report `drvExpiryDate` as `YYYY-MM-DD HH:MM:SS`. The option-chain endpoint requires a bare `YYYY-MM-DD` and otherwise rejects the call with `Invalid Expiry Date`. `dhan_get_butterfly_state` now normalizes the expiry before fetching the surface (`normalizeExpiryDate` in `surface-analytics.mjs`). Earlier reviews that fell back to explicit chain calls because of this error are historical; the tool is again the preferred first call for an open fly.
+
+## HF sampler placement — 2026-09-30
+
+`node src/workflow-data-cli.mjs --scope hf` is office-Mac-only by design and must be started as a local process on that machine. Launching it through a remote OpenClaw node exec was refused on 2026-09-30 with a shared-state ownership conflict before any sample was taken. Treat any sampler failure as `INSUFFICIENT_DATA` for the HF gate; do not substitute session OHLC.
