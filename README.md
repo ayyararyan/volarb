@@ -16,6 +16,7 @@ The personal covenant overrides generic engine carry branches: **intraday only, 
 - `skill/intraday-realized-volatility-forecast/` — five-minute HF observation model and fixtures.
 - `skill/market-news-signal-filter/` — normalized event/news risk filter.
 - `services/dhan-chatgpt-mcp/` — office-Mac MCP, browser web-token recovery, margin preflight, optional separately gated execution code and synthetic tests.
+- [services/essvi-dashboard/](services/essvi-dashboard/) — dark eSSVI surface, ATM IV, 1/5/22-session HAR forecasts and Q ratio; requires external Shaurya packages and local authentication.
 - `services/day-workflow/` — offline SHADOW state machine and lifecycle/failure tests; no live orders or jobs.
 - `market-outlook/` — append-only daily research journals.
 - `trade-log/` — historical trade records; never fresh broker truth or a second live ledger.
