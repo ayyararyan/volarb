@@ -10,9 +10,15 @@ const ORIGINS = new Set(['https://web.dhan.co', 'https://login.dhan.co']);
 function guard(page) {
   if (!ORIGINS.has(new URL(page.url()).origin)) throw new AuthError('UNEXPECTED_LOGIN_ORIGIN');
 }
-async function uniqueClick(locator) {
-  if (await locator.count() !== 1) throw new AuthError('DHAN_UI_CHANGED');
-  await locator.click({ timeout: 10000 });
+export async function uniqueClick(locator, errorCode = 'DHAN_UI_CHANGED') {
+  const visible = locator.filter({ visible: true });
+  if (await visible.count() !== 1) throw new AuthError(errorCode);
+  await visible.click({ timeout: 10000 });
+}
+async function uniqueFill(locator, value, errorCode = 'DHAN_UI_CHANGED') {
+  const visible = locator.filter({ visible: true });
+  if (await visible.count() !== 1) throw new AuthError(errorCode);
+  await visible.fill(value);
 }
 export async function login(page, root) {
   let pinSubmitted = false, mobileSubmitted = false;
@@ -23,20 +29,20 @@ export async function login(page, root) {
     const visibleText = await page.locator('body').innerText();
     if (/captcha|enter.{0,20}(otp|verification code)|one.time password/i.test(visibleText)) throw new AuthError('HUMAN_VERIFICATION_REQUIRED_IN_BROWSER');
     const mobileMode = page.getByText('Show login with Mobile', { exact: true });
-    if (await mobileMode.isVisible().catch(() => false)) {
-      await uniqueClick(mobileMode);
+    if (await mobileMode.filter({ visible: true }).count()) {
+      await uniqueClick(mobileMode, 'LOGIN_MOBILE_TOGGLE_AMBIGUOUS');
       await page.waitForTimeout(500);
       continue;
     }
     const mobile = page.getByPlaceholder('Enter Your Mobile Number Here', { exact: true });
-    if (await mobile.isVisible().catch(() => false)) {
+    if (await mobile.filter({ visible: true }).count()) {
       const saved = path.join(root, '.private', 'dhan-login.json');
       if (!fs.existsSync(saved)) throw new AuthError('ENTER_MOBILE_DIRECTLY_IN_BROWSER');
       if (mobileSubmitted) throw new AuthError('MOBILE_LOGIN_REJECTED_OR_UI_CHANGED');
       const { mobileNumber } = JSON.parse(privateRead(saved));
       if (!/^\d{10}$/.test(mobileNumber)) throw new AuthError('PRIVATE_MOBILE_NUMBER_INVALID');
-      await mobile.fill(mobileNumber);
-      await uniqueClick(page.getByText('Proceed', { exact: true }));
+      await uniqueFill(mobile, mobileNumber, 'LOGIN_MOBILE_INPUT_AMBIGUOUS');
+      await uniqueClick(page.getByText('Proceed', { exact: true }), 'LOGIN_PROCEED_AMBIGUOUS');
       mobileSubmitted = true;
       await page.waitForTimeout(1000);
       continue;
@@ -95,12 +101,12 @@ export async function captureWebToken({ root, clientId, until, cleanupOnly = fal
     await login(page, root);
     // Observed Dhan Web route and menu, 2026-09-29. Do not click any trading controls.
     await page.goto('https://web.dhan.co/index/profile', { waitUntil: 'domcontentloaded' });
-    await uniqueClick(page.getByText('Profile & Account Details', { exact: true }));
-    await page.getByText('Client ID', { exact: true }).waitFor();
+    await uniqueClick(page.getByText('Profile & Account Details', { exact: true }), 'PROFILE_DETAILS_CONTROL_AMBIGUOUS');
+    await page.getByText('Client ID', { exact: true }).filter({ visible: true }).first().waitFor();
     const details = await page.locator('body').innerText();
     if (details.match(/Client ID\s+(\d+)/)?.[1] !== String(clientId)) throw new AuthError('ACCOUNT_MISMATCH');
-    await uniqueClick(page.getByText('DhanHQ Trading APIs', { exact: true }));
-    await page.getByText('Generate new Access Token', { exact: true }).waitFor();
+    await uniqueClick(page.getByText('DhanHQ Trading APIs', { exact: true }), 'TRADING_API_CONTROL_AMBIGUOUS');
+    await page.getByText('Generate new Access Token', { exact: true }).filter({ visible: true }).first().waitFor();
     guard(page);
     await page.locator('td.mat-column-token').first().waitFor({ timeout: 5000 }).catch(() => {});
     if (cleanupOnly) {
@@ -126,10 +132,10 @@ export async function captureWebToken({ root, clientId, until, cleanupOnly = fal
     }
     // No raw page snapshots, response logging, system clipboard, screenshots or traces.
     const name = page.getByPlaceholder('Name your Application', { exact: true });
-    if (!await name.isVisible().catch(() => false)) await uniqueClick(page.getByText('Generate', { exact: true }));
-    await name.fill('Dusty');
-    await page.getByText('24 Hours', { exact: true }).waitFor();
-    await uniqueClick(page.getByText('Generate Access Token', { exact: true }));
+    if (!await name.filter({ visible: true }).count()) await uniqueClick(page.getByText('Generate', { exact: true }), 'GENERATE_CONTROL_AMBIGUOUS');
+    await uniqueFill(name, 'Dusty', 'APPLICATION_NAME_INPUT_AMBIGUOUS');
+    await page.getByText('24 Hours', { exact: true }).filter({ visible: true }).first().waitFor();
+    await uniqueClick(page.getByText('Generate Access Token', { exact: true }), 'GENERATE_TOKEN_CONTROL_AMBIGUOUS');
     const deadline = Date.now() + 20000;
     while (Date.now() < deadline) {
       guard(page);
