@@ -73,6 +73,24 @@ export async function verifyProfile(token, clientId, fetchFn = fetch) {
   if (String(d?.dhanClientId) !== String(clientId)) throw new AuthError('ACCOUNT_MISMATCH');
   return true;
 }
+export async function renewWebToken(token, clientId, fetchFn = fetch) {
+  let r;
+  try {
+    r = await fetchFn('https://api.dhan.co/v2/RenewToken', {
+      method: 'GET',
+      headers: { 'access-token': token, dhanClientId: clientId },
+      signal: AbortSignal.timeout(15000),
+      redirect: 'error'
+    });
+  } catch { throw new AuthError('RENEW_NETWORK_UNVERIFIED'); }
+  if ([400, 401, 403].includes(r.status)) throw new AuthError('RENEW_TOKEN_REJECTED');
+  if (!r.ok) throw new AuthError(`RENEW_HTTP_${r.status}`);
+  let d; try { d = await r.json(); } catch { throw new AuthError('RENEW_RESPONSE_INVALID'); }
+  const accessToken = d?.accessToken ?? d?.access_token;
+  if (!accessToken) throw new AuthError('RENEW_RESPONSE_INVALID');
+  if (String(claims(accessToken).dhanClientId) !== String(clientId)) throw new AuthError('ACCOUNT_MISMATCH');
+  return accessToken;
+}
 function lock(dir) {
   const file = path.join(dir, 'token-recovery.lock');
   try { fs.mkdirSync(file, { mode: 0o700 }); }
@@ -89,7 +107,7 @@ export async function ensureToken(options = {}) {
   flight = ensure(options).finally(() => { flight = undefined; });
   return flight;
 }
-async function ensure({ root = ROOT, allowBrowser = false, forceBrowser = false, sessionUntil, fetchFn = fetch, recover, cleanup, now = Date.now() } = {}) {
+async function ensure({ root = ROOT, allowBrowser = false, forceBrowser = false, sessionUntil, fetchFn = fetch, renew, recover, cleanup, now = Date.now() } = {}) {
   const envFile = path.join(root, '.env');
   const until = sessionEnd(now, sessionUntil);
   const original = privateRead(envFile), env = dotenv.parse(original);
@@ -103,6 +121,45 @@ async function ensure({ root = ROOT, allowBrowser = false, forceBrowser = false,
     if (!reason) {
       return { token: env.DHAN_ACCESS_TOKEN, status: 'VALID', action: 'REUSED', expires_at: new Date(claims(env.DHAN_ACCESS_TOKEN).exp * 1000).toISOString(), profile_verified: true };
     }
+  }
+  if (!forceBrowser && reason === 'EXPIRES_BEFORE_SESSION_END' && env.DHAN_ACCESS_TOKEN && env.DHAN_TOKEN_SOURCE === 'DHAN_WEB') {
+    const renewDir = path.join(root, '.private'); fs.mkdirSync(renewDir, { recursive: true, mode: 0o700 }); fs.chmodSync(renewDir, 0o700);
+    const releaseRenew = lock(renewDir);
+    try {
+      // Re-read under the cross-process lock so a concurrent successful rotation wins cleanly.
+      const currentOriginal = privateRead(envFile), currentEnv = dotenv.parse(currentOriginal);
+      const currentReason = needsRecovery(currentEnv.DHAN_ACCESS_TOKEN, currentEnv.DHAN_CLIENT_ID, until, now);
+      if (!currentReason) {
+        await verifyProfile(currentEnv.DHAN_ACCESS_TOKEN, currentEnv.DHAN_CLIENT_ID, fetchFn);
+        cache = { token: currentEnv.DHAN_ACCESS_TOKEN, at: now };
+        return { token: currentEnv.DHAN_ACCESS_TOKEN, status: 'VALID', action: 'REUSED_AFTER_LOCK', expires_at: new Date(claims(currentEnv.DHAN_ACCESS_TOKEN).exp * 1000).toISOString(), profile_verified: true };
+      }
+      if (currentReason === 'EXPIRES_BEFORE_SESSION_END' && currentEnv.DHAN_TOKEN_SOURCE === 'DHAN_WEB') {
+        try {
+          const renewFn = renew || ((oldToken, clientId) => renewWebToken(oldToken, clientId, fetchFn));
+          const renewedToken = await renewFn(currentEnv.DHAN_ACCESS_TOKEN, currentEnv.DHAN_CLIENT_ID);
+          const missing = needsRecovery(renewedToken, currentEnv.DHAN_CLIENT_ID, until, now);
+          if (missing) throw new AuthError(`RENEW_${missing}`);
+          await verifyProfile(renewedToken, currentEnv.DHAN_CLIENT_ID, fetchFn);
+          const expiry = new Date(claims(renewedToken).exp * 1000).toISOString();
+          const updated = mergeEnv(currentOriginal, {
+            DHAN_ACCESS_TOKEN: renewedToken,
+            DHAN_TOKEN_SOURCE: 'DHAN_WEB',
+            DHAN_TOKEN_NAME: currentEnv.DHAN_TOKEN_NAME || 'Dusty',
+            DHAN_TOKEN_EXPIRES_AT: expiry
+          });
+          atomicPrivate(envFile, updated, currentOriginal);
+          cache = { token: renewedToken, at: Date.now() };
+          return { token: renewedToken, status: 'VALID', action: 'API_TOKEN_RENEWED', expires_at: expiry, profile_verified: true };
+        } catch (e) {
+          // Renewal is the preferred path. If Dhan rejects/unavailable, browser recovery remains the fallback.
+          if (!(e instanceof AuthError) || !e.code.startsWith('RENEW_')) throw e;
+          reason = e.code;
+        }
+      } else {
+        reason = currentReason;
+      }
+    } finally { releaseRenew(); }
   }
   if (!allowBrowser) return { status: 'WEB_TOKEN_REQUIRED', reason: reason || 'FORCED_BROWSER_RECOVERY' };
   const dir = path.join(root, '.private'); fs.mkdirSync(dir, { recursive: true, mode: 0o700 }); fs.chmodSync(dir, 0o700);
