@@ -1,5 +1,18 @@
 # Security and protected confirmation
 
+## Provider and configuration boundary
+
+Runtime/provider configuration and user-supplied secrets belong only in ignored
+`agent/.env`; Codex owns its OAuth storage. The managed Codex adapter verifies
+its restricted effective configuration before model access, explicitly disables
+inherited MCP entries and tool/app/hook/shell capabilities, and submits turns
+with restricted read-only scratch roots. It never grants server tool/permission
+requests. Its process necessarily retains Codex-owned authentication access;
+this is a different boundary from the network-denied numerical sandbox below.
+Model role inputs reject raw/protected data and credential/configuration fields.
+No API key, `.env` contents or account identity is logged or placed in provenance.
+[Protocol and operational details](providers.md).
+
 ## Enforced boundary and threat model
 
 The trusted CLI/service and host operator administer the research environment.

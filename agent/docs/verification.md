@@ -1,5 +1,8 @@
 # Release verification
 
+Initial laboratory-build evidence. For the subsequent Codex/provider configuration
+release, see [Codex migration verification](codex-verification.md).
+
 Research-only release **0.1.0**. Installation and integrations are distinguished
 from market evidence. No broker operation, live risk change, authentication change
 or live-ledger write is part of this release.

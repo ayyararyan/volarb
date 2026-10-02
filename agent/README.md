@@ -1,7 +1,7 @@
 # Butterfly Research Laboratory
 
 Research-only, registry-centred **LangGraph** laboratory. No broker execution,
-production strategy imports, credentials or live-ledger writes. Synthetic examples
+production strategy imports, broker credentials or live-ledger writes. Synthetic examples
 are engineering evidence, never historical strategy performance.
 
 ## Install and run
@@ -18,7 +18,10 @@ uv venv --python 3.12.13 "$HOME/.local/share/butterfly-lab-env"
 uv pip sync --python "$HOME/.local/share/butterfly-lab-env/bin/python" --require-hashes requirements.lock
 uv pip install --python "$HOME/.local/share/butterfly-lab-env/bin/python" --no-deps .
 export PATH="$HOME/.local/share/butterfly-lab-env/bin:$PATH"
-export BUTTERFLY_LAB_HOME="$HOME/.local/share/butterfly-lab-runtime"
+cp .env.example .env
+chmod 600 .env
+# Edit .env once; private runtime defaults outside the checkout.
+butterfly-lab config check
 butterfly-lab doctor
 butterfly-lab demo --kind all
 ```
@@ -29,6 +32,12 @@ memory. It includes EXP-001, a full four-leg hold/close/recenter comparison, and
 blocked hypotheses. No model credentials are needed. Use a new runtime directory
 for a fresh demonstration; immutable IDs deliberately reject changed reruns.
 
+For real-model research, install Codex, run `codex` and choose **Sign in with
+ChatGPT**, then `butterfly-lab auth status` and the explicitly spending
+`butterfly-lab auth test`. The recommended provider is **Codex app-server**, not
+an API-key adapter. Configure Lab in **`agent/.env`**; Codex keeps ownership of
+its login credentials. [First-time setup, exact campaign command and troubleshooting](docs/providers.md).
+
 ## Commands and evidence
 
 - [Operations and recovery](docs/operations.md): campaigns, workers, cancellation,
@@ -36,6 +45,7 @@ for a fresh demonstration; immutable IDs deliberately reject changed reruns.
 - [Scientific contract](docs/scientific-contract.md): exact definitions, F0–F4
   ceilings, inference and baseline provenance.
 - [Provider configuration](docs/providers.md) and [security boundary](docs/security.md).
+- [Codex migration verification and exact setup](docs/codex-verification.md).
 - [Requirements → tests](docs/traceability.md), [verified data audit](docs/data-audit.md),
   [release verification](docs/verification.md).
 - [Architecture and diagrams](docs/architecture.md), [configuration reference](docs/configuration.md).

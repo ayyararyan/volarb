@@ -30,6 +30,12 @@
           "title": "Human Review Minutes",
           "type": "integer"
         },
+        "llm_calls": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Llm Calls",
+          "type": "integer"
+        },
         "llm_currency": {
           "default": 0,
           "minimum": 0,
@@ -178,6 +184,7 @@
       "enum": [
         "fixture",
         "replay",
+        "codex",
         "openai",
         "deterministic"
       ],

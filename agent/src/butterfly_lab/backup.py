@@ -63,6 +63,26 @@ def backup(root: Path | str, destination: Path | str) -> dict[str, Any]:
             )
             for source in databases:
                 _sqlite_copy(source, staging / source.name)
+            # These are generated reservation state, NOT user configuration or
+            # credentials. Retain them so restore cannot erase already spent
+            # local call/USD allowances. Respect each writer's actual lock.
+            for name in ("codex-usage.json", "provider-budget.json"):
+                source = registry.root / name
+                if not source.exists():
+                    continue
+                if source.is_symlink():
+                    raise RegistryError("Provider budget backup refuses symlinks")
+                lock_path = (
+                    source.with_suffix(source.suffix + ".lock")
+                    if name == "codex-usage.json"
+                    else source
+                )
+                with lock_path.open("a+") as provider_lock:
+                    fcntl.flock(provider_lock, fcntl.LOCK_EX)
+                    # Validate JSON before copying; never copy .env/auth/config.
+                    json.loads(source.read_text())
+                    shutil.copyfile(source, staging / name)
+                    os.chmod(staging / name, 0o600)
             source_artifacts = registry.artifacts.root
             for source in source_artifacts.rglob("*"):
                 if source.is_symlink():

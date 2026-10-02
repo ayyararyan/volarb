@@ -2,6 +2,8 @@
 
 `butterfly-lab --help` is the command authority. Global `--root DIRECTORY` precedes
 the subcommand. The runtime must be private, outside Git and cloud synchronization.
+Configure normal runtime/provider settings in **`agent/.env`**; `--root` is an
+explicit one-command runtime override. See [setup and provider operations](providers.md).
 
 ## Data and campaigns
 
@@ -18,9 +20,12 @@ butterfly-lab campaign report CAMPAIGN_ID
 Without `--wait`, admitted experiments enqueue and park. A short bounded batch is
 prepared concurrently; numerical dispatch is controlled separately. A campaign may
 succeed with rejected, inconclusive and data-limited findings. An unapproved campaign
-fails before generation. The provider defaults to a **synthetic fixture**, explicitly
-labelled; configuring `provider: openai` requires a real adapter and finite spending
-configuration, never a silent fixture fallback.
+fails before generation. New CLI campaigns with an omitted provider resolve the
+**`.env` provider (Codex by default)** and freeze that identity before registration.
+Explicit fixture campaigns and the offline demo remain synthetic and credential-free.
+An explicit campaign provider must match its adapter. API-key usage requires
+explicit `openai` selection plus finite API spending authorization; no provider
+falls back silently. Normal execution never needs `--provider-config`.
 
 A full pending queue parks the experiment at a queue-capacity interrupt; `resume`
 rechecks durable queue state. It does not consume an extra run reservation or turn
@@ -110,8 +115,12 @@ butterfly-lab --root /private/new-runtime restore /private/backup-location
 ```
 
 Quiesce workers/checkpoint writers before backup; unsafe active jobs are rejected.
-Backup includes consistent SQLite copies and artifact hashes, not external raw data
-or provider credentials. Restore requires an absent destination and verifies the
+Backup includes consistent SQLite copies, artifact hashes, and generated provider
+reservation ledgers (under their writer locks), not external raw data, `.env`,
+Codex credentials or generated authority keys. Stop model callers as well as
+workers before taking a recovery snapshot; do not restore an old snapshot to
+reset spend/call limits. Reconcile calls made after its timestamp before allowing
+further model work. Restore requires an absent destination and verifies the
 manifest and content; preserve the separately reported manifest SHA out-of-band.
 Reconcile after restore before dispatch. Keep original source datasets by their hashes.
 

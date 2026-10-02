@@ -5,21 +5,16 @@ from __future__ import annotations
 import hashlib
 import importlib.metadata
 import json
-import os
 import platform
 import sys
 from pathlib import Path
 
 
 def runtime_root(value: str | Path | None = None) -> Path:
-    root = (
-        Path(
-            value
-            or (os.environ.get("BUTTERFLY_LAB_HOME") or Path.home() / ".local/share/butterfly-lab")
-        )
-        .expanduser()
-        .resolve()
-    )
+    from .settings import get_settings
+
+    # Explicit worker roots avoid loading user configuration inside numerical sandboxes.
+    root = Path(value if value is not None else get_settings().lab_home).expanduser().resolve()
     forbidden = ("CloudStorage", "Google Drive", "Dropbox", "OneDrive", "Mobile Documents")
     if any(term in str(root) for term in forbidden):
         raise ValueError("active runtime databases must be outside cloud-synchronised paths")

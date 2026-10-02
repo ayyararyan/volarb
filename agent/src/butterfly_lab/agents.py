@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .providers import FixtureProvider, OpenAIProvider, Provider, ProviderError, ReplayProvider
 from .schemas import HypothesisSpec, digest
+from .codex_provider import CodexAppServerProvider
 
 
 class RoleOutput(BaseModel):
@@ -47,21 +48,71 @@ ROLE_PROFILES = {
 
 
 def _safe_context(value: Any) -> None:
+    import re
+
     if isinstance(value, dict):
         if value.get("partition") == "confirmation" or value.get("access_class") == "confirmation":
             raise PermissionError("Agent role cannot inspect protected confirmation evidence")
         if value.get("partition") not in (None, "development") and "diagnostic" in value:
             raise PermissionError("Hypothesis diagnostics must be development-only")
         for key, child in value.items():
-            if key.lower() in {
+            # Match environment-style, snake_case, kebab-case and camelCase
+            # keys without forwarding the key/value in an exception or model
+            # correction. A redacted settings dump is still not research input.
+            normalized = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1_\2", str(key))
+            normalized = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", normalized)
+            normalized = re.sub(r"[^A-Za-z0-9]+", "_", normalized).strip("_").lower()
+            forbidden = {
                 "api_key",
                 "access_token",
+                "refresh_token",
+                "oauth_token",
+                "oauth",
+                "oauth_credentials",
+                "authorization",
+                "authorization_key",
+                "signing_key",
+                "env_contents",
+                "env",
+                "dotenv",
+                "environment_variables",
+                "environ",
+                "settings",
+                "runtime_settings",
+                "runtime_config",
+                "provider_config",
+                "config_path",
+                "env_path",
+                "auth_path",
+                "codex_auth",
+                "codex_auth_path",
+                "credential_path",
+                "credentials_path",
+                "credentials",
+                "confirmation_secret",
                 "password",
                 "broker_credentials",
                 "raw_data",
                 "source_path",
-            }:
-                raise PermissionError(f"Forbidden agent-context field: {key}")
+            }
+            credential_suffixes = (
+                "_api_key",
+                "_access_token",
+                "_refresh_token",
+                "_oauth_token",
+                "_authorization_key",
+                "_signing_key",
+                "_password",
+                "_secret",
+                "_credentials",
+                "_auth_path",
+            )
+            if (
+                normalized in forbidden
+                or normalized.endswith(credential_suffixes)
+                or normalized.startswith("butterfly_")
+            ):
+                raise PermissionError("Forbidden credential/configuration field in agent context")
             _safe_context(child)
     elif isinstance(value, list):
         for child in value:
@@ -77,14 +128,21 @@ class AgentService:
 
     def bind_campaign(self, campaign_id: str) -> None:
         if self.registry is None:
-            if isinstance(self.provider, OpenAIProvider):
+            if isinstance(self.provider, (OpenAIProvider, CodexAppServerProvider)):
                 raise ProviderError("Live agent calls require an authoritative campaign registry")
             return
         campaign = self.registry.get("campaign", campaign_id)
         if not campaign or not campaign["approved"]:
             raise PermissionError("Agent roles require an approved registered campaign")
         expected = campaign.get("provider", "fixture")
-        if isinstance(self.provider, OpenAIProvider):
+        if isinstance(self.provider, CodexAppServerProvider):
+            if expected != "codex":
+                raise PermissionError("Campaign does not permit the Codex subscription provider")
+            budget = campaign["budget"]
+            self.provider.bind_campaign_budget(
+                campaign_id, budget.get("llm_calls", 0), budget["llm_tokens"]
+            )
+        elif isinstance(self.provider, OpenAIProvider):
             if expected != "openai":
                 raise PermissionError("Campaign does not permit a live provider")
             budget = campaign["budget"]
@@ -95,7 +153,7 @@ class AgentService:
             self.provider.bind_campaign_budget(
                 campaign_id, budget["llm_currency"], budget["llm_tokens"]
             )
-        elif expected == "openai":
+        elif expected in ("openai", "codex"):
             raise ProviderError("Live-provider campaign cannot silently use a fixture or replay")
         elif expected == "replay" and not isinstance(self.provider, ReplayProvider):
             raise ProviderError("Replay campaign requires a recorded-response provider")
@@ -106,7 +164,7 @@ class AgentService:
         campaign_id = payload.get("campaign_id", self._bound_campaign_id)
         if campaign_id and self.registry is not None:
             self.bind_campaign(campaign_id)
-        elif isinstance(self.provider, OpenAIProvider):
+        elif isinstance(self.provider, (OpenAIProvider, CodexAppServerProvider)):
             raise ProviderError("Live role call has no bound registered campaign")
         request = {"profile_version": "1", "profile": ROLE_PROFILES[role], **payload}
         for correction in range(2):
@@ -138,7 +196,7 @@ class AgentService:
                 **request,
                 "correction": {
                     "errors": [
-                        {key: issue[key] for key in ("type", "loc", "msg")}
+                        {"type": issue["type"], "loc": issue["loc"], "msg": issue["msg"]}
                         for issue in error.errors(include_input=False, include_url=False)
                     ],
                     "previous_response_hash": response.response_hash,

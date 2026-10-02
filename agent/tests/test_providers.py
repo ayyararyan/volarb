@@ -137,3 +137,24 @@ def test_replay_and_fixture_are_separately_labelled_and_hash_bound():
     )
     with pytest.raises(ProviderError, match="hash"):
         corrupt.generate("critic", {"x": 1})
+
+
+def test_api_campaign_call_ceiling_is_scoped_but_currency_ceiling_is_global(tmp_path, monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "synthetic-key")
+    provider = OpenAIProvider(config(tmp_path, max_calls=1), transport=lambda *a: response())
+    provider.bind_campaign_budget("first", 0.1, 10000)
+    provider.generate("steward", {})
+    with pytest.raises(ProviderBudgetExceeded):
+        provider.generate("steward", {})
+    provider.bind_campaign_budget("second", 0.1, 10000)
+    assert provider.generate("steward", {}).billing_kind == "api_usd"
+    assert json.loads(provider.config.ledger_path.read_text())["calls"] == 2
+
+
+def test_direct_api_config_rejects_header_injection_without_echoing_secret(tmp_path):
+    from pydantic import SecretStr
+
+    secret = "synthetic-private\nheader"
+    with pytest.raises(ValueError) as error:
+        config(tmp_path, api_key=SecretStr(secret))
+    assert secret not in str(error.value)

@@ -26,34 +26,30 @@ def emit(value):
     print(json.dumps(plain(value), sort_keys=True, indent=2, default=str))
 
 
-def provider_service(root, config_path):
-    from .agents import AgentService
-    from .providers import OpenAIConfig, OpenAIProvider, ReplayProvider
-
-    cfg = read_json(config_path)
-    if cfg.pop("kind", "openai") == "replay":
-        provider = ReplayProvider(read_json(cfg["records"]))
-    else:
-        cfg["ledger_path"] = root / "provider-budget.json"
-        provider = OpenAIProvider(OpenAIConfig(**cfg))
-    return AgentService(provider, Registry(root), max_calls=cfg.get("max_calls", 20))
-
-
-def lab_for(args, root):
+def lab_for(args, root, campaign=None):
     from .graph import Laboratory
+    from .provider_factory import service_for
+    from .settings import get_settings
 
+    if getattr(args, "provider_config", None):
+        raise ValueError("--provider-config is deprecated; move runtime settings to agent/.env")
+    settings = get_settings()
     return Laboratory(
         root,
-        provider_service(root, args.provider_config)
-        if getattr(args, "provider_config", None)
-        else None,
+        service_for(root, campaign, settings),
+        pending_limit=settings.pending_job_limit,
+        max_concurrency=min(
+            settings.llm_max_concurrent_calls, (campaign or {}).get("llm_concurrency", 2)
+        ),
     )
 
 
-def drain(root, campaign_id, timeout=120, provider_config=None):
+def drain(root, campaign_id, timeout=120):
     """Bounded operator-requested watcher; numerical supervision stays external."""
-    from .graph import Laboratory
+    from .settings import get_settings
 
+    settings = get_settings()
+    campaign = Registry(root).get("campaigns", campaign_id)
     worker = subprocess.Popen(
         [
             sys.executable,
@@ -62,7 +58,7 @@ def drain(root, campaign_id, timeout=120, provider_config=None):
             "--root",
             str(root),
             "--concurrency",
-            "2",
+            str(min(settings.numerical_workers, campaign["numerical_concurrency"])),
             "--idle-timeout",
             "-1",
         ],
@@ -70,7 +66,7 @@ def drain(root, campaign_id, timeout=120, provider_config=None):
         stderr=subprocess.PIPE,
         text=True,
     )
-    lab = Laboratory(root, provider_service(root, provider_config) if provider_config else None)
+    lab = lab_for(argparse.Namespace(), root, campaign)
     started = time.monotonic()
     try:
         while True:
@@ -179,6 +175,15 @@ def parser():
     p.add_argument("--root", help="Private non-cloud runtime directory")
     sub = p.add_subparsers(dest="command", required=True)
     sub.add_parser("doctor")
+    for name, choices in (
+        ("config", ("check", "show")),
+        ("auth", ("status", "test")),
+        ("provider", ("status", "test")),
+    ):
+        group = sub.add_parser(name)
+        actions = group.add_subparsers(dest="action", required=True)
+        for action in choices:
+            actions.add_parser(action)
     d = sub.add_parser("demo")
     d.add_argument("--kind", choices=["all", "spot", "fourleg"], default="all")
     sch = sub.add_parser("schemas")
@@ -199,12 +204,12 @@ def parser():
             elif group in ("campaign", "experiment") and action == "run":
                 q.add_argument("file")
                 q.add_argument("--wait", action="store_true")
-                q.add_argument("--provider-config")
+                q.add_argument("--provider-config", help="Deprecated; use agent/.env")
                 if group == "campaign":
                     q.add_argument("--dataset", required=True)
                     q.add_argument("--hypotheses")
             elif group == "worker" and action == "start":
-                q.add_argument("--concurrency", type=int, default=1)
+                q.add_argument("--concurrency", type=int)
                 q.add_argument("--max-jobs", type=int)
                 q.add_argument("--detach", action="store_true")
                 q.add_argument("--idle-timeout", type=float, default=2)
@@ -235,19 +240,41 @@ def parser():
 
 
 def dispatch(args):
+    from .settings import get_settings
+    import logging
+
+    settings = get_settings()
+    # Configure only our namespace; DEBUG must not enable SDK/protocol payload
+    # logging or dump third-party HTTP headers to stderr.
+    logger = logging.getLogger("butterfly_lab")
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter("%(levelname)s %(name)s %(message)s"))
+        logger.addHandler(handler)
+    logger.setLevel(settings.log_level)
+    logger.propagate = False
+    if getattr(args, "provider_config", None):
+        raise ValueError("--provider-config is deprecated; configure Butterfly Lab in agent/.env")
+    if args.command == "config":
+        return (
+            settings.redacted()
+            if args.action == "show"
+            else {
+                "valid": True,
+                "config_path": str(settings.config_path) if settings.config_path else None,
+                "provider": settings.llm_provider,
+            }
+        )
     if args.command == "restore":
         from .backup import restore
 
-        target = (
-            Path(
-                args.root
-                or os.environ.get("BUTTERFLY_LAB_HOME", Path.home() / ".local/share/butterfly-lab")
-            )
-            .expanduser()
-            .resolve()
-        )
+        target = Path(args.root or settings.lab_home).expanduser().resolve()
         return restore(Path(args.source), target)
     root = runtime_root(args.root)
+    if args.command in ("auth", "provider"):
+        from .provider_factory import provider_status, provider_test
+
+        return (provider_status if args.action == "status" else provider_test)(root, settings)
     if args.command == "doctor":
         from .security import verify_boundary
 
@@ -258,7 +285,9 @@ def dispatch(args):
             "runtime": str(root),
             "sandbox": verify_boundary(),
             "broker_execution": False,
-            "provider_smoke": "not run; explicit provider credentials and budget required",
+            "provider": settings.llm_provider,
+            "config_valid": True,
+            "provider_smoke": "not run; use auth status (no model call) or explicit auth test (one call)",
         }
     if args.command == "schemas":
         from .schemas import CONTRACTS
@@ -301,11 +330,14 @@ def dispatch(args):
 
         if args.action == "status":
             return registry.status()
+        concurrency = args.concurrency or settings.numerical_workers
+        if concurrency > settings.numerical_workers:
+            raise ValueError("Requested numerical concurrency exceeds agent/.env ceiling")
         if args.detach:
-            return spawn_worker(root, concurrency=args.concurrency)
+            return spawn_worker(root, concurrency=concurrency)
         return start_worker(
             root,
-            concurrency=args.concurrency,
+            concurrency=concurrency,
             max_jobs=args.max_jobs,
             idle_timeout=args.idle_timeout,
         )
@@ -349,18 +381,34 @@ def dispatch(args):
             return comparison_benchmark(root)
         return load_benchmark(root, jobs=args.jobs, hypotheses=args.hypotheses)
     if args.command == "resume":
-        lab = lab_for(args, root)
-        try:
-            if args.id and registry.get("campaigns", args.id):
+        if args.id and registry.get("campaigns", args.id):
+            campaign = registry.get("campaigns", args.id)
+            lab = lab_for(args, root, campaign)
+            try:
                 return lab.advance_confirmation(args.id)
-            ids = [args.id] if args.id else [e["id"] for e in registry.list("experiments")]
-            return [{"experiment_id": id, **lab.resume(id)} for id in ids]
-        finally:
-            lab.close()
+            finally:
+                lab.close()
+        ids = [args.id] if args.id else [e["id"] for e in registry.list("experiments")]
+        resumed = []
+        for id in ids:
+            experiment = registry.get("experiments", id)
+            if experiment is None:
+                raise ValueError("Unknown registered experiment")
+            campaign = registry.get("campaigns", experiment["campaign_id"])
+            lab = lab_for(args, root, campaign)
+            try:
+                resumed.append({"experiment_id": id, **lab.resume(id)})
+            finally:
+                lab.close()
+        return resumed
+
     kind = args.command
     model = CampaignSpec if kind == "campaign" else ExperimentSpec
     if args.action == "validate":
-        return model.model_validate(read_json(args.file)).model_dump(mode="json")
+        value = read_json(args.file)
+        if kind == "campaign":
+            value.setdefault("provider", settings.llm_provider)
+        return model.model_validate(value).model_dump(mode="json")
     if args.action == "cancel":
         return registry.cancel_campaign(args.id)
     if args.action == "status":
@@ -372,19 +420,24 @@ def dispatch(args):
                 "runs": [r for r in registry.runs() if r["experiment_id"] == args.id],
             }
         )
-    lab = lab_for(args, root)
-    try:
-        if args.action == "report":
-            return (
-                lab.campaign_report(args.id)
-                if kind == "campaign"
-                else registry.get("findings", "finding-" + args.id)
-            )
-        value = read_json(args.file)
+    if args.action == "report":
         if kind == "experiment":
-            value.update(environment_hash=environment_hash(), implementation_hash=evaluator_hash())
-        obj = model.model_validate(value)
-        registry.put(kind, obj.id, obj)
+            return registry.get("findings", "finding-" + args.id)
+        lab = lab_for(args, root, registry.get("campaigns", args.id))
+        try:
+            return lab.campaign_report(args.id)
+        finally:
+            lab.close()
+    value = read_json(args.file)
+    if kind == "experiment":
+        value.update(environment_hash=environment_hash(), implementation_hash=evaluator_hash())
+    else:
+        value.setdefault("provider", settings.llm_provider)
+    obj = model.model_validate(value)
+    registry.put(kind, obj.id, obj)
+    campaign = value if kind == "campaign" else registry.get("campaigns", obj.campaign_id)
+    lab = lab_for(args, root, campaign)
+    try:
         if kind == "campaign":
             data = DatasetManifest.model_validate(read_json(args.dataset))
             registry.put("datasets", data.id, data)
@@ -408,11 +461,11 @@ def dispatch(args):
             )
             result = lab.run_experiment(obj.id)
             campaign_id = obj.campaign_id
-        return (
-            drain(root, campaign_id, provider_config=args.provider_config) if args.wait else result
-        )
     finally:
+        # No old app-server remains while the independent numerical supervisor
+        # continues and a fresh graph/service later resumes the campaign.
         lab.close()
+    return drain(root, campaign_id) if args.wait else result
 
 
 def main():

@@ -895,7 +895,7 @@ def _controlled(
 ) -> dict[str, Any]:
     if dataset.get("provenance") != "SYNTHETIC" or dataset.get("fidelity") != "F0":
         raise DataQualificationError("controlled benchmark must remain SYNTHETIC/F0")
-    params = {**metadata(dataset), **experiment.get("parameters", {})}
+    params = {**metadata(dataset), **experiment.get("parameters", {}), **experiment.get("dsl", {})}
     n = int(params.get("n_sessions", 48))
     if not 5 <= n <= 10000:
         raise ValueError("controlled fixture size outside bound")

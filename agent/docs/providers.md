@@ -1,111 +1,193 @@
-# Providers and bounded research roles
+# Configure Butterfly Lab: Codex and one `.env`
 
-`agents.py` defines designer, methodological critic, constrained specification,
-replication-support, evidence-synthesis and campaign-steward profiles. These are
-bounded calls, not permanently running agents. Deterministic gates remain
-authoritative: a model's `ADMIT` cannot supply missing data, change a numerical
-result, spend more money, or upgrade an evidence grade.
+**Configure Butterfly Lab in `agent/.env`.** Copy the committed
+[template](../.env.example); do not create provider/secret JSON files. Codex is the
+recommended real-model provider. API keys are not required for this path.
 
-## Three distinct provenance labels
+## First-time setup
 
-| Provider | Output label | Behaviour |
+After the [locked Python installation](../README.md), from `volarb/agent`:
+
+```sh
+cp .env.example .env
+chmod 600 .env
+# Edit .env once. No field is required for the default Codex configuration.
+codex
+# Select Sign in with ChatGPT if not already authenticated.
+butterfly-lab config check
+butterfly-lab config show
+butterfly-lab doctor
+butterfly-lab auth status
+butterfly-lab auth test
+```
+
+Install Codex first if necessary, using the [official CLI instructions](https://developers.openai.com/codex/cli/).
+Codex owns login and refresh, using its configured credential store. Lab never
+reads, duplicates, exports, or asks you to paste its OAuth tokens. ChatGPT login
+and API-key login are different authentication modes; this provider requires the
+former. [Official authentication documentation](https://developers.openai.com/codex/auth/).
+
+`config show` redacts secrets. `doctor`, `auth status`, and `provider status` do
+**not** submit a model turn. Status distinguishes executable availability,
+ChatGPT authentication, app-server handshake, and model availability. Only
+`auth test` / `provider test` explicitly request one tiny structured model turn;
+this uses subscription capacity. A reported status is not proof that a later
+request will fit the account's remaining quota.
+
+## Offline demo and everyday campaign
+
+```sh
+butterfly-lab demo --kind all
+```
+
+This always uses deterministic fixtures, including when `.env` selects Codex. It
+needs neither Codex installation/login nor an API key. Synthetic output is never
+reported as historical economic evidence.
+
+For actual research, create and qualify your dataset manifest, then use:
+
+```sh
+butterfly-lab data validate /path/to/development-dataset.json
+butterfly-lab campaign validate configs/campaigns/codex.json
+butterfly-lab campaign run configs/campaigns/codex.json \
+  --dataset /path/to/development-dataset.json --wait
+butterfly-lab campaign report codex-development-001
+```
+
+The [example campaign](../configs/campaigns/codex.json) explicitly approves a finite
+Codex scope: two hypotheses and at most 20 model calls. Change its objective,
+approvals, and ID deliberately before registering a new research campaign.
+A manifest must point to your verified development data; paths above are
+placeholders, not claims that those datasets exist. No `--provider-config` is
+needed. Omitted campaign provider binds the selected `.env` provider at
+registration; an explicit campaign provider must match the configured adapter.
+Registered campaign specifications remain immutable.
+
+`--provider-config` is a rejected legacy migration path, not a second preferred
+configuration system. Move its user-provided endpoint/model/key/budget settings to
+`.env` using the reference below. Existing provider accounting ledgers are
+application state, not editable configuration. Do not delete them to reset usage.
+
+## Runtime settings and ownership
+
+[`.env.example`](../.env.example) lists every accepted setting. Shell variables
+override the selected file. Blank optional fields select defaults. No `$VAR`,
+command substitution, shell evaluation, or multiline values are supported.
+Unknown `BUTTERFLY_*` fields and duplicate file assignments fail closed.
+Relative paths are resolved against the selected `.env` directory.
+
+The loader finds the nearest Butterfly Lab `pyproject.toml`, then its `.env`, with
+an editable-checkout fallback. It never loads an unrelated parent project's
+`.env`. For an installed package launched elsewhere, set `BUTTERFLY_ENV_FILE` to
+the one authoritative file; this selects a file rather than merging several.
+Configuration is loaded once per process. Restart the command after editing it.
+
+| Settings | Default / purpose |
+|---|---|
+| `BUTTERFLY_LAB_HOME` | Blank: `~/.local/share/butterfly-lab`; private non-Git, non-cloud runtime |
+| `BUTTERFLY_LLM_PROVIDER` | `codex`; alternatives `fixture`, `replay`, explicit `openai` |
+| `BUTTERFLY_CODEX_MODE` | `managed`; no external listener in this release |
+| `BUTTERFLY_CODEX_COMMAND` | `codex`; one executable name/path, not a shell command |
+| `BUTTERFLY_CODEX_MODEL` | Blank: Codex resolves its default; no stale hard-coded model |
+| `BUTTERFLY_CODEX_STARTUP_TIMEOUT_SECONDS` / `BUTTERFLY_CODEX_REQUEST_TIMEOUT_SECONDS` | `30` / `120` |
+| `BUTTERFLY_LLM_MAX_CONCURRENT_CALLS` / `BUTTERFLY_LLM_MAX_CALLS_PER_CAMPAIGN` | `2` / `40`; campaign ceilings may be tighter |
+| `BUTTERFLY_LLM_MAX_OUTPUT_TOKENS` / `BUTTERFLY_LLM_MAX_INPUT_BYTES` | `4096` / `65536`; output semantics below |
+| `BUTTERFLY_NUMERICAL_WORKERS` / `BUTTERFLY_PENDING_JOB_LIMIT` | `2` / `20`; cannot enlarge registered campaign limits |
+| `BUTTERFLY_LOG_LEVEL` | `INFO`; no credentials or raw provider transcript logging |
+| `BUTTERFLY_REPLAY_PATH` | Exact recorded-response evidence file, required only for replay |
+| `OPENAI_API_KEY`, `BUTTERFLY_OPENAI_MODEL` | Blank; required only when explicitly selecting `openai` |
+| `BUTTERFLY_OPENAI_BASE_URL` | `https://api.openai.com/v1`; credential-free HTTPS |
+| `BUTTERFLY_OPENAI_MAX_COST_USD` | `0`; API spending disabled until deliberately configured |
+| `BUTTERFLY_OPENAI_INPUT_USD_PER_MILLION` / `BUTTERFLY_OPENAI_OUTPUT_USD_PER_MILLION` | `0`; supply current conservative API price ceilings for API fallback |
+
+**Not stored in `.env`:** campaign/experiment/dataset specifications, source data,
+results, checkpoints, registry databases, provider ledgers, or Codex-owned OAuth
+credentials. Generated confirmation signing/authorization keys remain private
+application-managed runtime state. They are not user-supplied secrets to copy into
+`.env`. The file is ignored by Git, excluded from shareable application backups,
+and must never be attached to a research artifact. Keep permissions `0600`.
+
+## Provider contract, lifecycle and accounting
+
+| Provider | Provenance | Network/model use |
 |---|---|---|
-| `FixtureProvider` | `synthetic_fixture` | Deterministic registered responses; no model call |
-| `ReplayProvider` | `recorded_replay` | Exact role/input/schema hash must match a recorded response hash |
-| `OpenAIProvider` | `real_model` | Configurable HTTPS OpenAI-compatible chat-completions request |
+| `FixtureProvider` | `synthetic_fixture` | None; deterministic bounded fixtures |
+| `ReplayProvider` | `recorded_replay` | None; exact role/input/schema and response hashes |
+| `CodexAppServerProvider` | `real_model` | Managed local app-server with Codex-owned ChatGPT login |
+| `OpenAIProvider` | `real_model` | Explicit optional HTTPS API-key adapter |
 
-Provider contract tests use an injected HTTP transport. They verify request and
-response semantics, not connectivity to a real service. No nonzero live-provider budget was configured during this implementation, so no
-live-provider request was made. Passing offline tests do not verify connectivity
-or imply provider spending.
+The six roles remain designer, critic, constrained specification, independent
+replication support, synthesizer, and steward. Inputs contain approved literature,
+verified capabilities, development-only diagnostics, and evidence-linked findings,
+not raw protected data. Strict local Pydantic validation and the existing single
+malformed-output correction remain authoritative. A correction consumes another
+reserved call. Model prose cannot grant capabilities, change numerical results,
+upgrade grades, or expand permissions/budgets.
 
-## Optional real-provider configuration
+The adapter uses the supported stdio JSON-RPC transport: `initialize`,
+`initialized`, account/model inspection, a fresh thread per role call, and
+`turn/start` with a strict `outputSchema` envelope (`payload_json: string`).
+The original role schema stays in the prompt; Lab decodes the JSON string and
+validates it locally. This is deliberate: Codex forwards schemas with strict
+validation, whereas open-ended DSL maps and defaulted Pydantic fields are not
+in the provider’s strict schema subset. The envelope does not weaken the local
+research contract or permit an extra economic repair loop.
+It consumes stream notifications until terminal
+completion; it is not a scraper for interactive CLI output. Official WebSocket
+transport is experimental/unsupported, so `external` mode is rejected. The
+interface was checked against **Codex CLI 0.149.1** and the official documentation
+on **2026-10-02**. [App-server reference](https://developers.openai.com/codex/app-server/).
 
-Create a private JSON configuration outside the repository; choose a compatible
-model and **explicit price ceilings**, checked against your provider's current
-pricing. Example values below are illustrative limits, not asserted prices:
+Managed processes have bounded startup/request waits, sanitized errors, explicit
+shutdown and child reaping. A crashed or timed-out ambiguous turn is not silently
+replayed. A new permitted call may establish a new process, subject to the same
+persistent reservations. Numerical workers and graph checkpoints are independent
+of app-server lifetime. Lab disables Codex tools, applications, hooks, skills,
+shell execution and discovered MCP integrations for bounded role turns; its
+scratch workspace is separate from market data. This is not a claim that a prompt
+alone supplies OS isolation, nor a reason to relax numerical/confirmation
+sandboxes.
 
-```json
-{
-  "kind": "openai",
-  "model": "YOUR_JSON_MODE_COMPATIBLE_MODEL",
-  "base_url": "https://api.openai.com/v1",
-  "api_key_env": "OPENAI_API_KEY",
-  "approved": true,
-  "max_calls": 1,
-  "max_cost_usd": 0.10,
-  "input_usd_per_million": 1.0,
-  "output_usd_per_million": 2.0,
-  "max_output_tokens": 2048,
-  "max_input_bytes": 16384,
-  "timeout_seconds": 60
-}
-```
+Codex-plan reservations enforce local call/concurrency/input limits. There is no
+API-dollar conversion for subscription usage. Token and rate-limit metadata are
+recorded when supplied; unknown consumption stays unknown. The current app-server
+turn interface has no documented hard output-token parameter: the configured
+output ceiling is an observation/interruption and acceptance limit, **not a
+promise that the server cannot generate or charge beyond it**. Do not interpret
+`budget.llm_tokens=0` in the Codex example as unlimited local calls or measured
+subscription quota. It means no fictitious aggregate token quota was approved.
+The actual resolved model, prompt/response hashes, reported usage and unavailable
+metadata reasons remain part of agent-call provenance and linked research records.
+[App-server usage events](https://developers.openai.com/codex/app-server/).
 
-Set `OPENAI_API_KEY` in the invoking environment without putting it in the
-configuration, shell history, logs or Git. Pass `--provider-config` to campaign
-execution. The CLI places the persistent provider reservation ledger under the
-private runtime root, not the repository. Campaign provider and currency budgets
-must also permit the operation. Start with one hypothesis and one call; the full
-multi-role lifecycle needs its own finite role-call allocation.
+The strict-schema behavior was checked against the installed-version
+[app-server forwarding implementation](https://github.com/openai/codex/blob/rust-v0.149.1/codex-rs/app-server/src/request_processors/turn_processor.rs#L561),
+[session strict-mode selection](https://github.com/openai/codex/blob/rust-v0.149.1/codex-rs/core/src/session/turn.rs#L1325),
+and [request serialization](https://github.com/openai/codex/blob/rust-v0.149.1/codex-rs/codex-api/src/common.rs#L372).
 
-The working CLI form is:
+Optional OpenAI usage retains positive configured API-price ceilings plus campaign
+USD/token authorization. Failed or ambiguous requests retain their reservation.
+It uses JSON mode and strict local validation, not a claim that JSON mode enforces
+all scientific rules. No provider ever falls back automatically to API-key or
+fixture output. [OpenAI JSON-mode documentation](https://developers.openai.com/api/docs/guides/structured-outputs).
 
-```sh
-butterfly-lab --root "$BUTTERFLY_LAB_HOME" campaign run /path/to/private-campaign.json \
-  --dataset /path/to/development-manifest.json \
-  --provider-config /path/to/private-provider.json --wait
-```
+## Troubleshooting
 
-The campaign must declare `provider: "openai"`, `approved: true`,
-`budget.currency: "USD"`, positive `budget.llm_currency` and `budget.llm_tokens`.
-The one-call example above deliberately stops at its call limit; for a complete
-one-hypothesis multi-role run authorize a finite larger call/token allocation
-(normally at least seven calls, plus any single malformed-output correction).
-Both the provider-wide and campaign-specific persisted reservations apply.
-Using INR without an explicit conversion is rejected rather than silently
-equating it to USD. A live-provider campaign cannot silently use fixture output.
+| Symptom | Action |
+|---|---|
+| Codex executable missing | Install the official CLI; set `BUTTERFLY_CODEX_COMMAND` only if it is outside `PATH` |
+| Not signed into ChatGPT / API-key mode | Run `codex`, select **Sign in with ChatGPT**, then `butterfly-lab auth status`; do not paste OAuth tokens |
+| App-server unavailable/crashed | Check `codex --version`, command path and startup timeout; rerun status; an ambiguous model call is not automatically retried |
+| Requested model unavailable | Clear `BUTTERFLY_CODEX_MODEL` for the Codex default, or choose an available model in Codex and rerun provider status |
+| Subscription/usage limit reached | Wait for the reported reset or resolve the account limit in Codex; there is no automatic API spend fallback |
+| Invalid `.env` | Run `butterfly-lab config check`; fix the named field, duplicate, quote, or unsupported setting; errors do not echo values |
+| Numerical sandbox unavailable | Follow `doctor`'s macOS/Linux sandbox result; no model configuration disables the required boundary |
+| Old private provider JSON | Migrate runtime fields to `.env`; retain immutable research definitions and replay evidence separately |
 
-The adapter reserves a conservative text-token upper bound before sending. A
-failed, refused, malformed or timed-out response does **not** release that
-reservation because the remote service may have billed it. The ledger is
-interprocess locked and survives a fresh adapter instance. No implicit retries,
-redirects, zero-price assumptions or automatic budget top-ups occur.
-Malformed schema output permits at most one bounded format-correction call, also
-reserved and logged. Economic disappointment never causes a correction loop.
+## Verification
 
-The request uses JSON mode plus local strict Pydantic role validation; it does not
-claim that server-side JSON mode itself enforces the full scientific schema.
-Provider tools/function calling and generated Python execution are disabled.
-Official API references used for the implementation:
-[Chat Completions](https://developers.openai.com/api/reference/resources/chat),
-[structured outputs and JSON mode](https://developers.openai.com/api/docs/guides/structured-outputs).
-
-## Inputs and review
-
-Generation receives the campaign objective, verified capabilities, approved
-source records, development-only diagnostics, evidence-linked prior findings and
-a finite search count. Confirmation diagnostics and protected-confirmation prior
-findings are rejected by the generator. Data paths, raw datasets and credential
-fields are rejected from every role context. Literature and repository content
-are evidence, never executable instructions.
-
-`configs/seeds.json` contains all twelve proposal questions as complete validated
-specifications. `load_seeds` namespaces IDs by campaign. Required capabilities are
-real constraints: missing option identity, high-frequency observations or
-multi-index synchronization does not get synthesized to make a seed runnable.
-
-Deduplication distinguishes exact scientific identity, parameter/policy variants,
-semantic-review candidates and new questions. Canonical hashes, token-set semantic
-similarity, feature overlap and optional development-only behaviour comparisons
-are deterministic. All aliases and variants retain registry lineage. Semantic
-similarity alone never silently merges a hypothesis.
-
-## Offline verification
-
-```sh
-python -m pytest tests/test_providers.py tests/test_agents.py tests/test_dedup.py -q
-```
-
-These commands run from `agent/` after installing its locked environment. They
-make no real-provider requests and spend no API budget.
+Offline CI uses controlled protocol servers, never your ChatGPT login. Run the
+full locked-environment `pytest -q` suite for configuration, provider protocol,
+LangGraph, scientific, recovery and security coverage. A live status check and a
+live model test are different evidence; see the release verification report for
+what was actually executed on the release host.

@@ -14,6 +14,7 @@ were installed and exercised; `requirements.lock` pins the resolved environment.
 | `evaluators.py`, `accounting.py` | Spot prediction and full path four-leg economics at admitted fidelity |
 | `replication.py`, `statistics.py` | Independent reconstruction and registered paired-session uncertainty |
 | `agents.py`, `providers.py` | Six bounded role profiles; real configurable provider, recorded replay and labelled fixtures |
+| `settings.py`, `provider_factory.py`, `codex_provider.py` | One `.env`, default managed Codex app-server, ChatGPT-owned login, structured role transport and durable subscription-call ceilings |
 | `confirmation.py`, `security.py` | Frozen batch, release authority, isolated evaluation, signed bundle, consumed-partition history |
 | `evidence.py` | Deterministic grades and evidence-linked research memory |
 | `artifacts.py`, `backup.py` | Atomic content addressing, verified references and consistent recoverable snapshots |
