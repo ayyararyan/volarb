@@ -20,7 +20,7 @@ import time
 import uuid
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any, Iterator, overload
 
 from .artifacts import ArtifactStore, canonical_bytes, digest, plain
 
@@ -182,6 +182,14 @@ def _kind(value: str) -> str:
         if plural == value:
             return singular
     raise RegistryError("Unsupported registry entity kind: " + value)
+
+
+@overload
+def _row(row: sqlite3.Row) -> dict[str, Any]: ...
+
+
+@overload
+def _row(row: None) -> None: ...
 
 
 def _row(row: sqlite3.Row | None) -> dict[str, Any] | None:

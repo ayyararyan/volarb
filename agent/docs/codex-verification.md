@@ -2,7 +2,8 @@
 
 Date: 2026-10-02. Branch: `feat/codex-appserver-env`.
 Initial implementation commit: `e9f0d64d52c2d58feb306b335eb3b92a43957817`;
-the release follow-up also fixes uncached annotation checks.
+the release follow-ups also fix uncached annotation checks and deterministic
+source resolution between editable and wheel installations.
 This report distinguishes software tests, controlled model transport, real
 app-server diagnostics, and actual model usage.
 
@@ -54,7 +55,7 @@ Ruff lint and formatting passed; mypy passed for six configured source modules.
 A fresh detached checkout, separately hash-locked environment, and non-editable
 wheel installation also completed **210 tests: all passed**, in **61.25 seconds**.
 Both clean-install offline demos completed and their artifact reports validated.
-The fresh uncached type pass exposed four annotation issues; those were fixed
+The fresh uncached type pass exposed six annotation issues; those were fixed
 without weakening checks or changing numerical behavior.
 Fourteen JSON schemas, two installed resources and five existing rendered
 diagrams passed consistency verification. Dependency lock contents were unchanged.

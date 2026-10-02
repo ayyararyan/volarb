@@ -35,7 +35,7 @@ jobs:
       - run: uv pip install --python "$RUNNER_TEMP/lab-env/bin/python" --no-deps .
       - run: ruff check .
       - run: ruff format --check .
-      - run: mypy --config-file pyproject.toml
+      - run: mypy --no-incremental --config-file pyproject.toml
       - run: pytest -q
       - run: butterfly-lab config check
       - run: butterfly-lab config show
