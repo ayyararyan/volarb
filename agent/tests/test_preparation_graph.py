@@ -182,6 +182,76 @@ def test_revise_then_admit_retains_versions_and_lineage(tmp_path):
     lab.close()
 
 
+def test_live_discovered_inapplicable_robustness_is_revisable_before_numerics(tmp_path):
+    factory, campaign, _, dataset, captured = controlled_campaign(tmp_path)
+    lab = factory()
+
+    def specify(context):
+        captured.append(("specification", copy.deepcopy(context)))
+        revision = context["review_context"]["research_governance"]["revision"]
+        # Initial human/model draft may still contain an inapplicable declaration.
+        repairing = "previous_specification" in context
+        assert revision <= 1
+        return {
+            "dsl": context["hypothesis"]["proposed_dsl"],
+            "notes": ["Correct robustness applicability"],
+            "robustness": ["block_length"] if repairing else ["block_length", "cost_stress"],
+        }
+
+    def critique(context):
+        captured.append(("critic", copy.deepcopy(context)))
+        assert not lab.registry.runs()
+        bad = "cost_stress" in context["review_context"]["proposed_experiment"]["robustness"]
+        return {
+            "notes": ["Assess actual supported checks"],
+            "recommendation": "REVISE" if bad else "ADMIT",
+            "concerns": ["Remove undefined cost stress from controlled evaluator"] if bad else [],
+        }
+
+    lab.agent_service.provider.responses.update(specification=specify, critic=critique)
+    lab.run_campaign(campaign.id, dataset.id)
+    versions = lab.registry.list("preparation", campaign.id)
+    assert len(versions) == 2
+    assert versions[0]["specification_hash"] != versions[1]["specification_hash"]
+    assert versions[1]["changed_fields"] == ["robustness"]
+    assert versions[1]["experiment"]["robustness"] == ["block_length"]
+    assert [
+        row["report"]["recommendation"] for row in lab.registry.list("critic_review", campaign.id)
+    ] == ["REVISE", "ADMIT"]
+    complete(lab, campaign)
+    lab.close()
+
+
+@pytest.mark.parametrize(
+    "robustness,admitted", [(["block_length"], True), (["block_length", "cost_stress"], False)]
+)
+def test_supplied_draft_is_labelled_and_cannot_bypass_deterministic_admission(
+    tmp_path, robustness, admitted
+):
+    factory, campaign, hypothesis, dataset, captured = controlled_campaign(tmp_path)
+    lab = factory()
+    supplied = {
+        "dsl": hypothesis.proposed_dsl,
+        "notes": ["Explicit supplied engineering draft"],
+        "robustness": robustness,
+    }
+    result = lab.prepare_hypothesis(
+        campaign.id, dataset.id, hypothesis.model_dump(mode="json"), initial_specification=supplied
+    )
+    assert bool(result.get("experiment_id")) == admitted
+    assert [role for role, _ in captured] == ["critic"]
+    assert lab.registry.list("preparation", campaign.id)[0]["origin"] == "supplied_draft"
+    assert not lab.registry.runs()
+    with pytest.raises(ValueError, match="cannot change"):
+        lab.prepare_hypothesis(
+            campaign.id,
+            dataset.id,
+            hypothesis.model_dump(mode="json"),
+            initial_specification={**supplied, "notes": ["changed"]},
+        )
+    lab.close()
+
+
 def test_revise_exhaustion_never_starts_numerics(tmp_path):
     factory, campaign, _, dataset, captured = controlled_campaign(tmp_path, outcome="REVISE")
     lab = factory()

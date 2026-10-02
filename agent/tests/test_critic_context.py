@@ -419,3 +419,23 @@ def test_ambiguous_dispatch_is_never_automatically_repeated(tmp_path):
 def test_free_text_private_locators_are_not_safe_context(text):
     with pytest.raises(PermissionError):
         _safe_context({"source_summary": text})
+
+
+def test_robustness_defaults_and_revisions_match_protected_evaluator():
+    _, hypothesis, dataset, qualification, draft = proposal()
+    assert draft.robustness == ["block_length"]
+    original = draft.model_dump(mode="json", exclude={"robustness"})
+    assert ExperimentSpec.model_validate(
+        {**original, "evaluator": "iron_butterfly"}
+    ).robustness == ["block_length", "cost_stress"]
+    malformed = draft.model_copy(update={"robustness": ["block_length", "cost_stress"]})
+    assert not methodological_admission(
+        hypothesis, dataset, qualification, malformed, original=draft
+    )["admitted"]
+    assert methodological_admission(hypothesis, dataset, qualification, draft, original=malformed)[
+        "admitted"
+    ]
+    removed_required = draft.model_copy(update={"robustness": []})
+    assert not methodological_admission(
+        hypothesis, dataset, qualification, removed_required, original=draft
+    )["admitted"]

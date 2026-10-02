@@ -45,6 +45,12 @@ class SpecificationOutput(BaseModel):
     notes: list[str] = Field(min_length=1)
     split: SplitPlan | None = None
     inference: InferencePlan | None = None
+    robustness: list[Literal["block_length", "cost_stress"]] | None = Field(
+        default=None,
+        min_length=1,
+        max_length=2,
+        description="Executable robustness declarations. Block-length checks are required; cost_stress applies only to iron_butterfly. Remove inapplicable declarations, never required evaluator checks.",
+    )
 
 
 ROLE_PROFILES = {

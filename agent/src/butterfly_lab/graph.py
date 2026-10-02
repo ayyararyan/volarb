@@ -73,6 +73,7 @@ class PreparationState(TypedDict, total=False):
     campaign_id: str
     dataset_id: str
     candidate: dict
+    initial_specification: dict | None
     hypothesis: dict
     qualification: dict
     original_draft: dict
@@ -363,11 +364,16 @@ class Laboratory:
             _, hyp, _ = records(state)
             context = review_context(state, ExperimentSpec.model_validate(state["original_draft"]))
             try:
-                output = self.agent_service.specify(
-                    hyp,
-                    review_context=context,
-                    call_id=f"specification-{hyp.campaign_id}-{hyp.id}-v0",
-                )
+                if state.get("initial_specification") is not None:
+                    # Explicit imported proposal, never represented as a model call.
+                    # It still traverses context, critic and all deterministic gates.
+                    output = SpecificationOutput.model_validate(state["initial_specification"])
+                else:
+                    output = self.agent_service.specify(
+                        hyp,
+                        review_context=context,
+                        call_id=f"specification-{hyp.campaign_id}-{hyp.id}-v0",
+                    )
                 return save_specification(state, output, 0)
             except ValidationError:
                 return {
@@ -389,6 +395,9 @@ class Laboratory:
                     "inference": plain(output.inference)
                     if output.inference is not None
                     else state["draft"]["inference"],
+                    "robustness": output.robustness
+                    if output.robustness is not None
+                    else state["draft"]["robustness"],
                 }
             )
             original = ExperimentSpec.model_validate(state["original_draft"])
@@ -404,6 +413,9 @@ class Laboratory:
                 "hypothesis_hash": digest(state["hypothesis"]),
                 "revision": revision,
                 "specification": plain(output),
+                "origin": "supplied_draft"
+                if revision == 0 and state.get("initial_specification") is not None
+                else "model",
                 "experiment": plain(draft),
                 "specification_hash": digest(plain(draft)),
                 "previous_specification_hash": digest(prior) if revision else None,
@@ -662,7 +674,19 @@ class Laboratory:
         graph.add_edge("freeze_experiment", END)
         return graph.compile(checkpointer=self.checkpointer)
 
-    def prepare_hypothesis(self, campaign_id, dataset_id, candidate):
+    def prepare_hypothesis(self, campaign_id, dataset_id, candidate, *, initial_specification=None):
+        """Prepare a generated or explicitly supplied draft without bypassing review.
+
+        Normal campaigns generate their own draft. Imported proposals enable
+        transparent review/reproduction of a known pre-result specification.
+        """
+        from .agents import SpecificationOutput
+
+        supplied = (
+            plain(SpecificationOutput.model_validate(initial_specification))
+            if initial_specification is not None
+            else None
+        )
         config = self._config("preparation-" + campaign_id + "-" + candidate["id"])
         state = self.preparation_graph.get_state(config)
         if state.values:
@@ -671,6 +695,7 @@ class Laboratory:
             if (
                 state.values.get("candidate") != candidate
                 or state.values["dataset_id"] != dataset_id
+                or state.values.get("initial_specification") != supplied
             ):
                 raise ValueError(
                     "Preparation resume cannot change registered hypothesis or dataset"
@@ -685,6 +710,7 @@ class Laboratory:
                 "campaign_id": campaign_id,
                 "dataset_id": dataset_id,
                 "candidate": candidate,
+                "initial_specification": supplied,
                 "workflow_hash": workflow_hash(),
             },
             config,

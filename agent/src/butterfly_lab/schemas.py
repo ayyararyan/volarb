@@ -258,7 +258,12 @@ class ExperimentSpec(Contract):
     parameters: dict[str, Any] = Field(default_factory=dict)
     split: SplitPlan = Field(default_factory=SplitPlan)
     inference: InferencePlan = Field(default_factory=InferencePlan)
-    robustness: list[str] = Field(default_factory=lambda: ["block_length", "cost_stress"])
+    robustness: list[str] = Field(
+        default_factory=lambda data: (
+            ["block_length"]
+            + (["cost_stress"] if data.get("evaluator") == "iron_butterfly" else [])
+        )
+    )
     fidelity: Fidelity = Fidelity.F0
     seed: int = 17
     rerun_ordinal: int = Field(default=0, ge=0)

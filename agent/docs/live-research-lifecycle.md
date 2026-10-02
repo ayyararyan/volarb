@@ -86,6 +86,18 @@ Revisions preserve hypothesis identity, lineage, evaluator, scoring and original
 parameter/search scope. They cannot inspect numerical outcomes or confirmation
 data. A valid negative result is a finding; it never returns to preparation.
 
+Robustness declarations must match the evaluator: block-length checks apply to
+all three primitives; cost stress applies only to the four-leg evaluator. Revision
+may remove an inapplicable declaration but cannot remove a required implemented
+check. The live probe exposed and corrected an earlier default/schema mismatch
+that prevented this legitimate repair.
+
+The preparation API can also review an explicitly supplied draft. Its immutable
+record is labelled `supplied_draft`, never a fabricated model generation; it still
+passes capability qualification, critique and deterministic admission. Normal
+campaign CLI usage generates specifications automatically. This narrow import path
+allows transparent reproduction of a known pre-result defect for verification.
+
 Named LangGraph stages expose the lifecycle and checkpoints. Stable logical role
 IDs are bound to request digests. Accepted responses replay without another model
 call. A persisted validated generation can recover the narrow crash window before

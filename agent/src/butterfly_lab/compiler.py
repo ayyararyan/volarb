@@ -226,6 +226,16 @@ def methodological_admission(
         reasons.append("experiment fidelity differs from registered data")
     if draft.inference.practical_effect != hypothesis.practical_effect:
         reasons.append("practical-effect scoring threshold differs from original hypothesis")
+    supported_robustness = {"block_length"}
+    if draft.evaluator == "iron_butterfly":
+        supported_robustness.add("cost_stress")
+    if set(draft.robustness) - supported_robustness:
+        reasons.append("robustness declaration is not implemented by the selected evaluator")
+    required_robustness = {"block_length"}
+    if original is not None:
+        required_robustness |= set(original.robustness) & supported_robustness
+    if not required_robustness <= set(draft.robustness):
+        reasons.append("revision removed a required registered numerical robustness check")
     if original is not None:
         immutable = (
             "id",
