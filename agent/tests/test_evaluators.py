@@ -125,6 +125,7 @@ def test_non_b0_uses_recorded_selection_not_simple_atm_substitution(tmp_path):
 
     data = generate_option_fixture(tmp_path / "q.parquet", 1)
     packet = baseline_golden_cases("B-policy")[-1]["packet"]
+    packet["available_at"] = "2025-01-02T09:59:00+05:30"
     legs = [
         {"contract_id": f"FIXTURE:NIFTY:2025-12-30:{strike}:{kind}", "signed_lots": sign}
         for strike, kind, sign in [
@@ -148,6 +149,9 @@ def test_non_b0_uses_recorded_selection_not_simple_atm_substitution(tmp_path):
     assert result["replication"]["status"] == "PASS"
     fills = pd.read_parquet(tmp_path / "observed/fills.parquet")
     assert set(fills[fills.reason.eq("entry")].contract_id) == {x["contract_id"] for x in legs}
+    packet["available_at"] = "2025-01-02T10:01:00+05:30"
+    assert evaluate(experiment, data, tmp_path / "future-gates")["outcome"] == "DATA_LIMITED"
+    packet["available_at"] = "2025-01-02T09:59:00+05:30"
     packet["entry_selection"]["available_at"] = "2025-01-02T10:01:00+05:30"
     assert evaluate(experiment, data, tmp_path / "future")["outcome"] == "DATA_LIMITED"
     del packet["entry_selection"]

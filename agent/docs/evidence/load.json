@@ -1,0 +1,43 @@
+{
+  "accepted_results": 2000,
+  "artifact_bytes": 19576076,
+  "benchmark_config": {
+    "bootstrap_samples": 99,
+    "concurrency": 2,
+    "hypotheses": 250,
+    "jobs": 2000,
+    "n_sessions": 8
+  },
+  "execution_seconds": 774.0813948750147,
+  "hypotheses": 250,
+  "jobs_per_second": 2.5837076220168367,
+  "label": "CONTROLLED SYNTHETIC lightweight numerical jobs; not real backtest throughput",
+  "max_observed_child_rss_mib": 110.828125,
+  "numerical_concurrency": 2,
+  "passed": true,
+  "recovery_after": [],
+  "recovery_before": [],
+  "registered_jobs": 2000,
+  "registration_seconds": 9.092552791989874,
+  "schema_version": "1",
+  "states_before_ingestion": {
+    "COMPLETED": 2000
+  },
+  "worker_receipt": {
+    "attempts_processed": 2000,
+    "budget_committed_upper_bounds": {
+      "cpu_seconds": 60000.0,
+      "measured_cpu_seconds": 829.398421,
+      "runs": 2000,
+      "storage_bytes": 4000000000
+    },
+    "graph_version": "1",
+    "numerical_concurrency": 2,
+    "pending_outbox": 0,
+    "runs": {
+      "COMPLETED": 2000
+    },
+    "schema_version": "1",
+    "wall_seconds": 774.0311880829977
+  }
+}

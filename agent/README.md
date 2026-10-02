@@ -14,8 +14,8 @@ From a clean checkout:
 
 ```sh
 cd agent
-uv venv --python 3.12 "$HOME/.local/share/butterfly-lab-env"
-uv pip sync --python "$HOME/.local/share/butterfly-lab-env/bin/python" requirements.lock
+uv venv --python 3.12.13 "$HOME/.local/share/butterfly-lab-env"
+uv pip sync --python "$HOME/.local/share/butterfly-lab-env/bin/python" --require-hashes requirements.lock
 uv pip install --python "$HOME/.local/share/butterfly-lab-env/bin/python" --no-deps .
 export PATH="$HOME/.local/share/butterfly-lab-env/bin:$PATH"
 export BUTTERFLY_LAB_HOME="$HOME/.local/share/butterfly-lab-runtime"

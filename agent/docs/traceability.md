@@ -11,7 +11,7 @@ are outside the change scope. Module names below refer to `src/butterfly_lab/`.
 | R02 | Complete registry, migrations, controlled writer, lineage/supersession | registry, dedup, evidence | test_registry; test_dedup; graph duplicate lineage | Passed |
 | R03 | Atomic campaign/hypothesis budgets, bounded queue | registry, providers | concurrent overspend, CPU rounding, selection/Monte Carlo distinction, queue parking | Passed |
 | R04 | Identity, PIT/availability, clocks, expiry/lots, source binding | data, registry | test_data; source mutation/directory/alias tests; actual-data gates | Passed; real inputs limited |
-| R05 | B-as-observed, B-policy, B0 remain distinct | baselines, frozen controller | golden cases, source hash, symmetry and missing-loss cases | Passed |
+| R05 | B-as-observed, B-policy, B0 remain distinct | baselines, frozen controller | golden cases, source hash, symmetry, recorded non-ATM selection, future availability and missing gate/selection cases | Passed |
 | R06 | Six functioning roles, real provider, replay/fixture distinction | agents, providers | role tests; HTTP contract, reservation and refusal tests | Passed offline; live service unverified |
 | R07 | Twelve complete seeds, capability admission, dedup | configs/seeds.json, compiler, dedup | seed validation; canonical/feature/semantic/behavior tests; admitted and blocked demo questions | Passed |
 | R08 | Actual campaign, experiment, review, confirmation graphs | graph | test_graph; clean installed CLI demos; Send aggregation and checkpoints | Passed |

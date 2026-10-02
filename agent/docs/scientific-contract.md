@@ -108,7 +108,8 @@ Frozen source is excluded from automatic formatting to preserve its byte hash.
 
 Non-B0 simulations require dated policy packets and recorded selected legs. They
 never silently reuse B0's ATM/width selector. Each `metadata.policy_packets[date]`
-entry includes `entry_selection` (and `recenter_selection` for that comparison):
+entry has a packet-level `available_at` no later than the decision and includes
+`entry_selection` (and `recenter_selection` for that comparison):
 `selection_policy_id`, offset-aware `available_at`, and four `legs`, each with
 `contract_id` and `signed_lots` equal to +1 or -1. Selected contracts must resolve
 in the admitted chain with valid geometry and effective lot specifications.

@@ -535,6 +535,10 @@ def _simulate_policy(
             "decision_at": origin.isoformat(),
             "held": False,
         }
+        if baseline_id != "B0-simple":
+            available = pd.Timestamp(packet.get("available_at"))
+            if pd.isna(available) or available.tzinfo is None or available > origin:
+                raise DataQualificationError("historical policy packet unavailable at decision")
         decision = policy_decision(packet, baseline_id)
         if decision["action"] == "BLOCKED":
             raise DataQualificationError(
