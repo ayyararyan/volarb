@@ -1,5 +1,98 @@
 # Codex provider and centralized configuration — verification
 
+## Full live lifecycle and revision verification — 2026-10-02
+
+Branch `fix/full-live-codex-workflow`, [PR #4](https://github.com/ayyararyan/volarb/pull/4).
+Final live-tested source commit: `adaf1cd143de5e3b4797f19d3ac879ace8c8e585`.
+The [root-cause/context audit and real lifecycle](live-research-lifecycle.md) explain
+the ordering, typed review, two-revision bound, deterministic gates and resume rules.
+Machine-readable, sanitized [acceptance receipts](evidence/live-codex-lifecycle.json)
+retain the successful runs and earlier blocked attempts. Raw runtime databases,
+model responses, credentials and account identifiers remain local.
+
+### Final-source acceptance campaign
+
+| Field | Observed result |
+|---|---|
+| Campaign | `codex-full-lifecycle-20261002-003` |
+| Experiment | `exp-codex-full-lifecycle-20261002-003-h1` |
+| Numerical run | `run-969537cd41834556732693f72e4bb5c9` — INGESTED |
+| Provider/authentication | Real managed Codex app-server; ChatGPT subscription; no API fallback |
+| Resolved model | `gpt-6-astra` |
+| Live role order | designer → specification → critic → replication → synthesis → steward |
+| Critic / admission | ADMIT followed by deterministic admission and immutable registration |
+| Numerical work | External Python worker, 64 controlled paired sessions, fixed seed 17 |
+| Robustness | Numerical block lengths 1/5/10; all registered checks reported, sign stable |
+| Replication | Independent worker reconstruction PASS; post-role artifact reconstruction PASS |
+| Evidence grade | F0; implementation verified; exposed temporal; informative; independently reconstructed |
+| Final finding | EXPLORATORY_SUPPORTED, synthetic engineering result only |
+| Completion | Synthesis and steward completed after findings; terminal report verified |
+| Confirmation | Not configured, not accessed |
+| Elapsed | 150.520 seconds, authoritative registry interval |
+| Usage | 6 real calls; 55,664 input / 2,991 output tokens reported |
+| Bounds | 8 calls, one numerical run, 60 CPU seconds, 20 MB storage, no broker access |
+
+This is **workflow acceptance, not butterfly profitability**. The effect is planted
+in a controlled generator; there is no historical financial or causal inference.
+
+### Live revision reproduction
+
+`codex-preparation-revision-probe-20261002-002` honestly imports the pre-result
+draft that exposed an inapplicable `cost_stress` declaration. Its initial record
+is labelled `supplied_draft`; it is not counted as a fresh model generation.
+Real Codex then performed **critic REVISE → specification repair → critic ADMIT**.
+Only the robustness declaration changed, both reports and versions were retained,
+and the hypothesis identity and numerical parameters remained fixed.
+
+- Original specification hash: `b7d12420bcfc84badd294d329806f00cfe8e95c2933b1ea3d5cafc394d9ff0d1`.
+- Revised specification hash: `f415041f38ff07acbf122d5e62e2597845624fbca16bc838107792a22f518a72`.
+- One revision; zero numerical jobs; deterministic admission passed and specification froze.
+- `gpt-6-astra`, 3 real calls, 32,639 input / 1,675 output tokens, 83.198 seconds.
+- Five-call ceiling, at most two revisions; no results or protected data entered preparation.
+
+The first live revision probe reached REVISE three times and stopped exactly at
+the two-revision ceiling. It discovered that the old generic robustness default
+included cost stress for a loss-only evaluator and that the output contract could
+not edit this field. Both defects were fixed, regression-tested and replayed above.
+The failed probe is retained, not relabelled successful.
+
+### Complete verification accounting
+
+The first acceptance attempt stopped DATA_LIMITED because a designer inserted
+prose into `minimum_data`, previously an unconstrained string list. A strict
+capability-identifier schema now gives that malformed output bounded format
+correction; genuine missing capability IDs still block execution. The unchanged
+engineering design then completed once before the robustness-contract correction
+and once on final source. There were **24 actual model calls across all five
+bounded verification attempts**, not merely the six in the final acceptance run.
+Only two numerical jobs ran; no outcomes changed the hypothesis or parameters.
+
+Final offline verification: **302 tests passed in 59.61 seconds**, including 28
+graph/restart/revision tests, 54 critic-context/security tests, and 44 scientific,
+accounting/statistics/replication tests. The remainder includes provider, worker,
+recovery, deterministic admission and contract coverage. Ruff, formatting,
+uncached mypy, 15 generated schemas, package resources and five diagrams passed.
+Both offline demos completed with ingested and independently reconstructed F0
+results. CI remains independent of live ChatGPT authentication.
+
+Reproduce a bounded acceptance via normal orchestration:
+
+```sh
+python examples/prepare_live_acceptance.py --output /tmp/new-acceptance \
+  --campaign-id unique-live-acceptance-id
+butterfly-lab --root /tmp/new-acceptance/runtime campaign run \
+  /tmp/new-acceptance/campaign.json --dataset /tmp/new-acceptance/dataset.json --wait
+python examples/check_live_campaign.py --root /tmp/new-acceptance/runtime \
+  --campaign-id unique-live-acceptance-id
+```
+
+Use a fresh private runtime and immutable ID. Remaining limitations are research
+and provider limits: this one synthetic design does not validate historical edge,
+and subscription availability/local interruption cannot guarantee upstream quota
+or output-token caps. No requested lifecycle stage remains unimplemented.
+
+## Historical provider-release verification
+
 Date: 2026-10-02. Branch: `feat/codex-appserver-env`.
 Initial implementation commit: `e9f0d64d52c2d58feb306b335eb3b92a43957817`;
 the release follow-ups also fix uncached annotation checks and deterministic

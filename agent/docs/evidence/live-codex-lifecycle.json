@@ -1,0 +1,321 @@
+{
+  "verification_date": "2026-10-02",
+  "source_commit": "adaf1cd143de5e3b4797f19d3ac879ace8c8e585",
+  "provider": "Managed Codex app-server, ChatGPT subscription; no API fallback or account identifiers",
+  "acceptance": {
+    "campaign_id": "codex-full-lifecycle-20261002-003",
+    "checks": {
+      "one_hypothesis_experiment_finding": true,
+      "one_ingested_numerical_run": true,
+      "all_six_live_roles": true,
+      "subscription_codex_no_fallback": true,
+      "finite_call_budget": true,
+      "actual_numerical_robustness": true,
+      "worker_independent_reconstruction": true,
+      "post_role_independent_reconstruction": true,
+      "f0_independent_exploratory_evidence": true,
+      "terminal_report_after_findings": true,
+      "no_confirmation": true,
+      "registered_event_order": true
+    },
+    "passed": true,
+    "experiment_ids": [
+      "exp-codex-full-lifecycle-20261002-003-h1"
+    ],
+    "numerical_runs": [
+      {
+        "run_id": "run-969537cd41834556732693f72e4bb5c9",
+        "state": "INGESTED"
+      }
+    ],
+    "models": [
+      "gpt-6-astra"
+    ],
+    "role_order": [
+      "designer",
+      "specification",
+      "critic",
+      "replication",
+      "synthesis",
+      "steward"
+    ],
+    "calls": 6,
+    "input_tokens": 55664,
+    "output_tokens": 2991,
+    "usage_incomplete": false,
+    "elapsed_registry_seconds": 150.52,
+    "outcomes": [
+      "EXPLORATORY_SUPPORTED"
+    ],
+    "evidence_grades": [
+      {
+        "fidelity": "F0",
+        "implementation": "verified",
+        "independence": "exposed_temporal",
+        "precision": "informative",
+        "replication": "independently_reconstructed",
+        "schema_version": "1"
+      }
+    ],
+    "robustness": [
+      {
+        "known_truth": 0.2,
+        "predefined_seed": 17,
+        "registered_checks": {
+          "1": {
+            "block_length": 1,
+            "ci_high": 0.22536515686311245,
+            "ci_low": 0.20016011330529174,
+            "estimate": 0.21258276741848373,
+            "limitations": [
+              "Exploratory/post-selection intervals are descriptive",
+              "Blocks assume local dependence regularity; absent crises are not synthesized"
+            ],
+            "method": "circular_moving_block_percentile",
+            "minimum_sessions": 30,
+            "n_sessions": 64,
+            "outcome": "EXPLORATORY_SUPPORTED",
+            "p_value": 0.001,
+            "practical_effect": 0.01,
+            "precision": "informative",
+            "relative": true,
+            "repetitions": 999,
+            "seed": 17,
+            "unit": "session"
+          },
+          "10": {
+            "block_length": 10,
+            "ci_high": 0.22245721181591802,
+            "ci_low": 0.20210042361235608,
+            "estimate": 0.21258276741848373,
+            "limitations": [
+              "Exploratory/post-selection intervals are descriptive",
+              "Blocks assume local dependence regularity; absent crises are not synthesized"
+            ],
+            "method": "circular_moving_block_percentile",
+            "minimum_sessions": 30,
+            "n_sessions": 64,
+            "outcome": "EXPLORATORY_SUPPORTED",
+            "p_value": 0.001,
+            "practical_effect": 0.01,
+            "precision": "informative",
+            "relative": true,
+            "repetitions": 999,
+            "seed": 17,
+            "unit": "session"
+          },
+          "5": {
+            "block_length": 5,
+            "ci_high": 0.2238814804529992,
+            "ci_low": 0.20086857683490889,
+            "estimate": 0.21258276741848373,
+            "limitations": [
+              "Exploratory/post-selection intervals are descriptive",
+              "Blocks assume local dependence regularity; absent crises are not synthesized"
+            ],
+            "method": "circular_moving_block_percentile",
+            "minimum_sessions": 30,
+            "n_sessions": 64,
+            "outcome": "EXPLORATORY_SUPPORTED",
+            "p_value": 0.001,
+            "practical_effect": 0.01,
+            "precision": "informative",
+            "relative": true,
+            "repetitions": 999,
+            "seed": 17,
+            "unit": "session"
+          }
+        },
+        "sign_stable": true
+      }
+    ],
+    "worker_replication": [
+      {
+        "max_error": 2.7755575615628914e-17,
+        "method": "independent_scalar_session_metric",
+        "status": "PASS"
+      }
+    ],
+    "post_role_replication": [
+      {
+        "artifact_refs": {
+          "session_outcomes": {
+            "media_type": "application/vnd.apache.parquet",
+            "schema_version": "1",
+            "sha256": "a33e178dd0684765f55cdc1ad4cad9712a11919a3b13f07d240ce30f6530bef8",
+            "size_bytes": null,
+            "uri": "sha256:a33e178dd0684765f55cdc1ad4cad9712a11919a3b13f07d240ce30f6530bef8"
+          }
+        },
+        "bounds": {
+          "artifact_bytes": 10000000,
+          "decoded_bytes": 67108864,
+          "rows": 100000,
+          "wall_seconds": 10.0
+        },
+        "checks": [
+          "content-addressed artifacts verified",
+          "paired session means and registered estimand"
+        ],
+        "disagreements": [],
+        "evaluator": "controlled",
+        "experiment_hash": "f82ce95e7b8bb89b897f8f304598e028aaa5daaeeb4c0098e8a671c4136f91d6",
+        "independence": "Independent scalar/decimal reductions after replication support; source-level feature/model reconstruction remains in the reserved worker.",
+        "method": "post_role_independent_registered_artifact_reconstruction_v1",
+        "observed": {
+          "artifact_bytes": 3360,
+          "decoded_bytes": 1765,
+          "rows": 64
+        },
+        "result_hash": "695c977abaf7b7791392043bb1ec40b7a940180936e87ffd73306c9a2526a514",
+        "status": "PASS"
+      }
+    ],
+    "scope": "Synthetic F0 workflow acceptance only; no profitability or historical strategy validation."
+  },
+  "revision_probe": {
+    "campaign_id": "codex-preparation-revision-probe-20261002-002",
+    "elapsed_seconds": 83.198,
+    "role_order": [
+      "critic",
+      "specification",
+      "critic"
+    ],
+    "models": [
+      "gpt-6-astra"
+    ],
+    "calls": 3,
+    "input_tokens": 32639,
+    "output_tokens": 1675,
+    "critic_recommendations": [
+      "REVISE",
+      "ADMIT"
+    ],
+    "specification_versions": [
+      {
+        "revision": 0,
+        "hash": "b7d12420bcfc84badd294d329806f00cfe8e95c2933b1ea3d5cafc394d9ff0d1",
+        "changed_fields": [
+          "dsl",
+          "robustness"
+        ],
+        "origin": "supplied_draft"
+      },
+      {
+        "revision": 1,
+        "hash": "f415041f38ff07acbf122d5e62e2597845624fbca16bc838107792a22f518a72",
+        "changed_fields": [
+          "robustness"
+        ],
+        "origin": "model"
+      }
+    ],
+    "same_hypothesis": true,
+    "numerical_jobs": 0,
+    "outcome": null,
+    "experiment_frozen": true,
+    "live_subscription": true,
+    "initial_draft": "Explicit imported pre-result draft; not counted as a live specification generation",
+    "scope": "F0 live revision-path verification, no numerical outcomes or broker activity."
+  },
+  "all_live_attempts": [
+    {
+      "campaign_id": "codex-full-lifecycle-20261002-001",
+      "calls": 3,
+      "input_tokens": 24206,
+      "output_tokens": 1096,
+      "role_order": [
+        "designer",
+        "synthesis",
+        "steward"
+      ],
+      "critic_recommendations": [],
+      "numerical_runs": 0
+    },
+    {
+      "campaign_id": "codex-full-lifecycle-20261002-002",
+      "calls": 6,
+      "input_tokens": 55526,
+      "output_tokens": 3057,
+      "role_order": [
+        "designer",
+        "specification",
+        "critic",
+        "replication",
+        "synthesis",
+        "steward"
+      ],
+      "critic_recommendations": [
+        "ADMIT"
+      ],
+      "numerical_runs": 1
+    },
+    {
+      "campaign_id": "codex-preparation-revision-probe-20261002-001",
+      "calls": 6,
+      "input_tokens": 65961,
+      "output_tokens": 3859,
+      "role_order": [
+        "specification",
+        "critic",
+        "specification",
+        "critic",
+        "specification",
+        "critic"
+      ],
+      "critic_recommendations": [
+        "REVISE",
+        "REVISE",
+        "REVISE"
+      ],
+      "numerical_runs": 0
+    },
+    {
+      "campaign_id": "codex-full-lifecycle-20261002-003",
+      "calls": 6,
+      "input_tokens": 55664,
+      "output_tokens": 2991,
+      "role_order": [
+        "designer",
+        "specification",
+        "critic",
+        "replication",
+        "synthesis",
+        "steward"
+      ],
+      "critic_recommendations": [
+        "ADMIT"
+      ],
+      "numerical_runs": 1
+    },
+    {
+      "campaign_id": "codex-preparation-revision-probe-20261002-002",
+      "calls": 3,
+      "input_tokens": 32639,
+      "output_tokens": 1675,
+      "role_order": [
+        "critic",
+        "specification",
+        "critic"
+      ],
+      "critic_recommendations": [
+        "REVISE",
+        "ADMIT"
+      ],
+      "numerical_runs": 0
+    }
+  ],
+  "total_live_calls": 24,
+  "tests": {
+    "passed": 302,
+    "graph_restart_revision": 28,
+    "context_security": 54,
+    "scientific_accounting_statistics_replication": 44,
+    "ruff": "PASS",
+    "format": "PASS",
+    "uncached_mypy": "PASS",
+    "generated_schemas": 15,
+    "offline_demos": "both passed"
+  },
+  "scope": "Synthetic F0 engineering acceptance only. No broker calls, trading, live ledgers, real confirmation data or profitability validation."
+}

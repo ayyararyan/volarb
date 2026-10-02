@@ -26,6 +26,11 @@ never a single graph-wide barrier. A completion already present when a graph
 registers its wait is ingested immediately; otherwise the graph parks durably.
 
 Interrupted nodes restart at their beginning, so side effects are registry-idempotent.
+Preparation now constructs a draft before its typed methodological review, with at
+most two critic-driven revisions. Immutable registry versions and accepted role-call
+receipts survive checkpoints; ambiguous calls are not automatically redispatched.
+Final synthesis and steward run only after all numerical findings exist. See the
+[live lifecycle and root-cause audit](live-research-lifecycle.md).
 `Command(resume=...)` carries a registry event or signed release reference, not a
 caller-authored success claim. Checkpoints cannot provide exactly-once external
 computation; fenced single acceptance and reconciliation are application code.

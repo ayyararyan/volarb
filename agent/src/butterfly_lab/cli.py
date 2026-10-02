@@ -73,6 +73,7 @@ def drain(root, campaign_id, timeout=120):
             for exp in lab.registry.list("experiments", campaign_id):
                 if not lab.registry.get("findings", "finding-" + exp["id"]):
                     lab.resume(exp["id"])
+            lab.advance_campaign(campaign_id)
             report = lab.campaign_report(campaign_id)
             if not report["pending_experiments"]:
                 worker.terminate()
@@ -385,7 +386,15 @@ def dispatch(args):
             campaign = registry.get("campaigns", args.id)
             lab = lab_for(args, root, campaign)
             try:
-                return lab.advance_confirmation(args.id)
+                for exp in lab.registry.list("experiments", args.id):
+                    if not lab.registry.get("findings", "finding-" + exp["id"]):
+                        lab.resume(exp["id"])
+                lifecycle = lab.advance_campaign(args.id)
+                return {
+                    "campaign": lifecycle,
+                    "report": lab.campaign_report(args.id),
+                    "confirmation": lab.advance_confirmation(args.id),
+                }
             finally:
                 lab.close()
         ids = [args.id] if args.id else [e["id"] for e in registry.list("experiments")]
@@ -398,6 +407,7 @@ def dispatch(args):
             lab = lab_for(args, root, campaign)
             try:
                 resumed.append({"experiment_id": id, **lab.resume(id)})
+                lab.advance_campaign(experiment["campaign_id"])
             finally:
                 lab.close()
         return resumed

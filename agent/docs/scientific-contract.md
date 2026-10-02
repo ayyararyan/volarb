@@ -3,6 +3,30 @@
 This file freezes definitions before real-data outcomes are inspected. Synthetic
 fixture outputs establish implementation behavior, not a trading edge.
 
+## Lifecycle correctness corrections
+
+Methodological review sees the actual draft experiment before admission; see
+[the complete review/revision contract](live-research-lifecycle.md). A negative
+numerical finding cannot trigger specification revision or parameter search.
+
+Dependent option legs advance from actual preceding fill timestamps, not just
+scheduled offsets. Management and scheduled exits cannot precede completion of
+entry/recenter fills. Independent Decimal accounting also rejects backward fill
+chronology, even when cash and inventory totals balance.
+
+Relative loss improvement is a ratio of paired means. Each moving-block resample
+recomputes both numerator and baseline denominator; a fixed full-sample denominator
+is not the registered statistic. Nonpositive resample denominators yield explicit
+insufficient precision rather than silently dropping resamples. Registered sample
+minimums and insufficient precision remain authoritative in evidence grading.
+
+Controlled synthetic campaigns perform actual registered block-length robustness,
+not only a known-truth metadata check. Independent reconstruction runs inside the
+budgeted numerical worker, followed after the replication-support role by a second
+bounded reconstruction from SHA-verified artifacts. The latter recomputes session
+effects/losses and, for options, primitive Decimal cash/P&L. It does not pretend to
+be a second full model-fit/backtest. Both reports must pass for independent evidence.
+
 ## Admission and evidence
 
 `data.qualify_dataset` is a separate read-only qualification step. It reports

@@ -5,9 +5,37 @@ from pydantic import ValidationError
 
 from butterfly_lab.agents import AgentService, fixture_provider, load_seeds
 from butterfly_lab.providers import FixtureProvider, ProviderError
+from butterfly_lab.review_context import build_critic_context
+from butterfly_lab.schemas import ExperimentSpec, InferencePlan
 
 
 SEEDS = Path(__file__).parents[1] / "configs" / "seeds.json"
+
+
+def review_context(hypothesis, capabilities):
+    draft = ExperimentSpec(
+        id="exp-" + hypothesis.id,
+        campaign_id=hypothesis.campaign_id,
+        hypothesis_id=hypothesis.id,
+        trial_id="trial-" + hypothesis.id,
+        dataset_id="fixture-data",
+        evaluator=hypothesis.evaluator,
+        baseline_id=hypothesis.baseline_id,
+        dsl=hypothesis.proposed_dsl,
+        inference=InferencePlan(practical_effect=hypothesis.practical_effect),
+    )
+    return build_critic_context(
+        {"id": hypothesis.campaign_id, "objective": "Review the registered experiment"},
+        hypothesis,
+        {
+            "id": "fixture-data",
+            "fidelity": "F0",
+            "provenance": "SYNTHETIC",
+            "partition": "development",
+        },
+        {"status": "PASS", "capabilities": capabilities},
+        draft,
+    )
 
 
 def test_twelve_seed_specs_and_roles_are_operational():
@@ -20,8 +48,11 @@ def test_twelve_seed_specs_and_roles_are_operational():
         ["spot_bars", "spot_excursion", "past_only_rv", "past_only_drift"],
     )
     assert len(generated) == 12
-    assert service.critique(generated[0], generated[0].minimum_data).recommendation == "ADMIT"
-    assert service.critique(generated[1], []).recommendation == "REVISE"
+    assert (
+        service.critique(review_context(generated[0], generated[0].minimum_data)).recommendation
+        == "ADMIT"
+    )
+    assert service.critique(review_context(generated[1], [])).recommendation == "REVISE"
     assert service.specify(generated[0]).dsl["evaluator"] == "exp001"
     assert service.replicate({"id": "frozen"}).notes
     assert service.synthesize([{"evidence_grade": "F0", "limitations": ["fixture"]}]).notes
@@ -69,7 +100,7 @@ def test_model_critic_cannot_override_missing_deterministic_capabilities():
     service = AgentService(
         FixtureProvider({"critic": {"notes": ["optimistic model"], "recommendation": "ADMIT"}})
     )
-    assert service.critique(seeds[1], []).recommendation == "ADMIT"
+    assert service.critique(review_context(seeds[1], [])).recommendation == "ADMIT"
     assert set(seeds[1].minimum_data) - set([])
 
 
@@ -87,6 +118,32 @@ def test_one_bounded_malformed_output_correction():
     with pytest.raises(ValidationError):
         wrong.steward({})
     assert wrong.calls == 2
+
+
+def test_designer_capability_prose_receives_bounded_contract_correction():
+    from butterfly_lab.benchmarks import controlled_hypothesis
+
+    valid = controlled_hypothesis("h", "c").model_dump(mode="json")
+    invalid = {**valid, "minimum_data": ["controlled_sessions", "64 paired synthetic sessions"]}
+    seen = []
+
+    def response(context):
+        seen.append(context)
+        return {"hypotheses": [invalid if len(seen) == 1 else valid]}
+
+    service = AgentService(FixtureProvider({"designer": response}))
+    hypotheses = service.design(
+        {"id": "c", "objective": "Controlled method test", "max_hypotheses": 1},
+        ["controlled_sessions"],
+    )
+    assert hypotheses[0].minimum_data == ["controlled_sessions"]
+    assert len(seen) == service.calls == 2
+    assert seen[1]["correction"]["errors"][0]["loc"] == ("hypotheses", 0, "minimum_data", 1)
+    # A syntactically valid but unavailable capability remains a genuine data gate,
+    # not something the model contract silently removes or admits.
+    assert type(hypotheses[0]).model_validate(
+        {**valid, "minimum_data": ["missing_quotes"]}
+    ).minimum_data == ["missing_quotes"]
 
 
 def test_live_agent_requires_registered_approved_usd_and_token_budget(tmp_path, monkeypatch):
@@ -138,6 +195,8 @@ def test_live_agent_requires_registered_approved_usd_and_token_budget(tmp_path, 
     )
     service.bind_campaign("live")
     assert service.steward({"campaign_id": "live"}).notes
+    # Identical accepted calls are now replayed durably without duplicate spend.
+    assert service.steward({"campaign_id": "live"}).notes
     with pytest.raises(ProviderError, match="budget"):
-        service.steward({"campaign_id": "live"})
+        service.steward({"campaign_id": "live"}, call_id="another-distinct-steward-call")
     assert len(calls) == 1

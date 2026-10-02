@@ -29,6 +29,7 @@ def classify(result: dict, independent: bool, confirmation: dict | None = None) 
     enough = inference.get("n_sessions", inference.get("n", 0)) >= inference.get(
         "minimum_sessions", 30
     )
+    enough = enough and inference.get("precision") != "insufficient"
     if low is None or high is None or not enough:
         return FindingOutcome.INCONCLUSIVE
     if high < hurdle:

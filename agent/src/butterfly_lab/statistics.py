@@ -46,13 +46,35 @@ def paired_inference(
             "reason": "relative baseline denominator nonpositive",
             "practical_effect": practical_effect,
         }
-    delta = (b - c if metric == "loss" else c - b) / denominator
+    delta = b - c if metric == "loss" else c - b
     n, length = len(delta), min(block_length, len(delta))
     rng = np.random.default_rng(seed)
     starts = rng.integers(0, n, size=(repetitions, int(np.ceil(n / length))))
     indices = ((starts[:, :, None] + np.arange(length)) % n).reshape(repetitions, -1)[:, :n]
-    draws = delta[indices].mean(axis=1)
-    estimate = float(delta.mean())
+    estimate = float(delta.mean() / denominator)
+    # Resample paired observations and recompute the *registered statistic*.
+    # Fixing the denominator at its full-sample value is not a bootstrap of
+    # relative improvement and gives spurious uncertainty for c = constant * b.
+    draw_denominators = b[indices].mean(axis=1) if relative else np.ones(repetitions)
+    if (draw_denominators <= 0).any():
+        return {
+            "n_sessions": n,
+            "estimate": estimate,
+            "ci_low": None,
+            "ci_high": None,
+            "p_value": None,
+            "outcome": "INCONCLUSIVE",
+            "precision": "insufficient",
+            "reason": "relative baseline denominator nonpositive in registered resamples",
+            "invalid_resamples": int(np.count_nonzero(draw_denominators <= 0)),
+            "practical_effect": practical_effect,
+            "relative": relative,
+            "unit": "session",
+            "block_length": length,
+            "repetitions": repetitions,
+            "seed": seed,
+        }
+    draws = delta[indices].mean(axis=1) / draw_denominators
     low, high = np.quantile(draws, [alpha / 2, 1 - alpha / 2])
     centered = draws - estimate
     p = float((1 + np.count_nonzero(centered >= estimate - practical_effect)) / (repetitions + 1))
@@ -116,9 +138,14 @@ def robustness(
             seed=int(plan.get("seed", 1729)),
             practical_effect=float(plan.get("practical_effect", 0.01)),
             relative=bool(plan.get("relative", metric == "loss")),
+            alpha=float(plan.get("alpha", 0.05)),
         )
         for n in lengths
     }
+    for report in reports.values():
+        report["minimum_sessions"] = int(plan.get("minimum_sessions", 30))
+        if report["n_sessions"] < report["minimum_sessions"]:
+            report.update(outcome="INCONCLUSIVE", precision="insufficient")
     return {
         "registered_checks": reports,
         "sign_stable": len(

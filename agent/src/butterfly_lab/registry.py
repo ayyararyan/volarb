@@ -46,6 +46,10 @@ KINDS = {
     "source": "sources",
     "benchmark": "benchmarks",
     "generation": "generations",
+    "preparation": "preparations",
+    "review_context": "review_contexts",
+    "critic_review": "critic_reviews",
+    "methodological_admission": "methodological_admissions",
 }
 
 
@@ -253,7 +257,7 @@ class Registry:
             try:
                 db.execute("PRAGMA journal_mode=WAL")
                 version = db.execute("PRAGMA user_version").fetchone()[0]
-                if version not in (0, 1, 2):
+                if version not in (0, 1, 2, 3):
                     raise RegistryError(f"Unsupported registry schema {version}; refusing resume")
                 if version == 0:
                     db.executescript("""
@@ -306,6 +310,17 @@ class Registry:
                       payload_hash TEXT NOT NULL,state TEXT NOT NULL,result_ref TEXT,created_at REAL NOT NULL);
                     INSERT OR IGNORE INTO migrations VALUES(2,strftime('%s','now'));
                     PRAGMA user_version=2;
+                    COMMIT;
+                    """)
+                if version < 3:
+                    db.executescript("""
+                    BEGIN IMMEDIATE;
+                    CREATE TABLE IF NOT EXISTS agent_calls(
+                      call_id TEXT PRIMARY KEY,campaign_id TEXT,role TEXT NOT NULL,
+                      request_hash TEXT NOT NULL,state TEXT NOT NULL,
+                      generation_id TEXT,payload TEXT,created_at REAL NOT NULL);
+                    INSERT OR IGNORE INTO migrations VALUES(3,strftime('%s','now'));
+                    PRAGMA user_version=3;
                     COMMIT;
                     """)
                 for singular, plural in KINDS.items():
@@ -363,6 +378,125 @@ class Registry:
     ) -> str:
         with self.transaction() as db:
             return self._event(db, event_type, subject, payload, event_id)
+
+    def _agent_call(self, db: sqlite3.Connection, call_id: str) -> dict[str, Any] | None:
+        receipt = _row(
+            db.execute("SELECT * FROM agent_calls WHERE call_id=?", (call_id,)).fetchone()
+        )
+        if receipt is None or receipt["state"] == "ACCEPTED":
+            return receipt
+        # Recover the narrow crash window after a validated generation was saved
+        # but before its acceptance receipt/checkpoint was committed. Never replay
+        # a dispatched call whose authoritative response is absent.
+        candidates = []
+        for row in db.execute(
+            "SELECT id,payload FROM records WHERE kind='generation' AND campaign_id IS ?",
+            (receipt["campaign_id"],),
+        ):
+            generation = json.loads(row["payload"])
+            if (
+                generation.get("logical_call_id") == call_id
+                and generation.get("contract_status") == "VALID"
+            ):
+                candidates.append((row["id"], generation))
+        if len(candidates) > 1:
+            raise ConflictError("Multiple accepted generations for one logical role call")
+        if candidates:
+            generation_id, generation = candidates[0]
+            self._accept_agent_call(db, receipt, generation_id, generation["payload"])
+            receipt.update(
+                state="ACCEPTED", generation_id=generation_id, payload=generation["payload"]
+            )
+        return receipt
+
+    def get_agent_call(self, call_id: str) -> dict[str, Any] | None:
+        with self.transaction() as db:
+            return self._agent_call(db, call_id)
+
+    def begin_agent_call(
+        self, call_id: str, campaign_id: str | None, role: str, request_hash: str
+    ) -> dict[str, Any]:
+        if not call_id or not role or len(request_hash) != 64:
+            raise RegistryError("Role call requires stable identity and request digest")
+        with self.transaction() as db:
+            prior = self._agent_call(db, call_id)
+            if prior:
+                if any(
+                    prior[key] != value
+                    for key, value in (
+                        ("campaign_id", campaign_id),
+                        ("role", role),
+                        ("request_hash", request_hash),
+                    )
+                ):
+                    raise ConflictError("Logical role call reused with a different contract")
+                return {**prior, "created": False}
+            db.execute(
+                "INSERT INTO agent_calls VALUES(?,?,?,?,?,?,?,?)",
+                (call_id, campaign_id, role, request_hash, "DISPATCHED", None, None, time.time()),
+            )
+            self._event(
+                db,
+                "AGENT_CALL_DISPATCHED",
+                call_id,
+                {"campaign_id": campaign_id, "role": role, "request_hash": request_hash},
+                "agent-dispatch-" + call_id,
+            )
+            return {
+                "call_id": call_id,
+                "campaign_id": campaign_id,
+                "role": role,
+                "request_hash": request_hash,
+                "state": "DISPATCHED",
+                "created": True,
+            }
+
+    def _accept_agent_call(
+        self, db: sqlite3.Connection, receipt: dict[str, Any], generation_id: str, payload: Any
+    ) -> None:
+        row = db.execute(
+            "SELECT payload FROM records WHERE kind='generation' AND id=?", (generation_id,)
+        ).fetchone()
+        generation = json.loads(row[0]) if row else {}
+        if (
+            generation.get("logical_call_id") != receipt["call_id"]
+            or generation.get("logical_request_hash") != receipt["request_hash"]
+            or generation.get("contract_status") != "VALID"
+            or generation.get("campaign_id") != receipt["campaign_id"]
+            or generation.get("role") != receipt["role"]
+            or generation.get("payload") != plain(payload)
+        ):
+            raise ConflictError("Acceptance must reference the validated generation for this call")
+        if receipt["state"] == "ACCEPTED":
+            if receipt["generation_id"] != generation_id or receipt["payload"] != plain(payload):
+                raise ConflictError("Accepted role response is immutable")
+            return
+        db.execute(
+            "UPDATE agent_calls SET state='ACCEPTED',generation_id=?,payload=? WHERE call_id=?",
+            (generation_id, canonical_bytes(payload).decode(), receipt["call_id"]),
+        )
+        self._event(
+            db,
+            "AGENT_CALL_ACCEPTED",
+            receipt["call_id"],
+            {"generation_id": generation_id, "response_hash": digest(payload)},
+            "agent-accepted-" + receipt["call_id"],
+        )
+
+    def finish_agent_call(self, call_id: str, generation_id: str, payload: Any) -> dict[str, Any]:
+        with self.transaction() as db:
+            receipt = _row(
+                db.execute("SELECT * FROM agent_calls WHERE call_id=?", (call_id,)).fetchone()
+            )
+            if receipt is None:
+                raise RegistryError("Cannot accept an undispatched role call")
+            self._accept_agent_call(db, receipt, generation_id, payload)
+            return {
+                **receipt,
+                "state": "ACCEPTED",
+                "generation_id": generation_id,
+                "payload": plain(payload),
+            }
 
     def put(self, kind: str, id: str, payload: Any) -> str:
         kind, payload = _kind(kind), plain(payload)

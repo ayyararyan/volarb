@@ -8,11 +8,15 @@ Accounting independently reduces primitive fills using decimal arithmetic.
 from __future__ import annotations
 
 import math
+import time
+from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
 import numpy as np
 import pandas as pd
+
+from .artifacts import ArtifactError, ArtifactStore, digest, plain
 
 
 def replicate_exp001(
@@ -154,14 +158,23 @@ def replicate_exp001(
 
 def replicate_accounting(fills: pd.DataFrame, opportunities: pd.DataFrame) -> dict[str, Any]:
     accounts: dict[tuple[str, str], dict[str, Any]] = {}
+    failures: list[str] = []
+    errors: list[float] = []
     for fill in fills.to_dict("records"):
         key = (fill["policy"], fill["cycle_id"])
         acc = accounts.setdefault(key, {"cash": Decimal(0), "positions": {}})
+        if "timestamp" in fill:
+            clock = datetime.fromisoformat(fill["timestamp"])
+            if clock.tzinfo is None:
+                failures.append("offset-naive primitive fill clock")
+            elif "clock" in acc and clock < acc["clock"]:
+                failures.append("dependent primitive fill chronology moved backwards")
+            if clock.tzinfo is not None:
+                acc["clock"] = clock
         quantity = int(fill["units"])
         acc["cash"] -= Decimal(quantity) * Decimal(str(fill["price"])) + Decimal(str(fill["fees"]))
         contract = fill["contract_id"]
         acc["positions"][contract] = acc["positions"].get(contract, 0) + quantity
-    failures, errors = [], []
     for row in opportunities.to_dict("records"):
         acc = accounts.get(
             (row["policy"], row["opportunity_id"]), {"cash": Decimal(0), "positions": {}}
@@ -197,6 +210,233 @@ def replicate_controlled(rows: pd.DataFrame, primary_estimate: float) -> dict[st
         "method": "independent_scalar_session_metric",
         "max_error": error,
     }
+
+
+class _ReconstructionError(ValueError):
+    """Bounded validation messages that never include external source paths."""
+
+
+def verify_registered_reconstruction(
+    result: dict[str, Any],
+    experiment: dict[str, Any],
+    dataset: dict[str, Any],
+    artifact_store: ArtifactStore,
+) -> dict[str, Any]:
+    """Post-role independent arithmetic over accepted immutable worker artifacts.
+
+    This is a bounded validation, not an evaluator/backtest rerun. Full independent
+    feature/model reconstruction remains inside the reserved numerical worker.
+    No raw source, source_path, protected partition, or provider is accessed here.
+    """
+    import pyarrow.parquet as parquet
+
+    resources = experiment.get("resources", {})
+    byte_limit = min(64 * 1024 * 1024, int(resources.get("storage_bytes", 10 * 1024 * 1024)))
+    decoded_limit = min(64 * 1024 * 1024, int(resources.get("memory_mb", 256)) * 1024 * 256)
+    deadline = time.monotonic() + min(10.0, float(resources.get("wall_seconds", 60)))
+    refs: dict[str, dict[str, Any]] = {}
+    counts = {"artifact_bytes": 0, "decoded_bytes": 0, "rows": 0}
+    report: dict[str, Any] = {
+        "status": "FAIL",
+        "method": "post_role_independent_registered_artifact_reconstruction_v1",
+        "evaluator": experiment.get("evaluator"),
+        "result_hash": digest(result),
+        "experiment_hash": digest(experiment),
+        "independence": "Independent scalar/decimal reductions after replication support; source-level feature/model reconstruction remains in the reserved worker.",
+        "checks": [],
+        "disagreements": [],
+    }
+
+    def require(condition: bool, message: str) -> None:
+        if not condition:
+            raise _ReconstructionError(message)
+        if time.monotonic() > deadline:
+            raise _ReconstructionError("Registered artifact validation deadline exceeded")
+
+    def read(name: str, columns: list[str]) -> pd.DataFrame:
+        ref = plain(result.get("artifacts", {}).get(name, {}))
+        path = artifact_store.path(ref)
+        size = path.stat().st_size
+        require(size + counts["artifact_bytes"] <= byte_limit, "Artifact byte bound exceeded")
+        artifact_store.verify(ref)
+        table = parquet.ParquetFile(path)
+        rows = table.metadata.num_rows
+        decoded = sum(
+            table.metadata.row_group(i).column(j).total_uncompressed_size
+            for i in range(table.metadata.num_row_groups)
+            for j in range(table.metadata.num_columns)
+        )
+        require(rows + counts["rows"] <= 100_000, "Artifact row bound exceeded")
+        require(
+            decoded + counts["decoded_bytes"] <= decoded_limit,
+            "Decoded artifact memory bound exceeded",
+        )
+        require(set(columns) <= set(table.schema.names), "Required primitive columns absent")
+        frame = table.read(columns=columns, use_threads=False).to_pandas()
+        artifact_store.verify(ref)
+        counts["artifact_bytes"] += size
+        counts["decoded_bytes"] += decoded
+        counts["rows"] += rows
+        refs[name] = ref
+        require(True, "")
+        return frame
+
+    def close(actual: float | None, expected: Any, label: str, tolerance: float = 1e-8) -> None:
+        require(
+            actual is None
+            and expected is None
+            or actual is not None
+            and expected is not None
+            and math.isfinite(float(expected))
+            and math.isclose(actual, float(expected), rel_tol=1e-10, abs_tol=tolerance),
+            "Independent registered value mismatch: " + label,
+        )
+
+    try:
+        require(dataset.get("partition") != "confirmation", "Protected confirmation is forbidden")
+        require(
+            result.get("fidelity") == dataset.get("fidelity")
+            and result.get("provenance") == dataset.get("provenance"),
+            "Result/dataset evidence classification differs",
+        )
+        evaluator = experiment["evaluator"]
+        require(evaluator in {"controlled", "exp001", "iron_butterfly"}, "Unknown evaluator")
+        columns = (
+            ["session", "baseline_pnl", "candidate_pnl"]
+            if evaluator == "iron_butterfly"
+            else ["session", "baseline_loss", "candidate_loss"]
+        )
+        sessions = read("session_outcomes", columns)
+        require(len(sessions) > 0 and sessions.session.is_unique, "Session outcomes must be unique")
+        require(
+            np.isfinite(sessions[columns[1:]].to_numpy(dtype=float)).all(),
+            "Unresolved/nonfinite outcomes cannot be silently omitted",
+        )
+        baseline = math.fsum(float(x) for x in sessions[columns[1]]) / len(sessions)
+        candidate = math.fsum(float(x) for x in sessions[columns[2]]) / len(sessions)
+        estimate = (
+            candidate - baseline
+            if evaluator == "iron_butterfly"
+            else (baseline - candidate) / baseline
+            if baseline > 0
+            else None
+        )
+        close(estimate, result.get("inference", {}).get("estimate"), "paired session estimand")
+        close(float(len(sessions)), result.get("metrics", {}).get("n_sessions"), "session count")
+        if evaluator == "controlled":
+            require(
+                dataset.get("fidelity") == "F0" and dataset.get("provenance") == "SYNTHETIC",
+                "Controlled reconstruction requires F0 synthetic evidence",
+            )
+            require(sessions.baseline_loss.eq(1.0).all(), "Controlled unit-loss baseline differs")
+            names = ("baseline_mean", "candidate_mean")
+        elif evaluator == "exp001":
+            features = read("features", ["session", "excursion"])
+            predictions = read(
+                "predictions",
+                [
+                    "session",
+                    "status",
+                    "baseline_prediction",
+                    "candidate_prediction",
+                    "baseline_loss",
+                    "candidate_loss",
+                ],
+            )
+            require(features.session.is_unique, "Feature sessions must be unique")
+            targets = dict(zip(features.session, features.excursion, strict=True))
+            scored = predictions[predictions.status.eq("EVALUATED")]
+            require(scored.session.is_unique, "Prediction sessions must be unique")
+            for row in scored.to_dict("records"):
+                require(row["session"] in targets, "Prediction target absent")
+                for policy in ("baseline", "candidate"):
+                    loss = 10000 * abs(
+                        float(targets[row["session"]]) - float(row[policy + "_prediction"])
+                    )
+                    close(loss, row[policy + "_loss"], policy + " original-scale loss", 1e-3)
+            split = experiment.get("split", {})
+            final = scored[
+                (scored.session > split.get("validation_end", "2024-12-31"))
+                & (scored.session <= split.get("evaluation_end", "2026-08-31"))
+            ].set_index("session")
+            require(
+                set(final.index) == set(sessions.session), "Registered evaluation split differs"
+            )
+            for row in sessions.to_dict("records"):
+                for policy in ("baseline", "candidate"):
+                    close(
+                        float(final.loc[row["session"], policy + "_loss"]),
+                        row[policy + "_loss"],
+                        "session/prediction loss",
+                    )
+            names = ("baseline_mae_bp", "candidate_mae_bp")
+            report["checks"].append(
+                "primitive target/prediction loss and registered evaluation split"
+            )
+        else:
+            fills = read(
+                "fills",
+                ["policy", "cycle_id", "contract_id", "units", "price", "fees", "timestamp"],
+            )
+            opportunities = read(
+                "opportunities", ["policy", "opportunity_id", "session", "pnl_inr"]
+            )
+            accounting = replicate_accounting(fills, opportunities)
+            require(
+                accounting["status"] == "PASS", "Primitive decimal accounting reconstruction failed"
+            )
+            keys = set(zip(opportunities.policy, opportunities.opportunity_id, strict=True))
+            require(len(keys) == len(opportunities), "Duplicate opportunity identity")
+            require(
+                set(zip(fills.policy, fills.cycle_id, strict=True)) <= keys,
+                "Primitive fills absent from opportunity ledger",
+            )
+            params = {**experiment.get("parameters", {}), **experiment.get("dsl", {})}
+            management = params.get("management", "hold")
+            left = opportunities[opportunities.policy.eq("hold")]
+            right = opportunities[opportunities.policy.eq(management)]
+            require(
+                set(left.opportunity_id) == set(right.opportunity_id),
+                "Paired opportunity identities differ",
+            )
+            require(
+                set(left.session) == set(sessions.session), "Opportunity/session coverage differs"
+            )
+            for row in sessions.to_dict("records"):
+                for ledger, name in ((left, "baseline_pnl"), (right, "candidate_pnl")):
+                    values = [float(x) for x in ledger[ledger.session.eq(row["session"])].pnl_inr]
+                    require(
+                        all(math.isfinite(x) for x in values), "Unresolved primitive opportunity"
+                    )
+                    close(math.fsum(values), row[name], "opportunity/session cashflow")
+            names = ("baseline_mean_pnl_inr", "candidate_mean_pnl_inr")
+            report["accounting"] = accounting
+            report["checks"].append(
+                "primitive decimal fills, clocks, paired opportunities and session P&L"
+            )
+        close(baseline, result.get("metrics", {}).get(names[0]), names[0])
+        close(candidate, result.get("metrics", {}).get(names[1]), names[1])
+        report["checks"].extend(
+            ["content-addressed artifacts verified", "paired session means and registered estimand"]
+        )
+        require(True, "")
+        report["status"] = "PASS"
+    except (ArtifactError, _ReconstructionError) as error:
+        report["disagreements"] = [str(error)]
+    except (ValueError, TypeError, KeyError, OSError, OverflowError) as error:
+        # Backend error prose can contain private paths; retain only its class.
+        report["disagreements"] = ["Artifact reconstruction rejected: " + type(error).__name__]
+    report.update(
+        artifact_refs=refs,
+        bounds={
+            "artifact_bytes": byte_limit,
+            "decoded_bytes": decoded_limit,
+            "rows": 100_000,
+            "wall_seconds": min(10.0, float(resources.get("wall_seconds", 60))),
+        },
+        observed=counts,
+    )
+    return report
 
 
 def replicate(

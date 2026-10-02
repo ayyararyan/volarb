@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from enum import StrEnum
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
@@ -154,7 +154,12 @@ class HypothesisSpec(Contract):
     risk_constraints: list[str] = Field(min_length=1)
     parameter_domain: dict[str, list[Any]] = Field(default_factory=dict)
     search_budget: int = Field(default=1, ge=1, le=60)
-    minimum_data: list[str] = Field(min_length=1)
+    minimum_data: list[
+        Annotated[str, Field(pattern=r"^[A-Za-z][A-Za-z0-9_.:-]*$", max_length=128)]
+    ] = Field(
+        min_length=1,
+        description="Exact data capability identifiers only, never prose, counts or methodological requirements. Put narrative constraints in risk_constraints.",
+    )
     falsification_rule: str = Field(min_length=12)
     alternative_explanations: list[str] = Field(min_length=1)
     source_refs: list[ArtifactRef] = Field(default_factory=list)
@@ -225,7 +230,17 @@ class InferencePlan(Contract):
     practical_effect: float = Field(default=0.01, ge=0)
     minimum_sessions: int = Field(default=30, ge=5)
     confirmation_family: str | None = None
-    robustness_block_lengths: list[int] = Field(default_factory=lambda: [1, 5, 10])
+    robustness_block_lengths: list[int] = Field(
+        default_factory=lambda: [1, 5, 10], min_length=1, max_length=8
+    )
+
+    @model_validator(mode="after")
+    def bounded_robustness(self):
+        if len(set(self.robustness_block_lengths)) != len(self.robustness_block_lengths):
+            raise ValueError("registered robustness block lengths must be unique")
+        if any(value < 1 or value > 1000 for value in self.robustness_block_lengths):
+            raise ValueError("registered robustness block length outside bound")
+        return self
 
 
 class ExperimentSpec(Contract):
@@ -243,7 +258,12 @@ class ExperimentSpec(Contract):
     parameters: dict[str, Any] = Field(default_factory=dict)
     split: SplitPlan = Field(default_factory=SplitPlan)
     inference: InferencePlan = Field(default_factory=InferencePlan)
-    robustness: list[str] = Field(default_factory=lambda: ["block_length", "cost_stress"])
+    robustness: list[str] = Field(
+        default_factory=lambda data: (
+            ["block_length"]
+            + (["cost_stress"] if data.get("evaluator") == "iron_butterfly" else [])
+        )
+    )
     fidelity: Fidelity = Fidelity.F0
     seed: int = 17
     rerun_ordinal: int = Field(default=0, ge=0)
@@ -267,6 +287,133 @@ class ExperimentSpec(Contract):
             and not self.parent_experiment_id
         ):
             raise ValueError("repair/rerun/replication requires parent experiment")
+        return self
+
+
+class ReviewSource(Contract):
+    """Bounded evidence reference, never an arbitrary source/configuration dump."""
+
+    id: str = Field(min_length=1, max_length=256)
+    title: str = Field(min_length=1, max_length=300)
+    summary: str = Field(max_length=1800)
+    provenance_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    limitations: list[str] = Field(default_factory=list, max_length=8)
+
+
+class ReviewCampaign(Contract):
+    campaign_id: str
+    objective: str = Field(max_length=8000)
+    research_scope: str = Field(max_length=1000)
+    constraints: list[str] = Field(max_length=20)
+
+
+class ReviewCoverage(Contract):
+    rows: int | None = Field(default=None, ge=0)
+    sessions: int | None = Field(default=None, ge=0)
+    start: str | None = None
+    end: str | None = None
+    registered_sessions: int = Field(ge=0)
+
+
+class ReviewData(Contract):
+    dataset_id: str
+    manifest_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    qualification_id: str
+    qualification_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    source_ids: list[str] = Field(max_length=32)
+    fidelity: Fidelity
+    provenance: Literal["SYNTHETIC", "HISTORICAL", "MODEL", "REPLAY"]
+    verified_capabilities: list[str] = Field(max_length=64)
+    qualification_status: str = Field(max_length=64)
+    coverage: ReviewCoverage
+    timing_semantics: str = Field(max_length=2000)
+    availability_semantics: str = Field(max_length=2000)
+    missingness_summary: str = Field(max_length=2000)
+    prior_exposed: bool
+    partition: Literal["development", "validation"]
+    limitations: list[str] = Field(max_length=20)
+
+
+class ReviewInference(Contract):
+    estimand: str = Field(max_length=1500)
+    primary_metric: str
+    practical_threshold: float = Field(ge=0)
+    unit_of_inference: Literal["session"]
+    split: SplitPlan
+    plan: InferencePlan
+    training_evaluation_chronology: str = Field(max_length=2000)
+    dependence_resampling: str = Field(max_length=1500)
+    missing_data_treatment: str = Field(max_length=2000)
+    multiple_testing_treatment: str = Field(max_length=1500)
+    decision_rule: str = Field(max_length=1500)
+
+
+class ReviewGovernance(Contract):
+    search_family_id: str
+    search_budget: int = Field(ge=1)
+    parameter_domain: dict[str, list[Any]]
+    max_hypotheses: int = Field(ge=1)
+    max_numerical_runs: int = Field(ge=0)
+    llm_call_budget: int = Field(ge=0)
+    llm_token_budget: int = Field(ge=0)
+    maximum_revisions: Literal[2] = 2
+    revision: int = Field(ge=0, le=2)
+    fidelity_ceiling: Fidelity
+    confirmation_available: bool
+    protected_data_restrictions: str
+
+
+class ReviewCritique(Contract):
+    review_id: str
+    recommendation: Literal["ADMIT", "REVISE", "UNSUPPORTED"]
+    concerns: list[str] = Field(max_length=20)
+    report_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+class ReviewAdmission(Contract):
+    admitted: bool
+    outcome: str | None = None
+    reasons: list[str] = Field(default_factory=list, max_length=30)
+
+
+class ControlledGeneratorReview(Contract):
+    n_sessions: int = Field(ge=5, le=10000)
+    effect: float
+    noise_standard_deviation: float = Field(ge=0)
+    seed: int
+    rng: Literal["numpy.random.default_rng"] = "numpy.random.default_rng"
+    noise_distribution: Literal["IID Gaussian mean zero"] = "IID Gaussian mean zero"
+    session_labels: Literal["business days from 2020-01-01; not historical dates"] = (
+        "business days from 2020-01-01; not historical dates"
+    )
+
+
+class CriticContext(Contract):
+    """Versioned pre-result contract: actual executable proposal plus bounded evidence."""
+
+    campaign: ReviewCampaign
+    hypothesis: HypothesisSpec
+    hypothesis_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    data_context: ReviewData
+    proposed_experiment: ExperimentSpec
+    specification_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    baseline: str = Field(max_length=1500)
+    candidate: str = Field(max_length=1500)
+    comparison_type: str = Field(max_length=1000)
+    decision_timing: str = Field(max_length=1500)
+    holding_horizon_minutes: int = Field(gt=0, le=375)
+    execution_assumptions: list[str] = Field(max_length=12)
+    controlled_generator: ControlledGeneratorReview | None = None
+    inference: ReviewInference
+    research_governance: ReviewGovernance
+    sources: list[ReviewSource] = Field(max_length=16)
+    prior_reviews: list[ReviewCritique] = Field(default_factory=list, max_length=2)
+    methodological_admission: ReviewAdmission | None = None
+
+    @model_validator(mode="after")
+    def bounded_review(self):
+        if len(canonical_json(self).encode()) > 60_000:
+            raise ValueError("review context exceeds bounded scientific input size")
         return self
 
 
@@ -431,4 +578,5 @@ CONTRACTS = [
     WorkerEvent,
     Capability,
     EvidenceGrade,
+    CriticContext,
 ]

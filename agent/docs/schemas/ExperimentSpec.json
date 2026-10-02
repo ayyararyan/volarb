@@ -106,6 +106,8 @@
           "items": {
             "type": "integer"
           },
+          "maxItems": 8,
+          "minItems": 1,
           "title": "Robustness Block Lengths",
           "type": "array"
         },
