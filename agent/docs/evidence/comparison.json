@@ -1,0 +1,121 @@
+{
+  "claim": "Infrastructure comparison on matched synthetic evidence. This does not establish LLM or multi-agent research superiority; a live-provider comparison needs explicit budget and credentials.",
+  "modes": [
+    {
+      "elapsed_seconds": 2.784542625013273,
+      "human_review_minutes": {
+        "reason": "No human comparison trial conducted",
+        "value": null
+      },
+      "informative_negative": 1,
+      "llm_currency": 0,
+      "llm_tokens": 0,
+      "mode": "multi_role",
+      "numeric_budget_seconds": 90,
+      "outcomes": [
+        "INCONCLUSIVE",
+        "EXPLORATORY_SUPPORTED",
+        "REJECTED_FINDING"
+      ],
+      "provider": "SYNTHETIC_FIXTURE",
+      "provider_calls": 7,
+      "registered": 3,
+      "valid_reproducible": 3,
+      "worker": {
+        "attempts_processed": 3,
+        "budget_committed_upper_bounds": {
+          "cpu_seconds": 90.0,
+          "measured_cpu_seconds": 1.19813,
+          "runs": 3,
+          "storage_bytes": 6000000
+        },
+        "graph_version": "1",
+        "numerical_concurrency": 2,
+        "pending_outbox": 0,
+        "runs": {
+          "COMPLETED": 3
+        },
+        "schema_version": "1",
+        "wall_seconds": 2.7353598329937086
+      }
+    },
+    {
+      "elapsed_seconds": 2.752043957996648,
+      "human_review_minutes": {
+        "reason": "No human comparison trial conducted",
+        "value": null
+      },
+      "informative_negative": 1,
+      "llm_currency": 0,
+      "llm_tokens": 0,
+      "mode": "single_agent",
+      "numeric_budget_seconds": 90,
+      "outcomes": [
+        "INCONCLUSIVE",
+        "EXPLORATORY_SUPPORTED",
+        "REJECTED_FINDING"
+      ],
+      "provider": "SYNTHETIC_FIXTURE",
+      "provider_calls": 1,
+      "registered": 3,
+      "valid_reproducible": 3,
+      "worker": {
+        "attempts_processed": 3,
+        "budget_committed_upper_bounds": {
+          "cpu_seconds": 180.0,
+          "measured_cpu_seconds": 2.386707,
+          "runs": 6,
+          "storage_bytes": 12000000
+        },
+        "graph_version": "1",
+        "numerical_concurrency": 2,
+        "pending_outbox": 0,
+        "runs": {
+          "COMPLETED": 3,
+          "INGESTED": 3
+        },
+        "schema_version": "1",
+        "wall_seconds": 2.7031922079622746
+      }
+    },
+    {
+      "elapsed_seconds": 2.420064457983244,
+      "human_review_minutes": {
+        "reason": "No human comparison trial conducted",
+        "value": null
+      },
+      "informative_negative": 1,
+      "llm_currency": 0,
+      "llm_tokens": 0,
+      "mode": "deterministic",
+      "numeric_budget_seconds": 90,
+      "outcomes": [
+        "INCONCLUSIVE",
+        "EXPLORATORY_SUPPORTED",
+        "REJECTED_FINDING"
+      ],
+      "provider": "SYNTHETIC_FIXTURE",
+      "provider_calls": 0,
+      "registered": 3,
+      "valid_reproducible": 3,
+      "worker": {
+        "attempts_processed": 3,
+        "budget_committed_upper_bounds": {
+          "cpu_seconds": 270.0,
+          "measured_cpu_seconds": 3.581488,
+          "runs": 9,
+          "storage_bytes": 18000000
+        },
+        "graph_version": "1",
+        "numerical_concurrency": 2,
+        "pending_outbox": 0,
+        "runs": {
+          "COMPLETED": 3,
+          "INGESTED": 6
+        },
+        "schema_version": "1",
+        "wall_seconds": 2.3705920000211336
+      }
+    }
+  ]
+}

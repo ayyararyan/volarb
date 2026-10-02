@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "butterfly-research-lab"
+version = "0.1.0"
+description = "Research-only registry-driven butterfly laboratory"
+requires-python = ">=3.12,<3.13"
+dependencies = ["langgraph==1.2.12", "langgraph-checkpoint-sqlite==3.0.3", "pydantic==2.13.4", "numpy==2.2.6", "pandas==2.3.3", "pyarrow==23.0.1", "scipy==1.17.1", "httpx==0.28.1"]
+
+[project.optional-dependencies]
+dev = ["pytest==9.1.1", "ruff==0.15.7", "mypy==1.19.1"]
+
+[project.scripts]
+butterfly-lab = "butterfly_lab.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/butterfly_lab"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["stress: thousands of actual controlled numerical jobs", "scientific: preregistered Monte Carlo validation"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.format]
+exclude = ["src/butterfly_lab/observed_controller_v26.py"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+check_untyped_defs = true
+files = ["src/butterfly_lab/schemas.py", "src/butterfly_lab/config.py"]

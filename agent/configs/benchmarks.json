@@ -1,0 +1,17 @@
+{
+  "version": "1",
+  "frozen_before_execution": true,
+  "scientific": {
+    "seeds": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39],
+    "n_sessions": 64,
+    "noise": 0.1,
+    "null_effect": 0.0,
+    "planted_effect": 0.10,
+    "bootstrap_samples": 199,
+    "practical_effect": 0.01,
+    "max_null_support_rate": 0.15,
+    "min_planted_support_rate": 0.85
+  },
+  "load": {"hypotheses":250,"jobs":2000,"concurrency":2,"n_sessions":8,"bootstrap_samples":99},
+  "comparison": {"modes":["multi_role","single_agent","deterministic"],"hypotheses_per_mode":3,"numerical_runs_per_mode":3,"provider":"SYNTHETIC_FIXTURE","token_budget_per_mode":0,"cpu_seconds_per_mode":90}
+}

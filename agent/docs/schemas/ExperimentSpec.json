@@ -1,0 +1,418 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "media_type": {
+          "default": "application/json",
+          "title": "Media Type",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size_bytes": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Size Bytes"
+        },
+        "uri": {
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uri",
+        "sha256"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "Fidelity": {
+      "enum": [
+        "F0",
+        "F1",
+        "F2",
+        "F3",
+        "F4"
+      ],
+      "title": "Fidelity",
+      "type": "string"
+    },
+    "InferencePlan": {
+      "additionalProperties": false,
+      "properties": {
+        "alpha": {
+          "default": 0.05,
+          "exclusiveMaximum": 1,
+          "exclusiveMinimum": 0,
+          "title": "Alpha",
+          "type": "number"
+        },
+        "block_length": {
+          "default": 5,
+          "minimum": 1,
+          "title": "Block Length",
+          "type": "integer"
+        },
+        "bootstrap_samples": {
+          "default": 999,
+          "minimum": 99,
+          "title": "Bootstrap Samples",
+          "type": "integer"
+        },
+        "confirmation_family": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confirmation Family"
+        },
+        "minimum_sessions": {
+          "default": 30,
+          "minimum": 5,
+          "title": "Minimum Sessions",
+          "type": "integer"
+        },
+        "practical_effect": {
+          "default": 0.01,
+          "minimum": 0,
+          "title": "Practical Effect",
+          "type": "number"
+        },
+        "robustness_block_lengths": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Robustness Block Lengths",
+          "type": "array"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "unit": {
+          "const": "session",
+          "default": "session",
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "title": "InferencePlan",
+      "type": "object"
+    },
+    "Relation": {
+      "enum": [
+        "NEW",
+        "VARIANT",
+        "REPAIR",
+        "RERUN",
+        "MONTE_CARLO",
+        "REPLICATION",
+        "RESULT_INFORMED",
+        "DUPLICATE"
+      ],
+      "title": "Relation",
+      "type": "string"
+    },
+    "RunResources": {
+      "additionalProperties": false,
+      "properties": {
+        "cpu_seconds": {
+          "default": 30,
+          "exclusiveMinimum": 0,
+          "title": "Cpu Seconds",
+          "type": "number"
+        },
+        "memory_mb": {
+          "default": 1024,
+          "minimum": 128,
+          "title": "Memory Mb",
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "storage_bytes": {
+          "default": 10000000,
+          "minimum": 1,
+          "title": "Storage Bytes",
+          "type": "integer"
+        },
+        "wall_seconds": {
+          "default": 60,
+          "exclusiveMinimum": 0,
+          "title": "Wall Seconds",
+          "type": "number"
+        }
+      },
+      "title": "RunResources",
+      "type": "object"
+    },
+    "SplitPlan": {
+      "additionalProperties": false,
+      "properties": {
+        "availability_lag_seconds": {
+          "default": 60,
+          "minimum": 0,
+          "title": "Availability Lag Seconds",
+          "type": "integer"
+        },
+        "evaluation_end": {
+          "default": "2026-08-31",
+          "title": "Evaluation End",
+          "type": "string"
+        },
+        "minimum_training_sessions": {
+          "default": 30,
+          "minimum": 5,
+          "title": "Minimum Training Sessions",
+          "type": "integer"
+        },
+        "purge_overlapping_labels": {
+          "default": true,
+          "title": "Purge Overlapping Labels",
+          "type": "boolean"
+        },
+        "refit": {
+          "default": "expanding_monthly",
+          "enum": [
+            "frozen",
+            "expanding_monthly"
+          ],
+          "title": "Refit",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "train_end": {
+          "default": "2023-12-31",
+          "title": "Train End",
+          "type": "string"
+        },
+        "validation_end": {
+          "default": "2024-12-31",
+          "title": "Validation End",
+          "type": "string"
+        }
+      },
+      "title": "SplitPlan",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "approval_scope_id": {
+      "default": "campaign",
+      "title": "Approval Scope Id",
+      "type": "string"
+    },
+    "baseline_id": {
+      "default": "B0-simple",
+      "title": "Baseline Id",
+      "type": "string"
+    },
+    "baseline_ref": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "campaign_id": {
+      "title": "Campaign Id",
+      "type": "string"
+    },
+    "dataset_id": {
+      "title": "Dataset Id",
+      "type": "string"
+    },
+    "dataset_ref": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "dsl": {
+      "additionalProperties": true,
+      "title": "Dsl",
+      "type": "object"
+    },
+    "environment_hash": {
+      "default": "unbound",
+      "title": "Environment Hash",
+      "type": "string"
+    },
+    "evaluator": {
+      "enum": [
+        "exp001",
+        "iron_butterfly",
+        "controlled"
+      ],
+      "title": "Evaluator",
+      "type": "string"
+    },
+    "evaluator_version": {
+      "const": "1",
+      "default": "1",
+      "title": "Evaluator Version",
+      "type": "string"
+    },
+    "fidelity": {
+      "$ref": "#/$defs/Fidelity",
+      "default": "F0"
+    },
+    "graph_version": {
+      "const": "1",
+      "default": "1",
+      "title": "Graph Version",
+      "type": "string"
+    },
+    "hypothesis_id": {
+      "title": "Hypothesis Id",
+      "type": "string"
+    },
+    "hypothesis_ref": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "implementation_hash": {
+      "default": "builtin-v1",
+      "title": "Implementation Hash",
+      "type": "string"
+    },
+    "inference": {
+      "$ref": "#/$defs/InferencePlan"
+    },
+    "informed_by_result_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Informed By Result Ids",
+      "type": "array"
+    },
+    "max_repairs": {
+      "default": 2,
+      "maximum": 2,
+      "minimum": 0,
+      "title": "Max Repairs",
+      "type": "integer"
+    },
+    "parameters": {
+      "additionalProperties": true,
+      "title": "Parameters",
+      "type": "object"
+    },
+    "parent_experiment_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Parent Experiment Id"
+    },
+    "relation": {
+      "$ref": "#/$defs/Relation",
+      "default": "NEW"
+    },
+    "rerun_ordinal": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Rerun Ordinal",
+      "type": "integer"
+    },
+    "resources": {
+      "$ref": "#/$defs/RunResources"
+    },
+    "robustness": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Robustness",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "1",
+      "default": "1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "seed": {
+      "default": 17,
+      "title": "Seed",
+      "type": "integer"
+    },
+    "split": {
+      "$ref": "#/$defs/SplitPlan"
+    },
+    "trial_id": {
+      "title": "Trial Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "campaign_id",
+    "hypothesis_id",
+    "trial_id",
+    "dataset_id",
+    "evaluator"
+  ],
+  "title": "ExperimentSpec",
+  "type": "object"
+}

@@ -1,0 +1,22 @@
+flowchart TD
+    C[Approved campaign] --> A[Audit verified capabilities]
+    A --> H[Generate and register hypotheses]
+    H --> B[Bounded Send preparation batches]
+    B --> S[Specification critique and review subgraphs]
+    S --> E[One durable experiment thread]
+    E --> Q[Qualification and compilation]
+    Q --> V[Baseline and implementation verification]
+    V --> J[Register budget and outbox]
+    J --> I[Interrupt for external job]
+    I --> R[Verified ingestion and robustness]
+    R --> X[Independent reconstruction]
+    X --> F[Deterministic grade and memory]
+    F --> Y[Registry-based campaign synthesis]
+    Y --> P{Eligible frozen finalist batch?}
+    P -->|No| T[Exploratory terminal evidence]
+    P -->|Yes| U[Protected confirmation subgraph]
+    U --> K[Authorization interrupt]
+    K --> L[Sealed evaluation and Holm correction]
+    L --> Z[Signed result and superseding finding]
+    Q -->|Missing data| F
+    V -->|Implementation failure| F

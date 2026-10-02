@@ -1,0 +1,88 @@
+{
+  "config": {
+    "bootstrap_samples": 199,
+    "max_null_support_rate": 0.15,
+    "min_planted_support_rate": 0.85,
+    "n_sessions": 64,
+    "noise": 0.1,
+    "null_effect": 0.0,
+    "planted_effect": 0.1,
+    "practical_effect": 0.01,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39
+    ]
+  },
+  "elapsed_seconds": 31.649415707972366,
+  "label": "SYNTHETIC preregistered known-null/planted-effect benchmark",
+  "monte_carlo_standard_error_null": 0.0,
+  "monte_carlo_standard_error_power": 0.0,
+  "null_rate_wilson_95": [
+    0.0,
+    0.08762160119728664
+  ],
+  "null_support_rate": 0.0,
+  "passed": true,
+  "planted_support_rate": 1.0,
+  "power_wilson_95": [
+    0.9123783988027135,
+    1.0
+  ],
+  "trials_per_family": 40,
+  "uncertainty_note": "Plug-in standard errors vanish at 0/1; Wilson bounds express finite Monte Carlo uncertainty. Acceptance thresholds were fixed before these draws.",
+  "worker": {
+    "attempts_processed": 80,
+    "budget_committed_upper_bounds": {
+      "cpu_seconds": 2400.0,
+      "measured_cpu_seconds": 33.593911,
+      "runs": 80,
+      "storage_bytes": 160000000
+    },
+    "graph_version": "1",
+    "numerical_concurrency": 2,
+    "pending_outbox": 0,
+    "runs": {
+      "COMPLETED": 80
+    },
+    "schema_version": "1",
+    "wall_seconds": 31.60034108295804
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "renderer": "@mermaid-js/mermaid-cli 12.0.0",
+  "diagrams": {
+    "components": {
+      "source_sha256": "58ea9992f8f684c1835e568255e3fd01106e5331198a56c3491217bb36516e06",
+      "render_sha256": "6e6da15d77d06b79dadc088593746576f33125591b9f21b427406c6e014f0c77"
+    },
+    "lineage": {
+      "source_sha256": "ba4448f2f4d8eb555b21739a3af326a22da3bfb1f3f17329ad89f26f1f0e2d3f",
+      "render_sha256": "249ef6a8f19f1dfa0a56658f6a212610ce1b2440214a75a5df676ae28710bb09"
+    },
+    "permissions": {
+      "source_sha256": "70328fc4552009b1e1e5d2e68183f318dc3ace8a24eb4f6d61c0e53a9bdd3694",
+      "render_sha256": "d4a79f948adb8eb9e0e435bb8fc2c5d22b7083c68790abf46f2ca019050d89b3"
+    },
+    "recovery": {
+      "source_sha256": "3c493e60e9913c28a3299adca2c39bc58019260d9d3c63c70f2e0e7ab714a2f2",
+      "render_sha256": "4a361be27cab66b0ffe1339a43b69dd4a2403e68970c0322fa82f28a4c1d17a1"
+    },
+    "workflow": {
+      "source_sha256": "68eb3172bac985e97f98ece4edbc18e4593d0d878697a97d74d0d0a9aaf05a41",
+      "render_sha256": "edf2f4b2aca9f8d2f05fa02d770e973782ac8c14da3976575c89ae25d00904c9"
+    }
+  }
+}

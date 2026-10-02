@@ -18,7 +18,8 @@
     "requirements.in",
     "requirements.lock",
     "requirements-dev.in",
-    "requirements-dev.lock"
+    "requirements-dev.lock",
+    "agent"
   ],
   "conventions": {
     "root": "Treat the current cleaned root layout as the baseline; new root entries should be intentionally classified.",

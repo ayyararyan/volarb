@@ -1,0 +1,238 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "media_type": {
+          "default": "application/json",
+          "title": "Media Type",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size_bytes": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Size Bytes"
+        },
+        "uri": {
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uri",
+        "sha256"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "CheckResult": {
+      "additionalProperties": false,
+      "properties": {
+        "detail": {
+          "title": "Detail",
+          "type": "string"
+        },
+        "evidence_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArtifactRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "passed": {
+          "title": "Passed",
+          "type": "boolean"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "passed",
+        "detail"
+      ],
+      "title": "CheckResult",
+      "type": "object"
+    },
+    "EvidenceGrade": {
+      "additionalProperties": false,
+      "properties": {
+        "fidelity": {
+          "$ref": "#/$defs/Fidelity"
+        },
+        "implementation": {
+          "enum": [
+            "invalid",
+            "qualified",
+            "verified"
+          ],
+          "title": "Implementation",
+          "type": "string"
+        },
+        "independence": {
+          "enum": [
+            "development",
+            "exposed_temporal",
+            "protected_confirmation"
+          ],
+          "title": "Independence",
+          "type": "string"
+        },
+        "precision": {
+          "enum": [
+            "insufficient",
+            "informative"
+          ],
+          "title": "Precision",
+          "type": "string"
+        },
+        "replication": {
+          "enum": [
+            "absent",
+            "reproduced",
+            "independently_reconstructed"
+          ],
+          "title": "Replication",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "implementation",
+        "fidelity",
+        "independence",
+        "precision",
+        "replication"
+      ],
+      "title": "EvidenceGrade",
+      "type": "object"
+    },
+    "Fidelity": {
+      "enum": [
+        "F0",
+        "F1",
+        "F2",
+        "F3",
+        "F4"
+      ],
+      "title": "Fidelity",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "accounting_findings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Accounting Findings",
+      "type": "array"
+    },
+    "checks": {
+      "items": {
+        "$ref": "#/$defs/CheckResult"
+      },
+      "title": "Checks",
+      "type": "array"
+    },
+    "evaluator_version": {
+      "title": "Evaluator Version",
+      "type": "string"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "leakage_findings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Leakage Findings",
+      "type": "array"
+    },
+    "permitted_evidence_ceiling": {
+      "$ref": "#/$defs/EvidenceGrade"
+    },
+    "replication_ref": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "reviewer_identity": {
+      "title": "Reviewer Identity",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1",
+      "default": "1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "QUALIFIED"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "subject_ref": {
+      "$ref": "#/$defs/ArtifactRef"
+    }
+  },
+  "required": [
+    "id",
+    "subject_ref",
+    "checks",
+    "evaluator_version",
+    "reviewer_identity",
+    "status",
+    "permitted_evidence_ceiling"
+  ],
+  "title": "ValidationReport",
+  "type": "object"
+}

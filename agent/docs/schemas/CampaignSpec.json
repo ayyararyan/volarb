@@ -1,0 +1,213 @@
+{
+  "$defs": {
+    "BudgetSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "cpu_seconds": {
+          "default": 3600,
+          "minimum": 0,
+          "title": "Cpu Seconds",
+          "type": "number"
+        },
+        "currency": {
+          "default": "INR",
+          "enum": [
+            "INR",
+            "USD"
+          ],
+          "title": "Currency",
+          "type": "string"
+        },
+        "data_currency": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Data Currency",
+          "type": "number"
+        },
+        "human_review_minutes": {
+          "default": 60,
+          "minimum": 0,
+          "title": "Human Review Minutes",
+          "type": "integer"
+        },
+        "llm_currency": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Llm Currency",
+          "type": "number"
+        },
+        "llm_tokens": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Llm Tokens",
+          "type": "integer"
+        },
+        "max_pending": {
+          "default": 20,
+          "maximum": 5000,
+          "minimum": 1,
+          "title": "Max Pending",
+          "type": "integer"
+        },
+        "max_runs": {
+          "default": 60,
+          "minimum": 0,
+          "title": "Max Runs",
+          "type": "integer"
+        },
+        "memory_mb": {
+          "default": 2048,
+          "exclusiveMinimum": 0,
+          "title": "Memory Mb",
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "storage_bytes": {
+          "default": 1000000000,
+          "minimum": 0,
+          "title": "Storage Bytes",
+          "type": "integer"
+        }
+      },
+      "title": "BudgetSpec",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "approved": {
+      "default": false,
+      "title": "Approved",
+      "type": "boolean"
+    },
+    "budget": {
+      "$ref": "#/$defs/BudgetSpec"
+    },
+    "confirmation_dataset_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Confirmation Dataset Id"
+    },
+    "dataset_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Dataset Ids",
+      "type": "array"
+    },
+    "development_diagnostics": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Development Diagnostics",
+      "type": "array"
+    },
+    "graph_version": {
+      "const": "1",
+      "default": "1",
+      "title": "Graph Version",
+      "type": "string"
+    },
+    "id": {
+      "pattern": "^[A-Za-z0-9_.-]+$",
+      "title": "Id",
+      "type": "string"
+    },
+    "llm_concurrency": {
+      "default": 2,
+      "maximum": 2,
+      "minimum": 1,
+      "title": "Llm Concurrency",
+      "type": "integer"
+    },
+    "max_hypotheses": {
+      "default": 12,
+      "maximum": 500,
+      "minimum": 1,
+      "title": "Max Hypotheses",
+      "type": "integer"
+    },
+    "negative_replication_fraction": {
+      "default": 0.2,
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Negative Replication Fraction",
+      "type": "number"
+    },
+    "numerical_concurrency": {
+      "default": 1,
+      "maximum": 2,
+      "minimum": 1,
+      "title": "Numerical Concurrency",
+      "type": "integer"
+    },
+    "objective": {
+      "minLength": 8,
+      "title": "Objective",
+      "type": "string"
+    },
+    "preparation_batch": {
+      "default": 4,
+      "maximum": 8,
+      "minimum": 1,
+      "title": "Preparation Batch",
+      "type": "integer"
+    },
+    "prior_finding_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Prior Finding Ids",
+      "type": "array"
+    },
+    "provider": {
+      "default": "fixture",
+      "enum": [
+        "fixture",
+        "replay",
+        "openai",
+        "deterministic"
+      ],
+      "title": "Provider",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1",
+      "default": "1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "seed": {
+      "default": 17,
+      "title": "Seed",
+      "type": "integer"
+    },
+    "source_records": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Source Records",
+      "type": "array"
+    }
+  },
+  "required": [
+    "id",
+    "objective"
+  ],
+  "title": "CampaignSpec",
+  "type": "object"
+}

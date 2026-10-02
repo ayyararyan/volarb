@@ -1,0 +1,57 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "approved_at": {
+      "format": "date-time",
+      "title": "Approved At",
+      "type": "string"
+    },
+    "expires_at": {
+      "format": "date-time",
+      "title": "Expires At",
+      "type": "string"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "principal": {
+      "title": "Principal",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1",
+      "default": "1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "scope": {
+      "enum": [
+        "campaign",
+        "data_access",
+        "confirmation"
+      ],
+      "title": "Scope",
+      "type": "string"
+    },
+    "signature": {
+      "title": "Signature",
+      "type": "string"
+    },
+    "subject_hash": {
+      "title": "Subject Hash",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "scope",
+    "subject_hash",
+    "principal",
+    "approved_at",
+    "expires_at",
+    "signature"
+  ],
+  "title": "Approval",
+  "type": "object"
+}

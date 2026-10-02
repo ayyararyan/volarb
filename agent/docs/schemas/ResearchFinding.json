@@ -1,0 +1,232 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "media_type": {
+          "default": "application/json",
+          "title": "Media Type",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size_bytes": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Size Bytes"
+        },
+        "uri": {
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uri",
+        "sha256"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "EvidenceGrade": {
+      "additionalProperties": false,
+      "properties": {
+        "fidelity": {
+          "$ref": "#/$defs/Fidelity"
+        },
+        "implementation": {
+          "enum": [
+            "invalid",
+            "qualified",
+            "verified"
+          ],
+          "title": "Implementation",
+          "type": "string"
+        },
+        "independence": {
+          "enum": [
+            "development",
+            "exposed_temporal",
+            "protected_confirmation"
+          ],
+          "title": "Independence",
+          "type": "string"
+        },
+        "precision": {
+          "enum": [
+            "insufficient",
+            "informative"
+          ],
+          "title": "Precision",
+          "type": "string"
+        },
+        "replication": {
+          "enum": [
+            "absent",
+            "reproduced",
+            "independently_reconstructed"
+          ],
+          "title": "Replication",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "implementation",
+        "fidelity",
+        "independence",
+        "precision",
+        "replication"
+      ],
+      "title": "EvidenceGrade",
+      "type": "object"
+    },
+    "Fidelity": {
+      "enum": [
+        "F0",
+        "F1",
+        "F2",
+        "F3",
+        "F4"
+      ],
+      "title": "Fidelity",
+      "type": "string"
+    },
+    "FindingOutcome": {
+      "enum": [
+        "UNSUPPORTED_HYPOTHESIS",
+        "DATA_LIMITED",
+        "IMPLEMENTATION_FAILED",
+        "INVALID_RESULT",
+        "REJECTED_FINDING",
+        "INCONCLUSIVE",
+        "EXPLORATORY_SUPPORTED",
+        "INDEPENDENTLY_SUPPORTED",
+        "CANCELLED",
+        "BUDGET_EXHAUSTED"
+      ],
+      "title": "FindingOutcome",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "assumptions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Assumptions",
+      "type": "array"
+    },
+    "campaign_id": {
+      "title": "Campaign Id",
+      "type": "string"
+    },
+    "claim": {
+      "title": "Claim",
+      "type": "string"
+    },
+    "dataset_id": {
+      "title": "Dataset Id",
+      "type": "string"
+    },
+    "estimate_refs": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "title": "Estimate Refs",
+      "type": "array"
+    },
+    "evidence_grade": {
+      "$ref": "#/$defs/EvidenceGrade"
+    },
+    "experiment_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Experiment Id"
+    },
+    "hypothesis_id": {
+      "title": "Hypothesis Id",
+      "type": "string"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "limitations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    },
+    "outcome": {
+      "$ref": "#/$defs/FindingOutcome"
+    },
+    "schema_version": {
+      "const": "1",
+      "default": "1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "search_family_id": {
+      "title": "Search Family Id",
+      "type": "string"
+    },
+    "supersedes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Supersedes",
+      "type": "array"
+    },
+    "validation_refs": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "title": "Validation Refs",
+      "type": "array"
+    }
+  },
+  "required": [
+    "id",
+    "campaign_id",
+    "hypothesis_id",
+    "experiment_id",
+    "outcome",
+    "claim",
+    "evidence_grade",
+    "dataset_id",
+    "search_family_id"
+  ],
+  "title": "ResearchFinding",
+  "type": "object"
+}

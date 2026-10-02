@@ -1,0 +1,37 @@
+name: Butterfly Research Laboratory
+on:
+  push:
+    paths: ['agent/**', '.github/workflows/test-research-agent.yml']
+  pull_request:
+    paths: ['agent/**', '.github/workflows/test-research-agent.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: research-agent-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  research-tests:
+    runs-on: macos-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: agent
+    env:
+      BUTTERFLY_LAB_HOME: ${{ runner.temp }}/butterfly-lab
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.13'
+      - run: python -m pip install --require-hashes -r requirements.lock
+      - run: python -m pip install --no-deps .
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: mypy --config-file pyproject.toml
+      - run: pytest -q
+      - run: butterfly-lab doctor
+      - run: butterfly-lab demo --kind all > "${{ runner.temp }}/demo.json"
+      - run: python examples/check_demo.py "${{ runner.temp }}/demo.json"
+      - run: python examples/check_generated.py
