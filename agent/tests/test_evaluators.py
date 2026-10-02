@@ -120,6 +120,52 @@ def test_missing_exit_withholds_metrics_never_complete_case(tmp_path):
     assert "baseline_mean_pnl_inr" not in result["metrics"]
 
 
+def test_non_b0_uses_recorded_selection_not_simple_atm_substitution(tmp_path):
+    from butterfly_lab.baselines import baseline_golden_cases
+
+    data = generate_option_fixture(tmp_path / "q.parquet", 1)
+    packet = baseline_golden_cases("B-policy")[-1]["packet"]
+    legs = [
+        {"contract_id": f"FIXTURE:NIFTY:2025-12-30:{strike}:{kind}", "signed_lots": sign}
+        for strike, kind, sign in [
+            (10000, "PE", 1),
+            (10500, "PE", -1),
+            (10500, "CE", -1),
+            (11000, "CE", 1),
+        ]
+    ]
+    packet["entry_selection"] = {
+        "selection_policy_id": "recorded-wide-overlay-fixture",
+        "available_at": "2025-01-02T09:59:00+05:30",
+        "legs": legs,
+    }
+    data["metadata"]["policy_packets"] = {"2025-01-02": packet}
+    experiment = {
+        **exp("iron_butterfly", {**default_ironfly_parameters(), "management": "hold"}),
+        "baseline_id": "B-policy",
+    }
+    result = evaluate(experiment, data, tmp_path / "observed")
+    assert result["replication"]["status"] == "PASS"
+    fills = pd.read_parquet(tmp_path / "observed/fills.parquet")
+    assert set(fills[fills.reason.eq("entry")].contract_id) == {x["contract_id"] for x in legs}
+    packet["entry_selection"]["available_at"] = "2025-01-02T10:01:00+05:30"
+    assert evaluate(experiment, data, tmp_path / "future")["outcome"] == "DATA_LIMITED"
+    del packet["entry_selection"]
+    assert evaluate(experiment, data, tmp_path / "absent")["outcome"] == "DATA_LIMITED"
+
+
+@pytest.mark.parametrize("baseline_id", ["B-policy", "B-as-observed"])
+def test_missing_historical_gate_packets_are_not_zero_pnl(baseline_id, tmp_path):
+    data = generate_option_fixture(tmp_path / "q.parquet", 1)
+    experiment = {
+        **exp("iron_butterfly", {**default_ironfly_parameters(), "management": "hold"}),
+        "baseline_id": baseline_id,
+    }
+    result = evaluate(experiment, data, tmp_path / "out")
+    assert result["outcome"] == "DATA_LIMITED"
+    assert "baseline_mean_pnl_inr" not in result.get("metrics", {})
+
+
 def test_partial_protective_fill_aborts_before_short_sale(tmp_path):
     data = generate_option_fixture(tmp_path / "q.parquet", 1)
     rows = pd.read_parquet(tmp_path / "q.parquet")

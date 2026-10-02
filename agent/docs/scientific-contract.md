@@ -106,6 +106,20 @@ Golden fixtures distinguish the three, including observed missing-loss HOLD,
 policy missing-loss BLOCKED, loss/reserve boundaries and the intraday deadline.
 Frozen source is excluded from automatic formatting to preserve its byte hash.
 
+Non-B0 simulations require dated policy packets and recorded selected legs. They
+never silently reuse B0's ATM/width selector. Each `metadata.policy_packets[date]`
+entry includes `entry_selection` (and `recenter_selection` for that comparison):
+`selection_policy_id`, offset-aware `available_at`, and four `legs`, each with
+`contract_id` and `signed_lots` equal to +1 or -1. Selected contracts must resolve
+in the admitted chain with valid geometry and effective lot specifications.
+The record freezes which optimizer/overlay selection actually governed the
+decision; the evaluator does not choose retrospectively between their widths.
+Missing gate packets, missing selection records or future-available selections
+are DATA_LIMITED, not zero-P&L opportunities. A complete actual selection record
+is necessary before an observed baseline can receive an economic estimate.
+Registered hold/close/recenter counterfactuals are separate management policies;
+they are not advertised as a replay of every historical live intervention.
+
 ## Four-leg execution and accounting
 
 Exactly four contracts, one underlying/expiry: long lower put, short body put,

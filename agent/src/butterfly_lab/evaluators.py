@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 
 from .accounting import Account, Contract, dated_spec, fee_for_fill
-from .baselines import policy_decision, select_b0
+from .baselines import policy_decision, select_b0, recorded_selection, select_recorded
 from .data import DataQualificationError, load_dataset, metadata, qualify_dataset
 from .statistics import paired_inference, robustness
 
@@ -536,12 +536,29 @@ def _simulate_policy(
             "held": False,
         }
         decision = policy_decision(packet, baseline_id)
+        if decision["action"] == "BLOCKED":
+            raise DataQualificationError(
+                decision.get("reason", "historical policy inputs unavailable")
+            )
         if decision["action"] not in {"ENTRY", "CANDIDATES"}:
             record["reason"] = decision.get(
                 "reason", decision.get("terminal_gate", "baseline_gate")
             )
             output.append(record)
             continue
+        entry_selection = recenter_selection = None
+        if baseline_id != "B0-simple":
+            try:
+                entry_selection = recorded_selection(packet, "entry_selection", origin)
+                if policy == "recenter":
+                    recenter_selection = recorded_selection(
+                        packet,
+                        "recenter_selection",
+                        origin
+                        + pd.Timedelta(minutes=float(params.get("management_after_minutes", 15))),
+                    )
+            except ValueError as error:
+                raise DataQualificationError(str(error)) from error
         try:
             chain = book.at(origin)
             if "spot" not in chain:
@@ -550,18 +567,26 @@ def _simulate_policy(
                 params.get("max_spot_disagreement", 0.01)
             ):
                 raise DataQualificationError("incoherent contemporaneous spot references")
-            legs = select_b0(
-                chain,
-                spot=float(chain.spot.iloc[0]),
-                session=session,
-                width_floor=float(params.get("width_floor", 500)),
-                lots=int(params.get("lots", 1)),
-                expiry=params.get("expiry"),
+            legs = (
+                select_recorded(chain, entry_selection)
+                if entry_selection
+                else select_b0(
+                    chain,
+                    spot=float(chain.spot.iloc[0]),
+                    session=session,
+                    width_floor=float(params.get("width_floor", 500)),
+                    lots=int(params.get("lots", 1)),
+                    expiry=params.get("expiry"),
+                )
             )
             for contract, _ in legs:
                 dated_spec(contract, session, specs)
             book.at(origin, [c.contract_id for c, _ in legs])
         except (ValueError, DataQualificationError) as exc:
+            if entry_selection:
+                raise DataQualificationError(
+                    "recorded entry selection cannot be reconstructed: " + str(exc)
+                ) from exc
             record.update(reason=str(exc), status="INELIGIBLE_ENTRY")
             output.append(record)
             continue
@@ -609,13 +634,17 @@ def _simulate_policy(
                     reopen = latest + pd.Timedelta(microseconds=1)
                     try:
                         chain2 = book.at(reopen)
-                        replacement = select_b0(
-                            chain2,
-                            spot=float(chain2.spot.iloc[0]),
-                            session=session,
-                            width_floor=float(params.get("width_floor", 500)),
-                            lots=int(params.get("lots", 1)),
-                            expiry=params.get("expiry"),
+                        replacement = (
+                            select_recorded(chain2, recenter_selection)
+                            if recenter_selection
+                            else select_b0(
+                                chain2,
+                                spot=float(chain2.spot.iloc[0]),
+                                session=session,
+                                width_floor=float(params.get("width_floor", 500)),
+                                lots=int(params.get("lots", 1)),
+                                expiry=params.get("expiry"),
+                            )
                         )
                         for contract, _ in replacement:
                             dated_spec(contract, session, specs)
@@ -634,6 +663,10 @@ def _simulate_policy(
                             if not ok:
                                 record["reason"] = "partial_recenter_entry"
                     except (ValueError, DataQualificationError) as exc:
+                        if recenter_selection:
+                            raise DataQualificationError(
+                                "recorded recenter selection cannot be reconstructed: " + str(exc)
+                            ) from exc
                         record["reason"] = f"replacement_ineligible:{exc}"
             if not account.flat and record["status"] != "UNRESOLVED_EXIT":
                 closed, latest = book.execute(
@@ -791,6 +824,7 @@ def _ironfly(
         "Counterfactual fills assume displayed liquidity is available; no market impact reconstruction",
         f"Capital requirement basis: {params.get('margin_basis')}",
         "Session-level inference, not individual legs or overlapping trades",
+        "Non-B0 baseline structures use frozen timestamped selection records; management comparisons remain the separately registered hold/close/recenter policies, not a claim to replay every live intervention",
     ]
     if sessions.empty or sessions[["baseline_pnl", "candidate_pnl"]].isna().any().any():
         return {

@@ -38,6 +38,8 @@ def policy_decision(packet: dict[str, Any], baseline_id: str = "B-policy") -> di
     if baseline_id not in BASELINES:
         raise ValueError("unknown baseline")
     if baseline_id == "B-as-observed":
+        if "controller_input" not in packet:
+            return {"action": "BLOCKED", "reason": "observed_controller_input_unavailable"}
         return observed_decision(packet["controller_input"], packet["decision_at"])
     timestamp = pd.Timestamp(packet["decision_at"])
     if timestamp.tzinfo is None:
@@ -171,6 +173,42 @@ def select_b0(
             int(r.lot_size),
         )
         legs.append((contract, sign * int(lots) * contract.lot_size))
+    validate_iron_butterfly(legs)
+    return legs
+
+
+def recorded_selection(packet: dict[str, Any], key: str, decision_at) -> dict[str, Any]:
+    """Require point-in-time selected legs; never substitute B0 for an observed policy."""
+    selection = packet.get(key)
+    if not isinstance(selection, dict) or not selection.get("selection_policy_id"):
+        raise ValueError("recorded " + key + " and selection_policy_id required")
+    instant = pd.Timestamp(selection.get("available_at"))
+    if pd.isna(instant) or instant.tzinfo is None or instant > pd.Timestamp(decision_at):
+        raise ValueError("recorded selection unavailable at decision timestamp")
+    legs = selection.get("legs", [])
+    if len(legs) != 4 or len({x.get("contract_id") for x in legs}) != 4:
+        raise ValueError("four recorded fixed-contract legs required")
+    if any(type(x.get("signed_lots")) is not int or abs(x["signed_lots"]) != 1 for x in legs):
+        raise ValueError("recorded selection requires exactly one signed lot per leg")
+    return selection
+
+
+def select_recorded(chain: pd.DataFrame, selection: dict[str, Any]) -> list[tuple[Contract, int]]:
+    legs = []
+    for value in selection["legs"]:
+        rows = chain[chain.contract_id.eq(value["contract_id"])]
+        if len(rows) != 1:
+            raise ValueError("recorded selected contract unavailable or ambiguous")
+        row = rows.iloc[0]
+        contract = Contract(
+            str(row.contract_id),
+            str(row.underlying),
+            str(row.expiry),
+            float(row.strike),
+            str(row.option_type),
+            int(row.lot_size),
+        )
+        legs.append((contract, value["signed_lots"] * contract.lot_size))
     validate_iron_butterfly(legs)
     return legs
 
