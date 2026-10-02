@@ -1,0 +1,12 @@
+flowchart LR
+    D[Dataset bytes and manifest hashes] --> E[Immutable experiment]
+    H[Hypothesis family and prior findings] --> E
+    C[Evaluator environment schema graph versions] --> E
+    E --> T[Trial classification and search exposure]
+    T --> R[Stable run identity]
+    R --> A[Distinct fenced attempts]
+    A --> P[Parquet paths fills and outcomes]
+    P --> V[Validation and independent reconstruction]
+    V --> F[Finding with fidelity precision and limitations]
+    F --> M[Evidence-linked memory]
+    F --> N[Result-informed descendant requires new confirmation]

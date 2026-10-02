@@ -1,0 +1,71 @@
+{
+  "$defs": {
+    "Fidelity": {
+      "enum": [
+        "F0",
+        "F1",
+        "F2",
+        "F3",
+        "F4"
+      ],
+      "title": "Fidelity",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "fidelity": {
+      "$ref": "#/$defs/Fidelity"
+    },
+    "implementation": {
+      "enum": [
+        "invalid",
+        "qualified",
+        "verified"
+      ],
+      "title": "Implementation",
+      "type": "string"
+    },
+    "independence": {
+      "enum": [
+        "development",
+        "exposed_temporal",
+        "protected_confirmation"
+      ],
+      "title": "Independence",
+      "type": "string"
+    },
+    "precision": {
+      "enum": [
+        "insufficient",
+        "informative"
+      ],
+      "title": "Precision",
+      "type": "string"
+    },
+    "replication": {
+      "enum": [
+        "absent",
+        "reproduced",
+        "independently_reconstructed"
+      ],
+      "title": "Replication",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1",
+      "default": "1",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "implementation",
+    "fidelity",
+    "independence",
+    "precision",
+    "replication"
+  ],
+  "title": "EvidenceGrade",
+  "type": "object"
+}

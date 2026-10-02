@@ -1,0 +1,229 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "media_type": {
+          "default": "application/json",
+          "title": "Media Type",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size_bytes": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Size Bytes"
+        },
+        "uri": {
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uri",
+        "sha256"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "Fidelity": {
+      "enum": [
+        "F0",
+        "F1",
+        "F2",
+        "F3",
+        "F4"
+      ],
+      "title": "Fidelity",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "availability_lag_seconds": {
+      "default": 60,
+      "minimum": 0,
+      "title": "Availability Lag Seconds",
+      "type": "integer"
+    },
+    "bar_label": {
+      "default": "start",
+      "enum": [
+        "start",
+        "end",
+        "event"
+      ],
+      "title": "Bar Label",
+      "type": "string"
+    },
+    "calendar_policy": {
+      "default": "explicit_sessions",
+      "title": "Calendar Policy",
+      "type": "string"
+    },
+    "capabilities": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Capabilities",
+      "type": "array"
+    },
+    "exposure_history": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Exposure History",
+      "type": "array"
+    },
+    "fidelity": {
+      "$ref": "#/$defs/Fidelity"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "spot_bars",
+        "option_quotes",
+        "option_bars",
+        "model",
+        "synthetic",
+        "session_panel"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "metadata": {
+      "additionalProperties": true,
+      "title": "Metadata",
+      "type": "object"
+    },
+    "partition": {
+      "default": "development",
+      "enum": [
+        "development",
+        "validation",
+        "confirmation"
+      ],
+      "title": "Partition",
+      "type": "string"
+    },
+    "prior_exposed": {
+      "default": true,
+      "title": "Prior Exposed",
+      "type": "boolean"
+    },
+    "provenance": {
+      "enum": [
+        "SYNTHETIC",
+        "HISTORICAL",
+        "MODEL",
+        "REPLAY"
+      ],
+      "title": "Provenance",
+      "type": "string"
+    },
+    "qualification_ref": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "schema_version": {
+      "const": "1",
+      "default": "1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "session_dates": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Session Dates",
+      "type": "array"
+    },
+    "source_path": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source Path"
+    },
+    "source_refs": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "title": "Source Refs",
+      "type": "array"
+    },
+    "source_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source Sha256"
+    },
+    "timestamp_convention_verified": {
+      "default": false,
+      "title": "Timestamp Convention Verified",
+      "type": "boolean"
+    },
+    "timezone": {
+      "default": "Asia/Kolkata",
+      "title": "Timezone",
+      "type": "string"
+    },
+    "transformations": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Transformations",
+      "type": "array"
+    }
+  },
+  "required": [
+    "id",
+    "kind",
+    "fidelity",
+    "provenance"
+  ],
+  "title": "DatasetManifest",
+  "type": "object"
+}

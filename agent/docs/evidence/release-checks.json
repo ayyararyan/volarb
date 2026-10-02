@@ -1,0 +1,72 @@
+{
+  "recorded_at": "2026-10-02T14:00:36.524040+00:00",
+  "label": "Software acceptance, not historical economic evidence",
+  "installation": "Separate non-editable Python 3.12.13 environment",
+  "evaluator_sha256": "d390a0736e97a2100821896d970098d27384854d592ad7c0d0f09fc4e696f4f5",
+  "tests": {
+    "passed": 123,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 23.72
+  },
+  "checks": {
+    "ruff": "PASS",
+    "format": "PASS",
+    "contract_config_mypy": "PASS",
+    "generated_schemas": 14,
+    "rendered_diagrams": 5
+  },
+  "demo": [
+    {
+      "campaign_id": "demo-spot",
+      "pending": [],
+      "findings": [
+        {
+          "hypothesis_id": "demo-spot-blocked",
+          "outcome": "DATA_LIMITED",
+          "fidelity": "F0",
+          "replication": "absent"
+        },
+        {
+          "hypothesis_id": "demo-spot-H001",
+          "outcome": "INCONCLUSIVE",
+          "fidelity": "F0",
+          "replication": "independently_reconstructed"
+        }
+      ]
+    },
+    {
+      "campaign_id": "demo-fourleg",
+      "pending": [],
+      "findings": [
+        {
+          "hypothesis_id": "demo-fourleg-blocked",
+          "outcome": "DATA_LIMITED",
+          "fidelity": "F0",
+          "replication": "absent"
+        },
+        {
+          "hypothesis_id": "demo-fourleg-H011",
+          "outcome": "EXPLORATORY_SUPPORTED",
+          "fidelity": "F0",
+          "replication": "independently_reconstructed"
+        }
+      ]
+    }
+  ],
+  "backup_restore": {
+    "files_verified": 32,
+    "manifest_sha256": "2b313d3fa873fd80fc03b2531512e32c6052a9f56f601840cb72f756cb3cb4a3"
+  },
+  "real_data": {
+    "spot": "DATA_LIMITED",
+    "rolling_options": "DATA_LIMITED",
+    "historical_pnl_jobs": 0,
+    "eligible_real_confirmation": false
+  },
+  "live_model_call": "NOT_RUN: no nonzero configured budget",
+  "boundaries": {
+    "macOS": "actual denial probes passed",
+    "Linux": "implemented; host integration unverified"
+  }
+}

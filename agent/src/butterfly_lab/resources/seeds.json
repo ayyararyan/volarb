@@ -1,0 +1,594 @@
+[
+  {
+    "id": "H001",
+    "campaign_id": "example-campaign",
+    "family_id": "drift_excursion",
+    "mechanism": "Past directional displacement adds information beyond realized variance about subsequent centre excursion.",
+    "expected_direction": "Higher past drift predicts greater future excursion conditional on RV.",
+    "decision_change": "Add one standardized directional displacement statistic to the frozen RV excursion model.",
+    "observable_inputs": [
+      "spot_close",
+      "past_30m_rv",
+      "past_30m_drift"
+    ],
+    "horizon_minutes": 30,
+    "outcome": "future_30m_max_absolute_log_excursion",
+    "baseline_id": "RV-only-regression",
+    "primary_comparison": "RV-only versus RV-plus-drift on identical eligible sessions.",
+    "primary_metric": "mae_relative_reduction",
+    "practical_effect": 0.01,
+    "risk_constraints": [
+      "Intraday only; no position beyond 15:00 IST",
+      "One historical lot; no unregistered leverage",
+      "Missing exits and rejected opportunities remain in the ledger"
+    ],
+    "parameter_domain": {},
+    "search_budget": 1,
+    "minimum_data": [
+      "spot_bars",
+      "spot_excursion",
+      "past_only_rv",
+      "past_only_drift"
+    ],
+    "falsification_rule": "The upper uncertainty bound rules out a 1% relative MAE reduction, or the effect is unstable against a simple scale predictor.",
+    "alternative_explanations": [
+      "Past RV measurement error",
+      "Anomalous sessions rather than persistent information",
+      "Spot predictability does not imply butterfly profitability"
+    ],
+    "source_refs": [],
+    "parent_ids": [],
+    "version": 1,
+    "evaluator": "exp001",
+    "proposed_dsl": {
+      "evaluator": "exp001"
+    }
+  },
+  {
+    "id": "H002",
+    "campaign_id": "example-campaign",
+    "family_id": "matched_variance_premium",
+    "mechanism": "Horizon-matched implied versus physical variance may identify states where collected premium exceeds expected path risk.",
+    "expected_direction": "Higher same-horizon premium improves cost-adjusted whole-policy outcomes.",
+    "decision_change": "Condition admission on a single frozen same-horizon variance-premium threshold.",
+    "observable_inputs": [
+      "atm_iv",
+      "physical_variance_forecast",
+      "time_to_expiry"
+    ],
+    "horizon_minutes": 30,
+    "outcome": "net_pnl_per_eligible_session",
+    "baseline_id": "B0-simple",
+    "primary_comparison": "Unfiltered B0 versus premium-filtered B0 with identical eligible opportunities.",
+    "primary_metric": "paired_net_pnl_inr",
+    "practical_effect": 1.0,
+    "risk_constraints": [
+      "Intraday only; no position beyond 15:00 IST",
+      "One historical lot; no unregistered leverage",
+      "Missing exits and rejected opportunities remain in the ledger"
+    ],
+    "parameter_domain": {
+      "premium_threshold": [
+        0.0,
+        0.1,
+        0.2
+      ]
+    },
+    "search_budget": 3,
+    "minimum_data": [
+      "identified_contracts",
+      "dated_lot_units",
+      "intraday_option_paths",
+      "same_horizon_forecast",
+      "historical_fees"
+    ],
+    "falsification_rule": "Any benefit disappears after costs and exposure matching or the upper confidence bound is below the practical threshold.",
+    "alternative_explanations": [
+      "Lower exposure rather than better selection",
+      "Outcome-dependent missingness or source-quality selection",
+      "Cost-model or point-in-time measurement error"
+    ],
+    "source_refs": [],
+    "parent_ids": [],
+    "version": 1,
+    "evaluator": "iron_butterfly",
+    "proposed_dsl": {
+      "evaluator": "iron_butterfly"
+    }
+  },
+  {
+    "id": "H003",
+    "campaign_id": "example-campaign",
+    "family_id": "jump_pressure",
+    "mechanism": "Recent jumps and continuous variation may imply different short-gamma path risks despite equal total realized variance.",
+    "expected_direction": "Greater jump pressure reduces subsequent cost-adjusted butterfly profitability.",
+    "decision_change": "Replace total-RV admission with a frozen continuous-variation and jump-pressure decomposition.",
+    "observable_inputs": [
+      "high_frequency_underlying",
+      "continuous_rv",
+      "jump_pressure"
+    ],
+    "horizon_minutes": 30,
+    "outcome": "net_pnl_per_eligible_session",
+    "baseline_id": "B-policy",
+    "primary_comparison": "Total-RV filter versus decomposed filter on identical opportunities.",
+    "primary_metric": "paired_net_pnl_inr",
+    "practical_effect": 1.0,
+    "risk_constraints": [
+      "Intraday only; no position beyond 15:00 IST",
+      "One historical lot; no unregistered leverage",
+      "Missing exits and rejected opportunities remain in the ledger"
+    ],
+    "parameter_domain": {
+      "decay_minutes": [
+        5,
+        15
+      ]
+    },
+    "search_budget": 2,
+    "minimum_data": [
+      "genuine_high_frequency_underlying",
+      "identified_contracts",
+      "intraday_option_paths",
+      "historical_fees"
+    ],
+    "falsification_rule": "No out-of-period incremental benefit remains after controlling total RV or uncertainty rules out practical improvement.",
+    "alternative_explanations": [
+      "Lower exposure rather than better selection",
+      "Outcome-dependent missingness or source-quality selection",
+      "Cost-model or point-in-time measurement error"
+    ],
+    "source_refs": [],
+    "parent_ids": [],
+    "version": 1,
+    "evaluator": "iron_butterfly",
+    "proposed_dsl": {
+      "evaluator": "iron_butterfly"
+    }
+  },
+  {
+    "id": "H004",
+    "campaign_id": "example-campaign",
+    "family_id": "position_relative_drift",
+    "mechanism": "Directional movement toward the held body may reduce position risk while equal movement away increases it.",
+    "expected_direction": "A signed body-relative rule improves exit decisions versus absolute drift.",
+    "decision_change": "Change the exit decision using signed displacement relative to the held body, at the same review states.",
+    "observable_inputs": [
+      "held_body",
+      "observable_underlying",
+      "signed_body_drift"
+    ],
+    "horizon_minutes": 30,
+    "outcome": "full_cycle_net_pnl",
+    "baseline_id": "B-policy",
+    "primary_comparison": "Absolute-drift exit versus body-relative exit at identical states.",
+    "primary_metric": "paired_net_pnl_inr",
+    "practical_effect": 1.0,
+    "risk_constraints": [
+      "Intraday only; no position beyond 15:00 IST",
+      "One historical lot; no unregistered leverage",
+      "Missing exits and rejected opportunities remain in the ledger"
+    ],
+    "parameter_domain": {
+      "drift_threshold": [
+        1.0
+      ]
+    },
+    "search_budget": 1,
+    "minimum_data": [
+      "identified_contracts",
+      "held_leg_paths",
+      "review_clock",
+      "historical_fees"
+    ],
+    "falsification_rule": "Tail losses from holding outweigh saved exits or the practical benefit is excluded by uncertainty.",
+    "alternative_explanations": [
+      "Lower exposure rather than better selection",
+      "Outcome-dependent missingness or source-quality selection",
+      "Cost-model or point-in-time measurement error"
+    ],
+    "source_refs": [],
+    "parent_ids": [],
+    "version": 1,
+    "evaluator": "iron_butterfly",
+    "proposed_dsl": {
+      "evaluator": "iron_butterfly"
+    }
+  },
+  {
+    "id": "H005",
+    "campaign_id": "example-campaign",
+    "family_id": "wing_skew_asymmetry",
+    "mechanism": "Skew changes the relative price of downside and upside insurance and may alter protection efficiency.",
+    "expected_direction": "Risk-matched asymmetric wings improve net outcomes over symmetric wings.",
+    "decision_change": "Select constrained asymmetric wings while freezing body, expiry and declared tail bounds.",
+    "observable_inputs": [
+      "strike_surface",
+      "skew",
+      "wing_ask_prices"
+    ],
+    "horizon_minutes": 30,
+    "outcome": "net_pnl_per_eligible_session",
+    "baseline_id": "B0-simple",
+    "primary_comparison": "Symmetric versus risk-matched asymmetric fly.",
+    "primary_metric": "paired_net_pnl_inr",
+    "practical_effect": 1.0,
+    "risk_constraints": [
+      "Intraday only; no position beyond 15:00 IST",
+      "One historical lot; no unregistered leverage",
+      "Missing exits and rejected opportunities remain in the ledger"
+    ],
+    "parameter_domain": {
+      "wing_ratio": [
+        0.8,
+        1.0,
+        1.2
+      ]
+    },
+    "search_budget": 3,
+    "minimum_data": [
+      "synchronized_strike_surface",
+      "identified_contracts",
+      "intraday_option_paths",
+      "historical_fees"
+    ],
+    "falsification_rule": "Gains vanish at executable sides or require exceeding the registered downside or upside risk bound.",
+    "alternative_explanations": [
+      "Lower exposure rather than better selection",
+      "Outcome-dependent missingness or source-quality selection",
+      "Cost-model or point-in-time measurement error"
+    ],
+    "source_refs": [],
+    "parent_ids": [],
+    "version": 1,
+    "evaluator": "iron_butterfly",
+    "proposed_dsl": {
+      "evaluator": "iron_butterfly"
+    }
+  },
+  {
+    "id": "H006",
+    "campaign_id": "example-campaign",
+    "family_id": "term_structure",
+    "mechanism": "Concentrated event variance can make front-expiry implied volatility appear rich without a transferable premium.",
+    "expected_direction": "Term-slope conditioning adds information beyond front IV and DTE.",
+    "decision_change": "Add one frozen term-slope interaction to the front-IV admission rule.",
+    "observable_inputs": [
+      "front_iv",
+      "next_expiry_iv",
+      "time_to_expiry",
+      "pit_event_calendar"
+    ],
+    "horizon_minutes": 30,
+    "outcome": "net_pnl_per_eligible_session",
+    "baseline_id": "B-policy",
+    "primary_comparison": "Front-IV gate versus premium-by-term-slope interaction.",
+    "primary_metric": "paired_net_pnl_inr",
+    "practical_effect": 1.0,
+    "risk_constraints": [
+      "Intraday only; no position beyond 15:00 IST",
+      "One historical lot; no unregistered leverage",
+      "Missing exits and rejected opportunities remain in the ledger"
+    ],
+    "parameter_domain": {
+      "term_slope_threshold": [
+        0.0,
+        0.1
+      ]
+    },
+    "search_budget": 2,
+    "minimum_data": [
+      "multiple_identified_expiries",
+      "pit_event_calendar",
+      "intraday_option_paths",
+      "historical_fees"
+    ],
+    "falsification_rule": "Benefit disappears after DTE and event controls or rests on a few events.",
+    "alternative_explanations": [
+      "Lower exposure rather than better selection",
+      "Outcome-dependent missingness or source-quality selection",
+      "Cost-model or point-in-time measurement error"
+    ],
+    "source_refs": [],
+    "parent_ids": [],
+    "version": 1,
+    "evaluator": "iron_butterfly",
+    "proposed_dsl": {
+      "evaluator": "iron_butterfly"
+    }
+  },
+  {
+    "id": "H007",
+    "campaign_id": "example-campaign",
+    "family_id": "entry_clock",
+    "mechanism": "Opening uncertainty and spreads may outweigh the additional premium earned by entering earlier.",
+    "expected_direction": "A later entry improves net eligible-session economics after exposure controls.",
+    "decision_change": "Move fixed entry from 10:00 to 11:00 with unchanged geometry and hold duration.",
+    "observable_inputs": [
+      "entry_clock",
+      "underlying",
+      "option_quotes"
+    ],
+    "horizon_minutes": 30,
+    "outcome": "net_pnl_per_eligible_session",
+    "baseline_id": "B0-simple",
+    "primary_comparison": "Fixed 10:00 versus fixed 11:00 entry on the same eligible sessions.",
+    "primary_metric": "paired_net_pnl_inr",
+    "practical_effect": 1.0,
+    "risk_constraints": [
+      "Intraday only; no position beyond 15:00 IST",
+      "One historical lot; no unregistered leverage",
+      "Missing exits and rejected opportunities remain in the ledger"
+    ],
+    "parameter_domain": {
+      "entry_time": [
+        "10:00",
+        "11:00"
+      ]
+    },
+    "search_budget": 2,
+    "minimum_data": [
+      "identified_contracts",
+      "intraday_option_paths",
+      "dated_lot_units",
+      "historical_fees"
+    ],
+    "falsification_rule": "Gains disappear per eligible session or an exposure-reduction control reproduces them.",
+    "alternative_explanations": [
+      "Lower exposure rather than better selection",
+      "Outcome-dependent missingness or source-quality selection",
+      "Cost-model or point-in-time measurement error"
+    ],
+    "source_refs": [],
+    "parent_ids": [],
+    "version": 1,
+    "evaluator": "iron_butterfly",
+    "proposed_dsl": {
+      "evaluator": "iron_butterfly"
+    }
+  },
+  {
+    "id": "H008",
+    "campaign_id": "example-campaign",
+    "family_id": "forward_body",
+    "mechanism": "Observable basis and carry can shift the neutral body relative to the nearest spot-centred listed strike.",
+    "expected_direction": "Forward centring improves economics beyond strike-discretization noise.",
+    "decision_change": "Choose nearest listed forward-centred body instead of spot-centred body.",
+    "observable_inputs": [
+      "pit_spot",
+      "pit_forward",
+      "listed_strike_grid"
+    ],
+    "horizon_minutes": 30,
+    "outcome": "net_pnl_per_eligible_session",
+    "baseline_id": "B0-simple",
+    "primary_comparison": "Same expiry, width, holding and opportunities; body rule alone changes.",
+    "primary_metric": "paired_net_pnl_inr",
+    "practical_effect": 1.0,
+    "risk_constraints": [
+      "Intraday only; no position beyond 15:00 IST",
+      "One historical lot; no unregistered leverage",
+      "Missing exits and rejected opportunities remain in the ledger"
+    ],
+    "parameter_domain": {},
+    "search_budget": 1,
+    "minimum_data": [
+      "pit_forward",
+      "full_local_strike_grid",
+      "identified_contracts",
+      "intraday_option_paths",
+      "historical_fees"
+    ],
+    "falsification_rule": "The difference is discretization noise or reverses after executable transaction costs.",
+    "alternative_explanations": [
+      "Lower exposure rather than better selection",
+      "Outcome-dependent missingness or source-quality selection",
+      "Cost-model or point-in-time measurement error"
+    ],
+    "source_refs": [],
+    "parent_ids": [],
+    "version": 1,
+    "evaluator": "iron_butterfly",
+    "proposed_dsl": {
+      "evaluator": "iron_butterfly"
+    }
+  },
+  {
+    "id": "H009",
+    "campaign_id": "example-campaign",
+    "family_id": "wing_width_counterhypothesis",
+    "mechanism": "Additional wing width may add tail exposure without enough incremental premium in a fixed-lot short iron butterfly.",
+    "expected_direction": "Wider wings fail to improve risk-constrained net outcomes.",
+    "decision_change": "Compare frozen wide baseline against two wider structures at fixed historical lot count.",
+    "observable_inputs": [
+      "wing_cost",
+      "width",
+      "historical_lot_size"
+    ],
+    "horizon_minutes": 30,
+    "outcome": "net_pnl_per_eligible_session",
+    "baseline_id": "B-policy",
+    "primary_comparison": "Frozen wide baseline versus two wider variants with no leverage rescaling.",
+    "primary_metric": "paired_net_pnl_inr",
+    "practical_effect": 1.0,
+    "risk_constraints": [
+      "Intraday only; no position beyond 15:00 IST",
+      "One historical lot; no unregistered leverage",
+      "Missing exits and rejected opportunities remain in the ledger"
+    ],
+    "parameter_domain": {
+      "width_multiplier": [
+        1.0,
+        1.25,
+        1.5
+      ]
+    },
+    "search_budget": 3,
+    "minimum_data": [
+      "wide_strike_paths",
+      "identified_contracts",
+      "dated_lot_units",
+      "historical_fees"
+    ],
+    "falsification_rule": "Wider variants improve net outcomes without registered tail-risk deterioration, contradicting the counter-hypothesis.",
+    "alternative_explanations": [
+      "Lower exposure rather than better selection",
+      "Outcome-dependent missingness or source-quality selection",
+      "Cost-model or point-in-time measurement error"
+    ],
+    "source_refs": [],
+    "parent_ids": [],
+    "version": 1,
+    "evaluator": "iron_butterfly",
+    "proposed_dsl": {
+      "evaluator": "iron_butterfly"
+    }
+  },
+  {
+    "id": "H010",
+    "campaign_id": "example-campaign",
+    "family_id": "early_closure",
+    "mechanism": "Marginal carry over later holding intervals may not compensate for additional directional and jump exposure.",
+    "expected_direction": "Earlier closure improves harvest efficiency after opportunity/exposure adjustment.",
+    "decision_change": "Change only the holding horizon while retaining the same entries and flat-by-15:00 deadline.",
+    "observable_inputs": [
+      "held_leg_paths",
+      "elapsed_minutes"
+    ],
+    "horizon_minutes": 30,
+    "outcome": "net_pnl_per_eligible_session",
+    "baseline_id": "B0-simple",
+    "primary_comparison": "Fixed 15-, 30- and 60-minute holds on identical entry opportunities.",
+    "primary_metric": "paired_net_pnl_inr",
+    "practical_effect": 1.0,
+    "risk_constraints": [
+      "Intraday only; no position beyond 15:00 IST",
+      "One historical lot; no unregistered leverage",
+      "Missing exits and rejected opportunities remain in the ledger"
+    ],
+    "parameter_domain": {
+      "hold_minutes": [
+        15,
+        30,
+        60
+      ]
+    },
+    "search_budget": 3,
+    "minimum_data": [
+      "identified_contracts",
+      "intraday_option_paths",
+      "historical_fees"
+    ],
+    "falsification_rule": "Improvement disappears under common opportunity accounting or is confined to one selected period.",
+    "alternative_explanations": [
+      "Lower exposure rather than better selection",
+      "Outcome-dependent missingness or source-quality selection",
+      "Cost-model or point-in-time measurement error"
+    ],
+    "source_refs": [],
+    "parent_ids": [],
+    "version": 1,
+    "evaluator": "iron_butterfly",
+    "proposed_dsl": {
+      "evaluator": "iron_butterfly"
+    }
+  },
+  {
+    "id": "H011",
+    "campaign_id": "example-campaign",
+    "family_id": "recenter_value",
+    "mechanism": "Restoring body alignment may reduce future short-gamma losses only if it pays for closing and reopening the structure.",
+    "expected_direction": "One recenter improves full-cycle net economics relative to hold and close.",
+    "decision_change": "At one frozen observable trigger state compare hold, close and a single recenter.",
+    "observable_inputs": [
+      "old_contract_paths",
+      "replacement_contract_paths",
+      "trigger_state"
+    ],
+    "horizon_minutes": 30,
+    "outcome": "full_cycle_net_pnl",
+    "baseline_id": "B0-simple",
+    "primary_comparison": "Hold versus close versus one recenter from the same decision state.",
+    "primary_metric": "paired_net_pnl_inr",
+    "practical_effect": 1.0,
+    "risk_constraints": [
+      "Intraday only; no position beyond 15:00 IST",
+      "One historical lot; no unregistered leverage",
+      "Missing exits and rejected opportunities remain in the ledger"
+    ],
+    "parameter_domain": {
+      "management": [
+        "hold",
+        "close",
+        "recenter"
+      ]
+    },
+    "search_budget": 3,
+    "minimum_data": [
+      "old_new_contract_paths",
+      "identified_contracts",
+      "synchronized_quotes_or_registered_bar_fills",
+      "historical_fees"
+    ],
+    "falsification_rule": "Incremental value is consumed by close/reopen costs, latency or greater tail exposure.",
+    "alternative_explanations": [
+      "Lower exposure rather than better selection",
+      "Outcome-dependent missingness or source-quality selection",
+      "Cost-model or point-in-time measurement error"
+    ],
+    "source_refs": [],
+    "parent_ids": [],
+    "version": 1,
+    "evaluator": "iron_butterfly",
+    "proposed_dsl": {
+      "evaluator": "iron_butterfly"
+    }
+  },
+  {
+    "id": "H012",
+    "campaign_id": "example-campaign",
+    "family_id": "liquidity_index_selection",
+    "mechanism": "Apparent carry differences across indices may be outweighed by spreads and insufficient executable size.",
+    "expected_direction": "Liquidity-aware selection improves the cross-index opportunity set.",
+    "decision_change": "Choose one index using a frozen spread/size-adjusted rule instead of a fixed index.",
+    "observable_inputs": [
+      "synchronized_index_opportunities",
+      "bid_ask_spreads",
+      "displayed_size"
+    ],
+    "horizon_minutes": 30,
+    "outcome": "net_pnl_per_eligible_session",
+    "baseline_id": "B0-simple",
+    "primary_comparison": "One lot selected across indices versus fixed-index policy with equal opportunity coverage.",
+    "primary_metric": "paired_net_pnl_inr",
+    "practical_effect": 1.0,
+    "risk_constraints": [
+      "Intraday only; no position beyond 15:00 IST",
+      "One historical lot; no unregistered leverage",
+      "Missing exits and rejected opportunities remain in the ledger"
+    ],
+    "parameter_domain": {},
+    "search_budget": 1,
+    "minimum_data": [
+      "synchronized_multi_index_opportunities",
+      "identified_contracts",
+      "dated_lot_units",
+      "two_sided_quotes",
+      "displayed_size",
+      "historical_fees"
+    ],
+    "falsification_rule": "The benefit vanishes under equal coverage or requires unavailable optimistic fills.",
+    "alternative_explanations": [
+      "Lower exposure rather than better selection",
+      "Outcome-dependent missingness or source-quality selection",
+      "Cost-model or point-in-time measurement error"
+    ],
+    "source_refs": [],
+    "parent_ids": [],
+    "version": 1,
+    "evaluator": "iron_butterfly",
+    "proposed_dsl": {
+      "evaluator": "iron_butterfly"
+    }
+  }
+]

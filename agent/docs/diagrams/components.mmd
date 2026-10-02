@@ -1,0 +1,13 @@
+flowchart LR
+    O[Operator campaign contract] --> G[LangGraph campaign and experiment threads]
+    G --> R[(SQLite registry controlled writer)]
+    G --> C[(Separate checkpoint store)]
+    G --> A[Bounded research roles]
+    R --> W[External local supervisor]
+    W --> N[Sandboxed numerical workers]
+    D[(Read-only source data)] --> N
+    N --> S[(Content-addressed artifacts)]
+    R --> M[Evidence-linked research memory]
+    S --> M
+    R --> P[Protected confirmation service]
+    P --> S

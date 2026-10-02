@@ -1,0 +1,229 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "media_type": {
+          "default": "application/json",
+          "title": "Media Type",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size_bytes": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Size Bytes"
+        },
+        "uri": {
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uri",
+        "sha256"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "alternative_explanations": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Alternative Explanations",
+      "type": "array"
+    },
+    "baseline_id": {
+      "title": "Baseline Id",
+      "type": "string"
+    },
+    "campaign_id": {
+      "title": "Campaign Id",
+      "type": "string"
+    },
+    "decision_change": {
+      "minLength": 8,
+      "title": "Decision Change",
+      "type": "string"
+    },
+    "evaluator": {
+      "default": "iron_butterfly",
+      "enum": [
+        "exp001",
+        "iron_butterfly",
+        "controlled"
+      ],
+      "title": "Evaluator",
+      "type": "string"
+    },
+    "expected_direction": {
+      "minLength": 1,
+      "title": "Expected Direction",
+      "type": "string"
+    },
+    "falsification_rule": {
+      "minLength": 12,
+      "title": "Falsification Rule",
+      "type": "string"
+    },
+    "family_id": {
+      "title": "Family Id",
+      "type": "string"
+    },
+    "horizon_minutes": {
+      "exclusiveMinimum": 0,
+      "maximum": 375,
+      "title": "Horizon Minutes",
+      "type": "integer"
+    },
+    "id": {
+      "minLength": 1,
+      "title": "Id",
+      "type": "string"
+    },
+    "informed_by_result_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Informed By Result Ids",
+      "type": "array"
+    },
+    "mechanism": {
+      "minLength": 12,
+      "title": "Mechanism",
+      "type": "string"
+    },
+    "minimum_data": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Minimum Data",
+      "type": "array"
+    },
+    "observable_inputs": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Observable Inputs",
+      "type": "array"
+    },
+    "outcome": {
+      "title": "Outcome",
+      "type": "string"
+    },
+    "parameter_domain": {
+      "additionalProperties": {
+        "items": {},
+        "type": "array"
+      },
+      "title": "Parameter Domain",
+      "type": "object"
+    },
+    "parent_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Parent Ids",
+      "type": "array"
+    },
+    "practical_effect": {
+      "minimum": 0,
+      "title": "Practical Effect",
+      "type": "number"
+    },
+    "primary_comparison": {
+      "minLength": 8,
+      "title": "Primary Comparison",
+      "type": "string"
+    },
+    "primary_metric": {
+      "title": "Primary Metric",
+      "type": "string"
+    },
+    "proposed_dsl": {
+      "additionalProperties": true,
+      "title": "Proposed Dsl",
+      "type": "object"
+    },
+    "risk_constraints": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Risk Constraints",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "1",
+      "default": "1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "search_budget": {
+      "default": 1,
+      "maximum": 60,
+      "minimum": 1,
+      "title": "Search Budget",
+      "type": "integer"
+    },
+    "source_refs": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "title": "Source Refs",
+      "type": "array"
+    },
+    "version": {
+      "default": 1,
+      "minimum": 1,
+      "title": "Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "id",
+    "campaign_id",
+    "family_id",
+    "mechanism",
+    "expected_direction",
+    "decision_change",
+    "observable_inputs",
+    "horizon_minutes",
+    "outcome",
+    "baseline_id",
+    "primary_comparison",
+    "primary_metric",
+    "practical_effect",
+    "risk_constraints",
+    "minimum_data",
+    "falsification_rule",
+    "alternative_explanations"
+  ],
+  "title": "HypothesisSpec",
+  "type": "object"
+}

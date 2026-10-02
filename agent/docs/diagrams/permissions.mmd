@@ -1,0 +1,26 @@
+flowchart LR
+    subgraph Trusted[Trusted operator boundary]
+      O[Campaign and release authorization]
+      G[Registry and graph controller]
+      P[Protected confirmation service]
+    end
+    subgraph Research[Restricted research workers]
+      A[Provider receives approved summaries only]
+      N[Numerical process no network or credentials]
+      R[Read-only evaluator and admitted development data]
+      W[Run-specific writable scratch]
+    end
+    subgraph Protected[Sealed confirmation scope]
+      D[Unexamined source partition]
+      E[Isolated fixed evaluation child]
+      F[One signed release consumed partition]
+    end
+    O --> G
+    G --> A
+    G --> N
+    R --> N
+    N --> W
+    O --> P
+    P --> E
+    D --> E
+    E --> F

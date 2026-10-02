@@ -1,0 +1,16 @@
+stateDiagram-v2
+    [*] --> QUEUED: atomic run budget outbox
+    QUEUED --> RUNNING: transactional claim and fencing token
+    RUNNING --> COMPLETED: atomic artifact publication and accepted hash
+    COMPLETED --> INGESTED: verified idempotent ingestion
+    INGESTED --> [*]
+    RUNNING --> LOST_UNRESOLVED: lease expired identity uncertain
+    LOST_UNRESOLVED --> COMPLETED: recover fenced published result
+    LOST_UNRESOLVED --> QUEUED: confirmed dead and retry budget available
+    RUNNING --> FAILED: bounded execution failure
+    QUEUED --> CANCELLED: campaign cancellation
+    RUNNING --> CANCEL_REQUESTED: campaign cancellation
+    CANCEL_REQUESTED --> CANCELLED: child stopped and acknowledged
+    CANCEL_REQUESTED --> LOST_UNRESOLVED: cannot establish stopped
+    FAILED --> [*]
+    CANCELLED --> [*]

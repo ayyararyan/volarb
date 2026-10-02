@@ -1,0 +1,77 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "cpu_seconds": {
+      "default": 3600,
+      "minimum": 0,
+      "title": "Cpu Seconds",
+      "type": "number"
+    },
+    "currency": {
+      "default": "INR",
+      "enum": [
+        "INR",
+        "USD"
+      ],
+      "title": "Currency",
+      "type": "string"
+    },
+    "data_currency": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Data Currency",
+      "type": "number"
+    },
+    "human_review_minutes": {
+      "default": 60,
+      "minimum": 0,
+      "title": "Human Review Minutes",
+      "type": "integer"
+    },
+    "llm_currency": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Llm Currency",
+      "type": "number"
+    },
+    "llm_tokens": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Llm Tokens",
+      "type": "integer"
+    },
+    "max_pending": {
+      "default": 20,
+      "maximum": 5000,
+      "minimum": 1,
+      "title": "Max Pending",
+      "type": "integer"
+    },
+    "max_runs": {
+      "default": 60,
+      "minimum": 0,
+      "title": "Max Runs",
+      "type": "integer"
+    },
+    "memory_mb": {
+      "default": 2048,
+      "exclusiveMinimum": 0,
+      "title": "Memory Mb",
+      "type": "integer"
+    },
+    "schema_version": {
+      "const": "1",
+      "default": "1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "storage_bytes": {
+      "default": 1000000000,
+      "minimum": 0,
+      "title": "Storage Bytes",
+      "type": "integer"
+    }
+  },
+  "title": "BudgetSpec",
+  "type": "object"
+}
