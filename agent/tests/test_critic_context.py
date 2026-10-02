@@ -216,7 +216,11 @@ def test_context_rejects_protected_partition_oversized_scope_and_unsafe_source_t
         build_critic_context(
             {**campaign, "objective": "x" * 8001}, hypothesis, dataset, qualification, draft
         )
-    for text in ("Load /private/review-fixture/.env", "Bearer private-token", "file:///private/auth.json"):
+    for text in (
+        "Load /private/review-fixture/.env",
+        "Bearer private-token",
+        "file:///private/auth.json",
+    ):
         bad = {**campaign, "source_records": [{"id": "bad", "summary": text}]}
         with pytest.raises(PermissionError):
             build_critic_context(bad, hypothesis, dataset, qualification, draft)
