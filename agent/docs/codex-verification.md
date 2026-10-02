@@ -54,7 +54,7 @@ This includes 30 controlled app-server provider tests and 14 provider/CLI/graph
 integration tests, alongside all existing scientific and recovery tests.
 Ruff lint and formatting passed; mypy passed for six configured source modules.
 A fresh detached checkout, separately hash-locked environment, and non-editable
-wheel installation also completed **210 tests: all passed**, in **61.25 seconds**.
+wheel installation also completed **218 tests: all passed**, in **42.01 seconds**.
 Both clean-install offline demos completed and their artifact reports validated.
 The fresh uncached type pass exposed six annotation issues; those were fixed
 without weakening checks or changing numerical behavior.
@@ -149,5 +149,12 @@ Changes are limited to `agent/` and its existing scoped CI workflow. Operational
 trading code, Dhan credentials, production limits, live ledgers and unrelated
 checkout edits were not changed. Only `.env.example` is tracked; the actual `.env`
 is private and ignored. No raw datasets, OAuth tokens, runtime databases or large
-artifacts were committed. The following release follow-up records clean-install
-and remote verification separately from the local implementation commit.
+artifacts were committed. Final source revision tested from the clean wheel install:
+`fa31f248bbbbc7ee1d8624548c5fef64f7b3a6cd`. Uncached mypy passes against the
+checkout sources in both environments; the final schema, fixture and demo checks
+also pass. Documentation-only release receipts do not change numerical logic.
+
+- [Published branch](https://github.com/ayyararyan/volarb/tree/feat/codex-appserver-env/agent)
+- [PR #2 and current merge/check status](https://github.com/ayyararyan/volarb/pull/2)
+- [Tested source commit](https://github.com/ayyararyan/volarb/commit/fa31f248bbbbc7ee1d8624548c5fef64f7b3a6cd)
+- [Scoped workflow runs](https://github.com/ayyararyan/volarb/actions/workflows/test-research-agent.yml)
