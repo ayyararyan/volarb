@@ -18,13 +18,14 @@ jobs:
       run:
         working-directory: agent
     env:
-      BUTTERFLY_LAB_HOME: ${{ runner.temp }}/butterfly-lab
       PYTHONDONTWRITEBYTECODE: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12.13'
+      - name: Configure private runtime outside checkout
+        run: echo "BUTTERFLY_LAB_HOME=$RUNNER_TEMP/butterfly-lab" >> "$GITHUB_ENV"
       - run: python -m pip install --require-hashes -r requirements.lock
       - run: python -m pip install --no-deps .
       - run: ruff check .
