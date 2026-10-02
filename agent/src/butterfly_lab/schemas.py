@@ -101,6 +101,7 @@ class BudgetSpec(Contract):
     memory_mb: int = Field(default=2048, gt=0)
     max_pending: int = Field(default=20, ge=1, le=5000)
     llm_tokens: int = Field(default=0, ge=0)
+    llm_calls: int = Field(default=0, ge=0)
     llm_currency: float = Field(default=0, ge=0)
     currency: Literal["INR", "USD"] = "INR"
     data_currency: float = Field(default=0, ge=0)
@@ -124,7 +125,7 @@ class CampaignSpec(Contract):
     preparation_batch: int = Field(default=4, ge=1, le=8)
     llm_concurrency: int = Field(default=2, ge=1, le=2)
     numerical_concurrency: int = Field(default=1, ge=1, le=2)
-    provider: Literal["fixture", "replay", "openai", "deterministic"] = "fixture"
+    provider: Literal["fixture", "replay", "codex", "openai", "deterministic"] = "fixture"
     source_records: list[dict[str, Any]] = Field(default_factory=list)
     development_diagnostics: list[dict[str, Any]] = Field(default_factory=list)
     prior_finding_ids: list[str] = Field(default_factory=list)
@@ -279,6 +280,7 @@ class RunManifest(Contract):
     environment_hash: str
     config_ref: ArtifactRef
     model_prompt_refs: list[ArtifactRef] = Field(default_factory=list)
+    agent_models: list[str] = Field(default_factory=list)
     seed: int
     worker_identity: str
     fencing_token: int = Field(ge=0)

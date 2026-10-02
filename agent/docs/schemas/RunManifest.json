@@ -106,6 +106,13 @@
   },
   "additionalProperties": false,
   "properties": {
+    "agent_models": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Agent Models",
+      "type": "array"
+    },
     "artifact_refs": {
       "items": {
         "$ref": "#/$defs/ArtifactRef"

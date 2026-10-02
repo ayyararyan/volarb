@@ -344,6 +344,7 @@ class WorkerSupervisor:
                     "evaluator_hash": engine_hash,
                 }
             )
+            provider_context = self.registry.get("source", "provider-context-" + run) or {}
             manifest = RunManifest(
                 run_id=run,
                 experiment_id=job["experiment_id"],
@@ -353,6 +354,8 @@ class WorkerSupervisor:
                 source_tree_hash=tree_hash,
                 environment_hash=env_hash,
                 config_ref=config_ref,
+                model_prompt_refs=provider_context.get("model_prompt_refs", []),
+                agent_models=provider_context.get("models", []),
                 seed=job["experiment"]["seed"],
                 worker_identity=self.worker_id + f"-{slot}",
                 fencing_token=fence,

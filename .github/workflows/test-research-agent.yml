@@ -37,6 +37,8 @@ jobs:
       - run: ruff format --check .
       - run: mypy --config-file pyproject.toml
       - run: pytest -q
+      - run: butterfly-lab config check
+      - run: butterfly-lab config show
       - run: butterfly-lab doctor
       - run: butterfly-lab demo --kind all > "${{ runner.temp }}/demo.json"
       - run: python examples/check_demo.py "${{ runner.temp }}/demo.json"

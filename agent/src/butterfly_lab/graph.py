@@ -121,9 +121,13 @@ def build_review_subgraph():
 
 
 class Laboratory:
-    def __init__(self, root: Path | str, agent_service=None):
+    def __init__(
+        self, root: Path | str, agent_service=None, *, pending_limit=None, max_concurrency=2
+    ):
         self.root = runtime_root(root)
         self.registry = Registry(self.root)
+        self.pending_limit = pending_limit
+        self.max_concurrency = max_concurrency
         self.artifacts = ArtifactStore(self.root / "artifacts")
         if agent_service is None:
             from .agents import AgentService, fixture_provider, load_seeds
@@ -148,9 +152,16 @@ class Laboratory:
 
     def close(self):
         self.connection.close()
+        close = getattr(self.agent_service.provider, "close", None)
+        if close:
+            close()
 
     def _config(self, id: str):
-        return {"configurable": {"thread_id": id}, "max_concurrency": 2, "recursion_limit": 2000}
+        return {
+            "configurable": {"thread_id": id},
+            "max_concurrency": self.max_concurrency,
+            "recursion_limit": 2000,
+        }
 
     def _records(self, state):
         exp = self.registry.get("experiments", state["experiment_id"])
@@ -291,10 +302,22 @@ class Laboratory:
             ):
                 return {"outcome": "CANCELLED", "reasons": ["Campaign cancelled before submission"]}
             try:
-                run = self.registry.register_run(exp, data, environment_hash(), evaluator_hash())
+                run = self.registry.register_run(
+                    exp,
+                    data,
+                    environment_hash(),
+                    evaluator_hash(),
+                    pending_limit=self.pending_limit,
+                )
             except QueueFull:
                 interrupt({"kind": "queue_capacity", "campaign_id": exp["campaign_id"]})
-                run = self.registry.register_run(exp, data, environment_hash(), evaluator_hash())
+                run = self.registry.register_run(
+                    exp,
+                    data,
+                    environment_hash(),
+                    evaluator_hash(),
+                    pending_limit=self.pending_limit,
+                )
             except BudgetExceeded as error:
                 return {"outcome": "BUDGET_EXHAUSTED", "reasons": [str(error)]}
             except SourceBindingError as error:
@@ -871,7 +894,13 @@ class Laboratory:
                     r["state"] in {"QUEUED", "RUNNING", "CANCEL_REQUESTED", "LOST_UNRESOLVED"}
                     for r in self.registry.runs(exp["campaign_id"])
                 )
-                if pending >= campaign["budget"]["max_pending"]:
+                total_pending = sum(
+                    r["state"] in {"QUEUED", "RUNNING", "CANCEL_REQUESTED", "LOST_UNRESOLVED"}
+                    for r in self.registry.runs()
+                )
+                if pending >= campaign["budget"]["max_pending"] or (
+                    self.pending_limit is not None and total_pending >= self.pending_limit
+                ):
                     return state.values
                 return self.experiment_graph.invoke(
                     Command(resume={"capacity_rechecked": True}), config, durability="sync"

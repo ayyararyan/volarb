@@ -1,0 +1,26 @@
+{
+  "id": "codex-development-001",
+  "objective": "Design and challenge at most two falsifiable butterfly research hypotheses supported by the registered development dataset, preserving informative negative and data-limited outcomes.",
+  "approved": true,
+  "provider": "codex",
+  "max_hypotheses": 2,
+  "preparation_batch": 2,
+  "llm_concurrency": 2,
+  "numerical_concurrency": 2,
+  "budget": {
+    "max_runs": 8,
+    "cpu_seconds": 900,
+    "storage_bytes": 128000000,
+    "memory_mb": 2048,
+    "max_pending": 4,
+    "llm_calls": 20,
+    "llm_tokens": 0,
+    "llm_currency": 0,
+    "currency": "INR",
+    "data_currency": 0,
+    "human_review_minutes": 30
+  },
+  "source_records": [],
+  "development_diagnostics": [],
+  "prior_finding_ids": []
+}

@@ -443,7 +443,13 @@ class Registry:
             return [json.loads(r[0]) for r in db.execute(query + " ORDER BY created_at,id", args)]
 
     def register_run(
-        self, experiment: Any, manifest: Any, environment_hash: str, evaluator_hash: str
+        self,
+        experiment: Any,
+        manifest: Any,
+        environment_hash: str,
+        evaluator_hash: str,
+        *,
+        pending_limit: int | None = None,
     ) -> str:
         from .schemas import DatasetManifest, ExperimentSpec
 
@@ -567,6 +573,12 @@ class Registry:
             ).fetchone()[0]
             if pending >= limits.get("max_pending", 20):
                 raise QueueFull("Backpressure: campaign pending queue is full")
+            if pending_limit is not None:
+                total_pending = db.execute(
+                    "SELECT count(*) FROM runs WHERE state IN ('QUEUED','RUNNING','CANCEL_REQUESTED','LOST_UNRESOLVED')"
+                ).fetchone()[0]
+                if total_pending >= pending_limit:
+                    raise QueueFull("Backpressure: machine pending queue is full")
             # Register the scientific inputs in the SAME transaction as reservation.
             for kind, value in (("experiment", experiment), ("dataset", manifest)):
                 prev = db.execute(
@@ -586,6 +598,27 @@ class Registry:
                             now,
                         ),
                     )
+            # Freeze the already-observed model lineage with submission, before
+            # any worker can claim the outbox. Model changes never rewrite it.
+            generations = [
+                json.loads(row[0])
+                for row in db.execute(
+                    "SELECT payload FROM records WHERE kind='generation' AND campaign_id=? ORDER BY id",
+                    (campaign,),
+                )
+            ]
+            self._record(
+                db,
+                "source",
+                "provider-context-" + run_id,
+                {
+                    "campaign_id": campaign,
+                    "run_id": run_id,
+                    "scope": "campaign role calls observed before numerical submission",
+                    "models": sorted({g["model"] for g in generations}),
+                    "model_prompt_refs": [plain(self.artifacts.put_json(g)) for g in generations],
+                },
+            )
             db.execute(
                 """INSERT INTO runs(run_id,execution_key,campaign_id,experiment_id,experiment,dataset,resources,
                 environment_hash,evaluator_hash,graph_version,schema_version,state,created_at,updated_at,priority)

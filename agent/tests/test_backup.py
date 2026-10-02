@@ -56,3 +56,20 @@ def test_restore_rejects_path_traversal(tmp_path):
     path.write_text(json.dumps(manifest))
     with pytest.raises(RegistryError, match="Unsafe backup path"):
         verify_backup(tmp_path / "snapshot")
+
+
+def test_backup_retains_generated_call_budgets_but_never_user_secrets(tmp_path):
+    reg, _, _ = setup_registry(tmp_path)
+    for name in ("codex-usage.json", "provider-budget.json"):
+        (reg.root / name).write_text(json.dumps({"calls": 3, "reserved_usd": 0.05}))
+    (reg.root / ".env").write_text("OPENAI_API_KEY=synthetic-private-placeholder")
+    (reg.root / "credentials.json").write_text('{"secret":"synthetic-private"}')
+    (reg.root / "authority").mkdir()
+    (reg.root / "authority" / "signing.key").write_text("synthetic-private-generated-key")
+    backup(reg.root, tmp_path / "snapshot")
+    manifest = verify_backup(tmp_path / "snapshot")
+    names = set(manifest["files"])
+    assert {"codex-usage.json", "provider-budget.json"} <= names
+    assert not any("env" in n or "credentials" in n or "signing" in n for n in names)
+    restore(tmp_path / "snapshot", tmp_path / "restored")
+    assert json.loads((tmp_path / "restored/codex-usage.json").read_text())["calls"] == 3
