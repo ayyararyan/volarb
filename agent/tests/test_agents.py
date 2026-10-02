@@ -120,6 +120,32 @@ def test_one_bounded_malformed_output_correction():
     assert wrong.calls == 2
 
 
+def test_designer_capability_prose_receives_bounded_contract_correction():
+    from butterfly_lab.benchmarks import controlled_hypothesis
+
+    valid = controlled_hypothesis("h", "c").model_dump(mode="json")
+    invalid = {**valid, "minimum_data": ["controlled_sessions", "64 paired synthetic sessions"]}
+    seen = []
+
+    def response(context):
+        seen.append(context)
+        return {"hypotheses": [invalid if len(seen) == 1 else valid]}
+
+    service = AgentService(FixtureProvider({"designer": response}))
+    hypotheses = service.design(
+        {"id": "c", "objective": "Controlled method test", "max_hypotheses": 1},
+        ["controlled_sessions"],
+    )
+    assert hypotheses[0].minimum_data == ["controlled_sessions"]
+    assert len(seen) == service.calls == 2
+    assert seen[1]["correction"]["errors"][0]["loc"] == ("hypotheses", 0, "minimum_data", 1)
+    # A syntactically valid but unavailable capability remains a genuine data gate,
+    # not something the model contract silently removes or admits.
+    assert type(hypotheses[0]).model_validate(
+        {**valid, "minimum_data": ["missing_quotes"]}
+    ).minimum_data == ["missing_quotes"]
+
+
 def test_live_agent_requires_registered_approved_usd_and_token_budget(tmp_path, monkeypatch):
     from butterfly_lab.providers import OpenAIConfig, OpenAIProvider
     from butterfly_lab.registry import Registry

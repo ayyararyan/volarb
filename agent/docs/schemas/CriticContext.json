@@ -370,7 +370,10 @@
           "type": "string"
         },
         "minimum_data": {
+          "description": "Exact data capability identifiers only, never prose, counts or methodological requirements. Put narrative constraints in risk_constraints.",
           "items": {
+            "maxLength": 128,
+            "pattern": "^[A-Za-z][A-Za-z0-9_.:-]*$",
             "type": "string"
           },
           "minItems": 1,

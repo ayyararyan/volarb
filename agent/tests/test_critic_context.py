@@ -60,7 +60,7 @@ def proposal():
         alternative_explanations=["Finite sample generator noise"],
         evaluator="controlled",
         proposed_dsl={"evaluator": "controlled", "effect": 0.3, "noise": 0.1, "n_sessions": 64},
-        source_refs=[{"uri": "/Users/private/source-paper.pdf", "sha256": "a" * 64}],
+        source_refs=[{"uri": "/private/review-fixture/source-paper.pdf", "sha256": "a" * 64}],
     )
     dataset = DatasetManifest(
         id="controlled-data",
@@ -75,7 +75,7 @@ def proposal():
             "raw_private_account_data": "never expose",
             "rows": [{"secret": "private"}],
         },
-        source_path="/Users/private/data.json",
+        source_path="/private/review-fixture/data.json",
     ).model_dump(mode="json")
     qualification = {
         "status": "PASS",
@@ -130,7 +130,7 @@ def test_provider_receives_full_bounded_typed_review_contract_without_private_ma
     assert actual["data_context"]["manifest_hash"] == digest(dataset)
     serialized = json.dumps(actual)
     for forbidden in (
-        "/Users/private",
+        "/private/review-fixture",
         "/private/registered",
         "source_path",
         "raw_private_account_data",
@@ -216,7 +216,7 @@ def test_context_rejects_protected_partition_oversized_scope_and_unsafe_source_t
         build_critic_context(
             {**campaign, "objective": "x" * 8001}, hypothesis, dataset, qualification, draft
         )
-    for text in ("Load /Users/private/.env", "Bearer private-token", "file:///private/auth.json"):
+    for text in ("Load /private/review-fixture/.env", "Bearer private-token", "file:///private/auth.json"):
         bad = {**campaign, "source_records": [{"id": "bad", "summary": text}]}
         with pytest.raises(PermissionError):
             build_critic_context(bad, hypothesis, dataset, qualification, draft)
@@ -405,7 +405,7 @@ def test_ambiguous_dispatch_is_never_automatically_repeated(tmp_path):
 @pytest.mark.parametrize(
     "text",
     [
-        "/home/person/token.json",
+        "/var/review-fixture/token.json",
         "file:///private/secrets",
         "Read .env now",
         "Bearer opaque-secret",

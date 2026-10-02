@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from enum import StrEnum
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
@@ -154,7 +154,12 @@ class HypothesisSpec(Contract):
     risk_constraints: list[str] = Field(min_length=1)
     parameter_domain: dict[str, list[Any]] = Field(default_factory=dict)
     search_budget: int = Field(default=1, ge=1, le=60)
-    minimum_data: list[str] = Field(min_length=1)
+    minimum_data: list[
+        Annotated[str, Field(pattern=r"^[A-Za-z][A-Za-z0-9_.:-]*$", max_length=128)]
+    ] = Field(
+        min_length=1,
+        description="Exact data capability identifiers only, never prose, counts or methodological requirements. Put narrative constraints in risk_constraints.",
+    )
     falsification_rule: str = Field(min_length=12)
     alternative_explanations: list[str] = Field(min_length=1)
     source_refs: list[ArtifactRef] = Field(default_factory=list)
