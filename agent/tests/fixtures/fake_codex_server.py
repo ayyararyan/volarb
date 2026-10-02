@@ -56,6 +56,28 @@ def event(method, params):
     send({"method": method, "params": params})
 
 
+def strict_schema(value):
+    """Relevant documented strict-output subset, independently checked here."""
+    if not isinstance(value, dict):
+        return False
+    if value.get("type") == "object":
+        properties = value.get("properties", {})
+        if value.get("additionalProperties") is not False:
+            return False
+        if set(value.get("required", [])) != set(properties):
+            return False
+        if not all(strict_schema(child) for child in properties.values()):
+            return False
+    if "items" in value and not strict_schema(value["items"]):
+        return False
+    for key in ("$defs", "definitions"):
+        if key in value and not all(strict_schema(child) for child in value[key].values()):
+            return False
+    if "anyOf" in value and not all(strict_schema(child) for child in value["anyOf"]):
+        return False
+    return True
+
+
 for line in sys.stdin:
     request = json.loads(line)
     method = request["method"]
@@ -121,6 +143,14 @@ for line in sys.stdin:
         if scenario == "stallinput":
             time.sleep(20)
     elif method == "turn/start":
+        if not strict_schema(params.get("outputSchema")):
+            send(
+                {
+                    "id": request["id"],
+                    "error": {"code": -32602, "message": "unsupported strict output schema"},
+                }
+            )
+            continue
         turn_id = f"fixture-turn-{threads}"
         prompt = json.loads(params["input"][0]["text"])
         role = prompt["role"]
@@ -164,9 +194,19 @@ for line in sys.stdin:
         value = responses.get(role, {"notes": ["bounded"]})
         if isinstance(value, list):
             value = value[min(counts[role] - 1, len(value) - 1)]
-        text = json.dumps(value) if scenario != "malformed" else "not-json"
+        inner = json.dumps(value) if scenario != "malformed" else "not-json"
+        if scenario == "innerarray":
+            inner = "[]"
+        envelope = {"payload_json": inner}
+        if scenario == "wireextra":
+            envelope["extra"] = "not allowed"
+        if scenario == "wiremissing":
+            envelope = {}
+        if scenario == "wiretype":
+            envelope["payload_json"] = {"not": "a string"}
+        text = json.dumps(envelope) if scenario != "wiremalformed" else "not-json"
         if scenario == "oversized":
-            text = json.dumps({"text": "x" * 100000})
+            text = json.dumps({"payload_json": json.dumps({"text": "x" * 100000})})
         if scenario == "rerouted":
             event(
                 "model/rerouted",

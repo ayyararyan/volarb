@@ -242,3 +242,87 @@ def test_logs_and_rate_snapshots_never_contain_prompt_or_account_data(tmp_path, 
         assert "email" not in json.dumps(response.metadata)
     assert "never-log-this-input" not in caplog.text
     assert "completed" in caplog.text and "reaped" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "scenario,match",
+    [
+        ("wireextra", "wire envelope"),
+        ("wiremissing", "wire envelope"),
+        ("wiretype", "wire envelope"),
+        ("wiremalformed", "wire envelope is malformed JSON"),
+        ("innerarray", "must be a JSON object"),
+    ],
+)
+def test_closed_wire_envelope_is_locally_enforced(tmp_path, scenario, match):
+    cfg = config(tmp_path, scenario)
+    with CodexAppServerProvider(cfg) as provider:
+        with pytest.raises(ProviderError, match=match):
+            provider.generate("critic", {}, schema=SCHEMA)
+    state = json.loads(cfg.ledger_path.read_text())
+    assert state["calls"] == 1
+    assert state["reservations"][0]["status"] == "FAILED_OR_AMBIGUOUS_RESERVATION_RETAINED"
+
+
+def test_role_schemas_with_defaults_and_open_dsl_use_closed_wire_transport(tmp_path):
+    from butterfly_lab.agents import RoleOutput, SpecificationOutput
+
+    cfg = config(tmp_path)
+    Path(cfg.command + ".responses.json").write_text(
+        json.dumps(
+            {
+                "critic": {"notes": ["bounded"]},
+                "specification": {
+                    "dsl": {"evaluator": "controlled", "nested": {"arbitrary_approved_key": 3}},
+                    "notes": ["fixture"],
+                },
+            }
+        )
+    )
+    assert set(RoleOutput.model_json_schema()["required"]) != set(
+        RoleOutput.model_json_schema()["properties"]
+    )
+    assert (
+        SpecificationOutput.model_json_schema()["properties"]["dsl"]["additionalProperties"] is True
+    )
+    with CodexAppServerProvider(cfg) as provider:
+        role = provider.generate("critic", {}, schema=RoleOutput.model_json_schema())
+        specification = provider.generate(
+            "specification", {}, schema=SpecificationOutput.model_json_schema()
+        )
+    assert RoleOutput.model_validate(role.payload).recommendations == []
+    assert (
+        SpecificationOutput.model_validate(specification.payload).dsl["nested"][
+            "arbitrary_approved_key"
+        ]
+        == 3
+    )
+    assert role.metadata["wire_contract_version"] == 1
+    assert specification.metadata["wire_contract_version"] == 1
+
+
+@pytest.mark.parametrize(
+    "bad_schema",
+    [
+        {
+            "type": "object",
+            "properties": {"optional": {"type": "string"}},
+            "additionalProperties": False,
+        },
+        {
+            "type": "object",
+            "properties": {"open": {"type": "object", "additionalProperties": True}},
+            "required": ["open"],
+            "additionalProperties": False,
+        },
+    ],
+)
+def test_fake_server_rejects_unsupported_strict_wire_schemas(tmp_path, monkeypatch, bad_schema):
+    import butterfly_lab.codex_provider as module
+
+    monkeypatch.setattr(module, "_WIRE_SCHEMA", bad_schema)
+    cfg = config(tmp_path)
+    with CodexAppServerProvider(cfg) as provider:
+        with pytest.raises(ProviderError, match="rejected turn/start"):
+            provider.generate("critic", {}, schema=SCHEMA)
+    assert json.loads(cfg.ledger_path.read_text())["calls"] == 1

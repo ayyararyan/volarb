@@ -126,7 +126,13 @@ upgrade grades, or expand permissions/budgets.
 
 The adapter uses the supported stdio JSON-RPC transport: `initialize`,
 `initialized`, account/model inspection, a fresh thread per role call, and
-`turn/start` with `outputSchema`. It consumes stream notifications until terminal
+`turn/start` with a strict `outputSchema` envelope (`payload_json: string`).
+The original role schema stays in the prompt; Lab decodes the JSON string and
+validates it locally. This is deliberate: Codex forwards schemas with strict
+validation, whereas open-ended DSL maps and defaulted Pydantic fields are not
+in the provider’s strict schema subset. The envelope does not weaken the local
+research contract or permit an extra economic repair loop.
+It consumes stream notifications until terminal
 completion; it is not a scraper for interactive CLI output. Official WebSocket
 transport is experimental/unsupported, so `external` mode is rejected. The
 interface was checked against **Codex CLI 0.149.1** and the official documentation
@@ -153,6 +159,11 @@ subscription quota. It means no fictitious aggregate token quota was approved.
 The actual resolved model, prompt/response hashes, reported usage and unavailable
 metadata reasons remain part of agent-call provenance and linked research records.
 [App-server usage events](https://developers.openai.com/codex/app-server/).
+
+The strict-schema behavior was checked against the installed-version
+[app-server forwarding implementation](https://github.com/openai/codex/blob/rust-v0.149.1/codex-rs/app-server/src/request_processors/turn_processor.rs#L561),
+[session strict-mode selection](https://github.com/openai/codex/blob/rust-v0.149.1/codex-rs/core/src/session/turn.rs#L1325),
+and [request serialization](https://github.com/openai/codex/blob/rust-v0.149.1/codex-rs/codex-api/src/common.rs#L372).
 
 Optional OpenAI usage retains positive configured API-price ceilings plus campaign
 USD/token authorization. Failed or ambiguous requests retain their reservation.

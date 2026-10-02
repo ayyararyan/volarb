@@ -13,7 +13,8 @@ app-server diagnostics, and actual model usage.
   deterministic shell overrides, redacted diagnostics, safe template and parsing.
 - `codex_provider.py`: managed official stdio app-server, ChatGPT-only account
   admission, restrictive effective configuration verification, fresh role threads,
-  structured output, bounded nonblocking IO, cancellation and child reaping.
+  strict JSON-envelope output plus authoritative local role validation, bounded
+  nonblocking IO, cancellation and child reaping.
 - `provider_factory.py`, `agents.py`, `cli.py`: six existing research roles,
   default Codex selection, explicit fixture/replay/API alternatives, configuration
   and no-spend status commands, explicitly requested single-call smoke test.
@@ -48,8 +49,8 @@ parameter fields. Historical financial evaluators/accounting were not redesigned
 
 ## Test evidence
 
-The development checkout completed **210 tests: all passed**, in **39.71 seconds**.
-This includes 22 controlled app-server provider tests and 14 provider/CLI/graph
+The development checkout completed **218 tests: all passed**, in **40.35 seconds**.
+This includes 30 controlled app-server provider tests and 14 provider/CLI/graph
 integration tests, alongside all existing scientific and recovery tests.
 Ruff lint and formatting passed; mypy passed for six configured source modules.
 A fresh detached checkout, separately hash-locked environment, and non-editable
@@ -74,6 +75,12 @@ These are **software demonstrations**, not historical strategy discoveries. No
 historical research campaign or full live-model campaign was run for this change.
 The prior 2,000-job laboratory benchmark was not rerun or re-labelled as new
 provider performance evidence.
+
+Version-pinned protocol-source inspection additionally caught strict-schema
+forwarding: raw Pydantic schemas with optional defaults/open DSL maps are not
+valid provider schemas. The adapter therefore uses a closed `payload_json` wire
+envelope and retains the complete original schema for local role validation.
+The controlled server checks that strict wire shape, not merely successful JSON.
 
 ## Real Codex diagnostic and external limitation
 
