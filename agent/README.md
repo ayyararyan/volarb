@@ -45,6 +45,7 @@ its login credentials. [First-time setup, exact campaign command and troubleshoo
 - [Scientific contract](docs/scientific-contract.md): exact definitions, F0–F4
   ceilings, inference and baseline provenance.
 - [Provider configuration](docs/providers.md) and [security boundary](docs/security.md).
+- [Codex migration verification and exact setup](docs/codex-verification.md).
 - [Requirements → tests](docs/traceability.md), [verified data audit](docs/data-audit.md),
   [release verification](docs/verification.md).
 - [Architecture and diagrams](docs/architecture.md), [configuration reference](docs/configuration.md).

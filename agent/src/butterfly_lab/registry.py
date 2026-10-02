@@ -8,6 +8,7 @@ also enforced by SQLite. An expired lease never by itself requeues computation.
 from __future__ import annotations
 
 import fcntl
+import builtins
 import hashlib
 import json
 import math
@@ -1188,7 +1189,7 @@ class Registry:
             )
             return {"queued_cancelled": queued, "running_requested": running}
 
-    def reconcile(self) -> list[dict[str, Any]]:
+    def reconcile(self) -> builtins.list[dict[str, Any]]:
         with self._reader() as db:
             rows = [
                 dict(r)
@@ -1313,7 +1314,7 @@ class Registry:
                 ).fetchone()[0],
             }
 
-    def events(self, subject: str | None = None) -> list[dict[str, Any]]:
+    def events(self, subject: str | None = None) -> builtins.list[dict[str, Any]]:
         with self._reader() as db:
             query, args = (
                 ("SELECT * FROM events WHERE subject=?", [subject])
@@ -1322,7 +1323,7 @@ class Registry:
             )
             return [_row(r) for r in db.execute(query + " ORDER BY created_at,event_id", args)]
 
-    def runs(self, campaign_id: str | None = None) -> list[dict[str, Any]]:
+    def runs(self, campaign_id: str | None = None) -> builtins.list[dict[str, Any]]:
         with self._reader() as db:
             query, args = (
                 ("SELECT * FROM runs WHERE campaign_id=?", [campaign_id])

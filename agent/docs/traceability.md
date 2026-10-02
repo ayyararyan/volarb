@@ -63,3 +63,10 @@ return UNSUPPORTED_HYPOTHESIS; verified missing data returns DATA_LIMITED.
 F4 depth replay and adaptive allocation are the proposal's optional extensions,
 not hidden mandatory-path stubs. Detailed measured evidence and external limits:
 [verification.md](verification.md).
+
+## Codex/provider configuration release
+
+The subsequent provider/runtime migration has its own [requirements-to-test map
+and measured verification](codex-verification.md#requirements--acceptance-evidence).
+It preserves the research requirements above and adds managed Codex protocol,
+one `.env`, subscription-call ceilings, no-spend diagnostics and secret hygiene.

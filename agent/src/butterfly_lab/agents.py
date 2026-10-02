@@ -196,7 +196,7 @@ class AgentService:
                 **request,
                 "correction": {
                     "errors": [
-                        {key: issue[key] for key in ("type", "loc", "msg")}
+                        {"type": issue["type"], "loc": issue["loc"], "msg": issue["msg"]}
                         for issue in error.errors(include_input=False, include_url=False)
                     ],
                     "previous_response_hash": response.response_hash,
