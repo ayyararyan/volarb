@@ -90,6 +90,9 @@ def test_real_stdio_handshake_status_generation_and_lifecycle(tmp_path, monkeypa
         ("apikey", "ChatGPT"),
         ("unsafe", "security"),
         ("stubbornmcp", "MCP"),
+        ("wideprofile", "restricted read roots"),
+        ("writablenetwork", "restricted read roots"),
+        ("unknownprofile", "restricted read roots"),
     ],
 )
 def test_auth_and_security_failure_never_falls_back_or_spends(tmp_path, scenario, match):
@@ -100,9 +103,56 @@ def test_auth_and_security_failure_never_falls_back_or_spends(tmp_path, scenario
     assert not cfg.ledger_path.exists()
 
 
-def test_inherited_mcp_is_explicitly_disabled_before_turn(tmp_path):
-    with CodexAppServerProvider(config(tmp_path, "mcp")) as provider:
+@pytest.mark.parametrize("scenario", ["mcp", "quotedmcp"])
+def test_inherited_mcp_is_explicitly_disabled_before_turn(tmp_path, scenario):
+    with CodexAppServerProvider(config(tmp_path, scenario)) as provider:
         assert provider.generate("critic", {}, schema=SCHEMA).payload["notes"]
+
+
+@pytest.mark.parametrize("scenario", ["missingprofile", "wrongprofile", "inheritedprofile"])
+def test_unconfirmed_thread_permissions_never_dispatch_a_turn(tmp_path, scenario):
+    cfg = config(tmp_path, scenario)
+    with CodexAppServerProvider(cfg) as provider:
+        with pytest.raises(ProviderError, match="restricted permissions profile"):
+            provider.generate("critic", {}, schema=SCHEMA)
+    requests = [
+        json.loads(line) for line in Path(cfg.command + ".requests.jsonl").read_text().splitlines()
+    ]
+    assert "thread/start" in {request["method"] for request in requests}
+    assert "turn/start" not in {request["method"] for request in requests}
+    assert json.loads(cfg.ledger_path.read_text())["calls"] == 1
+
+
+def test_retired_read_access_wire_format_is_rejected_without_generation(tmp_path):
+    import time
+
+    cfg = config(tmp_path)
+    with CodexAppServerProvider(cfg) as provider:
+        provider._start()
+        with pytest.raises(ProviderError, match="rejected turn/start"):
+            provider._rpc(
+                "turn/start",
+                {
+                    "threadId": "00000000-0000-0000-0000-000000000000",
+                    "input": [],
+                    "sandboxPolicy": {
+                        "type": "readOnly",
+                        "access": {"type": "restricted", "readableRoots": [str(tmp_path)]},
+                    },
+                },
+                time.monotonic() + 2,
+            )
+    assert not cfg.ledger_path.exists()
+
+
+def test_private_profile_accepts_dotted_paths_and_keeps_process_profiles_separate(tmp_path):
+    nested = tmp_path / "research.with.dots"
+    nested.mkdir()
+    cfg = config(nested)
+    with CodexAppServerProvider(cfg) as first, CodexAppServerProvider(cfg) as second:
+        assert first._permission_profile_id != second._permission_profile_id
+        assert first.generate("critic", {}, schema=SCHEMA).payload["notes"]
+        assert second.generate("critic", {}, schema=SCHEMA).payload["notes"]
 
 
 @pytest.mark.parametrize(

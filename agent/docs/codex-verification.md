@@ -7,6 +7,38 @@ source resolution between editable and wheel installations.
 This report distinguishes software tests, controlled model transport, real
 app-server diagnostics, and actual model usage.
 
+## Post-login compatibility correction — 2026-10-02
+
+The release-time signed-out diagnostics below could not exercise `turn/start`.
+After the operator completed ChatGPT sign-in, the first real test exposed a
+protocol defect: Codex 0.149.1 rejects the retired `readOnly.access` field. The
+earlier mock and documentation audit did not catch that rejection. Their passing
+results were not evidence of a successful live model request.
+
+The adapter now uses a unique, process-local named permissions profile and the
+required experimental protocol capability. It verifies the effective profile
+and thread provenance before generation. Minimal-platform and private-scratch
+read access, disabled command network access, and disabled tools/MCP remain in
+force. Inline TOML values fix native CLI parsing of quoted/dotted filesystem and
+MCP keys; only known null serialization defaults are normalized. User Codex
+configuration and credential storage are not modified.
+
+The CLI installed on the host changed to **0.160.0** during verification. Native
+initialization, effective-policy validation and thread-profile confirmation all
+passed against that version. The subsequent explicit `butterfly-lab auth test`
+completed **one real model response**, resolved to **gpt-6-astra**, and validated
+the typed payload. Elapsed time was **5.60 seconds**; reported usage was **7,327
+input tokens and 35 output tokens**. This used ChatGPT subscription authentication,
+not an API key or fallback. Account identifiers, authentication data and raw
+provider payloads are not included in this report.
+
+Follow-up verification: **227 tests passed in 43.54 seconds**, including **53
+provider/integration tests**. Ruff lint and formatting and uncached mypy for all
+six configured modules passed. This is connectivity/contract verification, not
+a completed research campaign or a guarantee of remaining subscription quota.
+
+The sections below preserve the original release-time evidence.
+
 ## Delivered
 
 - `settings.py`: one cached, typed runtime configuration from **`agent/.env`**;
