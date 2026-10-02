@@ -1,6 +1,6 @@
 """Managed Codex app-server JSONL provider using Codex-owned ChatGPT login.
 
-Protocol checked against codex-cli 0.149.1. No OAuth material is read, copied,
+Protocol audited on 0.149.1; live verified on 0.160.0. No OAuth material is read, copied,
 logged, or returned. Subscription usage is not API-dollar accounting. The
 protocol has no server-side output-token cap: local ceilings interrupt observed
 usage/output and bound elapsed time, but cannot promise zero quota overshoot.
@@ -76,7 +76,6 @@ _FIXED_CONFIG: dict[str, Any] = {
     "tools.experimental_request_user_input.enabled": False,
     "shell_environment_policy.inherit": "none",
     "approval_policy": "never",
-    "sandbox_mode": "read-only",
     "model_provider": "openai",
 }
 _SYSTEM = (
@@ -103,6 +102,26 @@ _WIRE_SCHEMA: dict[str, Any] = {
 _SAFE_ITEMS = {"userMessage", "agentMessage", "reasoning"}
 _PROTOCOL_LIMIT = 4_000_000
 _LOG = logging.getLogger(__name__)
+# ConfigRead materializes absent typed profile fields as null. Ignore only
+# these known null defaults, never unknown keys or a non-null permission.
+_NULL_PROFILE_DEFAULTS = {
+    "": {"description", "extends", "workspace_roots"},
+    "filesystem": {"glob_scan_max_depth"},
+    "network": {
+        "proxy_url",
+        "enable_socks5",
+        "socks_url",
+        "enable_socks5_udp",
+        "allow_upstream_proxy",
+        "dangerously_allow_non_loopback_proxy",
+        "dangerously_allow_all_unix_sockets",
+        "mode",
+        "domains",
+        "unix_sockets",
+        "allow_local_binding",
+        "mitm",
+    },
+}
 
 
 @dataclass(frozen=True)
@@ -151,6 +170,9 @@ class CodexAppServerProvider:
         self._lock = threading.RLock()
         self._process: subprocess.Popen[bytes] | None = None
         self._scratch: tempfile.TemporaryDirectory[str] | None = None
+        # A fresh name prevents table-merging with any user-owned profile.
+        # Verify the resulting profile exactly before account or model access.
+        self._permission_profile_id = f"butterfly_research_{uuid.uuid4().hex}"
         self._buffer = b""
         self._events: list[dict[str, Any]] = []
         self._sequence = 0
@@ -225,10 +247,24 @@ class CodexAppServerProvider:
         args = [binary, "app-server", "--listen", "stdio://", "--strict-config"]
         for key, value in _FIXED_CONFIG.items():
             args.extend(["-c", f"{key}={canonical_json(value)}"])
-        for name in disabled_mcp:
-            # Quote the TOML key, never interpolate a shell command or log names.
-            prefix = f"mcp_servers.{json.dumps(name)}"
-            args.extend(["-c", f"{prefix}.enabled=false", "-c", f"{prefix}.required=false"])
+        profile = self._permission_profile_id
+        args.extend(["-c", f"default_permissions={json.dumps(profile)}"])
+        # CLI override paths split on dots rather than parsing TOML keys.
+        # Put quoted filesystem keys inside an inline TOML value, not in the
+        # dotted override path (scratch directories may themselves have dots).
+        filesystem = ", ".join(
+            f'{json.dumps(path)} = "read"' for path in (":minimal", self._scratch.name)
+        )
+        args.extend(["-c", f"permissions.{profile}.filesystem={{ {filesystem} }}"])
+        args.extend(["-c", f"permissions.{profile}.network.enabled=false"])
+        if disabled_mcp:
+            # Names are keys inside a TOML value, never dotted CLI paths or
+            # shell commands. This also preserves quoted/dotted MCP names.
+            entries = ", ".join(
+                f"{json.dumps(name)} = {{ enabled = false, required = false }}"
+                for name in disabled_mcp
+            )
+            args.extend(["-c", f"mcp_servers={{ {entries} }}"])
         try:
             self._process = subprocess.Popen(
                 args,
@@ -251,7 +287,10 @@ class CodexAppServerProvider:
             "initialize",
             {
                 "clientInfo": {"name": "butterfly_lab", "version": "0.1.0"},
-                "capabilities": {"experimentalApi": False},
+                # 0.149.1 retired readOnly.access. Named permissions and their
+                # response provenance require this protocol capability; it
+                # does not enable any model tools or relax our fixed controls.
+                "capabilities": {"experimentalApi": True},
             },
             deadline,
         )
@@ -301,6 +340,36 @@ class CodexAppServerProvider:
                 raise ProviderError(
                     "Codex effective security policy does not match the required restricted profile"
                 )
+        profiles = config.get("permissions")
+        profile = profiles.get(self._permission_profile_id) if isinstance(profiles, dict) else None
+        if isinstance(profile, dict):
+            profile = dict(profile)
+            for section, fields in _NULL_PROFILE_DEFAULTS.items():
+                value = profile.get(section) if section else profile
+                if not isinstance(value, dict):
+                    continue
+                normalized = {
+                    key: item
+                    for key, item in value.items()
+                    if key not in fields or item is not None
+                }
+                if section:
+                    profile[section] = normalized
+                else:
+                    profile = normalized
+        expected_profile = {
+            "filesystem": {":minimal": "read", self._scratch.name: "read"},
+            "network": {"enabled": False},
+        }
+        if (
+            config.get("default_permissions") != self._permission_profile_id
+            or not isinstance(profile, dict)
+            or profile != expected_profile
+            or profile["network"]["enabled"] is not False
+        ):
+            raise ProviderError(
+                "Codex effective permissions profile does not match the restricted read roots"
+            )
         return config
 
     def _start(self) -> None:
@@ -790,7 +859,7 @@ class CodexAppServerProvider:
                     "ephemeral": True,
                     "cwd": self._scratch.name,
                     "approvalPolicy": "never",
-                    "sandbox": "read-only",
+                    "permissions": self._permission_profile_id,
                     "modelProvider": "openai",
                     "developerInstructions": _SYSTEM,
                 }
@@ -807,6 +876,15 @@ class CodexAppServerProvider:
                 ):
                     raise ProviderError(
                         "Codex thread violated the required provider/permission policy"
+                    )
+                active_profile = thread.get("activePermissionProfile")
+                if (
+                    not isinstance(active_profile, dict)
+                    or active_profile.get("id") != self._permission_profile_id
+                    or active_profile.get("extends") is not None
+                ):
+                    raise ProviderError(
+                        "Codex thread did not confirm the required restricted permissions profile"
                     )
                 if thread.get("instructionSources"):
                     raise ProviderError(
@@ -826,14 +904,7 @@ class CodexAppServerProvider:
                         "threadId": thread_id,
                         "input": [{"type": "text", "text": text}],
                         "approvalPolicy": "never",
-                        "sandboxPolicy": {
-                            "type": "readOnly",
-                            "access": {
-                                "type": "restricted",
-                                "includePlatformDefaults": True,
-                                "readableRoots": [self._scratch.name],
-                            },
-                        },
+                        "permissions": self._permission_profile_id,
                         "outputSchema": _WIRE_SCHEMA,
                     },
                     deadline,

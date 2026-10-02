@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import sys
 import time
+import tomllib
 
 if "--version" in sys.argv:
     print("codex-cli 0.149.1")
@@ -18,30 +19,49 @@ if "--version" in sys.argv:
 name = Path(sys.argv[0]).name
 scenario = name.split("-", 1)[0]
 config = {}
+
+
+def merge_config(target, values):
+    for key, value in values.items():
+        if isinstance(value, dict):
+            merge_config(target.setdefault(key, {}), value)
+        else:
+            target[key] = value
+
+
 for index, argument in enumerate(sys.argv):
     if argument == "-c":
+        # The CLI splits override paths on dots; only values are parsed as
+        # TOML. Quoted filesystem keys must therefore live in an inline table.
         key, raw = sys.argv[index + 1].split("=", 1)
-        # Fixed controls use plain dotted paths. Quoted MCP names are only
-        # needed for the inherited-server scenario below.
+        parsed = tomllib.loads("value=" + raw)["value"]
         parts = key.split(".")
         target = config
         for part in parts[:-1]:
-            target = target.setdefault(part.strip('"'), {})
-        target[parts[-1]] = json.loads(raw)
-if scenario in {"mcp", "stubbornmcp"}:
-    entry = config.setdefault("mcp_servers", {}).setdefault("inherited", {})
+            target = target.setdefault(part, {})
+        merge_config(target, {parts[-1]: parsed})
+if scenario in {"mcp", "quotedmcp", "stubbornmcp"}:
+    server_name = 'inherited.with."quotes"' if scenario == "quotedmcp" else "inherited"
+    entry = config.setdefault("mcp_servers", {}).setdefault(server_name, {})
     if scenario == "stubbornmcp":
         entry["enabled"] = True
     else:
         entry.setdefault("enabled", True)
 if scenario == "unsafe":
     config["features"]["shell_tool"] = True
+if scenario == "wideprofile":
+    config["permissions"][config["default_permissions"]]["filesystem"]["/"] = "read"
+if scenario == "writablenetwork":
+    config["permissions"][config["default_permissions"]]["network"]["enabled"] = True
+if scenario == "unknownprofile":
+    config["permissions"][config["default_permissions"]]["filesystem"]["unknown"] = None
 
 responses_path = Path(str(Path(sys.argv[0])) + ".responses.json")
 responses = json.loads(responses_path.read_text()) if responses_path.exists() else {}
 counts = {}
 threads = 0
 current_thread = None
+experimental_api = False
 
 
 def send(message):
@@ -85,6 +105,7 @@ for line in sys.stdin:
         trace.write(json.dumps({"method": method}) + "\n")
     params = request.get("params", {})
     if method == "initialize":
+        experimental_api = params.get("capabilities", {}).get("experimentalApi") is True
         if scenario == "startup":
             time.sleep(20)
         result(request, {"userAgent": "controlled-fake/0.149.1"})
@@ -93,6 +114,26 @@ for line in sys.stdin:
     elif method == "config/read":
         effective = json.loads(json.dumps(config))
         effective["tools"] = {"web_search": None}  # 0.149.1 ToolsV2 serialization
+        # Native ConfigRead serializes absent optional typed profile fields
+        # as null; sessionFlags below retains the original input structure.
+        profile = effective["permissions"][effective["default_permissions"]]
+        profile.update({"description": None, "extends": None, "workspace_roots": None})
+        profile["filesystem"]["glob_scan_max_depth"] = None
+        for key in (
+            "proxy_url",
+            "enable_socks5",
+            "socks_url",
+            "enable_socks5_udp",
+            "allow_upstream_proxy",
+            "dangerously_allow_non_loopback_proxy",
+            "dangerously_allow_all_unix_sockets",
+            "mode",
+            "domains",
+            "unix_sockets",
+            "allow_local_binding",
+            "mitm",
+        ):
+            profile["network"][key] = None
         result(
             request,
             {
@@ -127,8 +168,20 @@ for line in sys.stdin:
             request, {"data": [{"model": "fixture-model", "isDefault": True}], "nextCursor": None}
         )
     elif method == "thread/start":
+        if (
+            not experimental_api
+            or "sandbox" in params
+            or params.get("permissions") != config.get("default_permissions")
+        ):
+            send({"id": request["id"], "error": {"code": -32600, "message": "invalid profile"}})
+            continue
         threads += 1
         current_thread = f"fixture-thread-{threads}"
+        active_profile = {"id": params["permissions"], "extends": None}
+        if scenario == "wrongprofile":
+            active_profile["id"] = ":read-only"
+        if scenario == "inheritedprofile":
+            active_profile["extends"] = ":workspace"
         result(
             request,
             {
@@ -138,11 +191,32 @@ for line in sys.stdin:
                 "approvalPolicy": "never",
                 "instructionSources": [],
                 "sandbox": {"type": "readOnly"},
+                "activePermissionProfile": None if scenario == "missingprofile" else active_profile,
             },
         )
         if scenario == "stallinput":
             time.sleep(20)
     elif method == "turn/start":
+        # Installed 0.149.1 expressly rejects the retired restricted-access
+        # shape. This check catches the integration defect before model work.
+        if params.get("sandboxPolicy", {}).get("access", {}).get("type") == "restricted":
+            send(
+                {
+                    "id": request["id"],
+                    "error": {
+                        "code": -32600,
+                        "message": "readOnly.access is no longer supported; use permissionProfile for restricted reads",
+                    },
+                }
+            )
+            continue
+        if (
+            not experimental_api
+            or "sandboxPolicy" in params
+            or params.get("permissions") != config.get("default_permissions")
+        ):
+            send({"id": request["id"], "error": {"code": -32600, "message": "invalid profile"}})
+            continue
         if not strict_schema(params.get("outputSchema")):
             send(
                 {

@@ -148,6 +148,16 @@ scratch workspace is separate from market data. This is not a claim that a promp
 alone supplies OS isolation, nor a reason to relax numerical/confirmation
 sandboxes.
 
+Restricted reads use a unique, process-local named permission profile. It grants
+read access only to Codex's platform-minimum paths and the empty private scratch
+directory, with command network access disabled. The adapter opts into the beta
+permission-profile protocol, verifies the effective profile definition and the
+thread's active profile, and refuses a mismatch. It does not change the user's
+Codex configuration or credential store. Codex 0.149.1 rejects the retired
+`sandboxPolicy.readOnly.access` representation; merely removing that field would
+restore broad filesystem reads and is not a supported workaround.
+[Permission-profile reference](https://learn.chatgpt.com/docs/permissions).
+
 Codex-plan reservations enforce local call/concurrency/input limits. There is no
 API-dollar conversion for subscription usage. Token and rate-limit metadata are
 recorded when supplied; unknown consumption stays unknown. The current app-server
