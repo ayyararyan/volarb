@@ -7,6 +7,7 @@ import time
 import pytest
 
 from butterfly_lab.artifacts import ArtifactError, ArtifactStore, plain
+from butterfly_lab.artifacts import digest
 from butterfly_lab.registry import (
     BudgetExceeded,
     ConflictError,
@@ -97,6 +98,73 @@ def test_atomic_idempotent_registration_and_full_input_identity(tmp_path):
         reg.register_run(
             exp.model_copy(update={"seed": 88}), data, "environment-v1", "evaluator-v1"
         )
+
+
+def test_role_call_dispatch_is_atomic_and_contract_bound(tmp_path):
+    reg = Registry(tmp_path / "runtime")
+    request_hash = digest({"experiment": "draft-v0"})
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
+        receipts = list(
+            pool.map(
+                lambda _: reg.begin_agent_call("critic-v0", "test", "critic", request_hash),
+                range(12),
+            )
+        )
+    assert sum(r["created"] for r in receipts) == 1
+    assert all(r["state"] == "DISPATCHED" for r in receipts)
+    assert len(reg.events("critic-v0")) == 1
+    assert Registry(reg.root).get_agent_call("critic-v0")["state"] == "DISPATCHED"
+    with pytest.raises(ConflictError, match="different contract"):
+        reg.begin_agent_call("critic-v0", "test", "critic", digest({"experiment": "draft-v1"}))
+    with pytest.raises(ConflictError, match="validated generation"):
+        reg.finish_agent_call("critic-v0", "missing-generation", {"recommendation": "ADMIT"})
+
+
+def test_role_call_acceptance_recovers_crash_window_and_is_immutable(tmp_path):
+    reg = Registry(tmp_path / "runtime")
+    request_hash = digest({"experiment": "draft-v0"})
+    reg.begin_agent_call("critic-v0", "test", "critic", request_hash)
+    payload = {"recommendation": "REVISE", "notes": ["Specify comparator"]}
+    generation = {
+        "campaign_id": "test",
+        "role": "critic",
+        "logical_call_id": "critic-v0",
+        "logical_request_hash": request_hash,
+        "contract_status": "VALID",
+        "payload": payload,
+    }
+    reg.put("generation", "generation-v0", generation)
+    # Simulate process loss after generation persistence, before receipt/checkpoint.
+    reg = Registry(reg.root)
+    receipt = reg.get_agent_call("critic-v0")
+    assert receipt["state"] == "ACCEPTED"
+    assert receipt["payload"] == payload
+    assert reg.finish_agent_call("critic-v0", "generation-v0", payload)["state"] == "ACCEPTED"
+    assert [event["event_type"] for event in reg.events("critic-v0")] == [
+        "AGENT_CALL_DISPATCHED",
+        "AGENT_CALL_ACCEPTED",
+    ]
+    with pytest.raises(ConflictError):
+        reg.finish_agent_call("critic-v0", "generation-v0", {"recommendation": "ADMIT"})
+
+
+def test_role_call_recovery_rejects_foreign_generation(tmp_path):
+    reg = Registry(tmp_path / "runtime")
+    reg.begin_agent_call("critic-v0", "test", "critic", digest({"version": 0}))
+    reg.put(
+        "generation",
+        "foreign",
+        {
+            "campaign_id": "test",
+            "role": "critic",
+            "logical_call_id": "critic-v0",
+            "logical_request_hash": digest({"version": 1}),
+            "contract_status": "VALID",
+            "payload": {"recommendation": "ADMIT"},
+        },
+    )
+    with pytest.raises(ConflictError, match="validated generation"):
+        reg.get_agent_call("critic-v0")
 
 
 def test_immutable_entities_and_strict_models(tmp_path):

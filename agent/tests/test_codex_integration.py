@@ -120,7 +120,11 @@ def test_codex_roles_real_langgraph_external_worker_restart_and_provenance(tmp_p
     lab.registry.put("campaign", contract.id, contract)
     lab.registry.put("dataset", dataset.id, dataset)
     prepared = lab.run_campaign(contract.id, dataset.id)
-    assert prepared["report_ref"]
+    assert prepared.get("__interrupt__")
+    assert not prepared.get("report_ref")
+    assert not {"synthesis", "steward"} & {
+        record["role"] for record in lab.registry.list("generation", contract.id)
+    }
     experiments = lab.registry.list("experiments", contract.id)
     assert len(experiments) == 1
     experiment_id = experiments[0]["id"]
@@ -147,6 +151,7 @@ def test_codex_roles_real_langgraph_external_worker_restart_and_provenance(tmp_p
     try:
         result = lab.resume(experiment_id)
         assert result["finding_id"]
+        lab.advance_campaign(contract.id)
         report = lab.campaign_report(contract.id)
         assert not report["pending_experiments"]
         assert len(report["findings"]) == len(lab.registry.runs()) == 1
@@ -406,8 +411,10 @@ def test_persistent_codex_call_ceiling_survives_service_restart_and_backup_resto
     roles = service(root, configuration)
     roles.bind_campaign(contract.id)
     try:
+        assert roles.steward({"remaining_runs": 1}).notes == ["one authorized call"]
+        assert roles.calls == 0  # Accepted role replay does not spend again.
         with pytest.raises(ProviderError, match="budget"):
-            roles.steward({"remaining_runs": 1})
+            roles.steward({"remaining_runs": 2})
     finally:
         roles.provider.close()
     # Generated reservations are restoreable state. User configuration and
@@ -422,8 +429,9 @@ def test_persistent_codex_call_ceiling_survives_service_restart_and_backup_resto
     roles = service(restored, configuration)
     roles.bind_campaign(contract.id)
     try:
+        assert roles.steward({"remaining_runs": 1}).notes == ["one authorized call"]
         with pytest.raises(ProviderError, match="budget"):
-            roles.steward({"remaining_runs": 1})
+            roles.steward({"remaining_runs": 3})
         assert len(roles.registry.list("generation", contract.id)) == 1
     finally:
         roles.provider.close()

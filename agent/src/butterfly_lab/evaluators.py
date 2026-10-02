@@ -56,7 +56,8 @@ def _infer(
         relative=metric == "loss",
         alpha=float(plan.get("alpha", 0.05)),
     )
-    if len(b) < int(plan.get("minimum_sessions", 30)):
+    result["minimum_sessions"] = int(plan.get("minimum_sessions", 30))
+    if len(b) < result["minimum_sessions"]:
         result.update(outcome="INCONCLUSIVE", precision="insufficient")
     return result
 
@@ -249,6 +250,8 @@ def _exp001(
             "repetitions": plan.get("bootstrap_samples", 999),
             "seed": experiment.get("seed", 17),
             "practical_effect": plan.get("practical_effect", 0.01),
+            "alpha": plan.get("alpha", 0.05),
+            "minimum_sessions": plan.get("minimum_sessions", 30),
         },
     )
     from .replication import replicate_exp001
@@ -359,8 +362,14 @@ class _Book:
         max_wait = float(self.params.get("max_fill_wait_seconds", 60))
         all_filled = True
         latest = instant
+        if any(not math.isfinite(value) or value < 0 for value in (latency, spacing, max_wait)):
+            raise ValueError("execution latency, spacing and wait must be finite and nonnegative")
+        if account.fills:
+            latest = max(latest, pd.Timestamp(account.fills[-1]["timestamp"]))
         for index, (contract, desired) in enumerate(orders):
-            target = instant + pd.Timedelta(seconds=latency + index * spacing)
+            # Each order depends on the preceding actual fill, not a theoretical
+            # schedule that can place a short before a delayed protective wing.
+            target = latest + pd.Timedelta(seconds=spacing if index else latency)
             available = self.frame[
                 self.frame.contract_id.eq(contract.contract_id)
                 & (self.frame.available_at >= target)
@@ -624,7 +633,7 @@ def _simulate_policy(
                 closed, latest = book.execute(
                     account,
                     _orders_to_close(account, contracts),
-                    trigger,
+                    max(trigger, entry_completed),
                     fees,
                     "management_close",
                     cycle,
@@ -676,7 +685,7 @@ def _simulate_policy(
                 closed, latest = book.execute(
                     account,
                     _orders_to_close(account, contracts),
-                    exit_at,
+                    max(exit_at, latest),
                     fees,
                     "scheduled_exit",
                     cycle,
@@ -866,6 +875,8 @@ def _ironfly(
             "seed": experiment.get("seed", 17),
             "practical_effect": plan.get("practical_effect", 0.01),
             "relative": False,
+            "alpha": plan.get("alpha", 0.05),
+            "minimum_sessions": plan.get("minimum_sessions", 30),
         },
         metric="pnl",
     )
@@ -915,6 +926,20 @@ def _controlled(
     artifact = _write(rows, directory, "session_outcomes")
     from .replication import replicate_controlled
 
+    plan = experiment.get("inference", {})
+    checks = robustness(
+        baseline.tolist(),
+        candidate.tolist(),
+        {
+            "block_lengths": plan.get("robustness_block_lengths", [1, 5, 10]),
+            "repetitions": plan.get("bootstrap_samples", 999),
+            "seed": experiment.get("seed", 17),
+            "practical_effect": plan.get("practical_effect", 0.01),
+            "relative": True,
+            "alpha": plan.get("alpha", 0.05),
+            "minimum_sessions": plan.get("minimum_sessions", 30),
+        },
+    )
     return {
         "outcome": inference["outcome"],
         "metrics": {
@@ -931,7 +956,11 @@ def _controlled(
             "exclusions": _write(rows.iloc[:0], directory, "exclusions"),
         },
         "replication": replicate_controlled(rows, inference["estimate"]),
-        "robustness": {"known_truth": effect, "predefined_seed": experiment.get("seed", 17)},
+        "robustness": {
+            **checks,
+            "known_truth": effect,
+            "predefined_seed": experiment.get("seed", 17),
+        },
         "limitations": ["Controlled synthetic benchmark, not historical strategy evidence"],
     }
 

@@ -80,3 +80,13 @@ def test_expiry_payoff_fixture_not_intraday_pricer():
     assert expiry_payoff(legs(), 10000, 900) == 900
     assert expiry_payoff(legs(), 20000, 900) == -4100
     assert expiry_payoff(legs(), 0, 900) == -4100
+
+
+def test_account_refuses_backdated_dependent_fills_without_mutating_inventory():
+    account = Account()
+    contract, _ = legs()[0]
+    account.fill(contract, 10, 1.0, 0.0, "2025-01-02T10:01:00+05:30", "entry", "c")
+    with pytest.raises(ValueError, match="chronology"):
+        account.fill(contract, -10, 1.0, 0.0, "2025-01-02T10:00:00+05:30", "exit", "c")
+    assert account.inventory[contract.contract_id] == 10
+    assert len(account.fills) == 1

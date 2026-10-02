@@ -264,6 +264,8 @@ def _wilson(proportion, count):
 
 def comparison_benchmark(root: Path):
     from .agents import AgentService, fixture_provider
+    from .data import qualify_dataset
+    from .review_context import build_critic_context
 
     reports = []
     for mode in ("multi_role", "single_agent", "deterministic"):
@@ -278,9 +280,24 @@ def comparison_benchmark(root: Path):
         if mode != "deterministic":
             proposals = role.design(campaign, ["controlled_sessions"])
             if mode == "multi_role":
+                dataset = controlled_dataset(id + "-review-data").model_dump(mode="json")
+                qualification = qualify_dataset(dataset)
                 for h in proposals:
-                    role.critique(h, ["controlled_sessions"])
-                    role.specify(h)
+                    draft = ExperimentSpec(
+                        id="review-" + h.id,
+                        campaign_id=id,
+                        hypothesis_id=h.id,
+                        trial_id="review-trial-" + h.id,
+                        dataset_id=dataset["id"],
+                        evaluator=h.evaluator,
+                        baseline_id=h.baseline_id,
+                        dsl=h.proposed_dsl,
+                        inference=InferencePlan(practical_effect=h.practical_effect),
+                    )
+                    context = build_critic_context(campaign, h, dataset, qualification, draft)
+                    output = role.specify(h, review_context=context)
+                    draft = draft.model_copy(update={"dsl": output.dsl})
+                    role.critique(build_critic_context(campaign, h, dataset, qualification, draft))
         reg, runs = _register(
             root,
             id,

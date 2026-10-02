@@ -18,8 +18,8 @@
       "render_sha256": "4a361be27cab66b0ffe1339a43b69dd4a2403e68970c0322fa82f28a4c1d17a1"
     },
     "workflow": {
-      "source_sha256": "68eb3172bac985e97f98ece4edbc18e4593d0d878697a97d74d0d0a9aaf05a41",
-      "render_sha256": "edf2f4b2aca9f8d2f05fa02d770e973782ac8c14da3976575c89ae25d00904c9"
+      "source_sha256": "eeabf7f5410cf46b3907da741f819da8d7dbb21d06f4b037281dddedb062628f",
+      "render_sha256": "1e8c6df44fdd71903666ee7b1323426ebe370cc73d858a893f5e42b506a4d1b1"
     }
   }
 }

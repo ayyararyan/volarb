@@ -118,8 +118,11 @@ class Account:
             raise ValueError("fees unknown; cannot silently replace with zero")
         if not isinstance(units, int) or units == 0 or price < 0 or fees < 0:
             raise ValueError("invalid fill")
-        if datetime.fromisoformat(timestamp).tzinfo is None:
+        clock = datetime.fromisoformat(timestamp)
+        if clock.tzinfo is None:
             raise ValueError("offset-aware fill time required")
+        if self.fills and clock < datetime.fromisoformat(self.fills[-1]["timestamp"]):
+            raise ValueError("dependent fill chronology cannot move backwards")
         self.cash += -units * price - fees
         self.inventory[contract.contract_id] = self.inventory.get(contract.contract_id, 0) + units
         self.fills.append(

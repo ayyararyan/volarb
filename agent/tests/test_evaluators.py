@@ -309,3 +309,81 @@ def test_controlled_negative_and_planted_positive_terminate(tmp_path):
     assert null["outcome"] == "REJECTED_FINDING"
     assert positive["outcome"] == "EXPLORATORY_SUPPORTED"
     assert null["replication"]["status"] == positive["replication"]["status"] == "PASS"
+    for result in (null, positive):
+        assert set(result["robustness"]["registered_checks"]) == {"1", "5", "10"}
+        assert result["robustness"]["sign_stable"]
+        assert all(
+            check["n_sessions"] == 100
+            for check in result["robustness"]["registered_checks"].values()
+        )
+
+
+@pytest.mark.parametrize("policy", ["hold", "close", "recenter"])
+def test_dependent_management_never_predates_delayed_entry(tmp_path, policy):
+    data = generate_option_fixture(tmp_path / "q.parquet", 1)
+    params = {
+        **default_ironfly_parameters(),
+        "management": policy,
+        "leg_spacing_seconds": 60,
+        "management_after_minutes": 1,
+        "hold_minutes": 2,
+    }
+    result = evaluate(exp("iron_butterfly", params), data, tmp_path / "out")
+    assert result["replication"]["status"] == "PASS"
+    fills = pd.read_parquet(tmp_path / "out/fills.parquet")
+    for _, cycle in fills.groupby(["policy", "cycle_id"]):
+        assert pd.to_datetime(cycle.timestamp).is_monotonic_increasing
+        assert (
+            cycle[cycle.reason.ne("entry")].timestamp.min()
+            >= cycle[cycle.reason.eq("entry")].timestamp.max()
+        )
+
+
+@pytest.mark.parametrize("first_units,second_units", [(10, -10), (-10, 10)])
+def test_dependent_legs_wait_for_actual_preceding_fill(first_units, second_units):
+    from butterfly_lab.accounting import Account, Contract
+    from butterfly_lab.evaluators import _Book
+
+    origin = pd.Timestamp("2025-01-02T10:00:00+05:30")
+    contracts = [Contract(name, "NIFTY", "2025-12-30", 10000, "PE", 10) for name in ("a", "b")]
+    records = []
+    for name, seconds in [("a", 5), ("b", 2), ("b", 7)]:
+        clock = origin + pd.Timedelta(seconds=seconds)
+        records.append(
+            {
+                "contract_id": name,
+                "available_at": clock,
+                "event_at": clock,
+                "bid": 1.0,
+                "ask": 1.0,
+                "bid_size": 100,
+                "ask_size": 100,
+            }
+        )
+    fees = [
+        {
+            "effective_from": "2025-01-01",
+            "brokerage_per_fill": 0,
+            "exchange_rate": 0,
+            "regulatory_rate": 0,
+            "gst_rate": 0,
+            "sell_tax_rate": 0,
+            "buy_stamp_rate": 0,
+        }
+    ]
+    account = Account()
+    book = _Book(pd.DataFrame(records), {"leg_spacing_seconds": 2, "max_fill_wait_seconds": 10})
+    filled, latest = book.execute(
+        account,
+        [(contracts[0], first_units), (contracts[1], second_units)],
+        origin,
+        fees,
+        "test",
+        "c",
+    )
+    assert filled
+    assert [pd.Timestamp(fill["timestamp"]) for fill in account.fills] == [
+        origin + pd.Timedelta(seconds=5),
+        origin + pd.Timedelta(seconds=7),
+    ]
+    assert latest == origin + pd.Timedelta(seconds=7)

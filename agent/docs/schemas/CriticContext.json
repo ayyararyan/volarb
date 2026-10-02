@@ -1,0 +1,1319 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "media_type": {
+          "default": "application/json",
+          "title": "Media Type",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size_bytes": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Size Bytes"
+        },
+        "uri": {
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uri",
+        "sha256"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "ControlledGeneratorReview": {
+      "additionalProperties": false,
+      "properties": {
+        "effect": {
+          "title": "Effect",
+          "type": "number"
+        },
+        "n_sessions": {
+          "maximum": 10000,
+          "minimum": 5,
+          "title": "N Sessions",
+          "type": "integer"
+        },
+        "noise_distribution": {
+          "const": "IID Gaussian mean zero",
+          "default": "IID Gaussian mean zero",
+          "title": "Noise Distribution",
+          "type": "string"
+        },
+        "noise_standard_deviation": {
+          "minimum": 0,
+          "title": "Noise Standard Deviation",
+          "type": "number"
+        },
+        "rng": {
+          "const": "numpy.random.default_rng",
+          "default": "numpy.random.default_rng",
+          "title": "Rng",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "seed": {
+          "title": "Seed",
+          "type": "integer"
+        },
+        "session_labels": {
+          "const": "business days from 2020-01-01; not historical dates",
+          "default": "business days from 2020-01-01; not historical dates",
+          "title": "Session Labels",
+          "type": "string"
+        }
+      },
+      "required": [
+        "n_sessions",
+        "effect",
+        "noise_standard_deviation",
+        "seed"
+      ],
+      "title": "ControlledGeneratorReview",
+      "type": "object"
+    },
+    "ExperimentSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "approval_scope_id": {
+          "default": "campaign",
+          "title": "Approval Scope Id",
+          "type": "string"
+        },
+        "baseline_id": {
+          "default": "B0-simple",
+          "title": "Baseline Id",
+          "type": "string"
+        },
+        "baseline_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArtifactRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "campaign_id": {
+          "title": "Campaign Id",
+          "type": "string"
+        },
+        "dataset_id": {
+          "title": "Dataset Id",
+          "type": "string"
+        },
+        "dataset_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArtifactRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "dsl": {
+          "additionalProperties": true,
+          "title": "Dsl",
+          "type": "object"
+        },
+        "environment_hash": {
+          "default": "unbound",
+          "title": "Environment Hash",
+          "type": "string"
+        },
+        "evaluator": {
+          "enum": [
+            "exp001",
+            "iron_butterfly",
+            "controlled"
+          ],
+          "title": "Evaluator",
+          "type": "string"
+        },
+        "evaluator_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Evaluator Version",
+          "type": "string"
+        },
+        "fidelity": {
+          "$ref": "#/$defs/Fidelity",
+          "default": "F0"
+        },
+        "graph_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Graph Version",
+          "type": "string"
+        },
+        "hypothesis_id": {
+          "title": "Hypothesis Id",
+          "type": "string"
+        },
+        "hypothesis_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArtifactRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "implementation_hash": {
+          "default": "builtin-v1",
+          "title": "Implementation Hash",
+          "type": "string"
+        },
+        "inference": {
+          "$ref": "#/$defs/InferencePlan"
+        },
+        "informed_by_result_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Informed By Result Ids",
+          "type": "array"
+        },
+        "max_repairs": {
+          "default": 2,
+          "maximum": 2,
+          "minimum": 0,
+          "title": "Max Repairs",
+          "type": "integer"
+        },
+        "parameters": {
+          "additionalProperties": true,
+          "title": "Parameters",
+          "type": "object"
+        },
+        "parent_experiment_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Experiment Id"
+        },
+        "relation": {
+          "$ref": "#/$defs/Relation",
+          "default": "NEW"
+        },
+        "rerun_ordinal": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Rerun Ordinal",
+          "type": "integer"
+        },
+        "resources": {
+          "$ref": "#/$defs/RunResources"
+        },
+        "robustness": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Robustness",
+          "type": "array"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "seed": {
+          "default": 17,
+          "title": "Seed",
+          "type": "integer"
+        },
+        "split": {
+          "$ref": "#/$defs/SplitPlan"
+        },
+        "trial_id": {
+          "title": "Trial Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "campaign_id",
+        "hypothesis_id",
+        "trial_id",
+        "dataset_id",
+        "evaluator"
+      ],
+      "title": "ExperimentSpec",
+      "type": "object"
+    },
+    "Fidelity": {
+      "enum": [
+        "F0",
+        "F1",
+        "F2",
+        "F3",
+        "F4"
+      ],
+      "title": "Fidelity",
+      "type": "string"
+    },
+    "HypothesisSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "alternative_explanations": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Alternative Explanations",
+          "type": "array"
+        },
+        "baseline_id": {
+          "title": "Baseline Id",
+          "type": "string"
+        },
+        "campaign_id": {
+          "title": "Campaign Id",
+          "type": "string"
+        },
+        "decision_change": {
+          "minLength": 8,
+          "title": "Decision Change",
+          "type": "string"
+        },
+        "evaluator": {
+          "default": "iron_butterfly",
+          "enum": [
+            "exp001",
+            "iron_butterfly",
+            "controlled"
+          ],
+          "title": "Evaluator",
+          "type": "string"
+        },
+        "expected_direction": {
+          "minLength": 1,
+          "title": "Expected Direction",
+          "type": "string"
+        },
+        "falsification_rule": {
+          "minLength": 12,
+          "title": "Falsification Rule",
+          "type": "string"
+        },
+        "family_id": {
+          "title": "Family Id",
+          "type": "string"
+        },
+        "horizon_minutes": {
+          "exclusiveMinimum": 0,
+          "maximum": 375,
+          "title": "Horizon Minutes",
+          "type": "integer"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "informed_by_result_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Informed By Result Ids",
+          "type": "array"
+        },
+        "mechanism": {
+          "minLength": 12,
+          "title": "Mechanism",
+          "type": "string"
+        },
+        "minimum_data": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Minimum Data",
+          "type": "array"
+        },
+        "observable_inputs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Observable Inputs",
+          "type": "array"
+        },
+        "outcome": {
+          "title": "Outcome",
+          "type": "string"
+        },
+        "parameter_domain": {
+          "additionalProperties": {
+            "items": {},
+            "type": "array"
+          },
+          "title": "Parameter Domain",
+          "type": "object"
+        },
+        "parent_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Parent Ids",
+          "type": "array"
+        },
+        "practical_effect": {
+          "minimum": 0,
+          "title": "Practical Effect",
+          "type": "number"
+        },
+        "primary_comparison": {
+          "minLength": 8,
+          "title": "Primary Comparison",
+          "type": "string"
+        },
+        "primary_metric": {
+          "title": "Primary Metric",
+          "type": "string"
+        },
+        "proposed_dsl": {
+          "additionalProperties": true,
+          "title": "Proposed Dsl",
+          "type": "object"
+        },
+        "risk_constraints": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Risk Constraints",
+          "type": "array"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "search_budget": {
+          "default": 1,
+          "maximum": 60,
+          "minimum": 1,
+          "title": "Search Budget",
+          "type": "integer"
+        },
+        "source_refs": {
+          "items": {
+            "$ref": "#/$defs/ArtifactRef"
+          },
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "version": {
+          "default": 1,
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "campaign_id",
+        "family_id",
+        "mechanism",
+        "expected_direction",
+        "decision_change",
+        "observable_inputs",
+        "horizon_minutes",
+        "outcome",
+        "baseline_id",
+        "primary_comparison",
+        "primary_metric",
+        "practical_effect",
+        "risk_constraints",
+        "minimum_data",
+        "falsification_rule",
+        "alternative_explanations"
+      ],
+      "title": "HypothesisSpec",
+      "type": "object"
+    },
+    "InferencePlan": {
+      "additionalProperties": false,
+      "properties": {
+        "alpha": {
+          "default": 0.05,
+          "exclusiveMaximum": 1,
+          "exclusiveMinimum": 0,
+          "title": "Alpha",
+          "type": "number"
+        },
+        "block_length": {
+          "default": 5,
+          "minimum": 1,
+          "title": "Block Length",
+          "type": "integer"
+        },
+        "bootstrap_samples": {
+          "default": 999,
+          "minimum": 99,
+          "title": "Bootstrap Samples",
+          "type": "integer"
+        },
+        "confirmation_family": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confirmation Family"
+        },
+        "minimum_sessions": {
+          "default": 30,
+          "minimum": 5,
+          "title": "Minimum Sessions",
+          "type": "integer"
+        },
+        "practical_effect": {
+          "default": 0.01,
+          "minimum": 0,
+          "title": "Practical Effect",
+          "type": "number"
+        },
+        "robustness_block_lengths": {
+          "items": {
+            "type": "integer"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Robustness Block Lengths",
+          "type": "array"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "unit": {
+          "const": "session",
+          "default": "session",
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "title": "InferencePlan",
+      "type": "object"
+    },
+    "Relation": {
+      "enum": [
+        "NEW",
+        "VARIANT",
+        "REPAIR",
+        "RERUN",
+        "MONTE_CARLO",
+        "REPLICATION",
+        "RESULT_INFORMED",
+        "DUPLICATE"
+      ],
+      "title": "Relation",
+      "type": "string"
+    },
+    "ReviewAdmission": {
+      "additionalProperties": false,
+      "properties": {
+        "admitted": {
+          "title": "Admitted",
+          "type": "boolean"
+        },
+        "outcome": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Outcome"
+        },
+        "reasons": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 30,
+          "title": "Reasons",
+          "type": "array"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "admitted"
+      ],
+      "title": "ReviewAdmission",
+      "type": "object"
+    },
+    "ReviewCampaign": {
+      "additionalProperties": false,
+      "properties": {
+        "campaign_id": {
+          "title": "Campaign Id",
+          "type": "string"
+        },
+        "constraints": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Constraints",
+          "type": "array"
+        },
+        "objective": {
+          "maxLength": 8000,
+          "title": "Objective",
+          "type": "string"
+        },
+        "research_scope": {
+          "maxLength": 1000,
+          "title": "Research Scope",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaign_id",
+        "objective",
+        "research_scope",
+        "constraints"
+      ],
+      "title": "ReviewCampaign",
+      "type": "object"
+    },
+    "ReviewCoverage": {
+      "additionalProperties": false,
+      "properties": {
+        "end": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "End"
+        },
+        "registered_sessions": {
+          "minimum": 0,
+          "title": "Registered Sessions",
+          "type": "integer"
+        },
+        "rows": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rows"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sessions": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sessions"
+        },
+        "start": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start"
+        }
+      },
+      "required": [
+        "registered_sessions"
+      ],
+      "title": "ReviewCoverage",
+      "type": "object"
+    },
+    "ReviewCritique": {
+      "additionalProperties": false,
+      "properties": {
+        "concerns": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Concerns",
+          "type": "array"
+        },
+        "recommendation": {
+          "enum": [
+            "ADMIT",
+            "REVISE",
+            "UNSUPPORTED"
+          ],
+          "title": "Recommendation",
+          "type": "string"
+        },
+        "report_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Report Hash",
+          "type": "string"
+        },
+        "review_id": {
+          "title": "Review Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "review_id",
+        "recommendation",
+        "concerns",
+        "report_hash"
+      ],
+      "title": "ReviewCritique",
+      "type": "object"
+    },
+    "ReviewData": {
+      "additionalProperties": false,
+      "properties": {
+        "availability_semantics": {
+          "maxLength": 2000,
+          "title": "Availability Semantics",
+          "type": "string"
+        },
+        "coverage": {
+          "$ref": "#/$defs/ReviewCoverage"
+        },
+        "dataset_id": {
+          "title": "Dataset Id",
+          "type": "string"
+        },
+        "fidelity": {
+          "$ref": "#/$defs/Fidelity"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Limitations",
+          "type": "array"
+        },
+        "manifest_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Manifest Hash",
+          "type": "string"
+        },
+        "missingness_summary": {
+          "maxLength": 2000,
+          "title": "Missingness Summary",
+          "type": "string"
+        },
+        "partition": {
+          "enum": [
+            "development",
+            "validation"
+          ],
+          "title": "Partition",
+          "type": "string"
+        },
+        "prior_exposed": {
+          "title": "Prior Exposed",
+          "type": "boolean"
+        },
+        "provenance": {
+          "enum": [
+            "SYNTHETIC",
+            "HISTORICAL",
+            "MODEL",
+            "REPLAY"
+          ],
+          "title": "Provenance",
+          "type": "string"
+        },
+        "qualification_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Qualification Hash",
+          "type": "string"
+        },
+        "qualification_id": {
+          "title": "Qualification Id",
+          "type": "string"
+        },
+        "qualification_status": {
+          "maxLength": 64,
+          "title": "Qualification Status",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "source_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 32,
+          "title": "Source Ids",
+          "type": "array"
+        },
+        "timing_semantics": {
+          "maxLength": 2000,
+          "title": "Timing Semantics",
+          "type": "string"
+        },
+        "verified_capabilities": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 64,
+          "title": "Verified Capabilities",
+          "type": "array"
+        }
+      },
+      "required": [
+        "dataset_id",
+        "manifest_hash",
+        "qualification_id",
+        "qualification_hash",
+        "source_ids",
+        "fidelity",
+        "provenance",
+        "verified_capabilities",
+        "qualification_status",
+        "coverage",
+        "timing_semantics",
+        "availability_semantics",
+        "missingness_summary",
+        "prior_exposed",
+        "partition",
+        "limitations"
+      ],
+      "title": "ReviewData",
+      "type": "object"
+    },
+    "ReviewGovernance": {
+      "additionalProperties": false,
+      "properties": {
+        "confirmation_available": {
+          "title": "Confirmation Available",
+          "type": "boolean"
+        },
+        "fidelity_ceiling": {
+          "$ref": "#/$defs/Fidelity"
+        },
+        "llm_call_budget": {
+          "minimum": 0,
+          "title": "Llm Call Budget",
+          "type": "integer"
+        },
+        "llm_token_budget": {
+          "minimum": 0,
+          "title": "Llm Token Budget",
+          "type": "integer"
+        },
+        "max_hypotheses": {
+          "minimum": 1,
+          "title": "Max Hypotheses",
+          "type": "integer"
+        },
+        "max_numerical_runs": {
+          "minimum": 0,
+          "title": "Max Numerical Runs",
+          "type": "integer"
+        },
+        "maximum_revisions": {
+          "const": 2,
+          "default": 2,
+          "title": "Maximum Revisions",
+          "type": "integer"
+        },
+        "parameter_domain": {
+          "additionalProperties": {
+            "items": {},
+            "type": "array"
+          },
+          "title": "Parameter Domain",
+          "type": "object"
+        },
+        "protected_data_restrictions": {
+          "title": "Protected Data Restrictions",
+          "type": "string"
+        },
+        "revision": {
+          "maximum": 2,
+          "minimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "search_budget": {
+          "minimum": 1,
+          "title": "Search Budget",
+          "type": "integer"
+        },
+        "search_family_id": {
+          "title": "Search Family Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "search_family_id",
+        "search_budget",
+        "parameter_domain",
+        "max_hypotheses",
+        "max_numerical_runs",
+        "llm_call_budget",
+        "llm_token_budget",
+        "revision",
+        "fidelity_ceiling",
+        "confirmation_available",
+        "protected_data_restrictions"
+      ],
+      "title": "ReviewGovernance",
+      "type": "object"
+    },
+    "ReviewInference": {
+      "additionalProperties": false,
+      "properties": {
+        "decision_rule": {
+          "maxLength": 1500,
+          "title": "Decision Rule",
+          "type": "string"
+        },
+        "dependence_resampling": {
+          "maxLength": 1500,
+          "title": "Dependence Resampling",
+          "type": "string"
+        },
+        "estimand": {
+          "maxLength": 1500,
+          "title": "Estimand",
+          "type": "string"
+        },
+        "missing_data_treatment": {
+          "maxLength": 2000,
+          "title": "Missing Data Treatment",
+          "type": "string"
+        },
+        "multiple_testing_treatment": {
+          "maxLength": 1500,
+          "title": "Multiple Testing Treatment",
+          "type": "string"
+        },
+        "plan": {
+          "$ref": "#/$defs/InferencePlan"
+        },
+        "practical_threshold": {
+          "minimum": 0,
+          "title": "Practical Threshold",
+          "type": "number"
+        },
+        "primary_metric": {
+          "title": "Primary Metric",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "split": {
+          "$ref": "#/$defs/SplitPlan"
+        },
+        "training_evaluation_chronology": {
+          "maxLength": 2000,
+          "title": "Training Evaluation Chronology",
+          "type": "string"
+        },
+        "unit_of_inference": {
+          "const": "session",
+          "title": "Unit Of Inference",
+          "type": "string"
+        }
+      },
+      "required": [
+        "estimand",
+        "primary_metric",
+        "practical_threshold",
+        "unit_of_inference",
+        "split",
+        "plan",
+        "training_evaluation_chronology",
+        "dependence_resampling",
+        "missing_data_treatment",
+        "multiple_testing_treatment",
+        "decision_rule"
+      ],
+      "title": "ReviewInference",
+      "type": "object"
+    },
+    "ReviewSource": {
+      "additionalProperties": false,
+      "description": "Bounded evidence reference, never an arbitrary source/configuration dump.",
+      "properties": {
+        "id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Limitations",
+          "type": "array"
+        },
+        "provenance_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Provenance Hash",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "summary": {
+          "maxLength": 1800,
+          "title": "Summary",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "summary",
+        "provenance_hash"
+      ],
+      "title": "ReviewSource",
+      "type": "object"
+    },
+    "RunResources": {
+      "additionalProperties": false,
+      "properties": {
+        "cpu_seconds": {
+          "default": 30,
+          "exclusiveMinimum": 0,
+          "title": "Cpu Seconds",
+          "type": "number"
+        },
+        "memory_mb": {
+          "default": 1024,
+          "minimum": 128,
+          "title": "Memory Mb",
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "storage_bytes": {
+          "default": 10000000,
+          "minimum": 1,
+          "title": "Storage Bytes",
+          "type": "integer"
+        },
+        "wall_seconds": {
+          "default": 60,
+          "exclusiveMinimum": 0,
+          "title": "Wall Seconds",
+          "type": "number"
+        }
+      },
+      "title": "RunResources",
+      "type": "object"
+    },
+    "SplitPlan": {
+      "additionalProperties": false,
+      "properties": {
+        "availability_lag_seconds": {
+          "default": 60,
+          "minimum": 0,
+          "title": "Availability Lag Seconds",
+          "type": "integer"
+        },
+        "evaluation_end": {
+          "default": "2026-08-31",
+          "title": "Evaluation End",
+          "type": "string"
+        },
+        "minimum_training_sessions": {
+          "default": 30,
+          "minimum": 5,
+          "title": "Minimum Training Sessions",
+          "type": "integer"
+        },
+        "purge_overlapping_labels": {
+          "default": true,
+          "title": "Purge Overlapping Labels",
+          "type": "boolean"
+        },
+        "refit": {
+          "default": "expanding_monthly",
+          "enum": [
+            "frozen",
+            "expanding_monthly"
+          ],
+          "title": "Refit",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1",
+          "default": "1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "train_end": {
+          "default": "2023-12-31",
+          "title": "Train End",
+          "type": "string"
+        },
+        "validation_end": {
+          "default": "2024-12-31",
+          "title": "Validation End",
+          "type": "string"
+        }
+      },
+      "title": "SplitPlan",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Versioned pre-result contract: actual executable proposal plus bounded evidence.",
+  "properties": {
+    "baseline": {
+      "maxLength": 1500,
+      "title": "Baseline",
+      "type": "string"
+    },
+    "campaign": {
+      "$ref": "#/$defs/ReviewCampaign"
+    },
+    "candidate": {
+      "maxLength": 1500,
+      "title": "Candidate",
+      "type": "string"
+    },
+    "comparison_type": {
+      "maxLength": 1000,
+      "title": "Comparison Type",
+      "type": "string"
+    },
+    "controlled_generator": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ControlledGeneratorReview"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "data_context": {
+      "$ref": "#/$defs/ReviewData"
+    },
+    "decision_timing": {
+      "maxLength": 1500,
+      "title": "Decision Timing",
+      "type": "string"
+    },
+    "execution_assumptions": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 12,
+      "title": "Execution Assumptions",
+      "type": "array"
+    },
+    "holding_horizon_minutes": {
+      "exclusiveMinimum": 0,
+      "maximum": 375,
+      "title": "Holding Horizon Minutes",
+      "type": "integer"
+    },
+    "hypothesis": {
+      "$ref": "#/$defs/HypothesisSpec"
+    },
+    "hypothesis_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Hypothesis Hash",
+      "type": "string"
+    },
+    "inference": {
+      "$ref": "#/$defs/ReviewInference"
+    },
+    "methodological_admission": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ReviewAdmission"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "prior_reviews": {
+      "items": {
+        "$ref": "#/$defs/ReviewCritique"
+      },
+      "maxItems": 2,
+      "title": "Prior Reviews",
+      "type": "array"
+    },
+    "proposed_experiment": {
+      "$ref": "#/$defs/ExperimentSpec"
+    },
+    "research_governance": {
+      "$ref": "#/$defs/ReviewGovernance"
+    },
+    "schema_version": {
+      "const": "1",
+      "default": "1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "sources": {
+      "items": {
+        "$ref": "#/$defs/ReviewSource"
+      },
+      "maxItems": 16,
+      "title": "Sources",
+      "type": "array"
+    },
+    "specification_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Specification Hash",
+      "type": "string"
+    }
+  },
+  "required": [
+    "campaign",
+    "hypothesis",
+    "hypothesis_hash",
+    "data_context",
+    "proposed_experiment",
+    "specification_hash",
+    "baseline",
+    "candidate",
+    "comparison_type",
+    "decision_timing",
+    "holding_horizon_minutes",
+    "execution_assumptions",
+    "inference",
+    "research_governance",
+    "sources"
+  ],
+  "title": "CriticContext",
+  "type": "object"
+}

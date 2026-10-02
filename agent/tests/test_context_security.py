@@ -39,6 +39,12 @@ def test_even_redacted_settings_do_not_enter_role_context():
         _safe_context({"nested": Settings().redacted()})
 
 
+@pytest.mark.parametrize("locator", ["~/keys/token.json", "Source at ~/private/accounts.csv"])
+def test_home_relative_private_locators_do_not_enter_source_summaries(locator):
+    with pytest.raises(PermissionError):
+        _safe_context({"summary": locator})
+
+
 def test_scientific_definitions_and_token_budgets_remain_valid_inputs():
     _safe_context(
         {
