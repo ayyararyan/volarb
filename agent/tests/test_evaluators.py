@@ -37,6 +37,27 @@ def test_exp001_end_to_end_independent_reconstruction_and_rerun(tmp_path):
     assert (predictions.feature_available_at <= predictions.origin).all()
 
 
+@pytest.mark.parametrize("refit", ["frozen", "expanding_monthly"])
+def test_exp001_report_refitting_matches_registered_fit_membership(tmp_path, refit):
+    data = generate_spot_fixture(tmp_path / "spot.csv")
+    experiment = {**exp("exp001"), "split": {"refit": refit, "train_end": "2023-12-31"}}
+    result = evaluate(experiment, data, tmp_path / "output")
+    predictions = pd.read_parquet(tmp_path / "output/predictions.parquet")
+    assert result["replication"]["status"] == "PASS"
+    if refit == "frozen":
+        assert result["definition"]["refitting"] == (
+            "frozen through 2023-12-31; no refits; outcomes available before first prediction"
+        )
+        assert predictions.train_n.nunique() == 1
+        assert (predictions.train_end <= "2023-12-31").all()
+    else:
+        assert result["definition"]["refitting"] == (
+            "expanding monthly; outcomes available before first origin of month"
+        )
+        assert predictions.train_n.nunique() > 1
+        assert (predictions.train_end > "2023-12-31").any()
+
+
 def test_future_perturbation_cannot_change_earlier_features_or_predictions(tmp_path):
     manifest = generate_spot_fixture(tmp_path / "spot.csv")
     frame = load_dataset(manifest)
