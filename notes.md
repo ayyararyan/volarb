@@ -1120,3 +1120,16 @@ Broker Execution Port
 - `[5,0,4,7,1]` Normalized Broker Execution Facts
 
 The internals of the optimal-execution algorithm remain deliberately unresolved.
+
+
+### 2026-10-03 — Box 5 margin-aware dependency sequencing
+
+**Raw intent:** Box 5 uses dynamically refreshed market microstructure, account margin/capital and the current execution registry. It must infer which instruments hedge or offset others without knowing the parent strategy, and sequence execution to use margin and cash efficiently.
+
+**Architecture interpretation:** Add normalized live market state and live broker account state as first-class Box 5 inputs. The account state includes current positions and pending orders because existing protection and locked resources affect what can safely execute next.
+
+**Rule:** Convert inferred hedge relationships into quantity-aware execution dependencies. Protection that is required to avoid an unnecessary unhedged/high-margin intermediate state must be confirmed before the dependent risk-adding action may proceed. On reduction/unwind, the dependency reverses when removing protection first would expose the remaining position.
+
+**Dynamic rule:** Recompute after authoritative execution/account changes. Do not treat an expected fill, premium credit or margin release as available before the broker confirms it.
+
+**Broker-neutrality:** Box 5 infers structural hedge relationships. The active broker supplies authoritative current and hypothetical margin/account facts. The optimizer therefore remains reusable across brokers.

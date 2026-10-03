@@ -199,3 +199,44 @@ It should **not** require rewriting:
 Everything inside the actual optimization algorithm beyond the registry/engine/port boundary remains open.
 
 The next design step is to specify how the optimal execution engine should operate on several simultaneous instrument entries.
+
+
+## Margin-aware dependency sequencing
+
+Box 5 now has three continuously refreshed input classes:
+
+- `[5,0,1,9,1]` Active Instrument Execution Registry.
+- `[5,0,1,7,1]` Live Market Execution State: normalized quotes, executable depth/order book, spread, freshness and tradability.
+- `[5,0,1,7,2]` Live Broker Account State: available cash/collateral/margin, current positions, pending orders and other account-capacity facts required for execution.
+
+The optimizer must infer hedge/offset relationships from instrument economics and current account state rather than from strategy names.
+
+### [5,0,2,1,2] Hedge / Offset Relationship Analyzer
+
+This node identifies whether one current or intended position reduces, caps or offsets the risk and margin footprint of another. The representation may be quantity-aware and may include partial coverage, existing-position coverage and many-to-one relationships.
+
+### [5,0,2,7,1] Execution Dependency Graph
+
+The inferred hedge relationships become precedence constraints.
+
+If action A establishes protection required to avoid an unnecessary unhedged or high-margin intermediate state before action B, confirmed execution of A is a prerequisite for B up to the covered quantity.
+
+When reducing an existing paired position, the dependency reverses when necessary: risk-creating exposure is reduced before the protection that keeps it bounded is removed.
+
+A submitted but unfilled protective order does not count as established protection.
+
+### [5,0,2,1,3] Margin-Aware Sequence Optimizer
+
+Among actions allowed by the dependency graph, Box 5 chooses the next step using live account capacity.
+
+This component seeks to:
+1. preserve required hedge coverage;
+2. avoid unnecessary high-margin intermediate states;
+3. reduce peak cash/collateral/margin required by the outstanding registry;
+4. use only actually realized cash or margin effects from completed execution before committing further resources.
+
+The sequence is dynamically recomputed after fills, partial fills, rejections, cancellations or material account-state changes.
+
+Structural hedge relationships are broker-neutral. Actual rupee margin impact is not. The Broker Execution Port must therefore expose authoritative current account capacity and, where supported, hypothetical margin impact for candidate intermediate states.
+
+This fixes one component of the eventual execution objective: **capital- and margin-efficient sequencing subject to hedge-preservation constraints**. Price improvement, urgency, fill probability, adverse selection and market impact remain separate unresolved objectives.

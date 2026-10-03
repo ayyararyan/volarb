@@ -2822,6 +2822,101 @@
         1,
         1
       ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        7,
+        1
+      ],
+      "name": "Live Market Execution State",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "Continuously refreshed normalized quotes, executable depth/order book, spread, freshness and tradability used by optimal execution."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        7,
+        2
+      ],
+      "name": "Live Broker Account State",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "Authoritative dynamic account-capacity state including cash/collateral/margin, current positions and pending orders relevant to execution feasibility."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        1,
+        2
+      ],
+      "name": "Hedge / Offset Relationship Analyzer",
+      "kind": "node",
+      "parent_vid": [
+        5,
+        0,
+        2,
+        1,
+        1
+      ],
+      "note": "Infers structural risk-offset and coverage relationships from instruments, current positions and desired actions without strategy labels."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        7,
+        1
+      ],
+      "name": "Execution Dependency Graph",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        2,
+        1,
+        1
+      ],
+      "note": "Quantity-aware precedence constraints derived from inferred hedge relationships."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        1,
+        3
+      ],
+      "name": "Margin-Aware Sequence Optimizer",
+      "kind": "node",
+      "parent_vid": [
+        5,
+        0,
+        2,
+        1,
+        1
+      ],
+      "note": "Chooses feasible execution ordering that preserves hedge dependencies and reduces peak account-resource use using broker-authoritative account and margin facts."
     }
   ]
 }

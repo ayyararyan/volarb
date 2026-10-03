@@ -102,3 +102,10 @@ provider_version: ...
 ```
 
 Future providers can use keys such as `kotak` or `icici` while implementing the same broker execution port.
+
+
+## Box 5 state inputs
+
+The Dhan provider should normalize the execution facts needed by Box 5, including executable market depth/quotes, current positions, pending orders, available cash/collateral/margin and authoritative margin-calculator results where applicable.
+
+Dhan supplies these facts; it does not own the broker-neutral sequencing policy.
