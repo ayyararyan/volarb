@@ -1,48 +1,51 @@
-# Box 1 — Regime Decision Graph
+# [1,0,0,0,0] Box 1 — Regime Decision Graph
 
-This graph owns the **days/weeks decision horizon**.
-
-Its only job is to decide whether the broader market environment currently permits short-gamma deployment. It does not choose NIFTY, BANKNIFTY, SENSEX, strikes, structures, or execution tactics.
+This graph owns the **days/weeks** decision horizon.
 
 ## Graph
 
 ```mermaid
 flowchart TD
-    A[Start / scheduled regime review] --> B[Collect regime-relevant market context]
-    B --> C[Multi-day Regime Gate]
+    A["[1,0,1,1,1] Start / scheduled regime review"]
+    B["[1,0,2,1,1] Collect regime-relevant market context"]
+    C["[1,0,3,1,1] Multi-day Regime Gate"]
+    D["[1,0,4,7,1] REGIME_FAVORABLE"]
+    E["[1,0,5,1,1] Hand off to Box 2"]
+    F["[1,0,4,2,1] NO-NEW-SHORT-GAMMA"]
+    G["[1,0,5,3,1] Regime Recheck Scheduler"]
+    H["[1,0,6,2,1] Wait until next multi-day review condition"]
+    I["[1,0,4,2,2] Fail-safe: do not deploy new short gamma"]
 
-    C -->|Favorable| D[Emit REGIME_FAVORABLE]
-    D --> E[Hand off to Box 2: Intraday Instrument Selection]
-
-    C -->|Unfavorable| F[Enter NO-NEW-SHORT-GAMMA state]
-    F --> G[Regime Recheck Scheduler]
-    G --> H[Wait until next multi-day review condition]
-    H --> B
-
-    C -->|Uncertain / insufficient data| I[Fail-safe: do not deploy new short gamma]
-    I --> G
+    A -->|"[1,0,1,4,1]"| B
+    B -->|"[1,0,2,4,1]"| C
+    C -->|"[1,0,3,4,1] FAVORABLE"| D
+    D -->|"[1,0,4,4,1]"| E
+    C -->|"[1,0,3,4,2] UNFAVORABLE"| F
+    F -->|"[1,0,4,4,2]"| G
+    G -->|"[1,0,5,4,1]"| H
+    H -->|"[1,0,6,4,1]"| B
+    C -->|"[1,0,3,4,3] UNCERTAIN / INSUFFICIENT"| I
+    I -->|"[1,0,4,4,3]"| G
 ```
 
 ## Established decisions
 
-- This is a **persistent multi-day / multi-week regime**, not an intraday regime.
-- A favorable regime means short gamma may be considered; it does **not** force a trade.
-- An unfavorable or uncertain regime prohibits new short-gamma deployment.
-- The Regime Recheck Scheduler decides when enough new information may have accumulated to revisit the regime.
-- The recheck may eventually be time-based, event/state-change based, or hybrid; methodology remains TBD.
-- Box 2 is entered only after Box 1 emits `REGIME_FAVORABLE`.
+- This is a persistent multi-day / multi-week regime, not an intraday regime.
+- A favorable regime permits consideration of short gamma; it does not force a trade.
+- Unfavorable or uncertain prohibits new short-gamma deployment.
+- `[1,0,5,3,1]` decides when enough new information may justify another regime review.
+- Recheck methodology may later be time-based, event/state-change based, or hybrid.
+- Box 2 is entered only after `[1,0,4,7,1] REGIME_FAVORABLE`.
 
 ## Output contract
 
-At minimum:
-
 ```text
-RegimeDecision
+[1,0,4,7,1] RegimeDecision / REGIME_FAVORABLE
   state = FAVORABLE | UNFAVORABLE | UNCERTAIN
   assessed_at = ...
   valid_until / next_review_condition = ...
-  reasons = ...          # future
-  confidence = ...       # future, optional
+  reasons = ...        # future
+  confidence = ...     # future
 ```
 
 ## Still TBD
@@ -50,5 +53,5 @@ RegimeDecision
 - exact regime model and variables;
 - calibration and validation;
 - precise recheck rule;
-- what can invalidate a favorable regime before its scheduled review;
-- whether the regime is market-wide or later gains underlying/expiry-specific overlays.
+- what can invalidate a favorable regime before scheduled review;
+- whether regime later receives underlying/expiry-specific overlays.
