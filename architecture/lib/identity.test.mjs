@@ -13,14 +13,14 @@ test('canonical identity is stable across mounts while bound identity changes', 
   const volarb = makeBoundVid({
     compositionId: 'composition.volarb',
     mountId: 'mount.volarb.execution.main',
-    componentId: 'component.internal_execution',
+    componentId: 'component.execution_engine',
     canonicalVid: canonical
   });
 
   const other = makeBoundVid({
     compositionId: 'composition.other',
     mountId: 'mount.other.execution.main',
-    componentId: 'component.internal_execution',
+    componentId: 'component.execution_engine',
     canonicalVid: canonical
   });
 
@@ -28,7 +28,7 @@ test('canonical identity is stable across mounts while bound identity changes', 
   assert.notEqual(volarb.bound_id, other.bound_id);
   assert.equal(
     volarb.canonical_id,
-    serializeCanonicalVid('component.internal_execution', canonical)
+    serializeCanonicalVid('component.execution_engine', canonical)
   );
 });
 
@@ -50,7 +50,7 @@ test('runtime identity references bound/canonical context without replacing it',
   const bound = makeBoundVid({
     compositionId: 'composition.volarb',
     mountId: 'mount.volarb.execution.main',
-    componentId: 'component.internal_execution',
+    componentId: 'component.execution_engine',
     canonicalVid: [5,0,8,1,2]
   });
 

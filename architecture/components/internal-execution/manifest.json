@@ -1,97 +1,11 @@
 {
   "schema_version": "1.0",
   "component_id": "component.internal_execution",
-  "name": "Internal Execution",
-  "kind": "execution_engine",
-  "version": "1.0.0",
-  "ownership": "strategy_agnostic",
-  "provider_dependency": "injected",
-  "canonical_identity": {
-    "identity_kind": "vector_namespace",
-    "canonical_root_vid": [
-      5,
-      0,
-      0,
-      0,
-      0
-    ],
-    "legacy_namespace_code": 5,
-    "registry": "architecture/components/internal-execution/vector-id-registry.json",
-    "immutable_existing_vids": true
-  },
-  "boundary_ports": [
-    {
-      "port_id": "port.internal_execution.intent",
-      "direction": "in",
-      "canonical_vid": [
-        5,
-        0,
-        1,
-        9,
-        1
-      ],
-      "name": "Execution requirement / active instrument execution registry ingress",
-      "contract": "Broker-neutral economic execution requirement with runtime intent identity/version."
-    },
-    {
-      "port_id": "port.internal_execution.facts",
-      "direction": "out",
-      "canonical_vid": [
-        5,
-        0,
-        4,
-        7,
-        1
-      ],
-      "name": "Normalized Broker Execution Facts",
-      "contract": "Broker-neutral authoritative execution facts returned to strategy/position-management clients."
-    },
-    {
-      "port_id": "port.internal_execution.interrupt",
-      "direction": "in",
-      "canonical_vid": [
-        5,
-        0,
-        6,
-        7,
-        1
-      ],
-      "name": "Interrupt Directive",
-      "contract": "Broker-neutral preemption directive."
-    },
-    {
-      "port_id": "port.internal_execution.broker",
-      "direction": "provider",
-      "canonical_vid": [
-        5,
-        0,
-        3,
-        6,
-        1
-      ],
-      "name": "Broker Execution Port",
-      "contract": "Provider-neutral command/query/stream boundary implemented by a mounted broker provider."
-    }
-  ],
-  "extension_ports": [
-    {
-      "port_id": "port.internal_execution.algorithm",
-      "canonical_vid": [
-        5,
-        0,
-        4,
-        6,
-        1
-      ],
-      "name": "Execution Algorithm Port",
-      "contract": "Plug-and-play broker-neutral micro-execution algorithm boundary."
-    }
-  ],
-  "invariants": [
-    "Canonical VIDs identify execution architecture, never strategy placement.",
-    "No strategy semantic such as butterfly, condor, volarb, recenter, body, or wing is part of the component contract.",
-    "No provider-native identifier or error is part of strategy or execution-policy semantics.",
-    "Every mutating broker action remains subject to the component's Command Commit Guard / Execution Recovery invariants.",
-    "Mounting the component never changes or renumbers a canonical VID."
-  ]
+  "name": "Internal Execution (legacy alias)",
+  "kind": "compatibility_alias",
+  "status": "legacy_alias",
+  "alias_of": "component.execution_engine",
+  "canonical_manifest": "architecture/components/execution-engine/manifest.json",
+  "canonical_registry": "architecture/components/execution-engine/vector-id-registry.json",
+  "note": "Retained so older references resolve. New architecture must use component.execution_engine. Existing [5,0,...] VIDs are unchanged."
 }

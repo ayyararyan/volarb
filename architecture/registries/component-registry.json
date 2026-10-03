@@ -1,14 +1,17 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "identity_model_version": "2.0",
   "components": [
     {
-      "component_id": "component.internal_execution",
-      "name": "Internal Execution",
+      "component_id": "component.execution_engine",
+      "name": "Execution Engine",
       "kind": "execution_engine",
-      "manifest": "architecture/components/internal-execution/manifest.json",
-      "canonical_registry": "architecture/components/internal-execution/vector-id-registry.json",
-      "status": "active"
+      "manifest": "architecture/components/execution-engine/manifest.json",
+      "canonical_registry": "architecture/components/execution-engine/vector-id-registry.json",
+      "status": "active",
+      "legacy_aliases": [
+        "component.internal_execution"
+      ]
     },
     {
       "component_id": "provider.dhan",

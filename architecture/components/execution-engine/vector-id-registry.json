@@ -1,11 +1,9 @@
 {
   "version": "1.1",
   "identity_model_version": "2.0",
-  "component_id": "component.internal_execution",
-  "component_name": "Internal Execution (legacy alias)",
-  "registry_role": "legacy_alias_mirror",
-  "alias_of": "component.execution_engine",
-  "canonical_registry": "architecture/components/execution-engine/vector-id-registry.json",
+  "component_id": "component.execution_engine",
+  "component_name": "Execution Engine",
+  "registry_role": "canonical_component_registry",
   "canonical_root_vid": [
     5,
     0,
@@ -13,6 +11,44 @@
     0,
     0
   ],
+  "legacy_source_registry": "docs/workflows/vector-id-registry.json",
+  "semantics": {
+    "canonical_vid": "Immutable identity of an entity inside the reusable Execution Engine component.",
+    "leading_box_code_5": "Preserved legacy namespace code. It identifies component.execution_engine; it no longer means the component is strategy-owned.",
+    "bound_vid": "Derived only when this component is mounted into a composition; never stored as the entity's canonical VID."
+  },
+  "schema": {
+    "vector": [
+      "box",
+      "instance",
+      "layer",
+      "type",
+      "ordinal"
+    ],
+    "type_codes": {
+      "0": "graph_box_container_root",
+      "1": "process_action_decision_gate_node",
+      "2": "state",
+      "3": "scheduler_timer",
+      "4": "edge_transition",
+      "5": "worker_agent",
+      "6": "interface_port",
+      "7": "data_contract_event_message",
+      "8": "adapter_external_provider_connector",
+      "9": "resource_allocation_reservation"
+    },
+    "namespace_code": 5,
+    "namespace_name": "component.execution_engine"
+  },
+  "rules": {
+    "immutable": true,
+    "reuse_retired_ids": false,
+    "edge_layer_rule": "edge layer equals source node logical layer",
+    "graph_topology_authority": "explicit source/target relationships, not numeric adjacency",
+    "canonical_vid_preservation": "Existing [5,0,...] identities are never renumbered during composition migration.",
+    "strategy_agnostic": true,
+    "provider_agnostic": true
+  },
   "entities": [
     {
       "vid": [
@@ -2465,5 +2501,8 @@
       "identity_scope": "canonical",
       "canonical_component_id": "component.execution_engine"
     }
+  ],
+  "legacy_component_aliases": [
+    "component.internal_execution"
   ]
 }

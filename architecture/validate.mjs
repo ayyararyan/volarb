@@ -8,13 +8,15 @@ const key = vid => vid.join(',');
 
 const componentCatalog = readJson('architecture/registries/component-registry.json');
 const compositionCatalog = readJson('architecture/registries/composition-registry.json');
-const executionManifest = readJson('architecture/components/internal-execution/manifest.json');
-const executionRegistry = readJson('architecture/components/internal-execution/vector-id-registry.json');
+const executionManifest = readJson('architecture/components/execution-engine/manifest.json');
+const executionRegistry = readJson('architecture/components/execution-engine/vector-id-registry.json');
+const legacyExecutionAlias = readJson('architecture/components/internal-execution/manifest.json');
 const dhanManifest = readJson('architecture/providers/dhan/manifest.json');
 const volarb = readJson('architecture/strategies/volarb/composition.json');
 const legacy = readJson('docs/workflows/vector-id-registry.json');
 
 const fail = message => {
+
   console.error(`architecture validation failed: ${message}`);
   process.exitCode = 1;
 };
@@ -27,6 +29,8 @@ const unique = (values, label) => {
   }
 };
 
+if (legacyExecutionAlias.alias_of !== 'component.execution_engine' || legacyExecutionAlias.status !== 'legacy_alias') fail('Internal Execution legacy alias is invalid');
+
 unique(componentCatalog.components.map(x => x.component_id), 'component_id');
 unique(compositionCatalog.compositions.map(x => x.composition_id), 'composition_id');
 unique(volarb.mounts.map(x => x.mount_id), 'mount_id');
@@ -34,14 +38,14 @@ unique(volarb.bindings.map(x => x.binding_id), 'binding_id');
 unique(executionRegistry.entities.map(x => key(x.vid)), 'canonical execution VID');
 
 if (key(executionManifest.canonical_identity.canonical_root_vid) !== '5,0,0,0,0') {
-  fail('Internal Execution canonical root changed');
+  fail('Execution Engine canonical root changed');
 }
 
 for (const entity of executionRegistry.entities) {
   if (!Array.isArray(entity.vid) || entity.vid.length !== 5 || entity.vid[0] !== 5) {
-    fail(`non-[5,...] entity in canonical Internal Execution registry: ${JSON.stringify(entity.vid)}`);
+    fail(`non-[5,...] entity in canonical Execution Engine registry: ${JSON.stringify(entity.vid)}`);
   }
-  if (entity.canonical_component_id !== 'component.internal_execution') {
+  if (entity.canonical_component_id !== 'component.execution_engine') {
     fail(`missing canonical component ownership on ${key(entity.vid)}`);
   }
 }
@@ -75,7 +79,7 @@ for (const binding of volarb.bindings) {
       fail(`${binding.binding_id} references unknown mount ${endpoint.mount_id}`);
     }
     if (endpoint.canonical_vid && !canonicalVids.has(key(endpoint.canonical_vid))) {
-      fail(`${binding.binding_id} references unknown Internal Execution canonical VID ${key(endpoint.canonical_vid)}`);
+      fail(`${binding.binding_id} references unknown Execution Engine canonical VID ${key(endpoint.canonical_vid)}`);
     }
   }
 }
