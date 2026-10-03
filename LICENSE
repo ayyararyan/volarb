@@ -1,0 +1,107 @@
+VolArb Proprietary Source-Available License
+Copyright © 2026 Shunya. All Rights Reserved.
+
+Shunya is the sole proprietorship and trading name of Aryan Ayyar
+("Shunya"). Licensing and permission enquiries: https://www.shunya.solutions
+
+1. Ownership and scope
+
+Except for third-party material identified by its own notices or licenses,
+Shunya retains all copyright and other intellectual-property rights it owns
+in VolArb and its source code, architecture, documentation, designs,
+workflows, algorithms, schemas, models, tests, research materials and related
+repository contents (the "Materials"). Rights in those subject matters are
+reserved only to the extent protected by applicable law. No ownership,
+patent or trademark rights are transferred by publication or access.
+
+The Materials are proprietary software and publicly viewable source, not
+open-source software. Public availability does not place them in the public
+domain or grant rights beyond those expressly stated below.
+
+2. Limited inspection permission
+
+Shunya grants a non-exclusive, worldwide, royalty-free permission for the
+duration of its copyright, subject to section 7. You may view the Materials
+and retain an unmodified copy solely for private,
+non-commercial inspection and evaluation of their contents. This permission
+does not authorize running, modifying or deploying the software, or using
+it to provide a product, service, trading system or business capability.
+Retain all copyright, proprietary and third-party notices in any permitted
+copy.
+
+Nothing in this license restricts rights necessarily granted under GitHub's
+applicable Terms of Service for public repositories, including viewing,
+forking and permitted use, display, performance and reproduction through
+GitHub's service. Those platform-specific rights are not a general license
+for off-platform use, deployment, redistribution or commercialization. Nor
+does this license restrict rights that applicable law does not permit an
+owner to exclude.
+
+3. Reserved uses
+
+Except as expressly permitted by section 2, a third-party license or
+non-waivable law, prior written authorization from Shunya is required to:
+
+- use or execute the Materials commercially, in production, or for trading
+  or brokerage operations;
+- modify, adapt, translate or create derivative works or derivative products
+  from the Materials;
+- redistribute, sublicense, sell, license or otherwise supply the Materials;
+- incorporate the Materials or substantial protected portions into another
+  project, product or service, including hosted or software-as-a-service
+  offerings;
+- use substantial protected portions to build a directly competing system;
+- copy substantial portions beyond the limited inspection permission, or
+  remove or obscure copyright, proprietary or attribution notices.
+
+Do not represent the Materials or Shunya's work as your own. These
+restrictions concern Shunya's protected material; they do not claim ownership
+of public-domain facts, unprotectable ideas or independently developed work.
+No broader permission arises by implication, estoppel or the absence of
+technical access controls. Separate written terms from Shunya govern any
+additional authorization.
+
+4. Third-party material
+
+Third-party software, data and other material retain their respective
+ownership and license terms. Those terms govern that material and prevail
+over inconsistent provisions of this license for that material only.
+Shunya does not relicense third-party dependencies as proprietary Shunya
+property. Preserve their required notices. Refer to accompanying notices
+and THIRD_PARTY_NOTICES.md for bundled material, and package metadata for
+other dependencies, for the applicable terms.
+
+5. Financial and operational limitations
+
+The Materials are for inspection and evaluation, not investment, trading,
+financial or other professional advice. Publication does not authorize live
+brokerage use or deployment. Shunya makes no assurance of profitability,
+execution correctness, financial suitability, regulatory compliance, data
+accuracy, uninterrupted operation or prevention of losses. Tests,
+simulations and historical results do not establish live-market readiness
+or future performance.
+
+6. No warranty; limitation of liability
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE MATERIALS ARE PROVIDED
+"AS IS" AND "AS AVAILABLE", WITHOUT WARRANTIES OF ANY KIND, EXPRESS,
+IMPLIED OR STATUTORY, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE, TITLE AND NON-INFRINGEMENT.
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, SHUNYA AND ARYAN AYYAR
+SHALL NOT BE LIABLE FOR ANY CLAIM, LOSS, DAMAGE OR LIABILITY ARISING FROM
+THE MATERIALS OR THEIR USE OR INABILITY TO BE USED, WHETHER IN CONTRACT,
+TORT OR OTHERWISE. THIS INCLUDES TRADING OR INVESTMENT LOSSES, LOST PROFITS,
+LOST DATA, BUSINESS INTERRUPTION, OPERATIONAL FAILURES AND INDIRECT,
+INCIDENTAL, SPECIAL OR CONSEQUENTIAL DAMAGES, EVEN IF ADVISED OF THEIR
+POSSIBILITY. NOTHING EXCLUDES LIABILITY OR RIGHTS THAT CANNOT LAWFULLY BE
+EXCLUDED OR LIMITED.
+
+7. Breach and remaining rights
+
+If you breach this license, the additional inspection permission in section
+2 terminates and you must cease the unauthorized use and remove copies not
+otherwise lawfully retained. This does not purport to terminate independent
+rights under GitHub's terms, third-party licenses or non-waivable law. If a
+provision is unenforceable, the remaining provisions continue to apply to
+the extent permitted by law.

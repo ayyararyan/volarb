@@ -1,6 +1,6 @@
 ---
 name: butterfly-market-outlook
-description: Analyze, optimize, manage, and journal Indian index option butterflies using Dhan when available, full option surfaces, Greeks/OI/bid-ask, risk-neutral distributions, a five-minute high-frequency intraday realized-volatility/drift gate, deterministic regime/overnight/expiry/recenter diagnostics, and the calibrated Market News Signal Filter for current event risk. Use for checking an open NIFTY/BANKNIFTY/SENSEX butterfly, deciding HOLD/RECENTRE/SQUARE OFF or CARRY, searching for a wide butterfly, reviewing near-expiry or overnight risk, or recording butterfly market outlooks and trade/position history to the connected volarb GitHub repository.
+description: Analyze, optimize, manage, and journal Indian index option butterflies using Dhan when available, full option surfaces, Greeks/OI/bid-ask, risk-neutral distributions, a five-minute high-frequency intraday realized-volatility/drift gate, deterministic regime/overnight/expiry/recenter diagnostics, and the calibrated Market News Signal Filter for current event risk. Use for checking an open NIFTY/BANKNIFTY/SENSEX butterfly, deciding HOLD/RECENTRE/SQUARE OFF or CARRY, searching for a wide butterfly, reviewing near-expiry or overnight risk, or recording butterfly market outlooks and trade/position history in an authorized private journal outside the source checkout.
 ---
 
 # Butterfly Market Outlook — Engine v2.6 Controller
@@ -220,28 +220,31 @@ For HOLD/CARRY, select the earliest useful next review from:
 
 Read `references/output-template.md` for exact timing and formatting rules.
 
-## Repository persistence
+## Private recordkeeping
 
 Read `references/repo-logging.md` for every completed outlook, candidate search, position check, entry/recenter confirmation, or closure.
 
-Canonical repository: `ayyararyan/volarb` on `main`.
+The source repository `ayyararyan/volarb` is not a financial-record destination.
+Resolve an authorized private journal root outside the source checkout; if none
+is configured, report recordkeeping as blocked rather than publish to GitHub.
 
-- Append every completed outlook/candidate search/position review to `market-outlook/YYYY-MM-DD.md`.
+- Append every completed outlook/candidate search/position review to the private `market-outlook/YYYY-MM-DD.md`.
 - Reuse one daily file across NIFTY, BANKNIFTY and SENSEX with timestamped IST sections.
 - Update the identifiable trade record for material position-state changes and decisions.
 - Create/update ledger and trade files only from broker/user-confirmed execution facts.
 - Finalize realized P&L and post-trade episode after full closure when known.
-- Never store secrets, tokens, credentials, or full account identifiers.
-- Fetch the current GitHub file/blob SHA immediately before each write.
+- Keep secrets in their dedicated private credential store, never the journal.
+- Read the latest private file and use existing concurrency/atomic-write controls.
+- Never publish journals, fills, P&L, broker evidence or account records to the source repository, issues, pull requests or releases.
 
 Complete the trading decision first, persist it second, then emit the user-facing answer. Logging may never alter the decision. If a write fails after one retry, return the decision and briefly disclose the logging failure.
 
 ## Post-trade calibration
 
-After a trade is fully closed, use `references/post-trade-learning.md` and the repository workflow. Periodically run:
+After a trade is fully closed, use `references/post-trade-learning.md` and the private recordkeeping workflow. Periodically run:
 
 ```bash
-python scripts/summarize_trade_log.py --input episodes.jsonl --pretty
+python scripts/summarize_trade_log.py --input /path/to/private-journal/trade-log/episodes.jsonl --pretty
 ```
 
 Measure forecast errors, tail misses, execution slippage, profit give-back and recenter incremental P&L only when a defensible counterfactual exists. Never auto-change live thresholds from a small sample.

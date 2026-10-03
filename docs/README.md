@@ -14,5 +14,6 @@ Use the [repository map](REPOSITORY_MAP.md) for ownership and implementation sta
 | Deployment | [Portable kit](AGENT_KIT.md), [dependencies](DEPENDENCY_INVENTORY.md) | Source-only setup; private state external |
 | Proposed execution authority | [Inactive policy draft](AUTONOMOUS_EXECUTION_POLICY_DRAFT.md) | Unadopted proposal, not current governance |
 | Releases | [Changelog](../CHANGELOG.md), [release policy](RELEASING.md), [v0.1.0 notes](releases/v0.1.0.md) | Source milestones, not deployment approval |
+| Ownership and publication | [Proprietary LICENSE](../LICENSE), [third-party notices](../THIRD_PARTY_NOTICES.md), [preparation audit](audits/2026-10-04-public-preparation.md) | Shunya-owned; publication remains blocked pending history and protection prerequisites |
 | Development record | [History](DEVELOPMENT_HISTORY.md), [cleanup audit](audits/2026-10-03-repository-cleanup.md) | Dated provenance |
 | Superseded generations | [Archive](../archive/README.md) | Historical, never operational |

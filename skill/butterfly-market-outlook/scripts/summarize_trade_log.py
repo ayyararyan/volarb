@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Summarize closed butterfly episodes for calibration review.
 
-Accepts the repository ``trade-log/trades.csv``, JSONL, or a JSON array.
+Accepts an explicitly supplied private CSV, JSONL, or JSON-array input path.
+Personal financial inputs must remain outside the public source checkout.
 It measures outcomes; it never changes live thresholds.
 
 CSV rows are mapped to episode fields: realized points are

@@ -117,16 +117,16 @@
         "no outstanding orders",
         "deduplicated actual fills",
         "shared-writer reconciliation",
-        "sanitized journal published",
+        "private journal persisted",
         "cancel only day-owned jobs"
       ],
-      "dispatch": "local accounting adapter available explicitly; publisher and job cleanup remain unconnected"
+      "dispatch": "local accounting adapter available explicitly; private journal writer and job cleanup remain unconnected"
     },
     "STOP": {
       "dispatch": "none",
       "required_followup": [
         "workflow_accounting.py --commit-cycle with existing cycle and parent review",
-        "publish sanitized journal using existing authorized workflow",
+        "persist journal in configured private storage outside source; never publish financial records to GitHub",
         "cancel only verified day-owned jobs if any"
       ],
       "not_automatic": true
@@ -203,7 +203,7 @@
     },
     "publication": {
       "status": "not_connected",
-      "rule": "record each actual review through existing shared writer and publish sanitized journal before delivering research; logging failure never delays exit handoff"
+      "rule": "record each actual review through existing shared writer and persist private journal before delivering research; never publish financial records to GitHub; logging failure never delays exit handoff"
     }
   }
 }

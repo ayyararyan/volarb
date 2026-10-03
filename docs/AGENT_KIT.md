@@ -141,13 +141,14 @@ documents are included as clearly marked non-operational history; no archive is
 imported by setup or production code. The separate `agent/` research lab, prompts, workflow definitions and repository
 navigation are included as source-only context. The lab retains its own dependency
 lock and separate environment; kit setup does not install or execute it. Financial
-history directories contain generated README omission notices only, with links to
-the private repository—not dummy trades or copied journals. Raw lab runtime stores,
+history directories contain generated README omission notices only, directing
+authorized operators to their configured private records—not dummy trades or copied journals. Raw lab runtime stores,
 artifacts, databases and environments remain excluded. Private
 state, credentials, personal memory, financial ledgers, raw evidence and historical
 journals are excluded. Each archive contains SHA256SUMS.json for its source files.
-Keep the repository private: this package is reusable, not a public-release or
-licensing decision. Packaging is not encrypted backup or a tagged GitHub release.
+Publicly viewable source does not make private runtime records distributable or
+grant software-use rights beyond the root LICENSE. Packaging is not encrypted
+backup or a tagged GitHub release.
 
 ## Validation
 

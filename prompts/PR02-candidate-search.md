@@ -17,7 +17,7 @@ Today's session VRP screen was FAVOURABLE. Session loss so far today: ₹<verifi
 4. Run the first-terminal-gate controller with session_vrp_state, daily_loss_budget_rupees 1000 and session_loss_rupees.
 5. If the controller reaches the optimizer, rank wide symmetric candidates and run dhan_check_butterfly_margin with reserveRupees 1000 for each finalist.
 
-Publish the journal entry to ayyararyan/volarb main before replying.
+Save the entry to the configured private journal outside the source checkout and verify persistence before replying; never publish financial records to GitHub.
 Reply with the Mode C table only: up to three ranked rows, or one NO TRADE row naming the failing gate.
 ```
 

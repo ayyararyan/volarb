@@ -40,7 +40,7 @@ raw broker evidence, provider config, session history or live ledger copied.
 | Dhan browser login | Fixed Mac username, fixed PIN path, Chrome/CDP assumptions | Configurable PIN/binary/port; macOS adapter explicit, disabled by default |
 | Legacy SSH login, position-check and outcome adapters | External/old host paths | **Excluded and not required by new kit**. Legacy scheduled collectors need replacement/review before migration; no implicit fallback to the old machine |
 | Dated historical selection/review runners | Local scripts depending on saved snapshots | Excluded; not reusable/current-observation dependencies |
-| Canonical financial state | Private `Trading/ledger` | External data directory; restoration is separate step 6, not a GitHub journal substitute |
+| Canonical financial state | Private `Trading/ledger` | External data directory; restoration is separate step 6, never replaced by public source or journal projections |
 | Agent identity/policy/memory | Live OpenClaw workspace | Sanitized Dhandho template and adopted risk profile packaged; private memory deliberately excluded |
 | Model/provider credentials and channel bindings | OpenClaw-managed private state | Must provision separately; setup preserves global config and adds no binding |
 | Public MCP tunnel | Host ngrok + private domain/config | Optional adapter; no tunnel required for offline/local install; config stays private |
@@ -71,7 +71,7 @@ Imported source hashes (before portable path adaptation) are recorded in
   Chrome is detected, not bundled or arbitrarily pinned against security updates.
   Browser UI changes/OTP can require a human. Linux/WSL uses a privately supplied
   Dhan Web token; unattended cross-platform login is not claimed.
-- Git/GitHub CLI is needed for source updates/journal publication, not offline
+- Git/GitHub CLI is needed for authorized source updates, not private journal persistence or offline
   controller tests. GitHub authentication is an external prerequisite.
 - Docker is optional; its MCP-only image does not contain the full agent, browser,
   workspace or authoritative accounting state. No image build is implied by YAML tests.

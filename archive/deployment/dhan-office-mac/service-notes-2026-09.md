@@ -1,5 +1,10 @@
 # Historical Dhan service notes — September 2026
 
+> **Public-source redaction — 2026-10-04:** Workstation-specific paths in this
+> historical receipt are replaced by `<private-project-root>`. Original operational
+> records remain privately preserved. Use the current provider documentation and
+> configured `DHAN_RUNTIME_DIR` / `DHAN_PIN_FILE`, not these historical paths.
+
 **ARCHIVED, NOT AN OPERATIONAL RUNBOOK.** This is the pre-cleanup service README,
 preserved for the 29–30 September migration, authentication and verification record.
 Commands, machine paths and deployment observations below are historical. Do not
@@ -145,7 +150,7 @@ The instrument master is cached for six hours by default.
 
 ## Local Mac deployment — migrated 2026-09-29
 
-Active project: `/Users/maheit/dhan-chatgpt-mcp` on the OpenClaw Mac.
+Active project: `<private-project-root>` on the OpenClaw Mac.
 
 - Public MCP URL (unchanged): `https://YOUR-NGROK-HOST.ngrok-free.dev/mcp`
 - Local MCP: `http://127.0.0.1:3000/mcp`; health: `/healthz`.
@@ -154,7 +159,7 @@ Active project: `/Users/maheit/dhan-chatgpt-mcp` on the OpenClaw Mac.
 - The Dhan token was copied unchanged and verified live. It still requires normal web-token renewal/replacement; migration does not extend its expiry. After updating `.env`, restart the server.
 - Source code, package lock and original credentials matched the personal Mac by SHA-256. Dependencies were installed with `npm ci --ignore-scripts`; all five existing tests passed.
 - Verified local/public MCP initialization and discovery of all 15 read-only tools, plus live profile, positions, orders, quotes and NIFTY chain calls. These were connectivity tests, not a trading review.
-- The original personal-Mac server and ngrok processes were stopped. Its project was retained intact at `/Users/aryanayyar/dhan-chatgpt-mcp` for rollback.
+- The original personal-Mac server and ngrok processes were stopped. Its project was retained intact at `<private-project-root>` for rollback.
 - Existing ChatGPT connector URL does not need changing; connector UI state was not inspected. No OpenClaw tool registration or unrelated VolArb SSH adapter was changed.
 
 Check/restart services:
@@ -285,7 +290,7 @@ npm run auth:setup
 node src/token-cli.mjs --recover --session-end '2026-09-30T15:30:00+05:30'
 ```
 
-`auth:setup` opens a private native Mac dialog for the login mobile number (never paste it in chat). PIN is read privately from `/Users/maheit/Projects/VolArb/.env`. Browser state and optional login-number configuration remain under this project's mode-700 `.private/`; the target credentials file is `.env`, not `.environment`. Nothing in this workflow uses SSH or the personal Mac. The separate legacy VolArb SSH account adapters were not migrated by this change and must not be used for this workflow.
+`auth:setup` opens a private native Mac dialog for the login mobile number (never paste it in chat). PIN is read privately from `<private-project-root>`. Browser state and optional login-number configuration remain under this project's mode-700 `.private/`; the target credentials file is `.env`, not `.environment`. Nothing in this workflow uses SSH or the personal Mac. The separate legacy VolArb SSH account adapters were not migrated by this change and must not be used for this workflow.
 
 The default horizon is today's 15:30 IST regular NSE/BSE session close plus five minutes; after close it requires ten minutes of current validity and does not infer the next trading date. This does not change the strategy's 15:00 exit deadline. Explicit session horizons require a timezone.
 

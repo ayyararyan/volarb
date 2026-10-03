@@ -5,7 +5,7 @@
 - [x] Session VRP gate (`evaluate_session_vrp.py`, controller `SESSION_VRP`), loss-budget gate, re-entry gate, tests.
 - [x] RV forecaster freshness/news-packet/IV validation; fixture checker extended with negative cases; `build_rv_input.py`.
 - [x] MCP `dhan_get_butterfly_state` expiry normalization; local service redeployed.
-- [x] `summarize_trade_log.py` reads `trade-log/trades.csv`.
+- [x] `summarize_trade_log.py` reads CSV from an explicit private input path.
 - [x] 2026-09-30 NIFTY cycles recorded; `docs/DAILY_OPERATING_ALGORITHM.md` written.
 
 ## Open — current manual workflow

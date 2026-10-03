@@ -21,12 +21,12 @@ FAVOURABLE session VRP screen before selecting strikes.
 | 1 | 09:30 | If not `FAVOURABLE`: the day is closed for new entries. Journal the blocked check. Stop. | both | NO TRADE |
 | 2 | 09:45–09:55 | **Candidate search** (only if step 0 passed). Fresh Dhan positions and orders, one full chain, data health, five-minute HF block via the local sampler, one news packet, RV/drift gate, hard-risk gate, optimizer, margin preflight with ₹1,000 reserve. | Dhandho | one table, up to three candidates or NO TRADE |
 | 3 | — | **Honour the table.** NO TRADE means no trade. A blocked gate is NO TRADE. | Aryan | — |
-| 4 | after fills | **Confirm entry.** Tell Dhandho it filled. Reconcile fills from Dhan and record them first through the local shared-writer accounting store; sanitized trade and journal records follow without delaying risk management. | both | trade ID |
+| 4 | after fills | **Confirm entry.** Tell Dhandho it filled. Reconcile fills from Dhan and record them first through the local shared-writer accounting store; private trade and journal records follow without delaying risk management. | both | trade ID |
 | 5 | every 30 min | **Review.** Returns HOLD, SQUARE OFF or (rarely) RECENTRE. Cadence drops to 15–20 min when the RV state is MARGINAL or a break-even is within half an ATM straddle. Each review states session loss against the ₹1,000 budget. | Dhandho | one row |
 | 6 | — | **No self-directed rolls.** RECENTRE is only valid as a controller output with verified transition margin; today the preflight is entry-only, so RECENTRE is effectively unavailable. If the body is wrong, the answer is SQUARE OFF. | Aryan | — |
 | 7 | on trigger | **SQUARE OFF** when the review says so, when session loss reaches ₹1,000, or at 15:00 IST at the latest. | Aryan | flat |
 | 8 | after flat | **No re-entry** unless a fresh step 2 passes every gate again. Re-entry inherits the day's loss so far. | both | — |
-| 9 | after flat | **Closure record.** Fills, gross P&L, post-trade diagnosis, journal, publish to `main`. | Dhandho | commit hash |
+| 9 | after flat | **Closure record.** Fills, gross P&L, post-trade diagnosis and journal saved to the configured private store outside source. Never publish financial records to GitHub. | Dhandho | private persistence receipt |
 
 ## Terminal gates, in the order the controller checks them
 
@@ -72,18 +72,18 @@ Missing required candidate evidence blocks entry. For an existing position, miss
 | `re_entry_after_square_off` | bool | `RE_ENTRY_REQUIRES_FRESH_PASS` |
 | `fresh_candidate_pass` | bool | `RE_ENTRY_REQUIRES_FRESH_PASS` |
 
-## What went wrong on 30 September and what changed
+## Lessons incorporated on 30 September
 
-- Two NIFTY cycles were entered after a NO TRADE decision, with no session VRP, and rolled twice inside 40 minutes: gross −₹1,969.50 on 22 fills. See `trade-log/trades/2026-09-30-NIFTY-001.md` and `-002.md`.
+- A workflow audit identified that a NO TRADE decision must not be bypassed and that session VRP, loss-budget and re-entry gates need explicit inputs. Personal trade details remain in private records; the public source retains the engineering lessons only.
 - The HF sampler had been launched through a remote node exec and was refused; it now runs locally.
 - The RV forecaster accepted day-old HF blocks and a missing news packet as CURRENT/FAVOURABLE; it now requires a decision clock (`asof`), freshness within 120 s, an IV anchor, and caps the state at MARGINAL without a news packet.
 - The MCP butterfly-state tool failed on every open-position review because Dhan reports position expiries with a timestamp; the expiry is now normalized before the chain call.
-- The trade-log summariser could not read `trades.csv`; it now can, and reports gross INR, win/loss sizes and a broker-confirmed-only total.
+- The trade-log summariser gained CSV support and reports gross INR, win/loss sizes and a broker-confirmed-only total when given an explicit private input path.
 - The controller had no VRP or loss-budget input; both are now terminal gates, plus the re-entry gate.
 
 ## What is still not automated
 
 - Session loss must be supplied to each review from Dhan realized P&L plus the executable close cost; the controller does not fetch it.
 - The loss budget is a decision rule, not a broker-side stop. Realized loss can exceed it through slippage.
-- Net-after-charges P&L is unknown until reconciled in the local ledger; every figure in this repository is gross.
+- Net-after-charges P&L is unknown until reconciled in the private local ledger; label each private figure as gross or net. Account results are not published with source.
 - Nothing here monitors the market between reviews. Reviews happen when requested.

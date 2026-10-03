@@ -3,12 +3,11 @@ on:
   push:
     paths: ['VERSION', 'services/dhan-chatgpt-mcp/**', 'execution-engine/**', '.github/workflows/test-dhan-mcp.yml']
   pull_request:
-    paths: ['VERSION', 'services/dhan-chatgpt-mcp/**', 'execution-engine/**', '.github/workflows/test-dhan-mcp.yml']
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  test:
+  dhan-provider:
     runs-on: ubuntu-latest
     defaults:
       run:

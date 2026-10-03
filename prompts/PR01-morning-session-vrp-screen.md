@@ -12,7 +12,7 @@ Morning session VRP screen for NIFTY.
 Run evaluate_session_vrp.py against the local IV/HAR dashboard at http://127.0.0.1:8770/api/state.
 Report the state (FAVOURABLE / UNFAVOURABLE / UNKNOWN) with the IV and HAR RV figures it used and the dashboard timestamp.
 If the state is not FAVOURABLE, the day is closed for new entries: journal the blocked check and stop.
-Publish the journal entry to ayyararyan/volarb main before replying.
+Save the entry to the configured private journal outside the source checkout and verify persistence before replying; never publish financial records to GitHub.
 Reply with one table only.
 ```
 

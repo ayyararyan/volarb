@@ -46,7 +46,7 @@
       "required": false
     },
     "github_cli": {
-      "purpose": "sanitized journal publication",
+      "purpose": "reviewed source maintenance; never personal financial journal publication",
       "required_for_offline_setup": false
     },
     "clawlink-plugin": {
@@ -91,6 +91,8 @@
   ],
   "package_files": [
     "README.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
     "VERSION",
     "CHANGELOG.md",
     ".python-version",
@@ -101,6 +103,7 @@
     "requirements-dev.lock",
     "notes.md",
     "tasks.md",
+    ".gitattributes",
     ".gitignore"
   ]
 }

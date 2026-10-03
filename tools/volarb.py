@@ -270,7 +270,7 @@ def doctor(args):
     check('browser_recovery', platform.system() == 'Darwin' and
           Path(values.get('DHAN_BROWSER_EXECUTABLE') or '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome').is_file(),
           'Optional: macOS Chrome recovery; Linux/WSL requires a privately supplied Web token', required=False)
-    check('github_cli', bool(shutil.which('gh')), 'Install/authenticate GitHub CLI for journal publication (not needed offline)', required=False)
+    check('github_cli', bool(shutil.which('gh')), 'Install/authenticate GitHub CLI for authorized source maintenance (not needed offline)', required=False)
     check('model_and_news_access', False, 'Configure a model provider and current-news tools in OpenClaw; authentication/capability calls are not part of offline doctor', required=False)
     if not args.probe_mcp:
         check('mcp_connection', False, 'Not probed: --probe-mcp checks local health only; broker identity needs a separate authorized read', required=False)
@@ -313,10 +313,10 @@ def package(args):
             '# '+title+' — intentionally omitted from this source kit\n\n'
             'This directory is a navigation placeholder only. No journals, trades, '
             'account snapshots or financial records are packaged here.\n\n'
-            'Authorized users can consult the [private source repository]('
-            'https://github.com/ayyararyan/volarb/tree/main/'+directory+'). '
-            'Those records are historical evidence, never a substitute for the '
-            'restored private Trading/ledger shared-writer store.\n'
+            'Authorized operators use their configured private journal outside '
+            'the source checkout. Never publish those records to GitHub or use '
+            'them as a substitute for the restored private Trading/ledger '
+            'shared-writer store.\n'
         ).encode()
     hashes = {str(p.relative_to(SOURCE)): digest(p.read_bytes()) for p in allowed}
     hashes.update({name: digest(content) for name, content in omitted_history.items()})

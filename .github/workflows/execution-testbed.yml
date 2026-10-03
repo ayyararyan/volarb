@@ -2,15 +2,6 @@ name: Execution testbed
 
 on:
   pull_request:
-    paths:
-      - 'VERSION'
-      - 'execution-engine/**'
-      - 'execution-testkit/**'
-      - 'environments/execution/**'
-      - 'services/dhan-chatgpt-mcp/src/**'
-      - 'architecture/**'
-      - 'docs/workflows/vector-id-registry.json'
-      - '.github/workflows/execution-testbed.yml'
   push:
     branches: [main]
     paths:

@@ -2,14 +2,6 @@ name: Architecture identity checks
 
 on:
   pull_request:
-    paths:
-      - 'VERSION'
-      - 'architecture/**'
-      - 'docs/workflows/**'
-      - 'execution-engine/**'
-      - 'environments/execution/**'
-      - 'docs/architecture/**'
-      - '.github/workflows/architecture-identity.yml'
   push:
     branches: [main]
     paths:

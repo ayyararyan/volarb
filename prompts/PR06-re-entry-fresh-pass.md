@@ -13,7 +13,7 @@ This is a same-session re-entry after square-off of cycle <ID>. Session realized
 
 Treat this as a fresh complete pass: confirm flat with no pending orders in Dhan, re-read the session VRP dashboard, pull a fresh chain, run the local HF sampler and RV/drift forecast with a current news packet, then run the controller with re_entry_after_square_off true, daily_loss_budget_rupees 1000 and session_loss_rupees. Set fresh_candidate_pass true only after the fresh evidence acquisition and applicable prerequisite gates have actually passed; requesting a new search is not proof of a completed pass.
 Only if the controller reaches the optimizer, rank candidates and run dhan_check_butterfly_margin with reserveRupees 1000.
-Publish the journal entry to ayyararyan/volarb main before replying.
+Save the entry to the configured private journal outside the source checkout and verify persistence before replying; never publish financial records to GitHub.
 Reply with the Mode C table only.
 ```
 

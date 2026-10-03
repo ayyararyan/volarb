@@ -34,7 +34,7 @@ The MCP packet is ENTRY_ONLY. An overlapping RECENTRE needs independently verifi
 
 Maintain one row per butterfly cycle through verified closure using the existing local shared writer, `simple_ledger.csv`, nested `butterfly_reviews.json` and actual broker `tradelog.csv`. Same cycle ID through adjustments; new ID for re-entry. Never invent fills, profit or flatness. Repo trade records are historical evidence, not another live book.
 
-Score prior forecasts and compare actions after costs under the local internal review guide; unvalidated forecasts remain shadow-only. Append each completed check, blocked check, outlook and decision to the daily repository journal, preserve previous entries, push `main` and verify publication. Retry a publication conflict once, then disclose any failure. Keep raw private evidence local.
+Score prior forecasts and compare actions after costs under the local internal review guide; unvalidated forecasts remain shadow-only. Append each completed check, blocked check, outlook and decision to the configured private journal outside the source checkout, preserve previous entries and verify persistence. Retry a recordkeeping conflict once, then disclose any failure. Never publish personal market reviews, trades, P&L or broker evidence to GitHub. See the [private recordkeeping contract](../skill/butterfly-market-outlook/references/repo-logging.md).
 
 ## 7. Reply and execution boundary
 
@@ -46,12 +46,12 @@ No self-directed rolls. RECENTRE exists only as a controller output backed by a 
 
 ## 8. Software checks
 
-The packaging workflow runs all butterfly regressions, validates RV fixtures and packages all three skills. The service workflow installs locked dependencies and runs synthetic Node tests without Dhan credentials or browser sessions. Deployment and installed-skill refresh are separate explicit operations; GitHub is a source/journal destination, not live account state.
+The packaging workflow runs all butterfly regressions, validates RV fixtures and packages all three skills. The service workflow installs locked dependencies and runs synthetic Node tests without Dhan credentials or browser sessions. Deployment and installed-skill refresh are separate explicit operations; GitHub is a source-code destination only; personal journals and live account state remain private outside source.
 
 ## 9. Shadow day-workflow foundation — not live automation
 
 The [day-workflow source and synthetic regression suite](../services/day-workflow/README.md) simulate one selected butterfly, one lot total, and the owner’s ₹1,000 daily loss budget separately from the ₹1,000 free-cash reserve. Budget admission, executable liquidation P&L, duplicate/restart recovery, deadline events and completion are tested with synthetic evidence only. The budget is not a guaranteed realized-loss cap.
 
-LIVE mode is unconditionally rejected. Read-only observation and explicit shared-writer accounting adapters are implemented, but are not automatically dispatched by the SHADOW state machine. The live executor bridge, scheduling and journal-publication dispatch remain unconnected. Timing defaults are shadow-test defaults, not adopted live policy. The [policy draft](AUTONOMOUS_EXECUTION_POLICY_DRAFT.md) remains inactive; publication does not amend the covenant or authorize orders.
+LIVE mode is unconditionally rejected. Read-only observation and explicit shared-writer accounting adapters are implemented, but are not automatically dispatched by the SHADOW state machine. The live executor bridge, scheduling and private-journal dispatch remain unconnected. Timing defaults are shadow-test defaults, not adopted live policy. The [policy draft](AUTONOMOUS_EXECUTION_POLICY_DRAFT.md) remains inactive; publication does not amend the covenant or authorize orders.
 
 The MCP source adds `entrySequence: PAIRED_HEDGES` for put wing → put body → call wing → call body, preserving WINGS_FIRST by default. Require a fresh packet bound to the actual execution sequence and `reserveRupees: 1000`. Do not reuse a WINGS_FIRST result for the paired path. Historical read-only discovery on 2026-09-29 lacked this input. That dated receipt is not a claim about the current deployment: source supports it; verify the running schema separately before use. No service was restarted for this cleanup.

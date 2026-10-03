@@ -14,5 +14,5 @@ This archive preserves superseded designs and dated implementation snapshots. It
 - Each archived directory states its active period, replacement and execution status.
 - Keep historical assertions as history; do not silently rewrite old designs into modern ones. Add a notice and repair relocated navigational links when needed.
 - Preserve working compatibility imports, aliases and entrypoints in their active locations with explicit replacement pointers.
-- Keep dated market/trade records in their established journal paths. They were not rewritten or relocated by this cleanup.
+- The 2026-10-03 private-repository cleanup retained dated market/trade records at their then-established paths. Public-release preparation subsequently excluded those personal records from public source/history and preserved them in verified private storage. Do not restore them to this archive.
 - Never archive credentials or private runtime state. No archived configuration should be enabled as part of setup.

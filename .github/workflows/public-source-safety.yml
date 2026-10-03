@@ -1,0 +1,22 @@
+name: Public source safety
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-source-safety:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.13'
+      - name: Reject private payloads and unsafe publication sources
+        run: python -B tools/check_public_source.py
+      - name: Publication guard regressions
+        run: python -B -m unittest discover -s tests -p 'test_public_source.py' -v
+      - name: Verify purely synthetic RV fixtures
+        run: python -B skill/intraday-realized-volatility-forecast/scripts/generate_synthetic_fixtures.py --check

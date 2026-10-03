@@ -3,7 +3,6 @@ on:
   push:
     paths: ['VERSION', 'agent/**', '.github/workflows/test-research-agent.yml']
   pull_request:
-    paths: ['VERSION', 'agent/**', '.github/workflows/test-research-agent.yml']
   workflow_dispatch:
 permissions:
   contents: read

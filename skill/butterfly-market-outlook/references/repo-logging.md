@@ -1,18 +1,22 @@
-# Repository logging workflow
+# Private recordkeeping workflow
 
-Use this workflow as a backend side effect of every completed Butterfly Market Outlook run when the GitHub connector is writable.
+Use this workflow after every completed Butterfly Market Outlook run. The source
+repository `ayyararyan/volarb` is not a destination for market reviews, account data
+or personal financial records.
 
-Canonical repository: `ayyararyan/volarb`
-
-Canonical branch: `main`
+Configure an authorized **private journal root outside the source checkout**. All
+`market-outlook/` and `trade-log/` paths below are relative to that private root.
+Use the existing private store when available; do not create a remote repository,
+change access controls or schedule work implicitly. If no private destination is
+configured, report recordkeeping as blocked; never fall back to public GitHub.
 
 Use Asia/Kolkata timestamps throughout.
 
 ## Accounting and authority boundary
 
-This is the sanitized **repository publication workflow**, not the live accounting writer. The sole live book is the external configured `Trading/ledger/` shared-writer store (`simple_ledger.csv`, `butterfly_reviews.json`, `tradelog.csv`). Repository records are historical/publication projections, never fresh positions, order state or an alternate live ledger.
+This is the **private research and lifecycle recordkeeping workflow**, not the live accounting writer. The sole live book is the external configured `Trading/ledger/` shared-writer store (`simple_ledger.csv`, `butterfly_reviews.json`, `tradelog.csv`). Journal records are historical research projections, never fresh positions, order state or an alternate live ledger.
 
-Use one stable butterfly **cycle ID through adjustments/recenters**. A verified fully closed cycle followed by a fresh entry gets a new ID. Reconcile actual fills and accounting through the local shared writer before publishing the corresponding sanitized lifecycle facts. Do not rewrite historical records during source maintenance.
+Use one stable butterfly **cycle ID through adjustments/recenters**. A verified fully closed cycle followed by a fresh entry gets a new ID. Reconcile actual fills and accounting through the local shared writer before recording the corresponding private lifecycle facts. Preserve historical records in private storage; do not restore them into public source during maintenance.
 
 Generic CARRY fields below preserve schema/history; the adopted personal covenant prohibits overnight carry. Unchanged and blocked checks are journal-worthy. Recordkeeping must never delay a time-sensitive risk decision.
 
@@ -42,7 +46,7 @@ Treat these as journal-worthy events:
 
 ## 2. One market-outlook markdown file per day
 
-Path:
+Path relative to the configured private journal root:
 
 `market-outlook/YYYY-MM-DD.md`
 
@@ -104,20 +108,19 @@ For a candidate search, list the returned candidate(s) or NO TRADE reason inside
 
 Before modifying a daily file:
 
-1. Fetch the latest file from `main`.
-2. If absent, create it.
-3. If present, use its current blob SHA for the update.
-4. Append the new section; do not replace earlier entries.
-5. Use a commit message such as:
-   - `Log 2026-09-22 11:20 IST NIFTY outlook`
-   - `Log 2026-09-22 14:40 IST NIFTY position review`
-6. If a SHA conflict occurs, refetch once, merge by appending the missing section, and retry once.
+1. Resolve the authorized private journal root and verify it is outside the source checkout.
+2. Read the latest file from that store; create it only if absent.
+3. Use the store's existing lock/version checks and atomic-write procedure.
+4. Append the new timestamped section; preserve earlier entries and avoid duplicate events.
+5. If concurrent updates conflict, reread once, append only the missing section and retry once.
+6. Verify persistence and record a private receipt (event ID or content hash).
 
-Never claim a log was written unless the GitHub write succeeds.
+Never claim a record was saved unless the private write succeeds. Do not push the
+record, a financial excerpt or its private storage path to public GitHub.
 
-## 4. Published historical trade summary
+## 4. Private historical trade summary
 
-Repository summary (not the live ledger):
+Private journal summary (not the live ledger), relative to its root:
 
 `trade-log/trades.csv`
 
@@ -171,7 +174,7 @@ Clearly state whether P&L is gross or net of charges in `notes`.
 
 ## 5. Trade-specific markdown record
 
-For each executed trade, maintain:
+For each executed trade, maintain within the private journal root:
 
 `trade-log/trades/<trade_id>.md`
 
@@ -229,7 +232,7 @@ A separately verified full closure followed by a fresh entry is re-entry and rec
 
 ## 7. Post-trade episode
 
-Canonical calibration file:
+Private calibration file, relative to the private journal root:
 
 `trade-log/episodes.jsonl`
 
@@ -255,15 +258,17 @@ Avoid duplicate JSONL objects for the same `episode_id`. Fetch first and replace
 
 ## 8. Sensitive-data rule
 
-Never commit:
-- Dhan access tokens;
-- API secrets;
-- passwords;
-- full account/client identifiers;
-- private authentication URLs;
-- unrelated personal financial information.
+Never publish to the source repository, Git history, issues, pull requests or release assets:
 
-Position geometry, fills, trade P&L, option analytics and market research are allowed when they are part of this trading journal.
+- tokens, API secrets, passwords, cookies or authentication artifacts;
+- account/client identifiers, private infrastructure endpoints or workstation paths;
+- personal position geometry, fills, trade P&L, financial ledgers or account snapshots;
+- private market reviews, raw broker evidence or market datasets without publication rights.
+
+The private journal may retain necessary confirmed trading facts under its existing
+access controls. Sanitizing account IDs alone does not make financial records
+public-safe. Source changes and deliberately synthetic fixtures may be published
+through normal review; this workflow never authorizes public financial disclosure.
 
 ## 9. Ordering relative to the user-facing answer
 
@@ -274,6 +279,8 @@ For each run:
 3. persist the relevant daily/trade records;
 4. emit the normal minimal one-table answer.
 
-The GitHub commit is a record of the completed decision, not an input that should distort the decision.
+The private persistence receipt records the completed decision; it is not an
+input that should distort the decision. No GitHub commit is required for a market
+review, and no private record is a source-code contribution.
 
 If logging fails after one conflict-safe retry, do not delay or suppress a time-sensitive risk decision. Return the normal decision and add one concise logging-failure note after the table.

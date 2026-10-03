@@ -1,51 +1,69 @@
 #!/usr/bin/env python3
-"""Quick validator for local skill folders."""
-import sys
-import re
-import yaml
+"""Check VolArb's skill metadata contract without executing skill code.
+
+Implementation replaced for the 2026-10-04 publication audit. The public
+``validate_skill(path) -> (bool, explanation)`` interface is retained.
+Copyright © 2026 Shunya. All Rights Reserved. See the repository LICENSE.
+"""
+
+import argparse
+from collections.abc import Mapping
 from pathlib import Path
 
-def validate_skill(skill_path):
-    skill_path = Path(skill_path)
-    skill_md = skill_path / "SKILL.md"
-    if not skill_md.exists():
-        return False, "SKILL.md not found"
-    content = skill_md.read_text()
-    if not content.startswith("---"):
-        return False, "No YAML frontmatter found"
-    match = re.match(r"^---\n(.*?)\n---", content, re.DOTALL)
-    if not match:
-        return False, "Invalid frontmatter format"
+import yaml
+
+METADATA_FIELDS = frozenset({"name", "description", "license", "allowed-tools", "metadata"})
+
+
+def _metadata(document):
+    lines = document.splitlines()
+    if not lines or lines[0] != "---":
+        raise ValueError("SKILL.md must start with a YAML frontmatter delimiter")
     try:
-        frontmatter = yaml.safe_load(match.group(1))
-        if not isinstance(frontmatter, dict):
-            return False, "Frontmatter must be a YAML dictionary"
-    except yaml.YAMLError as e:
-        return False, f"Invalid YAML in frontmatter: {e}"
+        end = lines.index("---", 1)
+    except ValueError as error:
+        raise ValueError("SKILL.md frontmatter has no closing delimiter") from error
+    values = yaml.safe_load("\n".join(lines[1:end]))
+    if not isinstance(values, Mapping):
+        raise ValueError("Skill metadata must be a mapping")
+    extra = set(values).difference(METADATA_FIELDS)
+    if extra:
+        raise ValueError("Unsupported skill metadata field(s): " + ", ".join(sorted(map(str, extra))))
+    return values
 
-    allowed = {"name", "description", "license", "allowed-tools", "metadata"}
-    unexpected = set(frontmatter.keys()) - allowed
-    if unexpected:
-        return False, f"Unexpected frontmatter keys: {', '.join(sorted(unexpected))}"
-    if "name" not in frontmatter or "description" not in frontmatter:
-        return False, "Missing required name or description"
 
-    name = frontmatter["name"]
-    if not isinstance(name, str) or not re.match(r"^[a-z0-9-]+$", name):
-        return False, "Name must be lowercase hyphen-case"
-    if name.startswith("-") or name.endswith("-") or "--" in name or len(name) > 64:
-        return False, "Invalid skill name"
+def validate_skill(skill_path):
+    """Return a validation result; malformed documents do not escape as errors."""
+    directory = Path(skill_path)
+    try:
+        values = _metadata((directory / "SKILL.md").read_text(encoding="utf-8"))
+        name = values.get("name")
+        if not isinstance(name, str) or not 1 <= len(name) <= 64:
+            raise ValueError("A skill name of 1–64 characters is required")
+        segments = name.split("-")
+        if any(not segment or any(char not in "abcdefghijklmnopqrstuvwxyz0123456789" for char in segment)
+               for segment in segments):
+            raise ValueError("Skill names must contain lowercase ASCII words separated by single hyphens")
+        description = values.get("description")
+        if not isinstance(description, str) or len(description.strip()) > 1024:
+            raise ValueError("A text description of at most 1024 characters is required")
+        if set(description).intersection("<>"):
+            raise ValueError("Skill descriptions cannot contain angle brackets")
+        if not (directory / "agents" / "openai.yaml").is_file():
+            raise ValueError("The skill must include agents/openai.yaml")
+    except (OSError, UnicodeError, ValueError, yaml.YAMLError) as error:
+        return False, str(error)
+    return True, f"Metadata and agent entrypoint verified for {name}"
 
-    description = frontmatter["description"]
-    if not isinstance(description, str) or "<" in description or ">" in description or len(description.strip()) > 1024:
-        return False, "Invalid description"
 
-    if not (skill_path / "agents" / "openai.yaml").exists():
-        return False, "agents/openai.yaml not found"
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("skill_path", type=Path)
+    arguments = parser.parse_args()
+    accepted, explanation = validate_skill(arguments.skill_path)
+    print(explanation)
+    return 0 if accepted else 1
 
-    return True, "Skill is valid!"
 
 if __name__ == "__main__":
-    valid, message = validate_skill(sys.argv[1])
-    print(message)
-    raise SystemExit(0 if valid else 1)
+    raise SystemExit(main())

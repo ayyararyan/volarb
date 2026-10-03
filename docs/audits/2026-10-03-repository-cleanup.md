@@ -1,5 +1,17 @@
 # Repository cleanup audit — 2026-10-03
 
+> **Publication boundary update — 2026-10-04:** This is a dated report of the
+> private-repository cleanup. Its financial/journal preservation claims and the
+> accompanying classification TSV describe that earlier state. Public-release
+> preparation subsequently removed personal financial payloads from public source
+> and retained originals in a verified private backup. The classification TSV
+> replaces both path cells for 21 personal-record rows with neutral
+> `private-record-NNN` identifiers; filenames can themselves reveal trading dates,
+> instruments and cycle identities. Categories, row order, counts and historical
+> rationales are unchanged. The original TSV and exact identifier-to-path mapping
+> are retained privately, not in Git. These rows remain historical personal records,
+> not synthetic fixtures, available datasets or restore instructions.
+
 ## Scope and baseline
 
 Audited private `ayyararyan/volarb` from `origin/main` **`ec534e8`**: **402 tracked files**, including hidden CI/configuration, source, tests, skills, research assets and dated records. Read the full tree and recent architecture history before moving files. Used parallel architecture/execution, provider/services/installation, and research/skills reviewers, plus a repository navigation/operations/CI pass.

@@ -1,6 +1,6 @@
 # Development history
 
-Dated development history. Version and implementation statements inside older entries describe their period, not current deployment. Current entrypoints are in the [repository map](REPOSITORY_MAP.md).
+Dated development history. Version and implementation statements inside older entries describe their period, not current deployment. Personal journals and financial records preserved during the private-repository cleanup were subsequently removed from the public source boundary and retained in a verified private backup; historical preservation claims below describe the earlier private state. Current entrypoints are in the [repository map](REPOSITORY_MAP.md).
 
 ## 2026-09-20 — Front-end discipline and wide-fly optimization
 
@@ -19,7 +19,7 @@ The idea of reading the full exchange option surface and deriving skew, curvatur
 
 The Dhan connector became the preferred source for live position truth and structured full-chain data.
 
-During the carried NIFTY butterfly review, the exit rule was refined. A fixed percentage of original maximum theta was recognized as insufficient because the attainable profit changes as spot drifts.
+During a near-expiry workflow review, the exit rule was refined. A fixed percentage of original maximum theta was recognized as insufficient because the attainable profit changes as spot drifts.
 
 The workflow therefore moved to **Dynamic Harvest Saturation**: compare the amount already bankable with what is still realistically harvestable from the current state, while explicitly accounting for gamma/path risk and break-even buffer.
 
@@ -42,12 +42,12 @@ A promotion-gate concept was introduced to compare the more sophisticated v2 eng
 
 ## 2026-09-22 — Repository capture
 
-The complete live Butterfly Market Outlook v2 skill source, references and scripts were copied into this repository. Trade/review history is stored with explicit provenance so missing historical broker fields are left unknown rather than reverse-engineered.
+The complete live Butterfly Market Outlook v2 skill source, references and scripts were copied into this repository. Trade/review recordkeeping adopted explicit provenance so missing historical broker fields are left unknown rather than reverse-engineered. Those personal records now remain outside public source in private storage.
 
 
 ## 2026-09-23 — Overnight carry failure becomes a first-class problem
 
-The SENSEX expiry-eve carry exposed a weakness in treating overnight theta as though it were locally continuous. The following morning's large gap overwhelmed the expected theta harvest and the trade was closed for a gross realized loss.
+An expiry-eve risk review exposed a weakness in treating overnight theta as though it were locally continuous: gap risk can overwhelm the expected theta harvest. The public history preserves that design lesson, not the underlying personal trade record.
 
 The engine was tightened around:
 - next-actionable-exit rather than expiry-payoff thinking;
@@ -80,7 +80,7 @@ A low VIX no longer qualifies as evidence of a calm regime when realized tail ga
 
 ## 2026-09-30 — Session VRP gate, loss budget, validation fixes (v2.6)
 
-Two NIFTY iron-fly cycles were traded after a NO TRADE decision and while the local IV/HAR dashboard showed implied volatility below the HAR realized-volatility forecast. Gross result −₹1,969.50 on 22 fills. The engine had no session-level premium input and no loss-budget input, and three tooling defects were found during the audit.
+A workflow audit identified missing session-level premium and loss-budget inputs, the need to enforce NO TRADE decisions, and three tooling defects. Personal trade results and execution details are retained privately rather than reproduced in the public development history.
 
 Changes:
 
@@ -89,7 +89,7 @@ Changes:
 - **Re-entry gate.** A candidate after a same-session square-off requires a fresh full pass.
 - **RV forecaster validation.** Decision clock (`asof`) with 120-second freshness, future-skew rejection, surface-snapshot alignment, mandatory news packet (capped at MARGINAL when missing), consistent low-confidence INSUFFICIENT_DATA without an IV anchor. Fixture checker extended with five negative cases. `build_rv_input.py` converts office-Mac sampler evidence into forecaster input.
 - **MCP.** `dhan_get_butterfly_state` normalizes Dhan's timestamped position expiry to `YYYY-MM-DD` before the chain call; the Invalid Expiry Date failure on every open-position review is fixed and covered by a test.
-- **Trade-log summariser** reads `trade-log/trades.csv` and reports gross INR statistics including a broker-confirmed-only total.
+- **Trade-log summariser** accepts explicit private CSV inputs and reports gross INR statistics including a broker-confirmed-only total.
 - **Documentation.** `docs/DAILY_OPERATING_ALGORITHM.md` is the single daily sequence; decision-algorithm.md is v2.6.
 
 Not changed: thresholds in the optimizer, expiry-exit or overnight engines; the covenant; live execution remains disabled.

@@ -59,7 +59,7 @@ Serialize operations with durable intent, stable identifiers and a lock. After a
 
 Schedule bounded reviews using the actual forecast horizon and covenant. HOLD must have a verified next review. Missing HF observations alone follow the controller's degraded-data rule; missing account access never means flat or HOLD.
 
-Risk-reducing exits take priority over new entries, candidate optimization and journal publication. Start closure with the approved buffer before 15:00 IST; honor any earlier broker/exchange deadline. No new entry or recenter at/after 15:00. No authorized overnight carry.
+Risk-reducing exits take priority over new entries, candidate optimization and private recordkeeping. Start closure with the approved buffer before 15:00 IST; honor any earlier broker/exchange deadline. No new entry or recenter at/after 15:00. No authorized overnight carry.
 
 Use a separately scheduled deadline check that does not depend on an earlier HOLD job successfully scheduling its successor. Both paths share the same execution lock. If exposure remains after 15:00, declare a breach, prohibit new exposure, alert immediately and continue only authorized risk-reducing recovery while the market is actionable. Never claim guaranteed flatness or an executable after-close exit.
 
@@ -73,7 +73,7 @@ On broker/auth/host/data failure: block new exposure, retain durable state, use 
 
 Reconcile broker-confirmed fills through the existing shared writer into the canonical local ledger, trade events and review records. Preserve the cycle ID through approved adjustments; a separately authorized re-entry receives a new ID. Operational executor state is not a second financial ledger. Estimated charges remain labeled; no invented net profit.
 
-Publish sanitized completed reviews and decisions to the authorized repository under the existing journal procedure. Publication failures must be reported and must never prevent urgent exits. Prevent further discretionary entry when unresolved accounting state makes risk or ownership uncertain.
+Record completed reviews and decisions in the configured private journal outside the source checkout under the [recordkeeping procedure](../skill/butterfly-market-outlook/references/repo-logging.md). Never publish personal financial records to GitHub. Persistence failures must be reported and must never prevent urgent exits. Prevent further discretionary entry when unresolved accounting state makes risk or ownership uncertain.
 
 Declare DONE only after broker verification of zero strategy exposure and no pending strategy orders. Disable day-owned review jobs after verified completion; retain/report any accounting or publication repair task separately. Never disable unrelated jobs. No activation carries into the next day.
 
