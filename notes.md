@@ -1032,3 +1032,40 @@ Current capabilities include:
 **Preservation rule:** Reuse the mature safety/recovery primitives already present where they fit the new boundary. Do not preserve butterfly-specific policy in Box 5 merely because it already exists.
 
 **VID decision:** No new internal Box 5 VIDs are allocated by this discovery pass. `[5,0,0,0,0]` remains the only Box 5 VID until the first internal architectural object is actually decided.
+
+
+### 2026-10-03 — Box 5 atomicity boundary: instrument-level commands, never butterflies
+
+**Raw intent:** By the time control reaches the external Dhan execution layer, the strategy/execution intelligence has already selected the exact option contract to transact. Dhan should not be asked to "execute a butterfly" as a strategic object. Its unit of work is an individual tradable instrument instruction such as buy/sell a specific call or put at a specific strike and maturity.
+
+**Architecture interpretation:** The Box 4 -> Box 5 execution boundary is **atomic at the instrument level**. A butterfly remains an upstream Volarb concept. Box 4 decomposes any multi-leg structure into individual instrument commands and determines when each command should be issued. Box 5 does not need to know whether a given leg belongs to a butterfly, hedge, recenter, exit, or some future strategy.
+
+The existing `[4,0,5,7,1]` contract is therefore clarified as an **Atomic Broker-Neutral Instrument Execution Command**.
+
+Conceptually:
+
+```text
+Box 4 knows:
+  "this is a butterfly and these are its legs / desired sequence"
+
+Box 5 receives only:
+  BUY or SELL
+  + exact economic instrument identity
+  + size
+  + later-defined execution parameters
+
+Example semantic identity:
+  underlying = NIFTY
+  instrument = OPTION
+  option_type = CALL
+  strike = 25,000
+  expiry = YYYY-MM-DD
+```
+
+**Important provider boundary:** Box 4 should identify the economic contract, not pass a Dhan-specific Security ID. Box 5 mechanically resolves the semantic instrument identity into Dhan-specific identifiers and metadata such as Security ID, exchange segment, lot size, tick size and freeze quantity. The existing Dhan instrument-master code is reusable for this translation.
+
+**Explicitly not part of the Box 5 command:** butterfly geometry, wing/body role, strategy name, recenter intent, substitute strikes, alternative structures or any other strategy-level meaning.
+
+**Still unresolved:** exact quantity representation (lots versus units), price/limit fields, order type, repricing authority, sequencing rules, modification semantics and fill-driven progression. This decision fixes only the atomic execution unit.
+
+**VID decision:** No new Box 5 VID is created yet. This is a clarification of the existing boundary contract `[4,0,5,7,1]`, whose VID remains unchanged.

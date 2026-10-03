@@ -182,3 +182,69 @@ No official atomic arbitrary multi-leg iron-butterfly placement endpoint has bee
 ### VID status
 
 No internal Box 5 VIDs are created by this inspection. `[5,0,0,0,0]` remains the only allocated Box 5 identity until an internal object is actually decided.
+
+
+## First design decision — atomic instrument execution
+
+The atomic unit crossing into Box 5 is **one instrument instruction**, not a butterfly.
+
+A butterfly is an upstream Volarb object. By the time Box 4 calls the Dhan layer, Box 4 has already decided the exact economic contract to transact. The Dhan layer therefore receives commands of the conceptual form:
+
+```text
+BUY | SELL
+economic instrument identity:
+  underlying
+  instrument class
+  CALL | PUT
+  strike
+  expiry
+size
+[execution parameters still TBD]
+```
+
+The existing `[4,0,5,7,1]` boundary contract is clarified as **Atomic Broker-Neutral Instrument Execution Command**.
+
+### What Box 5 must not receive
+
+The ingress command should not need:
+- butterfly lower/center/upper geometry;
+- wing/body labels;
+- strategy name;
+- recenter/hedge/exit rationale;
+- alternative strikes or substitute trades;
+- any instruction to choose among strategies.
+
+Those meanings remain in Box 4.
+
+### Dhan-specific resolution
+
+The command should identify the economic contract rather than a Dhan Security ID.
+
+Box 5 mechanically maps that identity to Dhan-specific execution metadata, reusing the existing instrument-master implementation where possible:
+- Security ID;
+- exchange segment;
+- lot size;
+- tick size;
+- freeze quantity;
+- current tradability/enabled metadata.
+
+This is translation, not strategy intelligence.
+
+### Sequencing implication
+
+Because Box 5 operates on one instrument command at a time, it does not need an `executeButterfly` primitive at the Box 4 -> Box 5 boundary. The order in which butterfly legs are submitted can therefore be represented by the order in which Box 4 sends atomic instrument commands, subject to later-defined Dhan mechanical constraints and broker facts.
+
+The precise butterfly leg sequence is **not decided yet**.
+
+### Still open
+
+- whether command size is expressed in lots, units, or both;
+- exact price/limit representation;
+- which order types Box 5 accepts;
+- whether/how Box 5 may mechanically reprice;
+- modify-versus-cancel/replace behavior;
+- fill/partial-fill event contract;
+- Dhan-specific sequencing constraints;
+- what mechanical validation happens before a command is allowed to reach the Dhan order API.
+
+No new Box 5 VID is allocated by this decision; it narrows the meaning of existing boundary contract `[4,0,5,7,1]`.

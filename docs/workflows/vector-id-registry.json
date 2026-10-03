@@ -1966,7 +1966,7 @@
         7,
         1
       ],
-      "name": "Canonical broker-neutral execution command",
+      "name": "Atomic broker-neutral instrument execution command",
       "kind": "data_contract",
       "parent_vid": [
         4,
@@ -1974,7 +1974,8 @@
         0,
         0,
         0
-      ]
+      ],
+      "note": "One tradable instrument instruction at a time. Strategy/multi-leg structure meaning remains in Box 4; provider-specific identifiers are resolved downstream."
     },
     {
       "vid": [

@@ -16,7 +16,7 @@ flowchart TD
     F["[4,0,6,8,1] Active Broker Provider Plug-in"]
     G["[4,0,7,8,1] Dhan API / Broker"]
     H["[4,0,7,8,2] Kotak / ICICI / other broker"]
-    I["[4,0,5,7,1] Canonical broker-neutral execution command"]
+    I["[4,0,5,7,1] Atomic broker-neutral instrument execution command"]
     J["[4,0,6,6,1] ExecutionPort / thin Broker Executor"]
     K["[4,0,3,1,2] Live execution / risk / monitoring policy"]
     L["[4,0,4,1,2] Hold / adjust / recenter / hedge / reduce / exit"]
@@ -54,6 +54,14 @@ This is the intelligent layer. It will own execution sequencing, responses to fi
 This is intentionally thin. It translates canonical commands, handles authentication, instrument/token mapping, IP whitelisting, order IDs, broker errors, and returns authoritative execution/account facts.
 
 It must not independently choose strikes, alter structures, resize because it prefers another size, recenter, or alter strategy logic.
+
+### [4,0,5,7,1] Atomic instrument command
+
+The execution contract crossing toward the broker layer is atomic at one tradable instrument at a time. Box 4 may understand and sequence a butterfly, but the broker executor receives no butterfly object.
+
+A command identifies the economic instrument (for example underlying, option type, strike and expiry), side and size. Dhan-specific Security IDs and exchange metadata are resolved inside the Dhan provider boundary rather than leaking into Box 4.
+
+Price/order-type/repricing and exact sequencing semantics remain TBD.
 
 ## Broker margin dependency
 
