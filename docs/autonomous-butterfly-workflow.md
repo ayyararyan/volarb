@@ -1,0 +1,143 @@
+# Autonomous Butterfly Trading Workflow — Preliminary Graph v0.1
+
+This is the living master decision graph for the autonomous Volarb butterfly trading system.
+
+It is intentionally preliminary. Nodes marked **TBD** are architectural placeholders that will be designed independently as the workflow develops.
+
+## Master decision graph
+
+```mermaid
+flowchart TD
+
+    A[Start / Wake] --> B[Multi-day Regime Gate]
+
+    B -->|Unfavorable| C[Regime Recheck Scheduler]
+    C --> D[Wait until next regime review]
+    D --> B
+
+    B -->|Favorable| E[Underlying Opportunity Selector]
+
+    E -->|No underlying selected| F[Intraday Opportunity Recheck Scheduler]
+    F --> G[Wait until next intraday scan]
+    G --> E
+
+    E -->|Selected set S| H[Portfolio Capital Allocator]
+
+    H --> I{For each X in selected set S}
+
+    I --> JX[Launch Graph X]
+
+    subgraph GX["Per-Underlying Graph X"]
+        JX --> KX[Capital budget W_X received]
+        KX --> LX[Build admissible structure universe C_X]
+
+        LX --> MX["Candidate examples:
+        symmetric iron butterfly
+        ATM +/- 500
+        ATM +/- 600
+        asymmetric butterfly
+        iron condor
+        other approved short-vol structures"]
+
+        MX --> NX[Constrained Structure Optimizer]
+
+        NX -->|No feasible / attractive candidate| OX[Per-underlying no-trade state]
+        OX --> PX[Per-underlying recheck timing TBD]
+        PX --> LX
+
+        NX -->|Candidate selected| QX[Selected StructureSpec]
+        QX --> RX[Next stage: trade construction / execution / management TBD]
+    end
+
+    RX --> SX[Future trade lifecycle subgraph TBD]
+
+    H -. shared capital and risk constraints .-> JX
+```
+
+## Current interpretation
+
+The master graph currently has two different waiting loops:
+
+1. **Multi-day regime loop**  
+   Used when the broader short-gamma environment is unfavorable.
+
+2. **Intraday opportunity loop**  
+   Used when the broader regime is favorable but none of NIFTY, BANKNIFTY, or SENSEX is currently selected.
+
+When the underlying selector returns a non-empty set (S), the portfolio layer allocates capital to each selected underlying. Each selected underlying then receives its own independent graph.
+
+For a selected underlying (X):
+
+- the graph receives a capital budget (W_X);
+- an admissible candidate universe (C_X) is constructed;
+- a constrained optimizer selects the best candidate that satisfies the capital/margin budget and other future admissibility constraints;
+- the optimizer is allowed to return no feasible candidate;
+- the selected output is a broker-neutral `StructureSpec`, not a broker order.
+
+## Current graph hierarchy
+
+```text
+MASTER GRAPH
+|
+|-- Multi-day Regime Gate
+|   |-- unfavorable -> Regime Recheck Scheduler -> back to Regime Gate
+|   |
+|   +-- favorable
+|        |
+|        +-- Underlying Opportunity Selector
+|             |
+|             |-- empty set -> Intraday Opportunity Recheck -> selector again
+|             |
+|             +-- selected set S
+|                  |
+|                  +-- Portfolio Capital Allocator
+|                       |
+|                       +-- Graph NIFTY      if selected
+|                       +-- Graph BANKNIFTY  if selected
+|                       +-- Graph SENSEX     if selected
+|
++-- PER-UNDERLYING GRAPH X
+     |
+     +-- receive W_X
+     +-- build candidate set C_X
+     +-- constrained optimizer
+          |
+          |-- no candidate -> recheck path TBD
+          |
+          +-- selected StructureSpec
+               |
+               +-- execution / management lifecycle TBD
+```
+
+## Design rules already established
+
+- Dhan is an infrastructure provider, not part of the core architecture.
+- Research data, decision-time market data, and execution are separate provider interfaces.
+- The regime gate is multi-day, not intraday.
+- Underlying selection is distinct from structure selection.
+- Capital is allocated to an underlying graph before its structure optimizer runs.
+- NIFTY, BANKNIFTY, and SENSEX graphs may run concurrently.
+- Shared account capital cannot be double-counted by parallel graphs.
+- A favorable regime does not force a trade.
+- A selected underlying does not force a structure.
+- An optimizer may return **NO FEASIBLE CANDIDATE**.
+- Broker execution remains downstream of the broker-neutral decision graph.
+
+## Next expansion points
+
+The graph is expected to expand primarily at these nodes:
+
+- Regime Gate
+- Regime Recheck Scheduler
+- Underlying Opportunity Selector
+- Intraday Opportunity Recheck Scheduler
+- Portfolio Capital Allocator
+- Per-underlying Structure Optimizer
+- No-candidate recheck path
+- Trade construction
+- Order execution
+- Position monitoring
+- Hold / recenter / hedge / reduce / exit decisions
+- Portfolio risk coordination
+- Post-trade learning and research feedback
+
