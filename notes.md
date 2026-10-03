@@ -1401,6 +1401,6 @@ Canonical detail: `docs/providers/dhan-execution.md`.
 
 **Margin boundary:** an indicative margin shortfall is returned as data, not raised as an error. Only an actual broker/RMS rejection becomes a Provider Error. This preserves Margin Optimization ownership.
 
-**Streams:** STREAM remains reserved in the contract but live market/order WebSockets are not yet advertised as implemented. They are the next latency transport enhancement.
+**Streams:** live Dhan market and account-wide order-update WebSockets are now implemented behind the Broker Port. Market TICKER/QUOTE/FULL binary packets are normalized, subscriptions are batched to Dhan limits, and account-wide order updates are normalized into broker facts. REST remains the bootstrap/snapshot/reconciliation path.
 
 **VID:** no new provider VID. Existing global `[0,0,1,7,1] Provider Error Envelope` remains the error contract.

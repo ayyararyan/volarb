@@ -8,10 +8,10 @@ Dhan implements the mounted broker-provider boundary. Internal Execution remains
 
 | Internal Execution area | Dhan operations required | Purpose |
 |---|---|---|
-| State Integrity | GET_READINESS, GET_ACCOUNT_SNAPSHOT, GET_QUOTE, GET_ORDERS, GET_TRADES | establish whether broker/account/market/order truth is usable |
+| State Integrity | GET_READINESS, GET_ACCOUNT_SNAPSHOT, STREAM_MARKET, STREAM_ORDER_UPDATES, GET_QUOTE, GET_ORDERS, GET_TRADES | establish whether broker/account/market/order truth is usable |
 | Margin Optimization | GET_POSITIONS, GET_FUNDS, GET_ORDERS, GET_MARGIN, GET_BASKET_MARGIN | obtain authoritative account and hypothetical margin facts; Dhan does not decide affordability |
 | Execution Slicing | **none** | slicing is core-owned; Dhan native slicing is not used |
-| Optimal Execution | GET_QUOTE / GET_LTP, PLACE_ORDER, MODIFY_ORDER, CANCEL_ORDER, GET_ORDER, GET_ORDER_TRADES | observe current state and transmit the exact upstream-selected action |
+| Optimal Execution | STREAM_MARKET, STREAM_ORDER_UPDATES, GET_QUOTE / GET_LTP, PLACE_ORDER, MODIFY_ORDER, CANCEL_ORDER, GET_ORDER, GET_ORDER_TRADES | use low-latency live state and transmit the exact upstream-selected action |
 | Execution Recovery | GET_ORDER, GET_ORDER_BY_CORRELATION, GET_ORDER_TRADES, GET_ORDERS, GET_TRADES, GET_HISTORICAL_TRADES, GET_POSITIONS | reconstruct broker truth after ambiguity or restart |
 | Interrupt Control | GET_ORDERS, CANCEL_ORDER, GET_POSITIONS, PLACE_ORDER | cancel controlled work and submit explicit upstream-selected market flatten orders |
 
@@ -96,6 +96,20 @@ For example, a margin response with a positive `insufficientBalance` is returned
 - no strategy logic, ledger fsync, repricing loop, waits, MCP or LLM in the connector;
 - provider-call elapsed microseconds recorded for later p50/p95/p99 benchmarking.
 
-## Remaining transport work
+## Live transport
 
-The Broker Port reserves STREAM, but live market-feed and live order-update WebSockets are not yet advertised as implemented. Until that transport is wired, GET_QUOTE / GET_LTP remain the synchronous market-data surface.
+The Broker Port now implements `STREAM_MARKET` and `STREAM_ORDER_UPDATES`.
+
+```text
+DhanBrokerPort.openStream({
+  operation: STREAM_MARKET | STREAM_ORDER_UPDATES,
+  payload,
+  onEvent,
+  onError,
+  onState
+})
+```
+
+For market data, TICKER / QUOTE / FULL subscriptions use the persistent Dhan v2 WebSocket and normalized little-endian binary parsing. For order state, the account-wide order-update WebSocket is normalized into the same order fact vocabulary used by REST.
+
+REST GET_QUOTE / GET_LTP and order/trade/position queries remain available for bootstrap, explicit snapshots and authoritative reconciliation.

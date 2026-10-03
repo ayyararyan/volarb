@@ -1,6 +1,6 @@
 # Dhan Execution Provider Plug-in
 
-Status: **provider boundary active; executable Broker Execution Port connector, provider configuration/readiness, normalized facts and global error normalization implemented; live stream path pending.**
+Status: **provider boundary active; COMMAND, QUERY and STREAM broker connector implemented with provider configuration/readiness, normalized facts and global error normalization.**
 
 Last provider-boundary audit: **2026-10-03**, against repository `main` at `942003ede3c3ddb4836824e8e1dab97c58445847` and the current official DhanHQ v2 API documentation.
 
@@ -472,4 +472,29 @@ Historical trade backfill uses Dhan's documented `/trades/{from-date}/{to-date}/
 
 Dhan margin APIs return facts only; the provider does not convert an indicative shortfall into an affordability decision.
 
-Live market data and live order updates are the remaining transport optimization. Dhan documents both facilities; the current Broker Port reserves STREAM but does not advertise them as wired yet.
+Live market data and live order updates are implemented through `src/dhan-streams.mjs`. The Broker Port exposes `STREAM_MARKET` and `STREAM_ORDER_UPDATES`; REST remains the snapshot/reconciliation authority.
+
+
+### Live stream implementation
+
+`DhanBrokerPort.openStream(...)` now exposes two provider-neutral stream operations:
+
+- `STREAM_MARKET` — Dhan v2 tick-by-tick market WebSocket with TICKER, QUOTE and FULL modes. Subscription messages are automatically batched to Dhan's 100-instrument request maximum, up to the documented 5000 instruments per connection. Binary packets are parsed little-endian into broker-neutral events.
+- `STREAM_ORDER_UPDATES` — Dhan's account-wide JSON order-update WebSocket. Authentication is provider-local; order ID, correlation ID, exchange ID, side, product, type, status, quantities, prices and timestamps are normalized before emission.
+
+A stream event uses the same provider envelope shape as synchronous facts:
+
+```text
+{
+  contractVersion,
+  provider: "dhan",
+  kind: "STREAM",
+  operation,
+  observedAt,
+  data
+}
+```
+
+Stream connection/error state is observation only. A disconnect does not cause Dhan to make an execution decision; State Integrity / Execution Recovery decide the consequence.
+
+The provider intentionally implements Dhan's standard 5-level FULL packet here. Dhan's separate 20/200-level Full Market Depth service remains a distinct optional capability rather than being falsely treated as universal across segments.

@@ -3,7 +3,7 @@
   "component_id": "provider.dhan",
   "name": "Dhan Provider",
   "kind": "broker_provider",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "ownership": "strategy_agnostic",
   "canonical_identity": {
     "identity_kind": "component_string",
@@ -17,7 +17,8 @@
     "broker_port": "services/dhan-chatgpt-mcp/src/dhan-broker-port.mjs",
     "config": "services/dhan-chatgpt-mcp/src/dhan-config.mjs",
     "readiness": "services/dhan-chatgpt-mcp/src/dhan-readiness.mjs",
-    "normalizer": "services/dhan-chatgpt-mcp/src/dhan-normalizer.mjs"
+    "normalizer": "services/dhan-chatgpt-mcp/src/dhan-normalizer.mjs",
+    "streams": "services/dhan-chatgpt-mcp/src/dhan-streams.mjs"
   },
   "interfaces": [
     {
@@ -25,7 +26,7 @@
       "capabilities": [
         "COMMAND",
         "QUERY",
-        "STREAM_CONTRACT_RESERVED"
+        "STREAM"
       ],
       "implements": "port.internal_execution.broker",
       "semantics": "Translate, transmit, observe, normalize and report; never own strategy or execution policy.",
@@ -53,7 +54,10 @@
           "MODIFY_ORDER",
           "CANCEL_ORDER"
         ],
-        "stream": []
+        "stream": [
+          "STREAM_MARKET",
+          "STREAM_ORDER_UPDATES"
+        ]
       }
     }
   ],
@@ -74,7 +78,9 @@
     "The provider does not own execution sequencing, slicing, repricing, recovery policy, or risk policy.",
     "Missing provider configuration emits the global PROVIDER.NOT_CONFIGURED error.",
     "Mutations are rejected before transmission when Dhan static-IP/account readiness is not verified.",
-    "Margin calculators return broker facts only; affordability remains caller-owned."
+    "Margin calculators return broker facts only; affordability remains caller-owned.",
+    "Low-latency market and order observations use Dhan WebSocket streams; REST remains available for snapshots and reconciliation.",
+    "Stream disconnection is reported as provider state/error and never converted into a provider-owned trading decision."
   ],
   "configuration": {
     "query_required": [
@@ -86,6 +92,10 @@
       "DHAN_PROVIDER_EGRESS_IP",
       "DHAN_PROVIDER_STATIC_IP_CONFIRMED"
     ],
-    "readiness_cache": "DHAN_PROVIDER_READINESS_TTL_MS"
+    "readiness_cache": "DHAN_PROVIDER_READINESS_TTL_MS",
+    "stream_endpoints": [
+      "DHAN_MARKET_FEED_WS_URL",
+      "DHAN_ORDER_UPDATE_WS_URL"
+    ]
   }
 }

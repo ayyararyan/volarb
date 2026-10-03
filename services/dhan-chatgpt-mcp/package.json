@@ -30,6 +30,7 @@
   "exports": {
     "./runtime": "./src/dhan-runtime.mjs",
     "./broker-port": "./src/dhan-broker-port.mjs",
-    "./provider-error": "./src/provider-error.mjs"
+    "./provider-error": "./src/provider-error.mjs",
+    "./streams": "./src/dhan-streams.mjs"
   }
 }
