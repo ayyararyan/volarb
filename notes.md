@@ -491,6 +491,77 @@ The exact definition of `Objective_X(c)` remains open.
 - whether one or multiple structures can be selected per underlying,
 - and how unused capital is returned or reallocated.
 
+
+### 2026-10-03 — Third scheduling layer: within-hour structure recheck inside Graph X
+
+**Raw intent:** Once Graph X has been opened, the higher-level decision to trade underlying X has already been made. If the graph cannot currently find an appropriate candidate structure in its admissible subset C_X, it should not return to the underlying-selection layer. Instead, it should remain inside Graph X and decide **when within the hour to search for a suitable structure again**.
+
+**Interpretation:** This introduces a third and faster scheduling horizon.
+
+There are now three distinct re-evaluation clocks in the architecture:
+
+1. **Regime clock — days / weeks**
+   - Question: *Is the broader multi-day environment favorable for short gamma at all?*
+   - If unfavorable, the Regime Recheck Scheduler decides when to revisit the regime.
+
+2. **Underlying-opportunity clock — intraday**
+   - Question: *Given a favorable regime, which of NIFTY, BANKNIFTY, and SENSEX should be traded now?*
+   - If none is selected, the Intraday Opportunity Recheck Scheduler decides when to scan the index universe again.
+
+3. **Structure-opportunity clock — within the hour**
+   - Question: *Given that Graph X is already active and X is intended to be traded, is there an acceptable structure in C_X right now?*
+   - If not, the **Within-Hour Structure Recheck Scheduler** decides when Graph X should run its candidate search and constrained optimizer again.
+
+Conceptually:
+
+```text
+Graph X active
+    |
+    v
+Build / refresh candidate set C_X
+    |
+    v
+Constrained optimizer
+    |
+    +-- candidate found
+    |      |
+    |      v
+    |   continue to selected StructureSpec
+    |
+    +-- no acceptable candidate
+           |
+           v
+    WITHIN-HOUR STRUCTURE
+       RECHECK SCHEDULER
+           |
+     when should Graph X
+      search C_X again?
+           |
+           v
+          WAIT
+           |
+           +------> refresh C_X / optimizer
+```
+
+**Key principle:** A failure to find a structure is not the same as a failure to select the underlying. The graph should preserve the higher-level decision that X is currently a chosen market and remain local to Graph X while searching again on a faster cadence.
+
+**Example:** If both NIFTY and BANKNIFTY are selected, BANKNIFTY may immediately find a feasible butterfly and continue toward execution while NIFTY enters its within-hour structure-search loop. The two graphs progress independently.
+
+**Scheduling horizon:** This scheduler is explicitly intended to operate within the hour rather than on a multi-hour or multi-day regime horizon. The exact cadence is not yet defined. It may later depend on quote changes, volatility movement, option-chain changes, liquidity, spot displacement, elapsed minutes, or another state-change trigger.
+
+**Important distinction among the three waiting loops:**
+- unfavorable regime -> multi-day Regime Recheck Scheduler,
+- favorable regime but no underlying selected -> intraday Opportunity Recheck Scheduler,
+- underlying selected but no acceptable structure -> within-hour Structure Recheck Scheduler.
+
+**State persistence:** Graph X should remain active while waiting for a structure recheck. Whether its capital allocation W_X remains fully reserved during this waiting period, can be partially released, or expires after a timeout is a separate portfolio-allocation decision and remains TBD.
+
+**Future design task:** Define:
+- how the within-hour scheduler determines its next check,
+- whether a structure search can be triggered earlier by material market changes,
+- how long Graph X may remain in this state before its higher-level selection expires,
+- and what happens to W_X while Graph X is waiting.
+
 ## Open questions / unresolved design choices
 
 - What decisions should be fully autonomous versus require human approval?
@@ -509,6 +580,9 @@ The exact definition of `Objective_X(c)` remains open.
 - How should total deployable capital be allocated into per-underlying budgets W_X before graph-level optimization?
 - What objective should each per-underlying optimizer maximize under its W_X constraint?
 - What happens to unused capital when a graph finds no feasible or attractive candidate?
+- How should the Within-Hour Structure Recheck Scheduler choose its next candidate-search time?
+- How long can Graph X remain selected without finding a structure before the higher-level underlying decision must be reconsidered?
+- Is W_X fully reserved while Graph X is waiting for a structure, partially released, or dynamically reclaimable?
 - Should the regime gate output only eligible/ineligible/uncertain, or also a confidence score and risk-intensity recommendation?
 - How should the research laboratory feed evidence into the live trading system without creating look-ahead or uncontrolled adaptation?
 - What are the hard portfolio, loss, margin, liquidity, and execution-risk limits?
