@@ -1256,3 +1256,23 @@ Example: several independent long option purchases may be UNCONSTRAINED if none 
 **Fail-closed rule:** Missing or invalid ordering decision means no execution. UNCONSTRAINED is a valid explicit decision and must not be confused with a missing sequence.
 
 **Passive Chase default:** In UNCONSTRAINED mode, Passive Chase may work all released items independently, each with its own passive order, T timer and N-cycle counter.
+
+
+### 2026-10-03 — NVIC-inspired Interrupt Control
+
+**Raw intent:** Internal Execution needs a nested vectored interrupt mechanism so emergency control can preempt whatever Margin Optimization or Optimal Execution is currently doing.
+
+**Architecture:** `[5,0,6,0,1] Interrupt Control` is an orthogonal supervisory sub-box, not a third stage in the normal chain.
+
+**Current vector table:**
+- **L1 CANCEL_WORK:** cancel all working/unfilled orders in scope and block normal convergence from recreating them.
+- **L2 FLATTEN_SCOPE:** cancel/reconcile scoped orders, then bypass the normal execution algorithm and market-flatten confirmed positions in that scope.
+- **L3 FLATTEN_ALL:** highest priority; cancel/reconcile all controlled working orders and market-flatten all controlled positions.
+
+**Nested priority:** L3 > L2 > L1 > normal execution. Higher interrupts preempt lower handlers. Lower interrupts cannot downgrade a higher active emergency.
+
+**Latch rule:** Interrupt state persists after cancellation/flatten actions. Normal work in the affected scope does not resume automatically; an authorized clear/resume is required.
+
+**Emergency execution boundary:** Emergency market actions bypass Passive Chase / the plug-in Optimal Execution algorithm, but still go through the broker-neutral Broker Execution Port and authoritative broker reconciliation.
+
+**Flatten semantics:** Longs are sold; shorts are bought back. Emergency scope must be explicit and broker-neutral.
