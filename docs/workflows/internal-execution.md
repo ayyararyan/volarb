@@ -9,6 +9,8 @@ It has exactly two ordered sub-boxes:
 
 Margin Optimization decides both **whether ordering constraints exist** and, if they do, what those constraints are. Optimal Execution must obey that decision.
 
+A third, orthogonal supervisory sub-box — **[5,0,6,0,1] Interrupt Control** — is not part of the normal chain and may preempt both when an interrupt is raised.
+
 ## Architecture
 
 ~~~mermaid
@@ -31,6 +33,12 @@ flowchart TD
     X["[5,0,5,5,1] Passive Chase\n(current default plug-in)"]
     O["[5,0,4,7,2] Temporal Execution Decision"]
 
+    IC["[5,0,6,0,1] Interrupt Control"]
+    ID["[5,0,6,7,1] Interrupt Directive"]
+    IA["[5,0,6,1,1] Interrupt Arbiter"]
+    IS["[5,0,6,2,1] Latched Interrupt State"]
+    IP["[5,0,6,7,2] Interrupt Action Plan"]
+
     B["[5,0,3,6,1] Broker Execution Port"]
     F["[5,0,4,7,1] Normalized Broker Execution Facts"]
     E["External broker provider\nDhan / Kotak / ICICI / ..."]
@@ -43,6 +51,13 @@ flowchart TD
     Q --> OE
     M --> OE
     OE --> G --> W --> C --> P --> X --> O --> B
+
+    ID --> IC --> IA
+    IA --> IS
+    IA --> IP --> B
+    IS -. preempt .-> MO
+    IS -. preempt .-> OE
+    F --> IA
 
     B --> E
     E --> B
@@ -395,6 +410,34 @@ Execution Algorithm
 ~~~
 
 **No valid ordering decision -> no execution.**
+
+# [5,0,6,0,1] Interrupt Control
+
+Interrupt Control is an NVIC-inspired supervisory sub-box.
+
+It is orthogonal to the normal:
+
+~~~text
+Margin Optimization -> Optimal Execution
+~~~
+
+path and can preempt either or both.
+
+Current interrupt levels are:
+
+| Level | Action |
+|---|---|
+| L1 | CANCEL_WORK — cancel unfilled/working orders in scope and suppress new work |
+| L2 | FLATTEN_SCOPE — cancel/reconcile scoped orders, then market-flatten confirmed scoped positions |
+| L3 | FLATTEN_ALL — highest priority; cancel/reconcile all controlled working orders, then market-flatten all controlled positions |
+
+Higher levels preempt lower levels. Every interrupt is higher priority than normal execution.
+
+Interrupt state is latched so the normal convergence loop cannot recreate work that was intentionally cancelled.
+
+Emergency market-flatten actions bypass Passive Chase and the normal time-space optimizer, but they still go through the Broker Execution Port and authoritative reconciliation.
+
+Detailed workflow: [interrupt-control.md](interrupt-control.md)
 
 # Broker boundary
 
