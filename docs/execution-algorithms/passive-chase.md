@@ -4,7 +4,7 @@
 
 Passive Chase is a deliberately simple broker-neutral execution plug-in behind `[5,0,4,6,1] Execution Algorithm Port`.
 
-It consumes only the state exposed by Optimal Execution. It does not reason about strategy structure, hedge relationships, margin sequencing, or why an instrument is being traded.
+It consumes only the state exposed by Optimal Execution. It does not reason about strategy structure, hedge relationships, margin sequencing, or why an instrument is being traded. Passive Chase does not reorder work released by Margin Optimization; it executes the currently released slice.
 
 ## Inputs
 
@@ -81,13 +81,14 @@ After waiting `T`:
 3. if nothing remains, complete this execution work;
 4. refresh the LOB;
 5. increment the passive-cycle counter;
-6. if the counter is not greater than `N`:
+6. if the counter is still less than `N`:
    - determine the current passive touch;
    - if the passive touch changed, reprice the remaining order to the new touch;
    - if the passive touch did not change, leave the order resting;
-   - wait another `T`.
+   - wait another `T`;
+7. if the counter has reached `N` and quantity still remains, end the passive phase and proceed to market fallback.
 
-Only the unfilled remainder is ever repriced.
+Only the unfilled remainder is ever repriced. A passive cycle is consumed even when the best passive quote is unchanged, because another full interval `T` has elapsed without completion.
 
 ### Market fallback
 
