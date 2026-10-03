@@ -26,5 +26,10 @@
     "playwright-core": "1.63.0",
     "zod": "4.6.5"
   },
-  "packageManager": "npm@11.17.0"
+  "packageManager": "npm@11.17.0",
+  "exports": {
+    "./runtime": "./src/dhan-runtime.mjs",
+    "./broker-port": "./src/dhan-broker-port.mjs",
+    "./provider-error": "./src/provider-error.mjs"
+  }
 }
