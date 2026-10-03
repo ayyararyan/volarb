@@ -22,11 +22,11 @@
     },
     "box_codes": {
       "0": "master_global",
-      "1": "regime_decision",
-      "2": "intraday_selection_capital_allocation",
-      "3": "per_underlying_trade_selection",
-      "4": "shared_execution_risk_management",
-      "5": "optimal_execution"
+      "1": "regime_gate",
+      "2": "underlying_allocation",
+      "3": "trade_selection",
+      "4": "position_management",
+      "5": "internal_execution"
     },
     "box3_instance_codes": {
       "0": "template",
@@ -2569,7 +2569,7 @@
       "name": "Internal Execution",
       "kind": "root",
       "status": "active_design",
-      "note": "Broker-neutral Internal Execution module with normal Margin Optimization -> Optimal Execution flow plus orthogonal Interrupt Control that can preempt both."
+      "note": "Broker-neutral Internal Execution: normal Margin Optimization -> Execution Slicing -> Optimal Execution flow, with cross-cutting State Integrity, Execution Recovery/Ledger and Interrupt Control."
     },
     {
       "vid": [
@@ -2614,7 +2614,7 @@
         0,
         0
       ],
-      "note": "Holds the current set of atomic instrument execution intentions awaiting, undergoing, or completing execution. Strategy structure meaning is not required."
+      "note": "Holds outstanding instrument-level economic requirements with Runtime Intent Identity/version. Registry entries are persistent requirements, not broker order tickets."
     },
     {
       "vid": [
@@ -2960,7 +2960,7 @@
         0,
         1
       ],
-      "note": "Work released by Ordering Constraint Enforcer. ORDERED mode contains only currently permitted step(s); UNCONSTRAINED mode may contain all otherwise eligible items. Algorithms may act only within this set."
+      "note": "Current execution slice(s) released after ordering and slicing constraints. Contains intent identity/version, slice identity, instrument, side and permitted quantity. Optimal Execution acts only within this set."
     },
     {
       "vid": [
@@ -3146,7 +3146,9 @@
         3,
         6,
         1
-      ]
+      ],
+      "status": "retired",
+      "retired_reason": "Superseded by Command Commit Guard and durable Execution Ledger before Broker Execution Port."
     },
     {
       "vid": [
@@ -3555,7 +3557,9 @@
         3,
         1,
         1
-      ]
+      ],
+      "status": "retired",
+      "retired_reason": "Superseded by Execution Slicing between Margin Optimization and Optimal Execution."
     },
     {
       "vid": [
@@ -3775,7 +3779,9 @@
         3,
         6,
         1
-      ]
+      ],
+      "status": "retired",
+      "retired_reason": "Emergency mutations also pass through durable Command Commit Guard before Broker Execution Port."
     },
     {
       "vid": [
@@ -3875,6 +3881,954 @@
         6,
         7,
         1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        7,
+        3
+      ],
+      "name": "Runtime Intent Identity",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "Runtime identity/version carried by each live execution requirement: intent_id, intent_version, supersedes_version/status and timestamps. Distinct from immutable architectural VIDs."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        7,
+        0,
+        1
+      ],
+      "name": "Execution Slicing",
+      "kind": "root",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "Normal-flow sub-box between Margin Optimization and Optimal Execution. Converts ordered/unconstrained eligible quantity into one or more execution slices. Default slice_count=1."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        7,
+        1,
+        1
+      ],
+      "name": "Slice Planner",
+      "kind": "node",
+      "parent_vid": [
+        5,
+        0,
+        7,
+        0,
+        1
+      ],
+      "note": "Chooses number, quantity and scheduling of execution slices while preserving upstream ordering constraints. Current default: one slice; if multiple slices exist, execute sequentially."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        7,
+        7,
+        1
+      ],
+      "name": "Execution Slice Plan",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        7,
+        0,
+        1
+      ],
+      "note": "Per-intent slice plan carrying intent identity/version, ordering metadata, slice_count, slice_id/index, quantity and scheduling policy."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        7,
+        2,
+        1
+      ],
+      "name": "Slice Progress State",
+      "kind": "state",
+      "parent_vid": [
+        5,
+        0,
+        7,
+        0,
+        1
+      ],
+      "note": "Tracks current/complete/pending slices and authoritative filled quantity. Default sequential policy releases the next slice only after the current slice completes/reconciles."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        7,
+        7,
+        2
+      ],
+      "name": "Slice Policy",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        7,
+        0,
+        1
+      ],
+      "note": "Slicing configuration. Current default: slice_count=1 and scheduling_mode=SEQUENTIAL. Future policies may dynamically size/schedule slices."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        4,
+        8
+      ],
+      "name": "Execution Ordering Plan -> Execution Slicing",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        2,
+        7,
+        2
+      ],
+      "target_vid": [
+        5,
+        0,
+        7,
+        0,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        7,
+        4,
+        1
+      ],
+      "name": "Execution Slicing -> Slice Planner",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        7,
+        0,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        7,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        7,
+        4,
+        2
+      ],
+      "name": "Slice Planner -> Execution Slice Plan",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        7,
+        1,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        7,
+        7,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        7,
+        4,
+        3
+      ],
+      "name": "Execution Slice Plan -> Ordering Constraint Enforcer",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        7,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        3,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        7,
+        4,
+        4
+      ],
+      "name": "Broker facts -> Slice Progress State",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        4,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        7,
+        2,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        7,
+        4,
+        5
+      ],
+      "name": "Slice Progress State -> Slice Planner",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        7,
+        2,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        7,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        0,
+        1
+      ],
+      "name": "Execution Recovery",
+      "kind": "root",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "Cross-cutting durable execution/reconciliation sub-box. Owns write-ahead action recording, runtime identity/version validation, correlation and restart/ambiguity recovery."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        9,
+        1
+      ],
+      "name": "Execution Ledger",
+      "kind": "resource",
+      "parent_vid": [
+        5,
+        0,
+        8,
+        0,
+        1
+      ],
+      "note": "Durable append/update record linking runtime intent/version -> slice -> execution action -> correlation/order IDs -> authoritative fills/status/positions."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        1,
+        1
+      ],
+      "name": "Reconciliation Engine",
+      "kind": "node",
+      "parent_vid": [
+        5,
+        0,
+        8,
+        0,
+        1
+      ],
+      "note": "Reconstructs broker truth after timeout, ambiguity or restart using authoritative orders, trades, fills and positions. No blind mutation retry while outcome is unknown."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        1,
+        2
+      ],
+      "name": "Command Commit Guard",
+      "kind": "node",
+      "parent_vid": [
+        5,
+        0,
+        8,
+        0,
+        1
+      ],
+      "note": "Final pre-broker mutation gate. Rejects stale intent versions, requires durable write-ahead record/correlation identity, checks interrupt latch and action-class integrity permission, then releases the command."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        2,
+        1
+      ],
+      "name": "Recovery State",
+      "kind": "state",
+      "parent_vid": [
+        5,
+        0,
+        8,
+        0,
+        1
+      ],
+      "note": "Tracks CLEAN, RECONCILING, AMBIGUOUS and RECOVERY_REQUIRED execution states. Normal new mutations are blocked while unresolved ambiguity exists in relevant scope."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        7,
+        1
+      ],
+      "name": "Execution Action Envelope",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        8,
+        0,
+        1
+      ],
+      "note": "Broker-neutral mutation envelope carrying action_id, origin/intent or interrupt identity, intent_version, slice_id, action_class, correlation_id and requested broker operation."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        7,
+        2
+      ],
+      "name": "Reconciliation Result",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        8,
+        0,
+        1
+      ],
+      "note": "Authoritative reconciliation result mapping attempted actions to broker orders/trades/fills/positions and exact confirmed remaining requirement."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        4,
+        6
+      ],
+      "name": "Temporal execution decision -> Command Commit Guard",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        4,
+        7,
+        2
+      ],
+      "target_vid": [
+        5,
+        0,
+        8,
+        1,
+        2
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        4,
+        8
+      ],
+      "name": "Interrupt Action Plan -> Command Commit Guard",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        6,
+        7,
+        2
+      ],
+      "target_vid": [
+        5,
+        0,
+        8,
+        1,
+        2
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        4,
+        8
+      ],
+      "name": "Registry/runtime version -> Command Commit Guard",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        1,
+        9,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        8,
+        1,
+        2
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        4,
+        1
+      ],
+      "name": "Command Commit Guard -> Execution Ledger write-ahead",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        8,
+        1,
+        2
+      ],
+      "target_vid": [
+        5,
+        0,
+        8,
+        9,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        4,
+        2
+      ],
+      "name": "Committed action -> Broker Execution Port",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        8,
+        1,
+        2
+      ],
+      "target_vid": [
+        5,
+        0,
+        3,
+        6,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        4,
+        7
+      ],
+      "name": "Broker facts -> Reconciliation Engine",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        4,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        8,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        4,
+        3
+      ],
+      "name": "Execution Ledger -> Reconciliation Engine",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        8,
+        9,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        8,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        4,
+        4
+      ],
+      "name": "Reconciliation Engine -> Recovery State",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        8,
+        1,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        8,
+        2,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        4,
+        5
+      ],
+      "name": "Reconciliation Engine -> Execution Ledger",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        8,
+        1,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        8,
+        9,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        4,
+        6
+      ],
+      "name": "Recovery State -> Margin Optimization gate",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        8,
+        2,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        2,
+        0,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        4,
+        7
+      ],
+      "name": "Recovery State -> Optimal Execution gate",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        8,
+        2,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        9,
+        0,
+        1
+      ],
+      "name": "State Integrity",
+      "kind": "root",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "Cross-cutting broker-neutral readiness guard that classifies freshness/completeness/consistency of market, account, order/fill and recovery state before actions are allowed."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        9,
+        1,
+        1
+      ],
+      "name": "State Integrity Guard",
+      "kind": "node",
+      "parent_vid": [
+        5,
+        0,
+        9,
+        0,
+        1
+      ],
+      "note": "Computes action-class-aware execution permission. Normal risk-adding work requires sufficiently fresh/complete state; emergency cancel/flatten uses separate minimum-integrity requirements and never silently falls back."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        9,
+        7,
+        1
+      ],
+      "name": "Integrity Assessment",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        9,
+        0,
+        1
+      ],
+      "note": "Assessment with status VALID/STALE/INCOMPLETE/INCONSISTENT/UNKNOWN plus per-action permissions and reasons."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        9,
+        2,
+        1
+      ],
+      "name": "Integrity State",
+      "kind": "state",
+      "parent_vid": [
+        5,
+        0,
+        9,
+        0,
+        1
+      ],
+      "note": "Current freshness/completeness/consistency state of required broker-neutral inputs."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        4,
+        6
+      ],
+      "name": "Market state -> State Integrity",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        1,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        9,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        4,
+        7
+      ],
+      "name": "Account state -> State Integrity",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        1,
+        7,
+        2
+      ],
+      "target_vid": [
+        5,
+        0,
+        9,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        4,
+        8
+      ],
+      "name": "Broker facts -> State Integrity",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        4,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        9,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        4,
+        8
+      ],
+      "name": "Recovery State -> State Integrity",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        8,
+        2,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        9,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        9,
+        4,
+        1
+      ],
+      "name": "State Integrity Guard -> Integrity Assessment",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        9,
+        1,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        9,
+        7,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        9,
+        4,
+        2
+      ],
+      "name": "Integrity Assessment -> Margin Optimization",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        9,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        2,
+        0,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        9,
+        4,
+        3
+      ],
+      "name": "Integrity Assessment -> Optimal Execution",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        9,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        9,
+        4,
+        4
+      ],
+      "name": "Integrity Assessment -> Command Commit Guard",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        9,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        8,
+        1,
+        2
       ]
     }
   ]
