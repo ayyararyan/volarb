@@ -16,8 +16,10 @@ Transform the existing Volarb research and market-outlook ecosystem into an auto
 
 ## Living graph
 
-The architecture is now split into one small master orchestrator and four detailed graphs:
+The architecture is now split into one small master orchestrator and four detailed graphs. Every architectural entity uses the immutable Volarb Vector Identity System (VID):
 
+- [VID specification](docs/workflows/vector-id-system.md)
+- [VID registry](docs/workflows/vector-id-registry.json)
 - [Master workflow](docs/autonomous-butterfly-workflow.md)
 - [Box 1 — Regime Decision](docs/workflows/01-regime-decision.md)
 - [Box 2 — Intraday Instrument Selection & Capital Allocation](docs/workflows/02-intraday-selection.md)
@@ -890,6 +892,38 @@ The exact schema is TBD.
 **Preservation rule:** No prior decision has been discarded by this decomposition. Existing loops, capital-reservation rules, broker-independence rules, margin-feasibility dependency, optimizer behavior, and unresolved commitment-revocation question are assigned to the box that owns them.
 
 **Architecture rule going forward:** The master graph should describe only transitions between major phases. Detailed decisions belong in the relevant box graph.
+
+
+### 2026-10-03 — Vector Identity System becomes mandatory
+
+**Decision:** Every architectural entity now receives an immutable vector ID before it is added to the workflow.
+
+Canonical form:
+
+`VID = [Box, Instance, Layer, Type, Ordinal]`
+
+The coordinates encode top-level box, graph instance, logical layer, entity class, and stable ordinal. This applies to boxes, nodes, states, schedulers, arrows/transitions, future workers/agents, interfaces/ports, data contracts, broker adapters, and capital/resources.
+
+Examples:
+- Box 1 root: `[1,0,0,0,0]`
+- Multi-day Regime Gate: `[1,0,3,1,1]`
+- Regime Recheck Scheduler: `[1,0,5,3,1]`
+- Portfolio Capital Allocator: `[2,0,7,1,1]`
+- Box 3 template optimizer: `[3,0,5,1,1]`
+- NIFTY optimizer instance: `[3,1,5,1,1]`
+- BrokerMarginFeasibilityPort: `[4,0,5,6,1]`
+
+**Box 3 instance convention:**
+- `I=0` template
+- `I=1` NIFTY
+- `I=2` BANKNIFTY
+- `I=3` SENSEX
+
+**Immutability rule:** Existing IDs are never renumbered or reused. Display names may change, but VIDs do not. Removed entities are tombstoned rather than recycled.
+
+**Topology rule:** The vector identifies an entity; explicit edge/source/target relationships define the actual graph topology. This prevents future graph insertions from forcing renumbering.
+
+**Operational rule going forward:** Every architecture edit must update both the owning graph document and the central machine-readable VID registry.
 
 ## Open questions / unresolved design choices
 
