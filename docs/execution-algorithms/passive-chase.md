@@ -18,6 +18,16 @@ No valid ordering decision means no Passive Chase action.
 
 This rule is algorithm-independent: any future Optimal Execution plug-in must obey ORDERED constraints and may exploit freedom only when the upstream plan is UNCONSTRAINED.
 
+## Slice boundary
+
+Passive Chase operates on execution slices produced by `[5,0,7,0,1] Execution Slicing`.
+
+It does not decide how many slices exist or their sizes.
+
+With the current default slice policy there is one slice, so behavior is identical to executing the full permitted quantity.
+
+If a future Slice Planner creates multiple slices, each released slice receives its own Passive Chase lifecycle.
+
 ## Inputs
 
 At each decision point the algorithm receives:
@@ -26,7 +36,7 @@ At each decision point the algorithm receives:
 - current best bid / best ask and relevant LOB state;
 - its own working order state;
 - confirmed fills / partial fills;
-- remaining eligible quantity;
+- remaining slice quantity;
 - inherited execution constraints.
 
 ### ORDERED mode
@@ -117,7 +127,7 @@ If the passive phase is exhausted and confirmed quantity remains:
 1. cancel the resting limit order;
 2. confirm cancellation or otherwise reconcile authoritative broker state;
 3. recompute the exact unfilled remainder;
-4. only after the outstanding passive order is known not to be fillable anymore, send a market order for the remaining eligible quantity.
+4. only after the outstanding passive order is known not to be fillable anymore, send a market order for the remaining slice quantity.
 
 If cancellation/reconciliation is ambiguous, the algorithm must **not** immediately submit a market order because that could create a duplicate fill.
 
@@ -125,7 +135,7 @@ The market fallback remains subject to inherited execution constraints and provi
 
 ## Partial fills
 
-Partial fills reduce the remaining eligible quantity immediately.
+Partial fills reduce the remaining slice quantity immediately.
 
 Example:
 
