@@ -190,3 +190,17 @@ Replacing it with another algorithm must not change:
 - Position Management.
 
 That replacement should require only selecting another algorithm implementation behind `[5,0,4,6,1]`.
+
+## Interrupt preemption
+
+Passive Chase is subordinate to `[5,0,6,0,1] Interrupt Control`.
+
+If an interrupt is accepted for an item or scope currently being worked:
+
+- Passive Chase immediately stops generating new PLACE_LIMIT / REPRICE_LIMIT / PLACE_MARKET decisions for that scope;
+- its normal T/N loop is suspended;
+- cancellation or flattening is owned by Interrupt Control, not by Passive Chase;
+- Passive Chase must not resume merely because emergency broker actions completed;
+- normal execution may resume only after the latched interrupt state has been explicitly cleared and fresh eligible work is released again.
+
+This keeps emergency behavior independent of the selected execution algorithm.
