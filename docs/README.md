@@ -13,5 +13,6 @@ Use the [repository map](REPOSITORY_MAP.md) for ownership and implementation sta
 | Testing | [Execution Testbed](testing/execution-testbed.md), [validation commands](VALIDATION.md) | Offline checks; not live readiness |
 | Deployment | [Portable kit](AGENT_KIT.md), [dependencies](DEPENDENCY_INVENTORY.md) | Source-only setup; private state external |
 | Proposed execution authority | [Inactive policy draft](AUTONOMOUS_EXECUTION_POLICY_DRAFT.md) | Unadopted proposal, not current governance |
+| Releases | [Changelog](../CHANGELOG.md), [release policy](RELEASING.md), [v0.1.0 notes](releases/v0.1.0.md) | Source milestones, not deployment approval |
 | Development record | [History](DEVELOPMENT_HISTORY.md), [cleanup audit](audits/2026-10-03-repository-cleanup.md) | Dated provenance |
 | Superseded generations | [Archive](../archive/README.md) | Historical, never operational |

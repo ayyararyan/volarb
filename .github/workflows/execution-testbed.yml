@@ -3,6 +3,7 @@ name: Execution testbed
 on:
   pull_request:
     paths:
+      - 'VERSION'
       - 'execution-engine/**'
       - 'execution-testkit/**'
       - 'environments/execution/**'
@@ -13,6 +14,7 @@ on:
   push:
     branches: [main]
     paths:
+      - 'VERSION'
       - 'execution-engine/**'
       - 'execution-testkit/**'
       - 'environments/execution/**'

@@ -91,6 +91,8 @@
   ],
   "package_files": [
     "README.md",
+    "VERSION",
+    "CHANGELOG.md",
     ".python-version",
     ".node-version",
     "requirements.in",

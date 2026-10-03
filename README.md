@@ -106,4 +106,4 @@ The current strategy workflow remains human-executed under the [adopted covenant
 - Inject runtime dependencies; do not add test-only branches to production execution policy.
 - Update canonical documentation with code, and run the affected suites plus architecture validation.
 
-Component/package versions are independently scoped; there is no repository-wide release version. Follow [development history](docs/DEVELOPMENT_HISTORY.md) for milestones and [open implementation work](tasks.md) for what remains.
+Repository release: **v0.1.0 — Execution Infrastructure Foundation**. See the [changelog](CHANGELOG.md) and [release/versioning policy](docs/RELEASING.md). Component, schema and skill versions remain independently scoped. Follow [development history](docs/DEVELOPMENT_HISTORY.md) for milestones and [open implementation work](tasks.md) for what remains.

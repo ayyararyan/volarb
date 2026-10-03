@@ -243,7 +243,7 @@ export class InstrumentMaster {
     }
 
     const response = await this.fetchFn(this.url, {
-      headers: { 'User-Agent': 'dhan-chatgpt-mcp/0.2.0' }
+      headers: { 'User-Agent': 'dhan-chatgpt-mcp/0.3.0' }
     });
     if (!response.ok) {
       throw new Error(`Could not fetch Dhan instrument master (${response.status} ${response.statusText})`);

@@ -1,9 +1,9 @@
 name: Offline eSSVI dashboard HAR tests
 on:
   push:
-    paths: ['services/essvi-dashboard/**', '.github/workflows/test-essvi-dashboard.yml']
+    paths: ['VERSION', 'services/essvi-dashboard/**', '.github/workflows/test-essvi-dashboard.yml']
   pull_request:
-    paths: ['services/essvi-dashboard/**', '.github/workflows/test-essvi-dashboard.yml']
+    paths: ['VERSION', 'services/essvi-dashboard/**', '.github/workflows/test-essvi-dashboard.yml']
   workflow_dispatch:
 permissions:
   contents: read

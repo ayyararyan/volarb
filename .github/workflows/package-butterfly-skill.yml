@@ -1,9 +1,9 @@
 name: Package Butterfly Skills
 on:
   push:
-    paths: ['requirements*.lock', 'skill/**', '.github/skill-tools/**', '.github/workflows/package-butterfly-skill.yml']
+    paths: ['VERSION', 'requirements*.lock', 'skill/**', '.github/skill-tools/**', '.github/workflows/package-butterfly-skill.yml']
   pull_request:
-    paths: ['requirements*.lock', 'skill/**', '.github/skill-tools/**', '.github/workflows/package-butterfly-skill.yml']
+    paths: ['VERSION', 'requirements*.lock', 'skill/**', '.github/skill-tools/**', '.github/workflows/package-butterfly-skill.yml']
   workflow_dispatch:
 permissions:
   contents: read

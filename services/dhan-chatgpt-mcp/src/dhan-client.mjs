@@ -50,7 +50,7 @@ export class DhanClient {
           'Content-Type': 'application/json',
           'access-token': accessToken,
           'client-id': this.clientId,
-          'User-Agent': 'dhan-chatgpt-mcp/0.1.0'
+          'User-Agent': 'dhan-chatgpt-mcp/0.3.0'
         },
         body: body === undefined ? undefined : JSON.stringify(body),
         signal: controller.signal
