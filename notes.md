@@ -1237,3 +1237,22 @@ Margin Optimization must release an Eligible Execution Work Slice before Optimal
 **Plug-in rule:** Every execution algorithm, including the current Passive Chase default and any future replacement, may optimize only how the current step is executed. It may not reorder, skip, or select future steps.
 
 **Separation:** Margin Optimization decides ORDER. Optimal Execution decides HOW to execute the current ordered step.
+
+
+### 2026-10-03 — Ordering may be explicitly unconstrained
+
+**Correction:** Margin Optimization must not invent a sequence when no hedge or margin dependency requires one.
+
+Its mandatory output is now an **Execution Ordering Plan**, not necessarily an execution sequence.
+
+Two modes are valid:
+- `ORDERED`: precedence constraints exist and Optimal Execution must obey them.
+- `UNCONSTRAINED`: Margin Optimization explicitly determined that no sequencing constraint exists among the released items.
+
+Example: several independent long option purchases may be UNCONSTRAINED if none relies on another for hedge or margin feasibility.
+
+**Optimal Execution behavior:** Ordering Constraint Enforcer applies the plan. ORDERED releases only currently permitted work. UNCONSTRAINED releases all otherwise eligible items and allows the selected execution algorithm to choose order or concurrency.
+
+**Fail-closed rule:** Missing or invalid ordering decision means no execution. UNCONSTRAINED is a valid explicit decision and must not be confused with a missing sequence.
+
+**Passive Chase default:** In UNCONSTRAINED mode, Passive Chase may work all released items independently, each with its own passive order, T timer and N-cycle counter.
