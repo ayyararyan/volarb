@@ -1222,3 +1222,18 @@ Margin Optimization must release an Eligible Execution Work Slice before Optimal
 **Safety invariant:** Never submit the market fallback while an earlier passive limit could still fill. Ambiguous cancellation must reconcile before a market order is allowed.
 
 **Plug-and-play rule:** Passive Chase is the current default only. Replacing it with a future execution algorithm must not change Margin Optimization, Position Management, the Temporal Execution Decision contract, Broker Execution Port, or provider implementations.
+
+
+### 2026-10-03 — Mandatory sequence handoff into Optimal Execution
+
+**Raw intent:** Margin Optimization does not merely decide that several instruments are eligible. It must provide the execution sequence to Optimal Execution. Otherwise the downstream execution algorithm could choose instruments in an arbitrary order and violate the margin/hedge logic.
+
+**Architecture rule:** Margin Optimization always emits `[5,0,2,7,2] Execution Sequence Plan`, even when the plan contains only one step.
+
+**Optimal Execution rule:** `[5,0,3,1,1] Sequence Enforcer` is a hard algorithm-independent constraint. It releases only the current sequence step as `[5,0,3,7,1] Eligible Execution Work Slice`.
+
+**Fail-closed rule:** No valid sequence -> no execution. Optimal Execution must never invent an ordering.
+
+**Plug-in rule:** Every execution algorithm, including the current Passive Chase default and any future replacement, may optimize only how the current step is executed. It may not reorder, skip, or select future steps.
+
+**Separation:** Margin Optimization decides ORDER. Optimal Execution decides HOW to execute the current ordered step.
