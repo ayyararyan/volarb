@@ -27,7 +27,7 @@ flowchart TD
     D -->|"[4,0,4,4,1]"| E
     E -->|"[4,0,5,4,1]"| F
     F -->|"[4,0,6,4,1] DHAN TODAY"| G
-    F -.->|"[4,0,6,4,2] REPLACEABLE"| H
+    F -. "[4,0,6,4,2] REPLACEABLE" .-> H
     G -->|"[4,0,7,4,1] MARGIN / ACCOUNT FACTS"| F
     H -->|"[4,0,7,4,2] MARGIN / ACCOUNT FACTS"| F
     F -->|"[4,0,6,4,3] NORMALIZED MarginFeasibility"| D
