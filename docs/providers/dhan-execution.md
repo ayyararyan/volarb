@@ -6,7 +6,11 @@ Last provider-boundary audit: **2026-10-03**, against repository `main` at `9420
 
 This document is intentionally **outside the numbered Volarb box hierarchy**.
 
-Dhan is an **external reusable broker capability provider**. `[5,0,3,6,1] Broker Execution Port` is one important Volarb client of it, but Dhan is not owned by Internal Execution and does not know which strategy, workflow or execution engine called it. It does not receive a Box number or Volarb VID.
+Dhan is an **external reusable broker capability provider** with canonical component identity `provider.dhan`. `[5,0,3,6,1] Broker Execution Port` is one important client of it, but Dhan is not owned by Internal Execution and does not know which strategy, workflow or execution engine called it. It does not receive a Box number or Volarb VID. When mounted into a composition it receives a mount identity and composition-owned bindings; those do not become canonical Dhan VIDs.
+
+## Compositional identity
+
+The provider's canonical component ID is `provider.dhan`. The active Volarb composition mounts it at `mount.volarb.execution.main.broker.primary` and binds it to the mounted Internal Execution Broker Execution Port. Another strategy may mount the same provider under a different mount ID without changing Dhan itself. Canonical component identity, composition placement identity and runtime broker identifiers remain separate.
 
 ## Fundamental boundary
 

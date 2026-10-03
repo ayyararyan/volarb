@@ -1366,3 +1366,20 @@ Canonical detail: `docs/providers/dhan-execution.md`.
 **Dhan implementation:** `provider-error.mjs` defines the global contract, `dhan-error-mapper.mjs` maps all currently documented Dhan Trading/Data codes and fallbacks, and every canonical `DhanProvider` method passes failures through that mapper. A 2xx order response with REJECTED status is normalized as ORDER_REJECTED. Raw Dhan exceptions remain internal.
 
 **VID:** allocated `[0,0,1,7,1] Provider Error Envelope` under Master Architecture because the convention is global rather than owned by any one strategy, Position Management, Internal Execution, or broker.
+
+
+### 2026-10-03 — Compositional identity architecture
+
+**Decision:** Internal Execution is no longer strategy-owned. The existing `[5,0,...]` namespace is preserved without renumbering and is reinterpreted as the canonical VID namespace of reusable component `component.internal_execution`.
+
+**Three identity levels:** CVID = immutable identity inside a reusable component; BVID = composition + mount + canonical identity for one mounted occurrence; RID = live intent/version/slice/action/correlation/provider identity. Mounting never changes a CVID.
+
+**Volarb composition:** `composition.volarb` mounts Internal Execution at `mount.volarb.execution.main` and mounts `provider.dhan` below it at `mount.volarb.execution.main.broker.primary`. The strategy->execution intent, execution->strategy facts, strategy->interrupt and execution->broker relationships are explicit composition-owned bindings with stable binding IDs.
+
+**Cross-edge migration:** legacy edges `[0,0,5,4,1]`, `[0,0,4,4,1]` and `[0,0,6,4,1]` remain for compatibility but now point to the authoritative bindings in `architecture/strategies/volarb/composition.json`.
+
+**Dhan:** canonical component identity `provider.dhan`; no Volarb VID. A mount identity and binding identity describe where it is plugged in without contaminating provider identity.
+
+**Runtime propagation:** Runtime Intent Identity, Execution Action Envelope and Execution Ledger now explicitly carry composition/mount/canonical execution context so simultaneous mounts cannot collide.
+
+**Files:** canonical component manifests/registries and composition registries live under `architecture/`; `docs/workflows/vector-id-registry.json` is retained as an assembled compatibility view. `architecture/validate.mjs` and the architecture CI workflow enforce mirror, mount, binding and namespace invariants.

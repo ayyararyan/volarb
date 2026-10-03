@@ -1,0 +1,180 @@
+{
+  "schema_version": "1.0",
+  "identity_model_version": "2.0",
+  "composition_id": "composition.volarb",
+  "strategy_id": "strategy.volarb",
+  "name": "Volarb strategy composition",
+  "version": "1.0.0",
+  "strategy_scope": {
+    "legacy_registry": "docs/workflows/vector-id-registry.json",
+    "strategy_owned_box_codes": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "excluded_reusable_namespace_codes": [
+      5
+    ],
+    "note": "Box code 5 is retained only as the canonical namespace of component.internal_execution."
+  },
+  "mounts": [
+    {
+      "mount_id": "mount.volarb.execution.main",
+      "mount_path": "execution.main",
+      "component_id": "component.internal_execution",
+      "component_version": "1.0.0",
+      "parent": "strategy.volarb",
+      "canonical_root_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "role": "primary_execution_engine"
+    },
+    {
+      "mount_id": "mount.volarb.execution.main.broker.primary",
+      "mount_path": "execution.main/broker.primary",
+      "component_id": "provider.dhan",
+      "component_version": "1.0.0",
+      "parent_mount_id": "mount.volarb.execution.main",
+      "role": "primary_broker_provider"
+    }
+  ],
+  "bindings": [
+    {
+      "binding_id": "binding.volarb.position-management-to-execution.intent",
+      "kind": "data_binding",
+      "source": {
+        "scope": "strategy_local",
+        "vid": [
+          4,
+          0,
+          5,
+          7,
+          1
+        ],
+        "name": "Atomic broker-neutral instrument execution intent"
+      },
+      "target": {
+        "scope": "bound_component",
+        "mount_id": "mount.volarb.execution.main",
+        "canonical_vid": [
+          5,
+          0,
+          1,
+          9,
+          1
+        ],
+        "port_id": "port.internal_execution.intent"
+      },
+      "legacy_edge_vid": [
+        0,
+        0,
+        5,
+        4,
+        1
+      ]
+    },
+    {
+      "binding_id": "binding.volarb.execution-to-position-management.facts",
+      "kind": "data_binding",
+      "source": {
+        "scope": "bound_component",
+        "mount_id": "mount.volarb.execution.main",
+        "canonical_vid": [
+          5,
+          0,
+          4,
+          7,
+          1
+        ],
+        "port_id": "port.internal_execution.facts"
+      },
+      "target": {
+        "scope": "strategy_local",
+        "vid": [
+          4,
+          0,
+          2,
+          1,
+          1
+        ],
+        "name": "Volarb Execution + Risk Management Engine"
+      },
+      "legacy_edge_vid": [
+        0,
+        0,
+        4,
+        4,
+        1
+      ]
+    },
+    {
+      "binding_id": "binding.volarb.position-management-to-execution.interrupt",
+      "kind": "data_binding",
+      "source": {
+        "scope": "strategy_local",
+        "vid": [
+          4,
+          0,
+          2,
+          1,
+          1
+        ],
+        "name": "Volarb Execution + Risk Management Engine"
+      },
+      "target": {
+        "scope": "bound_component",
+        "mount_id": "mount.volarb.execution.main",
+        "canonical_vid": [
+          5,
+          0,
+          6,
+          7,
+          1
+        ],
+        "port_id": "port.internal_execution.interrupt"
+      },
+      "legacy_edge_vid": [
+        0,
+        0,
+        6,
+        4,
+        1
+      ]
+    },
+    {
+      "binding_id": "binding.volarb.execution-to-broker.primary",
+      "kind": "port_implementation",
+      "consumer": {
+        "scope": "bound_component",
+        "mount_id": "mount.volarb.execution.main",
+        "canonical_vid": [
+          5,
+          0,
+          3,
+          6,
+          1
+        ],
+        "port_id": "port.internal_execution.broker"
+      },
+      "provider": {
+        "scope": "mounted_provider",
+        "mount_id": "mount.volarb.execution.main.broker.primary",
+        "component_id": "provider.dhan",
+        "interface_id": "port.dhan.broker"
+      }
+    }
+  ],
+  "identity_examples": [
+    {
+      "canonical": "cvid://component.internal_execution/5.0.8.1.2",
+      "bound": "bvid://composition.volarb/mount.volarb.execution.main/5.0.8.1.2",
+      "entity": "Command Commit Guard"
+    }
+  ]
+}

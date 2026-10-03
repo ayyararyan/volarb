@@ -12,6 +12,7 @@ The personal covenant overrides generic engine carry branches: **intraday only, 
 
 ## Layout
 
+- `architecture/` — compositional identity system: reusable component manifests, canonical Internal Execution VID registry, Volarb mounts/bindings, identity helpers and validation.
 - `skill/butterfly-market-outlook/` — controller, references, scripts and regressions.
 - `skill/intraday-realized-volatility-forecast/` — five-minute HF observation model and fixtures.
 - `skill/market-news-signal-filter/` — normalized event/news risk filter.
@@ -27,6 +28,8 @@ The personal covenant overrides generic engine carry branches: **intraday only, 
 - `.github/workflows/` — skill packaging, synthetic service checks and conservative housekeeping.
 
 ## Boundaries
+
+Internal Execution is a reusable strategy-agnostic component, not a Volarb-owned box. Existing `[5,0,...]` VIDs are preserved as its canonical namespace; Volarb mounts that component through `architecture/strategies/volarb/composition.json`. Dhan is independently mounted as an unnumbered broker provider.
 
 Fresh broker positions/orders and executable quotes precede recommendations. First terminal gate wins; attractive theta cannot override missing data or hard risk. Margin checks retain ₹1,000 free cash against peak entry-stage requirement; entry-only packets cannot approve an overlapping recenter. RND is a pricing measure, not a physical forecast.
 

@@ -1,0 +1,2505 @@
+{
+  "version": "1.0",
+  "identity_model_version": "2.0",
+  "component_id": "component.internal_execution",
+  "component_name": "Internal Execution",
+  "registry_role": "canonical_component_registry",
+  "canonical_root_vid": [
+    5,
+    0,
+    0,
+    0,
+    0
+  ],
+  "legacy_source_registry": "docs/workflows/vector-id-registry.json",
+  "semantics": {
+    "canonical_vid": "Immutable identity of an entity inside the reusable Internal Execution component.",
+    "leading_box_code_5": "Preserved legacy namespace code. It identifies component.internal_execution; it no longer means the component is owned by strategy.volarb.",
+    "bound_vid": "Derived only when this component is mounted into a composition; never stored as the entity's canonical VID."
+  },
+  "schema": {
+    "vector": [
+      "box",
+      "instance",
+      "layer",
+      "type",
+      "ordinal"
+    ],
+    "type_codes": {
+      "0": "graph_box_container_root",
+      "1": "process_action_decision_gate_node",
+      "2": "state",
+      "3": "scheduler_timer",
+      "4": "edge_transition",
+      "5": "worker_agent",
+      "6": "interface_port",
+      "7": "data_contract_event_message",
+      "8": "adapter_external_provider_connector",
+      "9": "resource_allocation_reservation"
+    },
+    "namespace_code": 5,
+    "namespace_name": "component.internal_execution"
+  },
+  "rules": {
+    "immutable": true,
+    "reuse_retired_ids": false,
+    "edge_layer_rule": "edge layer equals source node logical layer",
+    "graph_topology_authority": "explicit source/target relationships, not numeric adjacency",
+    "canonical_vid_preservation": "Existing [5,0,...] identities are never renumbered during composition migration.",
+    "strategy_agnostic": true,
+    "provider_agnostic": true
+  },
+  "entities": [
+    {
+      "vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "name": "Internal Execution",
+      "kind": "root",
+      "status": "active_design",
+      "note": "Broker-neutral Internal Execution: normal Margin Optimization -> Execution Slicing -> Optimal Execution flow, with cross-cutting State Integrity, Execution Recovery/Ledger and Interrupt Control.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        9,
+        1
+      ],
+      "name": "Active Instrument Execution Registry",
+      "kind": "resource",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "Holds outstanding instrument-level economic requirements with Runtime Intent Identity/version. Registry entries are persistent requirements, not broker order tickets.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        1,
+        1
+      ],
+      "name": "Broker-Neutral Optimal Execution Engine",
+      "kind": "node",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "Reusable optimal-execution algorithm over the active registry. Objective and algorithm intentionally TBD.",
+      "status": "retired",
+      "retired_reason": "Superseded by explicit layered sub-boxes: Margin Optimization followed by Optimal Execution.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        3,
+        6,
+        1
+      ],
+      "name": "Broker Execution Port",
+      "kind": "interface",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "Broker-neutral interface implemented by unnumbered provider plug-ins such as Dhan, Kotak, or ICICI Securities.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        7,
+        1
+      ],
+      "name": "Normalized Broker Execution Facts",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "Authoritative broker order/fill/status/account execution facts normalized before use by Internal Execution or Position Management. Exact taxonomy TBD.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        4,
+        1
+      ],
+      "name": "Registry -> optimal execution engine",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        1,
+        9,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        2,
+        1,
+        1
+      ],
+      "status": "retired",
+      "retired_reason": "Superseded by direct inputs into the Margin Optimization sub-box.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        4,
+        1
+      ],
+      "name": "Optimal execution engine -> Broker Execution Port",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        2,
+        1,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        3,
+        6,
+        1
+      ],
+      "status": "retired",
+      "retired_reason": "Superseded by the Time-Space Execution Sub-Box; margin-aware sequencing now releases eligible work rather than sending broker actions.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        3,
+        4,
+        1
+      ],
+      "name": "Broker Execution Port -> normalized broker facts",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        3,
+        6,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        4,
+        7,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        4,
+        1
+      ],
+      "name": "Broker facts -> active execution registry",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        4,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        1,
+        9,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        7,
+        1
+      ],
+      "name": "Live Market Execution State",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "Continuously refreshed normalized quotes, executable depth/order book, spread, freshness and tradability used by optimal execution.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        7,
+        2
+      ],
+      "name": "Live Broker Account State",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "Authoritative dynamic account-capacity state including cash/collateral/margin, current positions and pending orders relevant to execution feasibility.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        1,
+        2
+      ],
+      "name": "Hedge / Offset Relationship Analyzer",
+      "kind": "node",
+      "parent_vid": [
+        5,
+        0,
+        2,
+        0,
+        1
+      ],
+      "note": "Infers structural risk-offset and coverage relationships from instruments, current positions and desired actions without strategy labels.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        7,
+        1
+      ],
+      "name": "Execution Dependency Graph",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        2,
+        0,
+        1
+      ],
+      "note": "Quantity-aware precedence constraints derived from inferred hedge relationships.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        1,
+        3
+      ],
+      "name": "Margin Sequence Optimizer",
+      "kind": "node",
+      "parent_vid": [
+        5,
+        0,
+        2,
+        0,
+        1
+      ],
+      "note": "Produces the Execution Ordering Plan. It decides whether precedence constraints exist. If required, emits ORDERED with sequence/quantity constraints; if genuinely unnecessary, emits UNCONSTRAINED.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ],
+      "name": "Optimal Execution",
+      "kind": "root",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "Second Internal Execution sub-box. Enforces the sequence from Margin Optimization, then converts only the current allowed step plus live LOB/order state into time-indexed order-management actions.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        3,
+        7,
+        1
+      ],
+      "name": "Eligible Execution Work Set",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ],
+      "note": "Current execution slice(s) released after ordering and slicing constraints. Contains intent identity/version, slice identity, instrument, side and permitted quantity. Optimal Execution acts only within this set.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        1,
+        1
+      ],
+      "name": "Temporal Execution Controller",
+      "kind": "node",
+      "parent_vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ],
+      "note": "Runs the time-indexed micro-execution loop, invokes the selected algorithm, validates its action, sends broker-neutral actions and consumes broker feedback.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        6,
+        1
+      ],
+      "name": "Execution Algorithm Port",
+      "kind": "interface",
+      "parent_vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ],
+      "note": "Plug-and-play broker-neutral micro-execution interface. Algorithms receive only the work set released under the upstream ordering decision.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        7,
+        2
+      ],
+      "name": "Temporal Execution Decision",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ],
+      "note": "Time-t action: WAIT, PLACE_LIMIT, REPRICE_LIMIT, CANCEL_LIMIT, or PLACE_MARKET, with applicable quantity, price and order-reference fields.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        4,
+        2
+      ],
+      "name": "Margin Optimization -> eligible work",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        2,
+        1,
+        3
+      ],
+      "target_vid": [
+        5,
+        0,
+        3,
+        7,
+        1
+      ],
+      "status": "retired",
+      "retired_reason": "Superseded by explicit Execution Sequence Plan and Sequence Enforcer.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        3,
+        4,
+        2
+      ],
+      "name": "Eligible work -> temporal execution controller",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        3,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        4,
+        1,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        4,
+        2
+      ],
+      "name": "Temporal controller -> Execution Algorithm Port",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        4,
+        1,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        4,
+        6,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        4,
+        3
+      ],
+      "name": "Execution Algorithm Port -> temporal execution decision",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        4,
+        6,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        4,
+        7,
+        2
+      ],
+      "status": "retired",
+      "retired_reason": "Superseded by an explicit plug-in implementation between the Execution Algorithm Port and Temporal Execution Decision.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        4,
+        4
+      ],
+      "name": "Temporal execution decision -> Broker Execution Port",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        4,
+        7,
+        2
+      ],
+      "target_vid": [
+        5,
+        0,
+        3,
+        6,
+        1
+      ],
+      "status": "retired",
+      "retired_reason": "Superseded by Command Commit Guard and durable Execution Ledger before Broker Execution Port.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        0,
+        1
+      ],
+      "name": "Margin Optimization",
+      "kind": "root",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "First Internal Execution sub-box. Determines hedge/margin dependencies and releases only currently eligible instrument quantity to Optimal Execution.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        4,
+        2
+      ],
+      "name": "Registry -> Margin Optimization",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        1,
+        9,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        2,
+        0,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        4,
+        3
+      ],
+      "name": "Market state -> Margin Optimization",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        1,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        2,
+        0,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        4,
+        4
+      ],
+      "name": "Account state -> Margin Optimization",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        1,
+        7,
+        2
+      ],
+      "target_vid": [
+        5,
+        0,
+        2,
+        0,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        4,
+        5
+      ],
+      "name": "Market state -> Optimal Execution",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        1,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        4,
+        3
+      ],
+      "name": "Margin Optimization -> hedge analyzer",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        2,
+        0,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        2,
+        1,
+        2
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        4,
+        4
+      ],
+      "name": "Hedge analyzer -> dependency graph",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        2,
+        1,
+        2
+      ],
+      "target_vid": [
+        5,
+        0,
+        2,
+        7,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        4,
+        5
+      ],
+      "name": "Dependency graph -> margin sequence optimizer",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        2,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        2,
+        1,
+        3
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        5,
+        5,
+        1
+      ],
+      "name": "Passive Chase",
+      "kind": "worker",
+      "parent_vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ],
+      "status": "default",
+      "note": "Current default Optimal Execution plug-in. Posts passively at the same-side best quote, waits T, refreshes/reprices for up to N passive cycles, then cancels/reconciles and markets the confirmed remainder.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        5,
+        7,
+        1
+      ],
+      "name": "Passive Chase Parameters",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        5,
+        5,
+        1
+      ],
+      "note": "T = passive waiting interval between evaluations; N = maximum passive refresh cycles after initial placement. Values intentionally TBD.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        5,
+        2,
+        1
+      ],
+      "name": "Passive Chase State",
+      "kind": "state",
+      "parent_vid": [
+        5,
+        0,
+        5,
+        5,
+        1
+      ],
+      "note": "Working order reference, confirmed remaining quantity, passive-cycle count, last passive price and last evaluation time.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        5,
+        3,
+        1
+      ],
+      "name": "Passive Reprice Timer",
+      "kind": "scheduler",
+      "parent_vid": [
+        5,
+        0,
+        5,
+        5,
+        1
+      ],
+      "note": "Waits parameter T between passive execution evaluations. Exact T is configuration, not architecture.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        4,
+        5
+      ],
+      "name": "Execution Algorithm Port -> Passive Chase",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        4,
+        6,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        5,
+        5,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        5,
+        4,
+        1
+      ],
+      "name": "Passive Chase -> Temporal Execution Decision",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        5,
+        5,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        4,
+        7,
+        2
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        7,
+        2
+      ],
+      "name": "Execution Ordering Plan",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        2,
+        0,
+        1
+      ],
+      "note": "Mandatory Margin Optimization output declaring ORDERED or UNCONSTRAINED execution. ORDERED supplies explicit precedence/sequence constraints; UNCONSTRAINED explicitly declares that no ordering constraint exists.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        3,
+        1,
+        1
+      ],
+      "name": "Ordering Constraint Enforcer",
+      "kind": "node",
+      "parent_vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ],
+      "note": "Interprets the Execution Ordering Plan. In ORDERED mode it releases only currently permitted step(s); in UNCONSTRAINED mode it releases all otherwise eligible work without imposing sequence. Missing/invalid ordering decision means no execution.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        4,
+        6
+      ],
+      "name": "Margin Sequence Optimizer -> Execution Ordering Plan",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        2,
+        1,
+        3
+      ],
+      "target_vid": [
+        5,
+        0,
+        2,
+        7,
+        2
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        4,
+        7
+      ],
+      "name": "Execution Ordering Plan -> Ordering Constraint Enforcer",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        2,
+        7,
+        2
+      ],
+      "target_vid": [
+        5,
+        0,
+        3,
+        1,
+        1
+      ],
+      "status": "retired",
+      "retired_reason": "Superseded by Execution Slicing between Margin Optimization and Optimal Execution.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        3,
+        4,
+        3
+      ],
+      "name": "Ordering Constraint Enforcer -> eligible execution work set",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        3,
+        1,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        3,
+        7,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        0,
+        1
+      ],
+      "name": "Interrupt Control",
+      "kind": "root",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "NVIC-inspired supervisory sub-box. Orthogonal to the normal Margin Optimization -> Optimal Execution chain and authorized to preempt both according to interrupt priority.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        7,
+        1
+      ],
+      "name": "Interrupt Directive",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        6,
+        0,
+        1
+      ],
+      "note": "Broker-neutral interrupt input carrying interrupt_id, level, scope, reason/source, issue time and target position/order scope. Levels currently: L1 CANCEL_WORK, L2 FLATTEN_SCOPE, L3 FLATTEN_ALL.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        1,
+        1
+      ],
+      "name": "Interrupt Arbiter",
+      "kind": "node",
+      "parent_vid": [
+        5,
+        0,
+        6,
+        0,
+        1
+      ],
+      "note": "Prioritizes and vectors interrupts. Higher levels preempt lower levels; normal execution is lower priority than every interrupt.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        2,
+        1
+      ],
+      "name": "Latched Interrupt State",
+      "kind": "state",
+      "parent_vid": [
+        5,
+        0,
+        6,
+        0,
+        1
+      ],
+      "note": "Persists active/pending interrupt priority, scope and completion state. Prevents normal convergence from recreating cancelled work until the interrupt is explicitly cleared.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        7,
+        2
+      ],
+      "name": "Interrupt Action Plan",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        6,
+        0,
+        1
+      ],
+      "note": "Deterministic emergency handler output: cancel working orders, flatten explicit scope, or flatten all controlled positions. Emergency flatten uses market actions for confirmed net positions after cancellation/reconciliation.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        4,
+        1
+      ],
+      "name": "Interrupt Directive -> Interrupt Arbiter",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        6,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        6,
+        1,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        4,
+        2
+      ],
+      "name": "Interrupt Arbiter -> latched interrupt state",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        6,
+        1,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        6,
+        2,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        4,
+        3
+      ],
+      "name": "Interrupt Arbiter -> interrupt action plan",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        6,
+        1,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        6,
+        7,
+        2
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        4,
+        4
+      ],
+      "name": "Interrupt Action Plan -> Broker Execution Port",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        6,
+        7,
+        2
+      ],
+      "target_vid": [
+        5,
+        0,
+        3,
+        6,
+        1
+      ],
+      "status": "retired",
+      "retired_reason": "Emergency mutations also pass through durable Command Commit Guard before Broker Execution Port.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        4,
+        5
+      ],
+      "name": "Interrupt Control -> Margin Optimization preemption",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        6,
+        2,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        2,
+        0,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        4,
+        6
+      ],
+      "name": "Interrupt Control -> Optimal Execution preemption",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        6,
+        2,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        4,
+        7
+      ],
+      "name": "Broker facts -> Interrupt Control",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        4,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        6,
+        1,
+        1
+      ],
+      "status": "retired",
+      "retired_reason": "VID layer violated edge-layer rule; replaced by [5,0,4,4,10] because source is Normalized Broker Execution Facts at layer 4.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        7,
+        3
+      ],
+      "name": "Runtime Intent Identity",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "Runtime identity carried by each live execution requirement: composition_id, execution mount_id, canonical component/VID context, intent_id, intent_version, supersedes_version/status and timestamps. The composition/mount context disambiguates concurrent uses of the same canonical execution component. Runtime identity remains distinct from immutable architectural CVIDs/BVIDs.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        7,
+        0,
+        1
+      ],
+      "name": "Execution Slicing",
+      "kind": "root",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "Normal-flow sub-box between Margin Optimization and Optimal Execution. Converts ordered/unconstrained eligible quantity into one or more execution slices. Default slice_count=1.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        7,
+        1,
+        1
+      ],
+      "name": "Slice Planner",
+      "kind": "node",
+      "parent_vid": [
+        5,
+        0,
+        7,
+        0,
+        1
+      ],
+      "note": "Chooses number, quantity and scheduling of execution slices while preserving upstream ordering constraints. Current default: one slice; if multiple slices exist, execute sequentially.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        7,
+        7,
+        1
+      ],
+      "name": "Execution Slice Plan",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        7,
+        0,
+        1
+      ],
+      "note": "Per-intent slice plan carrying intent identity/version, ordering metadata, slice_count, slice_id/index, quantity and scheduling policy.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        7,
+        2,
+        1
+      ],
+      "name": "Slice Progress State",
+      "kind": "state",
+      "parent_vid": [
+        5,
+        0,
+        7,
+        0,
+        1
+      ],
+      "note": "Tracks current/complete/pending slices and authoritative filled quantity. Default sequential policy releases the next slice only after the current slice completes/reconciles.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        7,
+        7,
+        2
+      ],
+      "name": "Slice Policy",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        7,
+        0,
+        1
+      ],
+      "note": "Slicing configuration. Current default: slice_count=1 and scheduling_mode=SEQUENTIAL. Future policies may dynamically size/schedule slices.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        4,
+        8
+      ],
+      "name": "Execution Ordering Plan -> Execution Slicing",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        2,
+        7,
+        2
+      ],
+      "target_vid": [
+        5,
+        0,
+        7,
+        0,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        7,
+        4,
+        1
+      ],
+      "name": "Execution Slicing -> Slice Planner",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        7,
+        0,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        7,
+        1,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        7,
+        4,
+        2
+      ],
+      "name": "Slice Planner -> Execution Slice Plan",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        7,
+        1,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        7,
+        7,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        7,
+        4,
+        3
+      ],
+      "name": "Execution Slice Plan -> Ordering Constraint Enforcer",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        7,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        3,
+        1,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        7,
+        4,
+        4
+      ],
+      "name": "Broker facts -> Slice Progress State",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        4,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        7,
+        2,
+        1
+      ],
+      "status": "retired",
+      "retired_reason": "VID layer violated edge-layer rule; replaced by [5,0,4,4,9] because source is Normalized Broker Execution Facts at layer 4.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        7,
+        4,
+        5
+      ],
+      "name": "Slice Progress State -> Slice Planner",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        7,
+        2,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        7,
+        1,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        0,
+        1
+      ],
+      "name": "Execution Recovery",
+      "kind": "root",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "Cross-cutting durable execution/reconciliation sub-box. Owns write-ahead action recording, runtime identity/version validation, correlation and restart/ambiguity recovery.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        9,
+        1
+      ],
+      "name": "Execution Ledger",
+      "kind": "resource",
+      "parent_vid": [
+        5,
+        0,
+        8,
+        0,
+        1
+      ],
+      "note": "Durable append/update record linking composition/mount/canonical execution context -> runtime intent/version -> slice -> execution action -> correlation/order IDs -> authoritative fills/status/positions. Canonical VIDs are never repurposed as runtime IDs.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        1,
+        1
+      ],
+      "name": "Reconciliation Engine",
+      "kind": "node",
+      "parent_vid": [
+        5,
+        0,
+        8,
+        0,
+        1
+      ],
+      "note": "Reconstructs broker truth after timeout, ambiguity or restart using authoritative orders, trades, fills and positions. No blind mutation retry while outcome is unknown.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        1,
+        2
+      ],
+      "name": "Command Commit Guard",
+      "kind": "node",
+      "parent_vid": [
+        5,
+        0,
+        8,
+        0,
+        1
+      ],
+      "note": "Final pre-broker mutation gate. Rejects stale intent versions, requires durable write-ahead record/correlation identity, checks interrupt latch and action-class integrity permission, then releases the command.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        2,
+        1
+      ],
+      "name": "Recovery State",
+      "kind": "state",
+      "parent_vid": [
+        5,
+        0,
+        8,
+        0,
+        1
+      ],
+      "note": "Tracks CLEAN, RECONCILING, AMBIGUOUS and RECOVERY_REQUIRED execution states. Normal new mutations are blocked while unresolved ambiguity exists in relevant scope.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        7,
+        1
+      ],
+      "name": "Execution Action Envelope",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        8,
+        0,
+        1
+      ],
+      "note": "Broker-neutral mutation envelope carrying composition_id, execution mount_id, canonical execution context, action_id, origin/intent or interrupt identity, intent_version, slice_id, action_class, correlation_id and requested broker operation.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        7,
+        2
+      ],
+      "name": "Reconciliation Result",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        8,
+        0,
+        1
+      ],
+      "note": "Authoritative reconciliation result mapping attempted actions to broker orders/trades/fills/positions and exact confirmed remaining requirement.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        4,
+        6
+      ],
+      "name": "Temporal execution decision -> Command Commit Guard",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        4,
+        7,
+        2
+      ],
+      "target_vid": [
+        5,
+        0,
+        8,
+        1,
+        2
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        4,
+        8
+      ],
+      "name": "Interrupt Action Plan -> Command Commit Guard",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        6,
+        7,
+        2
+      ],
+      "target_vid": [
+        5,
+        0,
+        8,
+        1,
+        2
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        4,
+        8
+      ],
+      "name": "Registry/runtime version -> Command Commit Guard",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        1,
+        9,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        8,
+        1,
+        2
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        4,
+        1
+      ],
+      "name": "Command Commit Guard -> Execution Ledger write-ahead",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        8,
+        1,
+        2
+      ],
+      "target_vid": [
+        5,
+        0,
+        8,
+        9,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        4,
+        2
+      ],
+      "name": "Committed action -> Broker Execution Port",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        8,
+        1,
+        2
+      ],
+      "target_vid": [
+        5,
+        0,
+        3,
+        6,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        4,
+        7
+      ],
+      "name": "Broker facts -> Reconciliation Engine",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        4,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        8,
+        1,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        4,
+        3
+      ],
+      "name": "Execution Ledger -> Reconciliation Engine",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        8,
+        9,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        8,
+        1,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        4,
+        4
+      ],
+      "name": "Reconciliation Engine -> Recovery State",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        8,
+        1,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        8,
+        2,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        4,
+        5
+      ],
+      "name": "Reconciliation Engine -> Execution Ledger",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        8,
+        1,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        8,
+        9,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        4,
+        6
+      ],
+      "name": "Recovery State -> Margin Optimization gate",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        8,
+        2,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        2,
+        0,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        4,
+        7
+      ],
+      "name": "Recovery State -> Optimal Execution gate",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        8,
+        2,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        9,
+        0,
+        1
+      ],
+      "name": "State Integrity",
+      "kind": "root",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "Cross-cutting broker-neutral readiness guard that classifies freshness/completeness/consistency of market, account, order/fill and recovery state before actions are allowed.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        9,
+        1,
+        1
+      ],
+      "name": "State Integrity Guard",
+      "kind": "node",
+      "parent_vid": [
+        5,
+        0,
+        9,
+        0,
+        1
+      ],
+      "note": "Computes action-class-aware execution permission. Normal risk-adding work requires sufficiently fresh/complete state; emergency cancel/flatten uses separate minimum-integrity requirements and never silently falls back.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        9,
+        7,
+        1
+      ],
+      "name": "Integrity Assessment",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        9,
+        0,
+        1
+      ],
+      "note": "Assessment with status VALID/STALE/INCOMPLETE/INCONSISTENT/UNKNOWN plus per-action permissions and reasons.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        9,
+        2,
+        1
+      ],
+      "name": "Integrity State",
+      "kind": "state",
+      "parent_vid": [
+        5,
+        0,
+        9,
+        0,
+        1
+      ],
+      "note": "Current freshness/completeness/consistency state of required broker-neutral inputs.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        4,
+        6
+      ],
+      "name": "Market state -> State Integrity",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        1,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        9,
+        1,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        4,
+        7
+      ],
+      "name": "Account state -> State Integrity",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        1,
+        7,
+        2
+      ],
+      "target_vid": [
+        5,
+        0,
+        9,
+        1,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        4,
+        8
+      ],
+      "name": "Broker facts -> State Integrity",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        4,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        9,
+        1,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        4,
+        8
+      ],
+      "name": "Recovery State -> State Integrity",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        8,
+        2,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        9,
+        1,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        9,
+        4,
+        1
+      ],
+      "name": "State Integrity Guard -> Integrity Assessment",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        9,
+        1,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        9,
+        7,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        9,
+        4,
+        2
+      ],
+      "name": "Integrity Assessment -> Margin Optimization",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        9,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        2,
+        0,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        9,
+        4,
+        3
+      ],
+      "name": "Integrity Assessment -> Optimal Execution",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        9,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        9,
+        4,
+        4
+      ],
+      "name": "Integrity Assessment -> Command Commit Guard",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        9,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        8,
+        1,
+        2
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        4,
+        9
+      ],
+      "name": "Broker facts -> Slice Progress State",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        4,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        7,
+        2,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        4,
+        9
+      ],
+      "name": "Interrupt Control -> Execution Slicing preemption",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        6,
+        2,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        7,
+        0,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        4,
+        10
+      ],
+      "name": "Broker facts -> Interrupt Control",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        4,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        6,
+        1,
+        1
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.internal_execution"
+    }
+  ]
+}
