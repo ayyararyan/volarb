@@ -21,11 +21,11 @@ The architecture is now split into one small master orchestrator and five detail
 - [VID specification](docs/workflows/vector-id-system.md)
 - [VID registry](docs/workflows/vector-id-registry.json)
 - [Master workflow](docs/autonomous-butterfly-workflow.md)
-- [Box 1 — Regime Decision](docs/workflows/01-regime-decision.md)
-- [Box 2 — Intraday Instrument Selection & Capital Allocation](docs/workflows/02-intraday-selection.md)
-- [Box 3 — Per-Underlying Trade Selection Graph X](docs/workflows/03-per-underlying-graph.md)
-- [Box 4 — Shared Execution & Risk Management](docs/workflows/04-execution-risk.md)
-- [Box 5 — Broker-Neutral Optimal Execution](docs/workflows/05-optimal-execution.md)
+- [Regime Gate](docs/workflows/regime-gate.md)
+- [Underlying Allocation](docs/workflows/underlying-allocation.md)
+- [Trade Selection](docs/workflows/trade-selection.md)
+- [Position Management](docs/workflows/position-management.md)
+- [Internal Execution](docs/workflows/internal-execution.md)
 
 The master graph should remain deliberately small. New decision detail should be added to the owning box rather than expanding the master unless a genuinely new top-level phase appears.
 
@@ -1176,3 +1176,23 @@ Lower Box 5:
 **Hard boundary:** The temporal algorithm can choose timing, price, order type and quantity up to the released amount. It cannot make an ineligible instrument eligible, bypass margin/hedge constraints, alter instrument identity or reinterpret strategy intent.
 
 **Clock remains open:** fixed interval, event-driven or hybrid scheduling will be decided later.
+
+
+### 2026-10-03 — Architecture naming and execution cleanup
+
+**Canonical naming rule:** Top-level modules are referred to by short semantic names, never as "Box 1", "Box 2", etc. Numeric identity remains only inside immutable VIDs.
+
+Canonical modules:
+- `[1,0,0,0,0]` Regime Gate
+- `[2,0,0,0,0]` Underlying Allocation
+- `[3,0,0,0,0]` Trade Selection
+- `[4,0,0,0,0]` Position Management
+- `[5,0,0,0,0]` Internal Execution
+
+**Internal Execution layering:** Internal Execution has exactly two ordered sub-boxes:
+1. `[5,0,2,0,1]` Margin Optimization
+2. `[5,0,3,0,1]` Optimal Execution
+
+Margin Optimization must release an Eligible Execution Work Slice before Optimal Execution may act. Optimal Execution may choose timing, price, order type and quantity only within that released slice.
+
+**Repository cleanup:** Canonical workflow documents now use semantic filenames. Older numbered workflow files and the superseded Dhan-specific handoff are historical artifacts and are being removed from the active workflow set. Earlier notes that use "Box" terminology remain historical context only and are superseded by this naming rule.
