@@ -72,7 +72,7 @@ The economic identity is broker-neutral. Dhan Security IDs, Kotak identifiers, e
 
 This is the handoff from Position Management into Internal Execution.
 
-Position Management can hand Internal Execution one or more atomic instrument execution intentions. Box 5 registers them and applies the reusable optimal-execution algorithm.
+Position Management can hand Internal Execution one or more atomic instrument execution intentions. Internal Execution registers them, applies Margin Optimization, then passes eligible work to Optimal Execution.
 
 The previous interpretation of this interface as a thin broker executor is superseded.
 
