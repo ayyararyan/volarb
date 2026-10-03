@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="764" viewBox="0 0 440 764" role="img" aria-labelledby="title description">
+<title id="title">Volarb: one engine, injected dependencies</title>
+<desc id="description">Architecture design target. Strategy enters through an optional strategy execution adapter. Execution Engine contracts exist; its complete pipeline is in development. The Broker Execution Port connects simulated and Dhan providers. The deterministic testbed injects runtime dependencies.</desc>
+<!-- Editable source artwork. Fixed high-contrast palette works on light and dark GitHub pages. -->
+<style>
+  text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }
+  .label { fill: #f0f5fb; font-size: 25px; font-weight: 600; }
+  .body { fill: #becbdb; font-size: 18px; }
+  .eyebrow { fill: #a9bed3; font-size: 16px; font-weight: 600; letter-spacing: 1.5px; }
+  .edge { fill: none; stroke: #809bb7; stroke-width: 2; marker-end: url(#arrow); }
+  .inject { fill: none; stroke: #67dcc6; stroke-width: 2; marker-end: url(#teal-arrow); }
+</style>
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#809bb7"/></marker>
+  <marker id="teal-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#67dcc6"/></marker>
+</defs>
+<rect width="440" height="764" rx="16" fill="#0c1829"/>
+<text x="24" y="34" class="eyebrow" text-anchor="start" style="font-size: 15px">ARCHITECTURE / DESIGN TARGET</text>
+<path class="edge" d="M220 122 V146"/>
+<path class="edge" d="M220 218 V246"/>
+<path class="edge" d="M220 346 V382"/>
+<path class="edge" d="M220 448 V474 H116 V494"/>
+<path class="edge" d="M220 448 V474 H324 V494"/>
+<path class="inject" d="M28 670 H12 V296 H28"/>
+<rect x="28" y="58" width="384" height="64" rx="12" fill="#15263b" stroke="#3a526c" stroke-width="1.5"/>
+<text x="220" y="99" class="label" text-anchor="middle">Strategy</text>
+<rect x="28" y="146" width="384" height="72" rx="12" fill="#15263b" stroke="#3a526c" stroke-width="1.5"/>
+<text x="220" y="177" class="label" text-anchor="middle" style="font-size: 23px">Strategy Execution Adapter</text>
+<text x="220" y="203" class="body" text-anchor="middle" style="font-size: 20px">optional</text>
+<rect x="28" y="246" width="384" height="100" rx="12" fill="#183450" stroke="#75b6ee" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="220" y="280" class="label" text-anchor="middle">Execution Engine</text>
+<text x="220" y="307" class="body" text-anchor="middle" style="font-size: 20px">Contracts implemented</text>
+<text x="220" y="333" class="body" text-anchor="middle" style="font-size: 20px">Pipeline in development</text>
+<rect x="28" y="382" width="384" height="66" rx="12" fill="#15263b" stroke="#3a526c" stroke-width="1.5"/>
+<text x="220" y="423" class="label" text-anchor="middle" style="font-size: 25px">Broker Execution Port</text>
+<rect x="28" y="494" width="176" height="84" rx="12" fill="#15263b" stroke="#3a526c" stroke-width="1.5"/>
+<text x="116" y="529" class="label" text-anchor="middle" style="font-size: 24px">Simulated</text>
+<text x="116" y="557" class="label" text-anchor="middle" style="font-size: 24px">broker</text>
+<rect x="236" y="494" width="176" height="84" rx="12" fill="#15263b" stroke="#3a526c" stroke-width="1.5"/>
+<text x="324" y="529" class="label" text-anchor="middle" style="font-size: 24px">Dhan</text>
+<text x="324" y="557" class="label" text-anchor="middle" style="font-size: 24px">Provider</text>
+<text x="220" y="609" class="body" text-anchor="middle" style="font-size: 19px">Future providers extend the same port</text>
+<rect x="28" y="632" width="384" height="108" rx="12" fill="#102c31" stroke="#378d83" stroke-width="1.5"/>
+<text x="220" y="664" class="label" text-anchor="middle" style="font-size: 25px">Execution Testbed</text>
+<text x="220" y="692" class="body" text-anchor="middle" style="font-size: 20px">Virtual time · seeded scenarios</text>
+<text x="220" y="718" class="body" text-anchor="middle" style="font-size: 20px">Fault injection · invariant checks</text>
+</svg>

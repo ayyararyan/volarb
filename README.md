@@ -1,57 +1,113 @@
 # Volarb
 
-Indian index-option butterfly research and decision tooling, plus reusable broker-neutral execution infrastructure under development. The repository contains **three distinct systems**: the current manual trading workflow, an offline research laboratory, and the evolving execution architecture. Source publication does not deploy services or authorize trading.
+**Quantitative research. Broker-neutral execution. Deterministic testing.**
+
+Volarb brings Indian index-option research and strategy workflows together with reusable execution infrastructure. It separates the decision to trade from execution policy and broker mechanics, so research, simulation and provider integration can evolve independently.
+
+[![Architecture validation](https://github.com/ayyararyan/volarb/actions/workflows/architecture-identity.yml/badge.svg?branch=main)](https://github.com/ayyararyan/volarb/actions/workflows/architecture-identity.yml)
+[![Execution Testbed](https://github.com/ayyararyan/volarb/actions/workflows/execution-testbed.yml/badge.svg?branch=main)](https://github.com/ayyararyan/volarb/actions/workflows/execution-testbed.yml)
+[![Dhan Provider tests](https://github.com/ayyararyan/volarb/actions/workflows/test-dhan-mcp.yml/badge.svg?branch=main)](https://github.com/ayyararyan/volarb/actions/workflows/test-dhan-mcp.yml)
+
+[Architecture](#architecture) · [Start here](#start-here) · [Development](#local-development) · [Repository map](docs/REPOSITORY_MAP.md)
+
+<picture>
+  <source media="(max-width: 600px)" srcset="docs/assets/volarb-architecture-mobile.svg">
+  <img src="docs/assets/volarb-architecture.svg" width="960" alt="Volarb architecture: strategy through an optional adapter into the Execution Engine, then the Broker Execution Port with simulated and Dhan providers. The deterministic testbed injects runtime dependencies. Contracts are implemented; the complete engine pipeline is in development.">
+</picture>
+
+**Current scope:** broker contracts, the Dhan Provider, deterministic test infrastructure and research tooling are implemented. The complete generic Execution Engine is **under development**, not a deployed autonomous trading system.
+
+## Capabilities and status
+
+| Area | Available today | Implementation boundary |
+|---|---|---|
+| **Execution infrastructure** | Provider-neutral ports, global Provider Error Envelope, immutable component identities and validated composition bindings | Policy/convergence pipeline and production environment loader are designed, not yet implemented |
+| **Dhan integration** | REST/WebSocket connector; normalized commands, queries and streams; instrument translation and readiness gates | Mechanical broker operations, not strategy or execution policy |
+| **Deterministic testing** | Virtual clock, seeded scenarios, simulated broker/market, faults, traces, invariants and composition harnesses | Exercises implemented components and fixtures; full-engine coverage awaits the engine |
+| **Quantitative research** | Option-surface analytics, physical realized-volatility forecasting, event/news filtering and butterfly decision workflows | Decision support and experimental research, not order authority |
+| **Research laboratory** | Offline experiments, isolated workers, dataset provenance and evidence grading | Separate scientific baseline; not the live decision controller |
+
+The [SHADOW day-workflow prototype](services/day-workflow/README.md) and optional [eSSVI/IV/HAR dashboard](services/essvi-dashboard/README.md) are supporting services. Their deployment-specific dependencies are documented separately.
 
 ## Architecture
 
+The canonical boundary is **Strategy → optional Strategy Execution Adapter → Execution Engine → Broker Execution Port → Broker Provider**.
+
+The Execution Engine is reusable and strategy-agnostic: **`component.execution_engine`**, with immutable VID namespace **`[5,0,...]`**. Volarb's position/strategy layer owns instrument intent, butterfly semantics and risk decisions. Dhan translates, transmits and normalizes broker facts; it does not choose execution policy.
+
+The **designed** execution path is:
+
 ```text
-Strategy (Volarb or another strategy)
-    │ optional Strategy Execution Adapter
-    ▼
-Execution Engine — component.execution_engine, immutable [5,0,...]
-    │ Broker Execution Port
-    ▼
-Broker Provider — Dhan / future providers
+Margin Optimization → Execution Slicing → Optimal Execution
+    → Execution Recovery / Command Commit Guard → Broker Execution Port
 ```
 
-The Execution Engine is **strategy-agnostic**, not owned by Volarb. Strategy geometry and risk decisions stay upstream; the Dhan Provider performs mechanical broker operations. `component.internal_execution` is a compatibility alias only.
+**State Integrity, Execution Recovery and Interrupt Control** span that path. The former `component.internal_execution` name is a compatibility alias only.
 
-The designed normal path is **Margin Optimization → Execution Slicing → Optimal Execution → Execution Recovery / Command Commit Guard → Broker Execution Port**. State Integrity, Execution Recovery and Interrupt Control are cross-cutting. See the [architecture index](architecture/README.md) and [canonical execution design](docs/workflows/execution-engine.md).
+See the [architecture index](architecture/README.md) for identities and composition, and the [Execution Engine design](docs/workflows/execution-engine.md) for policy and recovery semantics.
 
-**Implementation status:** `execution-engine/` currently supplies runtime ports and contracts, not a completed convergence pipeline. The Dhan connector and deterministic test infrastructure are implemented. Test/replay/shadow/production inject dependencies; production must never import `execution-testkit`. Environment manifests are declarations, not deployment or activation commands.
+### One engine, injected environments
+
+The testing model requires **the same engine code**, with dependencies supplied through ports—not a second engine or test-only policy branches.
+
+| Dependency | Deterministic test environment | Production target |
+|---|---|---|
+| Broker | Simulated broker | Dhan Provider |
+| Time and market | Virtual clock, simulated observations | Real clock, live observations |
+| Failure conditions | Seeded faults and recorded traces | Normalized provider errors and reconciliation |
+
+The five intended levels are **box tests → composition tests → full-engine scenarios → mass simulation → replay/shadow**. Box/composition harnesses and scenario/mass drivers exist; complete-engine mounting and dedicated replay/shadow runners remain planned. Environment manifests are declarations, not an executable loader.
+
+[Execution Testbed](docs/testing/execution-testbed.md) · [Environment definitions](environments/execution/README.md)
 
 ## Start here
 
-| Goal | Canonical entrypoint |
+Choose a path by the work you want to do. The [full repository map](docs/REPOSITORY_MAP.md) covers secondary services, tooling and historical records.
+
+| Work on | Canonical entrypoint |
 |---|---|
-| Understand the whole repository | [Repository map](docs/REPOSITORY_MAP.md) |
-| Follow the current manual trading workflow | [Daily operating algorithm](docs/DAILY_OPERATING_ALGORITHM.md), [covenant](docs/PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md), [prompts](prompts/README.md) |
-| Understand strategy composition and identities | [Architecture](architecture/README.md), [Volarb design](docs/autonomous-butterfly-workflow.md) |
-| Build reusable execution infrastructure | [Execution Engine](execution-engine/README.md) |
-| Test with deterministic broker/clock/ledger dependencies | [Execution Testbed](execution-testkit/README.md), [environments](environments/execution/README.md) |
-| Integrate a broker | [Dhan Provider](services/dhan-chatgpt-mcp/README.md), [global Provider Error Envelope](docs/providers/provider-error-contract.md) |
-| Run offline research | [Butterfly Research Laboratory](agent/README.md) |
-| Use current-observation research modules | [Skills](skill/README.md) |
-| Install a portable research kit | [Agent kit](docs/AGENT_KIT.md) |
-| Review development decisions or older generations | [Current notes](notes.md), [history](docs/DEVELOPMENT_HISTORY.md), [archive](archive/README.md) |
+| Architecture and identities | [`architecture/`](architecture/README.md) — manifests, registries, composition and validation |
+| Generic execution | [`execution-engine/`](execution-engine/README.md) — implemented contracts and the runtime boundary |
+| Execution testing | [`execution-testkit/`](execution-testkit/README.md) and [`environments/execution/`](environments/execution/README.md) |
+| Broker integration | [`services/dhan-chatgpt-mcp/`](services/dhan-chatgpt-mcp/README.md) — Dhan Provider and service interfaces |
+| Volarb strategy | [Strategy composition/design](docs/autonomous-butterfly-workflow.md); [current operating algorithm](docs/DAILY_OPERATING_ALGORITHM.md) |
+| Research and decision modules | [`skill/`](skill/README.md) — butterfly outlook, realized volatility and market news |
+| Offline experiments | [`agent/`](agent/README.md) — Butterfly Research Laboratory |
+| Source/workspace packaging | [`agent-kit/`](agent-kit/README.md) — distinct from the research laboratory |
+| Operations and documentation | [`docs/`](docs/README.md) and [`prompts/`](prompts/README.md) — canonical procedures and bounded prompts |
+| Historical generations | [`archive/`](archive/README.md) — superseded designs and reports, not operational instructions |
 
-## Stable directory ownership
+## Local development
 
-- `architecture/` — component identities, manifests, composition bindings and validation.
-- `execution-engine/` — reusable broker-neutral runtime contracts and future pipeline implementation.
-- `execution-testkit/`, `environments/` — non-production testing tools and explicit dependency declarations.
-- `services/` — Dhan integration, SHADOW day-workflow prototype and optional eSSVI/HAR dashboard.
-- `agent/` — research-only laboratory, distinct from the portable `agent-kit/` deployment templates.
-- `skill/` — Butterfly Market Outlook v2.6, intraday HF-RV model and news filter.
-- `docs/`, `prompts/` — canonical explanations, operational procedure and bounded user-invoked prompts.
-- `tools/`, `tests/`, `.github/` — source packaging, regression checks and CI.
-- `market-outlook/`, `trade-log/` — preserved dated journals and historical execution evidence, **not live account truth**.
-- `archive/` — superseded architecture/research/deployment material, explicitly non-operational.
+Start with **offline source validation**. No broker credentials or running services are required. Use the repository pins: **Node 26.5.0**, **npm 11.17.0** and **Python 3.12.13**. Run from the repository root:
 
-## Operating boundaries
+```sh
+# Architecture and deterministic Execution Testbed: no npm install required.
+node architecture/validate.mjs
+node --test architecture/lib/*.test.mjs architecture/*.test.mjs \
+  execution-testkit/test/*.test.mjs
 
-The personal covenant requires **intraday only, flat by 15:00 IST, no entry or recenter thereafter**. Dhandho researches; Aryan executes. New-entry research is one selected butterfly, one lot total, with the adopted ₹1,000 daily decision-loss budget and a separate ₹1,000 free-cash margin reserve. Neither is a guaranteed realized-loss cap.
+# Locked provider dependencies and synthetic tests.
+npm ci --ignore-scripts --prefix services/dhan-chatgpt-mcp
+npm test --prefix services/dhan-chatgpt-mcp
 
-Fresh broker positions/orders and executable quotes precede recommendations; first terminal gate wins. Generic overnight diagnostics cannot override the covenant. Private credentials, browser state, raw broker evidence and the sole live `Trading/ledger/` store remain outside this repository. Installed skills and running services do not automatically track source updates.
+# Local documentation paths, anchors, JSON and JavaScript imports.
+python3.12 -B tools/check_repository.py
+```
 
-For local offline checks, see [validation](docs/VALIDATION.md). CI checks source behavior; it does not establish live broker readiness.
+For Python regression suites, isolated environments, research-lab checks, skill packages and container builds, follow the [validation guide](docs/VALIDATION.md). The laboratory has its own dependency lock; do not merge it with the root kit environment. The [portable kit guide](docs/AGENT_KIT.md) covers installation without restoring private runtime state.
+
+### Production boundary
+
+Repository code and passing CI do not activate trading or establish live broker readiness. Credentials and account state stay private; test, replay, shadow and production dependencies are separate. **Production must never depend on `execution-testkit`.** Live mutations require explicit production configuration, broker readiness and operating authorization; they are not a quickstart step.
+
+The current strategy workflow remains human-executed under the [adopted covenant](docs/PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md). Historical journals are not live account truth. Publishing source does not deploy services or refresh installed skills.
+
+### Development conventions
+
+- Preserve canonical VIDs and compatibility aliases; never renumber existing identities.
+- Keep strategy semantics and provider-native logic outside the generic engine.
+- Inject runtime dependencies; do not add test-only branches to production execution policy.
+- Update canonical documentation with code, and run the affected suites plus architecture validation.
+
+Component/package versions are independently scoped; there is no repository-wide release version. Follow [development history](docs/DEVELOPMENT_HISTORY.md) for milestones and [open implementation work](tasks.md) for what remains.
