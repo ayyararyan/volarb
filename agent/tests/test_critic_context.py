@@ -439,3 +439,22 @@ def test_robustness_defaults_and_revisions_match_protected_evaluator():
     assert not methodological_admission(
         hypothesis, dataset, qualification, removed_required, original=draft
     )["admitted"]
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("cpu_seconds", 120),
+        ("wall_seconds", 240),
+        ("memory_mb", 2048),
+        ("storage_bytes", 50_000_000),
+    ],
+)
+def test_methodological_revision_cannot_change_frozen_run_resources(field, value):
+    _, hypothesis, dataset, qualification, draft = proposal()
+    altered = draft.model_copy(
+        update={"resources": draft.resources.model_copy(update={field: value})}
+    )
+    report = methodological_admission(hypothesis, dataset, qualification, altered, original=draft)
+    assert not report["admitted"]
+    assert "revision changed protected execution scope or lineage" in report["reasons"]

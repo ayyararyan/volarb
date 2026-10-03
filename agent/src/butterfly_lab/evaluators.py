@@ -16,6 +16,7 @@ import pandas as pd
 
 from .accounting import Account, Contract, dated_spec, fee_for_fill
 from .baselines import policy_decision, select_b0, recorded_selection, select_recorded
+from .compiler import DatasetExecutionScopeError, validate_dataset_execution_scope
 from .data import DataQualificationError, load_dataset, metadata, qualify_dataset
 from .statistics import paired_inference, robustness
 
@@ -259,7 +260,16 @@ def _exp001(
     replication = replicate_exp001(frame, dataset, experiment, features, predictions)
     return {
         "outcome": inference["outcome"],
-        "definition": EXP001_DEFINITION,
+        "definition": {
+            **EXP001_DEFINITION,
+            "refitting": (
+                "frozen through "
+                + experiment.get("split", {}).get("train_end", "2023-12-31")
+                + "; no refits; outcomes available before first prediction"
+                if experiment.get("split", {}).get("refit", "expanding_monthly") == "frozen"
+                else EXP001_DEFINITION["refitting"]
+            ),
+        },
         "metrics": {
             "baseline_mae_bp": float(final.baseline_loss.mean()),
             "candidate_mae_bp": float(final.candidate_loss.mean()),
@@ -839,6 +849,12 @@ def _ironfly(
         "Session-level inference, not individual legs or overlapping trades",
         "Non-B0 baseline structures use frozen timestamped selection records; management comparisons remain the separately registered hold/close/recenter policies, not a claim to replay every live intervention",
     ]
+    if "execution_scope" in meta:
+        limitations.append(
+            "Fixed captured-feed decision subset: missing/stale entry observations remain "
+            "INELIGIBLE_ENTRY with zero allocation, not observed zero-return exchange opportunities; "
+            "report source availability and executed-cycle counts before economic generalization."
+        )
     if sessions.empty or sessions[["baseline_pnl", "candidate_pnl"]].isna().any().any():
         return {
             "outcome": "DATA_LIMITED",
@@ -972,6 +988,7 @@ def evaluate(
     output_dir.mkdir(parents=True, exist_ok=True)
     evaluator = experiment.get("evaluator", experiment.get("dsl", {}).get("evaluator"))
     try:
+        validate_dataset_execution_scope(experiment, dataset)
         if dataset.get("fidelity") == "F4":
             raise DataQualificationError(
                 "F4 depth/event fill replay is explicitly unsupported in this release"
@@ -1002,6 +1019,20 @@ def evaluate(
             result["outcome"] = "INVALID_RESULT"
         # JSON roundtrip rejects NaN and external path objects at the worker boundary.
         return json.loads(json.dumps(result, allow_nan=False))
+    except DatasetExecutionScopeError as exc:
+        return {
+            "outcome": "UNSUPPORTED_HYPOTHESIS",
+            "fidelity": dataset.get("fidelity"),
+            "provenance": dataset.get("provenance"),
+            "evaluator_version": "1",
+            "metrics": {},
+            "artifacts": {},
+            "limitations": [str(exc)],
+            "replication": {
+                "status": "NOT_APPLICABLE",
+                "reason": "immutable dataset execution scope rejected before economics",
+            },
+        }
     except DataQualificationError as exc:
         return {
             "outcome": "DATA_LIMITED",

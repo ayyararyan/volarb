@@ -12,6 +12,7 @@ from butterfly_lab.graph import Laboratory
 from butterfly_lab.providers import FixtureProvider
 from butterfly_lab.registry import Registry
 from butterfly_lab.schemas import BudgetSpec, CampaignSpec, digest
+from butterfly_lab.settings import Settings
 from butterfly_lab.workers import start_worker
 
 
@@ -109,6 +110,72 @@ def complete(lab, campaign):
     assert report["synthesis_complete"] and report["steward_complete"]
     assert not report["pending_experiments"]
     return report
+
+
+@pytest.mark.parametrize("configured", [False, True])
+def test_run_resources_are_reviewed_frozen_and_preserved_on_revision_and_resume(
+    tmp_path, monkeypatch, configured
+):
+    settings = Settings(
+        **(
+            {
+                "run_cpu_seconds": 120,
+                "run_wall_seconds": 240,
+                "run_memory_mb": 2048,
+                "run_storage_bytes": 50_000_000,
+            }
+            if configured
+            else {}
+        )
+    )
+    monkeypatch.setattr("butterfly_lab.graph.get_settings", lambda: settings)
+    expected = {
+        "schema_version": "1",
+        "cpu_seconds": settings.run_cpu_seconds,
+        "wall_seconds": settings.run_wall_seconds,
+        "memory_mb": settings.run_memory_mb,
+        "storage_bytes": settings.run_storage_bytes,
+    }
+    factory, campaign, hypothesis, dataset, captured = controlled_campaign(
+        tmp_path, first_incomplete=True
+    )
+    lab = factory()
+    original_critic = lab.agent_service.provider.responses["critic"]
+
+    def critic(context):
+        assert context["review_context"]["proposed_experiment"]["resources"] == expected
+        # A later runtime setting must not alter this draft during revision.
+        monkeypatch.setattr("butterfly_lab.graph.get_settings", lambda: Settings(run_cpu_seconds=1))
+        return original_critic(context)
+
+    lab.agent_service.provider.responses["critic"] = critic
+    try:
+        state = lab.prepare_hypothesis(campaign.id, dataset.id, hypothesis.model_dump(mode="json"))
+        versions = lab.registry.list("preparation", campaign.id)
+        assert len(versions) == 2
+        assert all(row["experiment"]["resources"] == expected for row in versions)
+        assert all(
+            context["review_context"]["proposed_experiment"]["resources"] == expected
+            for role, context in captured
+            if role in {"specification", "critic"}
+        )
+        experiment = lab.registry.get("experiments", state["experiment_id"])
+        assert experiment["resources"] == expected
+        assert not lab.registry.runs()
+        calls = len(captured)
+    finally:
+        lab.close()
+
+    restarted = factory()
+    try:
+        resumed = restarted.prepare_hypothesis(
+            campaign.id, dataset.id, hypothesis.model_dump(mode="json")
+        )
+        assert resumed["draft"]["resources"] == expected
+        assert len(captured) == calls
+        assert not restarted.registry.runs()
+    finally:
+        restarted.close()
 
 
 def test_admit_complete_provider_handoff_and_finalization(tmp_path):

@@ -40,6 +40,10 @@ class Settings(BaseModel):
     llm_max_input_bytes: int = Field(default=65536, ge=1, le=4194304)
     numerical_workers: int = Field(default=2, ge=1, le=2)
     pending_job_limit: int = Field(default=20, ge=1, le=100000)
+    run_cpu_seconds: float = Field(default=30, gt=0, le=3600, allow_inf_nan=False)
+    run_wall_seconds: float = Field(default=60, gt=0, le=7200, allow_inf_nan=False)
+    run_memory_mb: int = Field(default=1024, ge=128, le=65536)
+    run_storage_bytes: int = Field(default=10_000_000, ge=1, le=1_000_000_000)
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     replay_path: Path | None = None
     openai_api_key: SecretStr | None = Field(default=None, repr=False)

@@ -1,0 +1,1815 @@
+{
+  "schema_version": "1",
+  "asof_utc": "2026-10-03T09:05:12.396909+00:00",
+  "scope": "Previously exposed real historical research, not deployment; no raw observations included",
+  "starting_main": "730e632f4e5fec10823ef5322b520977a446dc1b",
+  "source_families_found": 20,
+  "market_sessions": {
+    "official": 41,
+    "source_directories": 39,
+    "absent_entire_directories": [
+      "2026-02-01",
+      "2026-02-10"
+    ],
+    "spot_observed": 38
+  },
+  "campaigns": [
+    {
+      "campaign_id": "real-spot-smoke-20261003-001",
+      "terminal_completed": true,
+      "lifecycle_status": "COMPLETED",
+      "terminal_report_ref": {
+        "media_type": "application/json",
+        "schema_version": "1",
+        "sha256": "9be52be62b52add78f6a797e0e53fb011d8829a5f45b0b865c1fffc90dd63589",
+        "size_bytes": null,
+        "uri": "sha256:9be52be62b52add78f6a797e0e53fb011d8829a5f45b0b865c1fffc90dd63589"
+      },
+      "registered_hypotheses": 1,
+      "registered_trials": 1,
+      "model_generated_hypotheses": 1,
+      "outcomes": {
+        "INCONCLUSIVE": 1
+      },
+      "finding_ids": [
+        "finding-exp-real-spot-smoke-20261003-001-h1"
+      ],
+      "codex_calls": 8,
+      "model_ids": [
+        "gpt-6-astra"
+      ],
+      "input_tokens": 85829,
+      "output_tokens": 6054,
+      "summed_codex_call_wall_seconds": 278.96912741608685,
+      "roles": {
+        "designer": 1,
+        "specification": 2,
+        "critic": 2,
+        "replication": 1,
+        "synthesis": 1,
+        "steward": 1
+      },
+      "experiments": [
+        {
+          "experiment_id": "exp-real-spot-smoke-20261003-001-h1",
+          "run_id": "run-51ce7394ab5a1b5c361c2b65f03082d4",
+          "state": "INGESTED",
+          "dataset_id": "local-nifty-ticks-minute-20260102-v1",
+          "source_sha256": "87952c2059c5974ae28fd33649ad4b0c42832fbe9a9ee1399233c1ca6733bd11",
+          "result_ref": {
+            "media_type": "application/json",
+            "schema_version": "1",
+            "sha256": "5c77289ae9b38c954c7aa94940e2a13cdb483a6db3a7f8dbf5dd1d3a94ba165d",
+            "size_bytes": null,
+            "uri": "sha256:5c77289ae9b38c954c7aa94940e2a13cdb483a6db3a7f8dbf5dd1d3a94ba165d"
+          },
+          "outcome": "INCONCLUSIVE",
+          "evidence_grade": {
+            "fidelity": "F2",
+            "implementation": "verified",
+            "independence": "exposed_temporal",
+            "precision": "insufficient",
+            "replication": "independently_reconstructed",
+            "schema_version": "1"
+          },
+          "metrics": {
+            "baseline_mae_bp": 6.422924562560659,
+            "candidate_mae_bp": 7.633030465128233,
+            "control_mae_bp": 6.906695765905602,
+            "eligible_sessions": 39,
+            "missing_sessions": 1,
+            "n_sessions": 18,
+            "validation_n": 10
+          },
+          "inference": {
+            "block_length": 5,
+            "ci_high": -0.025904769381894455,
+            "ci_low": -0.3678044323730773,
+            "estimate": -0.18840419045574686,
+            "limitations": [
+              "Exploratory/post-selection intervals are descriptive",
+              "Blocks assume local dependence regularity; absent crises are not synthesized"
+            ],
+            "method": "circular_moving_block_percentile",
+            "minimum_sessions": 30,
+            "n_sessions": 18,
+            "outcome": "INCONCLUSIVE",
+            "p_value": 0.981,
+            "practical_effect": 0.01,
+            "precision": "insufficient",
+            "relative": true,
+            "repetitions": 999,
+            "seed": 17,
+            "unit": "session"
+          },
+          "robustness": {
+            "registered_checks": {
+              "1": {
+                "block_length": 1,
+                "ci_high": 0.0818683175055287,
+                "ci_low": -0.4552178701540697,
+                "estimate": -0.18840419045574686,
+                "limitations": [
+                  "Exploratory/post-selection intervals are descriptive",
+                  "Blocks assume local dependence regularity; absent crises are not synthesized"
+                ],
+                "method": "circular_moving_block_percentile",
+                "minimum_sessions": 30,
+                "n_sessions": 18,
+                "outcome": "INCONCLUSIVE",
+                "p_value": 0.928,
+                "practical_effect": 0.01,
+                "precision": "insufficient",
+                "relative": true,
+                "repetitions": 999,
+                "seed": 17,
+                "unit": "session"
+              },
+              "10": {
+                "block_length": 10,
+                "ci_high": -0.07136183984897826,
+                "ci_low": -0.30977463920699316,
+                "estimate": -0.18840419045574686,
+                "limitations": [
+                  "Exploratory/post-selection intervals are descriptive",
+                  "Blocks assume local dependence regularity; absent crises are not synthesized"
+                ],
+                "method": "circular_moving_block_percentile",
+                "minimum_sessions": 30,
+                "n_sessions": 18,
+                "outcome": "INCONCLUSIVE",
+                "p_value": 0.997,
+                "practical_effect": 0.01,
+                "precision": "insufficient",
+                "relative": true,
+                "repetitions": 999,
+                "seed": 17,
+                "unit": "session"
+              },
+              "5": {
+                "block_length": 5,
+                "ci_high": -0.025904769381894455,
+                "ci_low": -0.3678044323730773,
+                "estimate": -0.18840419045574686,
+                "limitations": [
+                  "Exploratory/post-selection intervals are descriptive",
+                  "Blocks assume local dependence regularity; absent crises are not synthesized"
+                ],
+                "method": "circular_moving_block_percentile",
+                "minimum_sessions": 30,
+                "n_sessions": 18,
+                "outcome": "INCONCLUSIVE",
+                "p_value": 0.981,
+                "practical_effect": 0.01,
+                "precision": "insufficient",
+                "relative": true,
+                "repetitions": 999,
+                "seed": 17,
+                "unit": "session"
+              }
+            },
+            "sign_stable": true
+          },
+          "primitive_accounting_reconstruction": {
+            "checks": [
+              "eligibility",
+              "past-only features",
+              "training membership",
+              "independent ridge solution",
+              "original-scale MAE"
+            ],
+            "disagreements": [],
+            "independence": "computational reconstruction; same market observations, not independent market evidence",
+            "max_feature_error": 1.7763568394002505e-15,
+            "max_loss_error_bp": 6.039613253960852e-14,
+            "max_prediction_error": 6.071532165918825e-18,
+            "method": "independent_scalar_features_augmented_ridge_and_metrics",
+            "n_features": 38,
+            "status": "PASS"
+          },
+          "resources": {
+            "artifact_bytes": 53357,
+            "cpu_seconds": 1.3954149999999998,
+            "environment_hash": "e400f674e9941fc0310a7532b5fac01afc11d4bf73ddfa2a15593a12b6c73417",
+            "evaluator_hash": "569118fb57fd44738477f3a3334af7af3057dbb8ed8dbfce8647049e552cf1b9",
+            "peak_rss_mb": 189.890625,
+            "provenance": "HISTORICAL",
+            "sandbox": "Darwin",
+            "wall_seconds": 1.688165667001158
+          }
+        }
+      ]
+    },
+    {
+      "campaign_id": "real-options-smoke-20261003-001",
+      "terminal_completed": true,
+      "lifecycle_status": "COMPLETED",
+      "terminal_report_ref": {
+        "media_type": "application/json",
+        "schema_version": "1",
+        "sha256": "c0f1be67e01ab8024589ea8974673ddb1e890609f72d5b38bca397a26d251cfa",
+        "size_bytes": null,
+        "uri": "sha256:c0f1be67e01ab8024589ea8974673ddb1e890609f72d5b38bca397a26d251cfa"
+      },
+      "registered_hypotheses": 1,
+      "registered_trials": 1,
+      "model_generated_hypotheses": 1,
+      "outcomes": {
+        "UNSUPPORTED_HYPOTHESIS": 1
+      },
+      "finding_ids": [
+        "finding-exp-real-options-smoke-20261003-001-h1"
+      ],
+      "codex_calls": 9,
+      "model_ids": [
+        "gpt-6-astra"
+      ],
+      "input_tokens": 110048,
+      "output_tokens": 9423,
+      "summed_codex_call_wall_seconds": 476.34456179395784,
+      "roles": {
+        "designer": 1,
+        "specification": 3,
+        "critic": 3,
+        "synthesis": 1,
+        "steward": 1
+      },
+      "experiments": []
+    },
+    {
+      "campaign_id": "real-options-smoke-20261003-002",
+      "terminal_completed": true,
+      "lifecycle_status": "COMPLETED",
+      "terminal_report_ref": {
+        "media_type": "application/json",
+        "schema_version": "1",
+        "sha256": "1ee9a1b066064bf161fb7f5c7fab0a4f8431ecd3ada386130f787ad7a28a8536",
+        "size_bytes": null,
+        "uri": "sha256:1ee9a1b066064bf161fb7f5c7fab0a4f8431ecd3ada386130f787ad7a28a8536"
+      },
+      "registered_hypotheses": 1,
+      "registered_trials": 1,
+      "model_generated_hypotheses": 0,
+      "outcomes": {
+        "INCONCLUSIVE": 1
+      },
+      "finding_ids": [
+        "finding-exp-real-options-smoke-20261003-002-h1"
+      ],
+      "codex_calls": 5,
+      "model_ids": [
+        "gpt-6-astra"
+      ],
+      "input_tokens": 52071,
+      "output_tokens": 3638,
+      "summed_codex_call_wall_seconds": 168.21304966596654,
+      "roles": {
+        "specification": 1,
+        "critic": 1,
+        "replication": 1,
+        "synthesis": 1,
+        "steward": 1
+      },
+      "experiments": [
+        {
+          "experiment_id": "exp-real-options-smoke-20261003-002-h1",
+          "run_id": "run-bf388fbdf38abb916098dca858246fb2",
+          "state": "INGESTED",
+          "dataset_id": "local-nifty-weekly-quotes-20260102-v2",
+          "source_sha256": "ac2c794503e5374c6ca9aaff342d001fc3db300ef8de1fe897560656539a88b3",
+          "result_ref": {
+            "media_type": "application/json",
+            "schema_version": "1",
+            "sha256": "428bfca5f30b7bd0bddf8b310b6adc77a81815cff8c5f53670016e91494fc608",
+            "size_bytes": null,
+            "uri": "sha256:428bfca5f30b7bd0bddf8b310b6adc77a81815cff8c5f53670016e91494fc608"
+          },
+          "outcome": "INCONCLUSIVE",
+          "evidence_grade": {
+            "fidelity": "F3",
+            "implementation": "verified",
+            "independence": "exposed_temporal",
+            "precision": "insufficient",
+            "replication": "independently_reconstructed",
+            "schema_version": "1"
+          },
+          "metrics": {
+            "baseline_mean_pnl_inr": -149.28999999999996,
+            "candidate_executed_cycles": 1,
+            "candidate_exposure_seconds": 904.0,
+            "candidate_mean_pnl_inr": -217.70000000000005,
+            "candidate_rejection_rate": 0.0,
+            "candidate_turnover_inr": 24108.5,
+            "candidate_worst_session_inr": -217.70000000000005,
+            "fees_inr": 422.24,
+            "n_sessions": 1,
+            "net_pnl_currency": "INR",
+            "opportunities": 1,
+            "unresolved_opportunities": 0
+          },
+          "inference": {
+            "block_length": 1,
+            "ci_high": -68.41000000000008,
+            "ci_low": -68.41000000000008,
+            "estimate": -68.41000000000008,
+            "limitations": [
+              "Exploratory/post-selection intervals are descriptive",
+              "Blocks assume local dependence regularity; absent crises are not synthesized"
+            ],
+            "method": "circular_moving_block_percentile",
+            "minimum_sessions": 30,
+            "n_sessions": 1,
+            "outcome": "INCONCLUSIVE",
+            "p_value": 1.0,
+            "practical_effect": 50.0,
+            "precision": "insufficient",
+            "relative": false,
+            "repetitions": 999,
+            "seed": 17,
+            "unit": "session"
+          },
+          "robustness": {
+            "cost_stress": {
+              "additional_rupees_per_fill": [
+                1,
+                5
+              ],
+              "candidate_net_total": {
+                "1": -225.70000000000005,
+                "5": -257.70000000000005
+              },
+              "registered": true
+            },
+            "registered_checks": {
+              "1": {
+                "block_length": 1,
+                "ci_high": -68.41000000000008,
+                "ci_low": -68.41000000000008,
+                "estimate": -68.41000000000008,
+                "limitations": [
+                  "Exploratory/post-selection intervals are descriptive",
+                  "Blocks assume local dependence regularity; absent crises are not synthesized"
+                ],
+                "method": "circular_moving_block_percentile",
+                "minimum_sessions": 30,
+                "n_sessions": 1,
+                "outcome": "INCONCLUSIVE",
+                "p_value": 1.0,
+                "practical_effect": 50.0,
+                "precision": "insufficient",
+                "relative": false,
+                "repetitions": 999,
+                "seed": 17,
+                "unit": "session"
+              },
+              "10": {
+                "block_length": 1,
+                "ci_high": -68.41000000000008,
+                "ci_low": -68.41000000000008,
+                "estimate": -68.41000000000008,
+                "limitations": [
+                  "Exploratory/post-selection intervals are descriptive",
+                  "Blocks assume local dependence regularity; absent crises are not synthesized"
+                ],
+                "method": "circular_moving_block_percentile",
+                "minimum_sessions": 30,
+                "n_sessions": 1,
+                "outcome": "INCONCLUSIVE",
+                "p_value": 1.0,
+                "practical_effect": 50.0,
+                "precision": "insufficient",
+                "relative": false,
+                "repetitions": 999,
+                "seed": 17,
+                "unit": "session"
+              },
+              "5": {
+                "block_length": 1,
+                "ci_high": -68.41000000000008,
+                "ci_low": -68.41000000000008,
+                "estimate": -68.41000000000008,
+                "limitations": [
+                  "Exploratory/post-selection intervals are descriptive",
+                  "Blocks assume local dependence regularity; absent crises are not synthesized"
+                ],
+                "method": "circular_moving_block_percentile",
+                "minimum_sessions": 30,
+                "n_sessions": 1,
+                "outcome": "INCONCLUSIVE",
+                "p_value": 1.0,
+                "practical_effect": 50.0,
+                "precision": "insufficient",
+                "relative": false,
+                "repetitions": 999,
+                "seed": 17,
+                "unit": "session"
+              }
+            },
+            "sign_stable": true
+          },
+          "primitive_accounting_reconstruction": {
+            "cycles": 2,
+            "disagreements": [],
+            "independence": "accounting reconstruction from immutable primitive fills",
+            "max_cash_error": 5.684341886080802e-14,
+            "method": "independent_decimal_cash_and_signed_inventory_reduce",
+            "status": "PASS"
+          },
+          "resources": {
+            "artifact_bytes": 31412,
+            "cpu_seconds": 0.797977,
+            "environment_hash": "e400f674e9941fc0310a7532b5fac01afc11d4bf73ddfa2a15593a12b6c73417",
+            "evaluator_hash": "29c713d9dadef66b3b23d49e55f233b288ea30ce2dd8228fd51a2092cd82bff8",
+            "peak_rss_mb": 123.75,
+            "provenance": "HISTORICAL",
+            "sandbox": "Darwin",
+            "wall_seconds": 1.0782282080035657
+          }
+        }
+      ]
+    },
+    {
+      "campaign_id": "real-options-wave1-20261003-001",
+      "terminal_completed": true,
+      "lifecycle_status": "COMPLETED",
+      "terminal_report_ref": {
+        "media_type": "application/json",
+        "schema_version": "1",
+        "sha256": "024eb6bf0222ca6f13e5ee37fa8fc2531327a915f6b6e7986466832a7d198723",
+        "size_bytes": null,
+        "uri": "sha256:024eb6bf0222ca6f13e5ee37fa8fc2531327a915f6b6e7986466832a7d198723"
+      },
+      "registered_hypotheses": 12,
+      "registered_trials": 12,
+      "model_generated_hypotheses": 12,
+      "outcomes": {
+        "DATA_LIMITED": 11,
+        "REJECTED_FINDING": 1
+      },
+      "finding_ids": [
+        "finding-exp-real-options-wave1-20261003-001-H04",
+        "finding-exp-real-options-wave1-20261003-001-H05",
+        "finding-exp-real-options-wave1-20261003-001-H06",
+        "finding-exp-real-options-wave1-20261003-001-H07",
+        "finding-exp-real-options-wave1-20261003-001-H08",
+        "finding-exp-real-options-wave1-20261003-001-H09",
+        "finding-exp-real-options-wave1-20261003-001-H10",
+        "finding-exp-real-options-wave1-20261003-001-H11",
+        "finding-exp-real-options-wave1-20261003-001-H12",
+        "finding-exp-real-options-wave1-20261003-001-H01",
+        "finding-exp-real-options-wave1-20261003-001-H02",
+        "finding-exp-real-options-wave1-20261003-001-H03"
+      ],
+      "codex_calls": 10,
+      "model_ids": [
+        "gpt-6-astra"
+      ],
+      "input_tokens": 126237,
+      "output_tokens": 16173,
+      "summed_codex_call_wall_seconds": 742.173910416197,
+      "roles": {
+        "designer": 1,
+        "specification": 3,
+        "critic": 3,
+        "replication": 1,
+        "synthesis": 1,
+        "steward": 1
+      },
+      "experiments": [
+        {
+          "experiment_id": "exp-real-options-wave1-20261003-001-H01",
+          "run_id": "run-5ec12a810a538ce93437677f5047357e",
+          "state": "INGESTED",
+          "dataset_id": "local-nifty-weekly-w200-20260102-v2",
+          "source_sha256": "9bbe8a9960af2fdc6234d7d94651e129aec7606e7161684ac3a3b8c04f6683ad",
+          "result_ref": {
+            "media_type": "application/json",
+            "schema_version": "1",
+            "sha256": "31f747596d3ff7e304cc2cd30461af0696dca7929fa9ab0786c5801b5244294a",
+            "size_bytes": null,
+            "uri": "sha256:31f747596d3ff7e304cc2cd30461af0696dca7929fa9ab0786c5801b5244294a"
+          },
+          "outcome": "REJECTED_FINDING",
+          "evidence_grade": {
+            "fidelity": "F3",
+            "implementation": "verified",
+            "independence": "exposed_temporal",
+            "precision": "informative",
+            "replication": "independently_reconstructed",
+            "schema_version": "1"
+          },
+          "metrics": {
+            "baseline_mean_pnl_inr": -241.99926829268304,
+            "candidate_executed_cycles": 34,
+            "candidate_exposure_seconds": 20537.0,
+            "candidate_mean_pnl_inr": -278.6963414634149,
+            "candidate_rejection_rate": 0.17073170731707318,
+            "candidate_turnover_inr": 1958583.25,
+            "candidate_worst_session_inr": -609.5300000000002,
+            "fees_inr": 16476.769999999997,
+            "n_sessions": 41,
+            "net_pnl_currency": "INR",
+            "opportunities": 41,
+            "unresolved_opportunities": 0
+          },
+          "inference": {
+            "block_length": 5,
+            "ci_high": 9.915987804877663,
+            "ci_low": -92.11275609756083,
+            "estimate": -36.697073170731876,
+            "limitations": [
+              "Exploratory/post-selection intervals are descriptive",
+              "Blocks assume local dependence regularity; absent crises are not synthesized"
+            ],
+            "method": "circular_moving_block_percentile",
+            "minimum_sessions": 30,
+            "n_sessions": 41,
+            "outcome": "REJECTED_FINDING",
+            "p_value": 0.998,
+            "practical_effect": 50.0,
+            "precision": "informative",
+            "relative": false,
+            "repetitions": 999,
+            "seed": 17,
+            "unit": "session"
+          },
+          "robustness": {
+            "cost_stress": {
+              "additional_rupees_per_fill": [
+                1,
+                5
+              ],
+              "candidate_net_total": {
+                "1": -11698.55000000001,
+                "5": -12786.55000000001
+              },
+              "registered": true
+            },
+            "registered_checks": {
+              "1": {
+                "block_length": 1,
+                "ci_high": 22.22280487804846,
+                "ci_low": -92.18753658536606,
+                "estimate": -36.697073170731876,
+                "limitations": [
+                  "Exploratory/post-selection intervals are descriptive",
+                  "Blocks assume local dependence regularity; absent crises are not synthesized"
+                ],
+                "method": "circular_moving_block_percentile",
+                "minimum_sessions": 30,
+                "n_sessions": 41,
+                "outcome": "REJECTED_FINDING",
+                "p_value": 1.0,
+                "practical_effect": 50.0,
+                "precision": "informative",
+                "relative": false,
+                "repetitions": 999,
+                "seed": 17,
+                "unit": "session"
+              },
+              "10": {
+                "block_length": 10,
+                "ci_high": 13.14001219512167,
+                "ci_low": -93.90201219512201,
+                "estimate": -36.697073170731876,
+                "limitations": [
+                  "Exploratory/post-selection intervals are descriptive",
+                  "Blocks assume local dependence regularity; absent crises are not synthesized"
+                ],
+                "method": "circular_moving_block_percentile",
+                "minimum_sessions": 30,
+                "n_sessions": 41,
+                "outcome": "REJECTED_FINDING",
+                "p_value": 1.0,
+                "practical_effect": 50.0,
+                "precision": "informative",
+                "relative": false,
+                "repetitions": 999,
+                "seed": 17,
+                "unit": "session"
+              },
+              "5": {
+                "block_length": 5,
+                "ci_high": 9.915987804877663,
+                "ci_low": -92.11275609756083,
+                "estimate": -36.697073170731876,
+                "limitations": [
+                  "Exploratory/post-selection intervals are descriptive",
+                  "Blocks assume local dependence regularity; absent crises are not synthesized"
+                ],
+                "method": "circular_moving_block_percentile",
+                "minimum_sessions": 30,
+                "n_sessions": 41,
+                "outcome": "REJECTED_FINDING",
+                "p_value": 0.998,
+                "practical_effect": 50.0,
+                "precision": "informative",
+                "relative": false,
+                "repetitions": 999,
+                "seed": 17,
+                "unit": "session"
+              }
+            },
+            "sign_stable": true
+          },
+          "primitive_accounting_reconstruction": {
+            "cycles": 82,
+            "disagreements": [],
+            "independence": "accounting reconstruction from immutable primitive fills",
+            "max_cash_error": 6.480149750132114e-12,
+            "method": "independent_decimal_cash_and_signed_inventory_reduce",
+            "status": "PASS"
+          },
+          "resources": {
+            "artifact_bytes": 146129,
+            "cpu_seconds": 50.317311000000004,
+            "environment_hash": "e400f674e9941fc0310a7532b5fac01afc11d4bf73ddfa2a15593a12b6c73417",
+            "evaluator_hash": "29c713d9dadef66b3b23d49e55f233b288ea30ce2dd8228fd51a2092cd82bff8",
+            "peak_rss_mb": 360.953125,
+            "provenance": "HISTORICAL",
+            "sandbox": "Darwin",
+            "wall_seconds": 50.56997820804827
+          }
+        },
+        {
+          "experiment_id": "exp-real-options-wave1-20261003-001-H02",
+          "run_id": "run-4d75a9402e5c6cd809b0f68f347bbef7",
+          "state": "INGESTED",
+          "dataset_id": "local-nifty-weekly-w200-20260102-v2",
+          "source_sha256": "9bbe8a9960af2fdc6234d7d94651e129aec7606e7161684ac3a3b8c04f6683ad",
+          "result_ref": {
+            "media_type": "application/json",
+            "schema_version": "1",
+            "sha256": "8728314a8948e3cdc45914e9ef63ff1abf19f999265f968dcc456761e7125c39",
+            "size_bytes": null,
+            "uri": "sha256:8728314a8948e3cdc45914e9ef63ff1abf19f999265f968dcc456761e7125c39"
+          },
+          "outcome": "DATA_LIMITED",
+          "evidence_grade": {
+            "fidelity": "F3",
+            "implementation": "qualified",
+            "independence": "exposed_temporal",
+            "precision": "insufficient",
+            "replication": "absent",
+            "schema_version": "1"
+          },
+          "metrics": {
+            "fees_inr": 15391.260000000002,
+            "n_sessions": 41,
+            "net_pnl_currency": "INR",
+            "opportunities": 41,
+            "unresolved_opportunities": 1
+          },
+          "inference": null,
+          "robustness": null,
+          "primitive_accounting_reconstruction": {
+            "cycles": 82,
+            "disagreements": [],
+            "independence": "accounting reconstruction from immutable primitive fills",
+            "max_cash_error": 6.480149750132114e-12,
+            "method": "independent_decimal_cash_and_signed_inventory_reduce",
+            "status": "PASS"
+          },
+          "resources": {
+            "artifact_bytes": 151027,
+            "cpu_seconds": 55.339007,
+            "environment_hash": "e400f674e9941fc0310a7532b5fac01afc11d4bf73ddfa2a15593a12b6c73417",
+            "evaluator_hash": "29c713d9dadef66b3b23d49e55f233b288ea30ce2dd8228fd51a2092cd82bff8",
+            "peak_rss_mb": 353.703125,
+            "provenance": "HISTORICAL",
+            "sandbox": "Darwin",
+            "wall_seconds": 55.72247854096349
+          }
+        },
+        {
+          "experiment_id": "exp-real-options-wave1-20261003-001-H03",
+          "run_id": "run-a77683d61876b01c77324878900630d9",
+          "state": "INGESTED",
+          "dataset_id": "local-nifty-weekly-w200-20260102-v2",
+          "source_sha256": "9bbe8a9960af2fdc6234d7d94651e129aec7606e7161684ac3a3b8c04f6683ad",
+          "result_ref": {
+            "media_type": "application/json",
+            "schema_version": "1",
+            "sha256": "d9601914684fb5ffa98dec54ec0a33e2567acd9fb956f1f3f798968e9d6070e2",
+            "size_bytes": null,
+            "uri": "sha256:d9601914684fb5ffa98dec54ec0a33e2567acd9fb956f1f3f798968e9d6070e2"
+          },
+          "outcome": "DATA_LIMITED",
+          "evidence_grade": {
+            "fidelity": "F3",
+            "implementation": "qualified",
+            "independence": "exposed_temporal",
+            "precision": "insufficient",
+            "replication": "absent",
+            "schema_version": "1"
+          },
+          "metrics": {
+            "fees_inr": 15392.720000000001,
+            "n_sessions": 41,
+            "net_pnl_currency": "INR",
+            "opportunities": 41,
+            "unresolved_opportunities": 1
+          },
+          "inference": null,
+          "robustness": null,
+          "primitive_accounting_reconstruction": {
+            "cycles": 82,
+            "disagreements": [],
+            "independence": "accounting reconstruction from immutable primitive fills",
+            "max_cash_error": 7.844391802791506e-12,
+            "method": "independent_decimal_cash_and_signed_inventory_reduce",
+            "status": "PASS"
+          },
+          "resources": {
+            "artifact_bytes": 157132,
+            "cpu_seconds": 65.333774,
+            "environment_hash": "e400f674e9941fc0310a7532b5fac01afc11d4bf73ddfa2a15593a12b6c73417",
+            "evaluator_hash": "29c713d9dadef66b3b23d49e55f233b288ea30ce2dd8228fd51a2092cd82bff8",
+            "peak_rss_mb": 355.984375,
+            "provenance": "HISTORICAL",
+            "sandbox": "Darwin",
+            "wall_seconds": 65.83040879201144
+          }
+        }
+      ]
+    },
+    {
+      "campaign_id": "real-options-wave2-20261003-001",
+      "terminal_completed": true,
+      "lifecycle_status": "COMPLETED",
+      "terminal_report_ref": {
+        "media_type": "application/json",
+        "schema_version": "1",
+        "sha256": "5faddf736ae8e93df232b20bf9e60603ffa2d68156b517918fd2fea80cdfb423",
+        "size_bytes": null,
+        "uri": "sha256:5faddf736ae8e93df232b20bf9e60603ffa2d68156b517918fd2fea80cdfb423"
+      },
+      "registered_hypotheses": 12,
+      "registered_trials": 12,
+      "model_generated_hypotheses": 12,
+      "outcomes": {
+        "DATA_LIMITED": 11,
+        "REJECTED_FINDING": 1
+      },
+      "finding_ids": [
+        "finding-exp-real-options-wave2-20261003-001-H04",
+        "finding-exp-real-options-wave2-20261003-001-H05",
+        "finding-exp-real-options-wave2-20261003-001-H06",
+        "finding-exp-real-options-wave2-20261003-001-H07",
+        "finding-exp-real-options-wave2-20261003-001-H08",
+        "finding-exp-real-options-wave2-20261003-001-H09",
+        "finding-exp-real-options-wave2-20261003-001-H10",
+        "finding-exp-real-options-wave2-20261003-001-H11",
+        "finding-exp-real-options-wave2-20261003-001-H12",
+        "finding-exp-real-options-wave2-20261003-001-H01",
+        "finding-exp-real-options-wave2-20261003-001-H02",
+        "finding-exp-real-options-wave2-20261003-001-H03"
+      ],
+      "codex_calls": 10,
+      "model_ids": [
+        "gpt-6-astra"
+      ],
+      "input_tokens": 126393,
+      "output_tokens": 15957,
+      "summed_codex_call_wall_seconds": 687.9660520830075,
+      "roles": {
+        "designer": 1,
+        "specification": 3,
+        "critic": 3,
+        "replication": 1,
+        "synthesis": 1,
+        "steward": 1
+      },
+      "experiments": [
+        {
+          "experiment_id": "exp-real-options-wave2-20261003-001-H01",
+          "run_id": "run-256a41a20b9e86ff8335165d2af095e0",
+          "state": "INGESTED",
+          "dataset_id": "local-nifty-weekly-w500-20260102-v2",
+          "source_sha256": "3b41348a90417a208f39f3fce2230e89ac59e1daafcd135585beb02bcb13bafa",
+          "result_ref": {
+            "media_type": "application/json",
+            "schema_version": "1",
+            "sha256": "eab0bb059e1d16945a549e6b53908330f36ebce7f733950f75798983fb9688aa",
+            "size_bytes": null,
+            "uri": "sha256:eab0bb059e1d16945a549e6b53908330f36ebce7f733950f75798983fb9688aa"
+          },
+          "outcome": "REJECTED_FINDING",
+          "evidence_grade": {
+            "fidelity": "F3",
+            "implementation": "verified",
+            "independence": "exposed_temporal",
+            "precision": "informative",
+            "replication": "independently_reconstructed",
+            "schema_version": "1"
+          },
+          "metrics": {
+            "baseline_mean_pnl_inr": -120.76024390243914,
+            "candidate_executed_cycles": 21,
+            "candidate_exposure_seconds": 12745.0,
+            "candidate_mean_pnl_inr": -177.25756097560978,
+            "candidate_rejection_rate": 0.4878048780487805,
+            "candidate_turnover_inr": 1236173.25,
+            "candidate_worst_session_inr": -969.0100000000011,
+            "fees_inr": 10223.23,
+            "n_sessions": 41,
+            "net_pnl_currency": "INR",
+            "opportunities": 41,
+            "unresolved_opportunities": 0
+          },
+          "inference": {
+            "block_length": 5,
+            "ci_high": 16.10730487804847,
+            "ci_low": -132.65707317073134,
+            "estimate": -56.49731707317064,
+            "limitations": [
+              "Exploratory/post-selection intervals are descriptive",
+              "Blocks assume local dependence regularity; absent crises are not synthesized"
+            ],
+            "method": "circular_moving_block_percentile",
+            "minimum_sessions": 30,
+            "n_sessions": 41,
+            "outcome": "REJECTED_FINDING",
+            "p_value": 0.997,
+            "practical_effect": 50.0,
+            "precision": "informative",
+            "relative": false,
+            "repetitions": 999,
+            "seed": 17,
+            "unit": "session"
+          },
+          "robustness": {
+            "cost_stress": {
+              "additional_rupees_per_fill": [
+                1,
+                5
+              ],
+              "candidate_net_total": {
+                "1": -7435.560000000001,
+                "5": -8107.560000000001
+              },
+              "registered": true
+            },
+            "registered_checks": {
+              "1": {
+                "block_length": 1,
+                "ci_high": 31.07476829268297,
+                "ci_low": -154.44648780487788,
+                "estimate": -56.49731707317064,
+                "limitations": [
+                  "Exploratory/post-selection intervals are descriptive",
+                  "Blocks assume local dependence regularity; absent crises are not synthesized"
+                ],
+                "method": "circular_moving_block_percentile",
+                "minimum_sessions": 30,
+                "n_sessions": 41,
+                "outcome": "REJECTED_FINDING",
+                "p_value": 0.98,
+                "practical_effect": 50.0,
+                "precision": "informative",
+                "relative": false,
+                "repetitions": 999,
+                "seed": 17,
+                "unit": "session"
+              },
+              "10": {
+                "block_length": 10,
+                "ci_high": 13.641597560975375,
+                "ci_low": -133.75876829268256,
+                "estimate": -56.49731707317064,
+                "limitations": [
+                  "Exploratory/post-selection intervals are descriptive",
+                  "Blocks assume local dependence regularity; absent crises are not synthesized"
+                ],
+                "method": "circular_moving_block_percentile",
+                "minimum_sessions": 30,
+                "n_sessions": 41,
+                "outcome": "REJECTED_FINDING",
+                "p_value": 0.997,
+                "practical_effect": 50.0,
+                "precision": "informative",
+                "relative": false,
+                "repetitions": 999,
+                "seed": 17,
+                "unit": "session"
+              },
+              "5": {
+                "block_length": 5,
+                "ci_high": 16.10730487804847,
+                "ci_low": -132.65707317073134,
+                "estimate": -56.49731707317064,
+                "limitations": [
+                  "Exploratory/post-selection intervals are descriptive",
+                  "Blocks assume local dependence regularity; absent crises are not synthesized"
+                ],
+                "method": "circular_moving_block_percentile",
+                "minimum_sessions": 30,
+                "n_sessions": 41,
+                "outcome": "REJECTED_FINDING",
+                "p_value": 0.997,
+                "practical_effect": 50.0,
+                "precision": "informative",
+                "relative": false,
+                "repetitions": 999,
+                "seed": 17,
+                "unit": "session"
+              }
+            },
+            "sign_stable": true
+          },
+          "primitive_accounting_reconstruction": {
+            "cycles": 82,
+            "disagreements": [],
+            "independence": "accounting reconstruction from immutable primitive fills",
+            "max_cash_error": 3.979039320256561e-12,
+            "method": "independent_decimal_cash_and_signed_inventory_reduce",
+            "status": "PASS"
+          },
+          "resources": {
+            "artifact_bytes": 103757,
+            "cpu_seconds": 32.243221,
+            "environment_hash": "e400f674e9941fc0310a7532b5fac01afc11d4bf73ddfa2a15593a12b6c73417",
+            "evaluator_hash": "29c713d9dadef66b3b23d49e55f233b288ea30ce2dd8228fd51a2092cd82bff8",
+            "peak_rss_mb": 276.28125,
+            "provenance": "HISTORICAL",
+            "sandbox": "Darwin",
+            "wall_seconds": 32.477446416975
+          }
+        },
+        {
+          "experiment_id": "exp-real-options-wave2-20261003-001-H02",
+          "run_id": "run-cea2c0debedda41eff543da708b133ad",
+          "state": "INGESTED",
+          "dataset_id": "local-nifty-weekly-w500-20260102-v2",
+          "source_sha256": "3b41348a90417a208f39f3fce2230e89ac59e1daafcd135585beb02bcb13bafa",
+          "result_ref": {
+            "media_type": "application/json",
+            "schema_version": "1",
+            "sha256": "cf1e3352edea28d69f3d5f7777e2ced0d42b49c0f2154db81360f326408e2da6",
+            "size_bytes": null,
+            "uri": "sha256:cf1e3352edea28d69f3d5f7777e2ced0d42b49c0f2154db81360f326408e2da6"
+          },
+          "outcome": "DATA_LIMITED",
+          "evidence_grade": {
+            "fidelity": "F3",
+            "implementation": "qualified",
+            "independence": "exposed_temporal",
+            "precision": "insufficient",
+            "replication": "absent",
+            "schema_version": "1"
+          },
+          "metrics": {
+            "fees_inr": 9410.55,
+            "n_sessions": 41,
+            "net_pnl_currency": "INR",
+            "opportunities": 41,
+            "unresolved_opportunities": 1
+          },
+          "inference": null,
+          "robustness": null,
+          "primitive_accounting_reconstruction": {
+            "cycles": 82,
+            "disagreements": [],
+            "independence": "accounting reconstruction from immutable primitive fills",
+            "max_cash_error": 4.661160346586257e-12,
+            "method": "independent_decimal_cash_and_signed_inventory_reduce",
+            "status": "PASS"
+          },
+          "resources": {
+            "artifact_bytes": 106165,
+            "cpu_seconds": 37.295297,
+            "environment_hash": "e400f674e9941fc0310a7532b5fac01afc11d4bf73ddfa2a15593a12b6c73417",
+            "evaluator_hash": "29c713d9dadef66b3b23d49e55f233b288ea30ce2dd8228fd51a2092cd82bff8",
+            "peak_rss_mb": 280.359375,
+            "provenance": "HISTORICAL",
+            "sandbox": "Darwin",
+            "wall_seconds": 37.44946454197634
+          }
+        },
+        {
+          "experiment_id": "exp-real-options-wave2-20261003-001-H03",
+          "run_id": "run-ef67149cc668a0c8d7a46ad8bc679849",
+          "state": "INGESTED",
+          "dataset_id": "local-nifty-weekly-w500-20260102-v2",
+          "source_sha256": "3b41348a90417a208f39f3fce2230e89ac59e1daafcd135585beb02bcb13bafa",
+          "result_ref": {
+            "media_type": "application/json",
+            "schema_version": "1",
+            "sha256": "1b542d4825c890f028fe176c6ad6867b2a507158a7c071dff80e29b0717f680a",
+            "size_bytes": null,
+            "uri": "sha256:1b542d4825c890f028fe176c6ad6867b2a507158a7c071dff80e29b0717f680a"
+          },
+          "outcome": "DATA_LIMITED",
+          "evidence_grade": {
+            "fidelity": "F3",
+            "implementation": "qualified",
+            "independence": "exposed_temporal",
+            "precision": "insufficient",
+            "replication": "absent",
+            "schema_version": "1"
+          },
+          "metrics": {
+            "fees_inr": 9409.119999999999,
+            "n_sessions": 41,
+            "net_pnl_currency": "INR",
+            "opportunities": 41,
+            "unresolved_opportunities": 1
+          },
+          "inference": null,
+          "robustness": null,
+          "primitive_accounting_reconstruction": {
+            "cycles": 82,
+            "disagreements": [],
+            "independence": "accounting reconstruction from immutable primitive fills",
+            "max_cash_error": 4.007461029686965e-12,
+            "method": "independent_decimal_cash_and_signed_inventory_reduce",
+            "status": "PASS"
+          },
+          "resources": {
+            "artifact_bytes": 109266,
+            "cpu_seconds": 41.995656,
+            "environment_hash": "e400f674e9941fc0310a7532b5fac01afc11d4bf73ddfa2a15593a12b6c73417",
+            "evaluator_hash": "29c713d9dadef66b3b23d49e55f233b288ea30ce2dd8228fd51a2092cd82bff8",
+            "peak_rss_mb": 281.625,
+            "provenance": "HISTORICAL",
+            "sandbox": "Darwin",
+            "wall_seconds": 42.171917749976274
+          }
+        }
+      ]
+    },
+    {
+      "campaign_id": "real-options-cost-smoke-20261003-001",
+      "terminal_completed": true,
+      "lifecycle_status": "COMPLETED",
+      "terminal_report_ref": {
+        "media_type": "application/json",
+        "schema_version": "1",
+        "sha256": "2a6353ab5b66289dc348dcae0a6f257732f025a89614a5f0dd3d34c05e15bea8",
+        "size_bytes": null,
+        "uri": "sha256:2a6353ab5b66289dc348dcae0a6f257732f025a89614a5f0dd3d34c05e15bea8"
+      },
+      "registered_hypotheses": 1,
+      "registered_trials": 1,
+      "model_generated_hypotheses": 0,
+      "outcomes": {
+        "INCONCLUSIVE": 1
+      },
+      "finding_ids": [
+        "finding-exp-real-options-cost-smoke-20261003-001-h1"
+      ],
+      "codex_calls": 5,
+      "model_ids": [
+        "gpt-6-astra"
+      ],
+      "input_tokens": 50328,
+      "output_tokens": 3512,
+      "summed_codex_call_wall_seconds": 164.71971908496926,
+      "roles": {
+        "specification": 1,
+        "critic": 1,
+        "replication": 1,
+        "synthesis": 1,
+        "steward": 1
+      },
+      "experiments": [
+        {
+          "experiment_id": "exp-real-options-cost-smoke-20261003-001-h1",
+          "run_id": "run-e95544dc2cb57c9bedc44457f524c2de",
+          "state": "INGESTED",
+          "dataset_id": "local-nifty-weekly-quotes-20260102-v3",
+          "source_sha256": "ac2c794503e5374c6ca9aaff342d001fc3db300ef8de1fe897560656539a88b3",
+          "result_ref": {
+            "media_type": "application/json",
+            "schema_version": "1",
+            "sha256": "f021a5299439ebcdb7a93799e382aafbd33f8afb83c7bfe8780690d6f03dd479",
+            "size_bytes": null,
+            "uri": "sha256:f021a5299439ebcdb7a93799e382aafbd33f8afb83c7bfe8780690d6f03dd479"
+          },
+          "outcome": "INCONCLUSIVE",
+          "evidence_grade": {
+            "fidelity": "F3",
+            "implementation": "verified",
+            "independence": "exposed_temporal",
+            "precision": "insufficient",
+            "replication": "independently_reconstructed",
+            "schema_version": "1"
+          },
+          "metrics": {
+            "baseline_mean_pnl_inr": -149.43000000000006,
+            "candidate_executed_cycles": 1,
+            "candidate_exposure_seconds": 904.0,
+            "candidate_mean_pnl_inr": -217.8400000000006,
+            "candidate_rejection_rate": 0.0,
+            "candidate_turnover_inr": 24108.5,
+            "candidate_worst_session_inr": -217.8400000000006,
+            "fees_inr": 422.52,
+            "n_sessions": 1,
+            "net_pnl_currency": "INR",
+            "opportunities": 1,
+            "unresolved_opportunities": 0
+          },
+          "inference": {
+            "block_length": 1,
+            "ci_high": -68.41000000000054,
+            "ci_low": -68.41000000000054,
+            "estimate": -68.41000000000054,
+            "limitations": [
+              "Exploratory/post-selection intervals are descriptive",
+              "Blocks assume local dependence regularity; absent crises are not synthesized"
+            ],
+            "method": "circular_moving_block_percentile",
+            "minimum_sessions": 30,
+            "n_sessions": 1,
+            "outcome": "INCONCLUSIVE",
+            "p_value": 1.0,
+            "practical_effect": 50.0,
+            "precision": "insufficient",
+            "relative": false,
+            "repetitions": 999,
+            "seed": 17,
+            "unit": "session"
+          },
+          "robustness": {
+            "cost_stress": {
+              "additional_rupees_per_fill": [
+                1,
+                5
+              ],
+              "candidate_net_total": {
+                "1": -225.8400000000006,
+                "5": -257.8400000000006
+              },
+              "registered": true
+            },
+            "registered_checks": {
+              "1": {
+                "block_length": 1,
+                "ci_high": -68.41000000000054,
+                "ci_low": -68.41000000000054,
+                "estimate": -68.41000000000054,
+                "limitations": [
+                  "Exploratory/post-selection intervals are descriptive",
+                  "Blocks assume local dependence regularity; absent crises are not synthesized"
+                ],
+                "method": "circular_moving_block_percentile",
+                "minimum_sessions": 30,
+                "n_sessions": 1,
+                "outcome": "INCONCLUSIVE",
+                "p_value": 1.0,
+                "practical_effect": 50.0,
+                "precision": "insufficient",
+                "relative": false,
+                "repetitions": 999,
+                "seed": 17,
+                "unit": "session"
+              },
+              "10": {
+                "block_length": 1,
+                "ci_high": -68.41000000000054,
+                "ci_low": -68.41000000000054,
+                "estimate": -68.41000000000054,
+                "limitations": [
+                  "Exploratory/post-selection intervals are descriptive",
+                  "Blocks assume local dependence regularity; absent crises are not synthesized"
+                ],
+                "method": "circular_moving_block_percentile",
+                "minimum_sessions": 30,
+                "n_sessions": 1,
+                "outcome": "INCONCLUSIVE",
+                "p_value": 1.0,
+                "practical_effect": 50.0,
+                "precision": "insufficient",
+                "relative": false,
+                "repetitions": 999,
+                "seed": 17,
+                "unit": "session"
+              },
+              "5": {
+                "block_length": 1,
+                "ci_high": -68.41000000000054,
+                "ci_low": -68.41000000000054,
+                "estimate": -68.41000000000054,
+                "limitations": [
+                  "Exploratory/post-selection intervals are descriptive",
+                  "Blocks assume local dependence regularity; absent crises are not synthesized"
+                ],
+                "method": "circular_moving_block_percentile",
+                "minimum_sessions": 30,
+                "n_sessions": 1,
+                "outcome": "INCONCLUSIVE",
+                "p_value": 1.0,
+                "practical_effect": 50.0,
+                "precision": "insufficient",
+                "relative": false,
+                "repetitions": 999,
+                "seed": 17,
+                "unit": "session"
+              }
+            },
+            "sign_stable": true
+          },
+          "primitive_accounting_reconstruction": {
+            "cycles": 2,
+            "disagreements": [],
+            "independence": "accounting reconstruction from immutable primitive fills",
+            "max_cash_error": 5.968558980384842e-13,
+            "method": "independent_decimal_cash_and_signed_inventory_reduce",
+            "status": "PASS"
+          },
+          "resources": {
+            "artifact_bytes": 31420,
+            "cpu_seconds": 0.838672,
+            "environment_hash": "e400f674e9941fc0310a7532b5fac01afc11d4bf73ddfa2a15593a12b6c73417",
+            "evaluator_hash": "29c713d9dadef66b3b23d49e55f233b288ea30ce2dd8228fd51a2092cd82bff8",
+            "peak_rss_mb": 124.03125,
+            "provenance": "HISTORICAL",
+            "sandbox": "Darwin",
+            "wall_seconds": 1.0550992909702472
+          }
+        }
+      ]
+    },
+    {
+      "campaign_id": "real-options-cost-repair-w200-20261003-001",
+      "terminal_completed": true,
+      "lifecycle_status": "COMPLETED",
+      "terminal_report_ref": {
+        "media_type": "application/json",
+        "schema_version": "1",
+        "sha256": "ddcee8abd95c9d77fb2dfb28c2d5be05193e581e14283ac7a8dee9ceaa083aba",
+        "size_bytes": null,
+        "uri": "sha256:ddcee8abd95c9d77fb2dfb28c2d5be05193e581e14283ac7a8dee9ceaa083aba"
+      },
+      "registered_hypotheses": 1,
+      "registered_trials": 1,
+      "model_generated_hypotheses": 0,
+      "outcomes": {
+        "UNSUPPORTED_HYPOTHESIS": 1
+      },
+      "finding_ids": [
+        "finding-exp-real-options-cost-repair-w200-20261003-001-h1"
+      ],
+      "codex_calls": 8,
+      "model_ids": [
+        "gpt-6-astra"
+      ],
+      "input_tokens": 97322,
+      "output_tokens": 7136,
+      "summed_codex_call_wall_seconds": 322.69261508405907,
+      "roles": {
+        "specification": 3,
+        "critic": 3,
+        "synthesis": 1,
+        "steward": 1
+      },
+      "experiments": []
+    },
+    {
+      "campaign_id": "real-options-cost-repair-w500-20261003-001",
+      "terminal_completed": true,
+      "lifecycle_status": "COMPLETED",
+      "terminal_report_ref": {
+        "media_type": "application/json",
+        "schema_version": "1",
+        "sha256": "b2175be94ef5b11482cbfd18b4d9692c3133f6bf3abc6460529889480a9ccce0",
+        "size_bytes": null,
+        "uri": "sha256:b2175be94ef5b11482cbfd18b4d9692c3133f6bf3abc6460529889480a9ccce0"
+      },
+      "registered_hypotheses": 1,
+      "registered_trials": 1,
+      "model_generated_hypotheses": 0,
+      "outcomes": {
+        "REJECTED_FINDING": 1
+      },
+      "finding_ids": [
+        "finding-exp-real-options-cost-repair-w500-20261003-001-h1"
+      ],
+      "codex_calls": 5,
+      "model_ids": [
+        "gpt-6-astra"
+      ],
+      "input_tokens": 50177,
+      "output_tokens": 3438,
+      "summed_codex_call_wall_seconds": 162.08742241800064,
+      "roles": {
+        "specification": 1,
+        "critic": 1,
+        "replication": 1,
+        "synthesis": 1,
+        "steward": 1
+      },
+      "experiments": [
+        {
+          "experiment_id": "exp-real-options-cost-repair-w500-20261003-001-h1",
+          "run_id": "run-e739780d1ebe96f0fdd10113ea6cfac5",
+          "state": "INGESTED",
+          "dataset_id": "local-nifty-weekly-w500-20260102-v3",
+          "source_sha256": "3b41348a90417a208f39f3fce2230e89ac59e1daafcd135585beb02bcb13bafa",
+          "result_ref": {
+            "media_type": "application/json",
+            "schema_version": "1",
+            "sha256": "11be2631593aa6710228ffaa96b4a47598695f75aeb11bda471e307396bd044f",
+            "size_bytes": null,
+            "uri": "sha256:11be2631593aa6710228ffaa96b4a47598695f75aeb11bda471e307396bd044f"
+          },
+          "outcome": "REJECTED_FINDING",
+          "evidence_grade": {
+            "fidelity": "F3",
+            "implementation": "verified",
+            "independence": "exposed_temporal",
+            "precision": "informative",
+            "replication": "independently_reconstructed",
+            "schema_version": "1"
+          },
+          "metrics": {
+            "baseline_mean_pnl_inr": -120.93853658536595,
+            "candidate_executed_cycles": 21,
+            "candidate_exposure_seconds": 12745.0,
+            "candidate_mean_pnl_inr": -177.43536585365862,
+            "candidate_rejection_rate": 0.4878048780487805,
+            "candidate_turnover_inr": 1236173.25,
+            "candidate_worst_session_inr": -969.2499999999995,
+            "fees_inr": 10237.83,
+            "n_sessions": 41,
+            "net_pnl_currency": "INR",
+            "opportunities": 41,
+            "unresolved_opportunities": 0
+          },
+          "inference": {
+            "block_length": 5,
+            "ci_high": 16.108756097560804,
+            "ci_low": -132.65576829268292,
+            "estimate": -56.49682926829269,
+            "limitations": [
+              "Exploratory/post-selection intervals are descriptive",
+              "Blocks assume local dependence regularity; absent crises are not synthesized"
+            ],
+            "method": "circular_moving_block_percentile",
+            "minimum_sessions": 30,
+            "n_sessions": 41,
+            "outcome": "REJECTED_FINDING",
+            "p_value": 0.997,
+            "practical_effect": 50.0,
+            "precision": "informative",
+            "relative": false,
+            "repetitions": 999,
+            "seed": 17,
+            "unit": "session"
+          },
+          "robustness": {
+            "cost_stress": {
+              "additional_rupees_per_fill": [
+                1,
+                5
+              ],
+              "candidate_net_total": {
+                "1": -7442.850000000004,
+                "5": -8114.850000000004
+              },
+              "registered": true
+            },
+            "registered_checks": {
+              "1": {
+                "block_length": 1,
+                "ci_high": 31.07395121951222,
+                "ci_low": -154.44719512195127,
+                "estimate": -56.49682926829269,
+                "limitations": [
+                  "Exploratory/post-selection intervals are descriptive",
+                  "Blocks assume local dependence regularity; absent crises are not synthesized"
+                ],
+                "method": "circular_moving_block_percentile",
+                "minimum_sessions": 30,
+                "n_sessions": 41,
+                "outcome": "REJECTED_FINDING",
+                "p_value": 0.98,
+                "practical_effect": 50.0,
+                "precision": "informative",
+                "relative": false,
+                "repetitions": 999,
+                "seed": 17,
+                "unit": "session"
+              },
+              "10": {
+                "block_length": 10,
+                "ci_high": 13.641890243902356,
+                "ci_low": -133.7571097560976,
+                "estimate": -56.49682926829269,
+                "limitations": [
+                  "Exploratory/post-selection intervals are descriptive",
+                  "Blocks assume local dependence regularity; absent crises are not synthesized"
+                ],
+                "method": "circular_moving_block_percentile",
+                "minimum_sessions": 30,
+                "n_sessions": 41,
+                "outcome": "REJECTED_FINDING",
+                "p_value": 0.997,
+                "practical_effect": 50.0,
+                "precision": "informative",
+                "relative": false,
+                "repetitions": 999,
+                "seed": 17,
+                "unit": "session"
+              },
+              "5": {
+                "block_length": 5,
+                "ci_high": 16.108756097560804,
+                "ci_low": -132.65576829268292,
+                "estimate": -56.49682926829269,
+                "limitations": [
+                  "Exploratory/post-selection intervals are descriptive",
+                  "Blocks assume local dependence regularity; absent crises are not synthesized"
+                ],
+                "method": "circular_moving_block_percentile",
+                "minimum_sessions": 30,
+                "n_sessions": 41,
+                "outcome": "REJECTED_FINDING",
+                "p_value": 0.997,
+                "practical_effect": 50.0,
+                "precision": "informative",
+                "relative": false,
+                "repetitions": 999,
+                "seed": 17,
+                "unit": "session"
+              }
+            },
+            "sign_stable": true
+          },
+          "primitive_accounting_reconstruction": {
+            "cycles": 82,
+            "disagreements": [],
+            "independence": "accounting reconstruction from immutable primitive fills",
+            "max_cash_error": 3.979039320256561e-12,
+            "method": "independent_decimal_cash_and_signed_inventory_reduce",
+            "status": "PASS"
+          },
+          "resources": {
+            "artifact_bytes": 103862,
+            "cpu_seconds": 33.31099,
+            "environment_hash": "e400f674e9941fc0310a7532b5fac01afc11d4bf73ddfa2a15593a12b6c73417",
+            "evaluator_hash": "29c713d9dadef66b3b23d49e55f233b288ea30ce2dd8228fd51a2092cd82bff8",
+            "peak_rss_mb": 278.21875,
+            "provenance": "HISTORICAL",
+            "sandbox": "Darwin",
+            "wall_seconds": 33.523545250005554
+          }
+        }
+      ]
+    },
+    {
+      "campaign_id": "real-options-cost-repair-w200-20261003-002",
+      "terminal_completed": false,
+      "lifecycle_status": "PREFLIGHT_FAILED",
+      "terminal_report_ref": {
+        "media_type": "application/json",
+        "schema_version": "1",
+        "sha256": "e82eed9e381e8d6538b0311e4782f935f0380a6e47f2d57aa561369b9cb8fd9a",
+        "size_bytes": null,
+        "uri": "sha256:e82eed9e381e8d6538b0311e4782f935f0380a6e47f2d57aa561369b9cb8fd9a"
+      },
+      "registered_hypotheses": 0,
+      "registered_trials": 0,
+      "model_generated_hypotheses": 0,
+      "outcomes": {},
+      "finding_ids": [],
+      "codex_calls": 0,
+      "model_ids": [],
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "summed_codex_call_wall_seconds": 0,
+      "roles": {},
+      "experiments": []
+    },
+    {
+      "campaign_id": "real-options-cost-repair-w200-20261003-003",
+      "terminal_completed": true,
+      "lifecycle_status": "COMPLETED",
+      "terminal_report_ref": {
+        "media_type": "application/json",
+        "schema_version": "1",
+        "sha256": "91fbb4dbeac893a463d1e5d61361df8abc3fd40954c8beb83fcedab7e7ad07fc",
+        "size_bytes": null,
+        "uri": "sha256:91fbb4dbeac893a463d1e5d61361df8abc3fd40954c8beb83fcedab7e7ad07fc"
+      },
+      "registered_hypotheses": 1,
+      "registered_trials": 1,
+      "model_generated_hypotheses": 0,
+      "outcomes": {
+        "REJECTED_FINDING": 1
+      },
+      "finding_ids": [
+        "finding-exp-real-options-cost-repair-w200-20261003-003-h1"
+      ],
+      "codex_calls": 5,
+      "model_ids": [
+        "gpt-6-astra"
+      ],
+      "input_tokens": 51359,
+      "output_tokens": 3701,
+      "summed_codex_call_wall_seconds": 173.96023716585478,
+      "roles": {
+        "specification": 1,
+        "critic": 1,
+        "replication": 1,
+        "synthesis": 1,
+        "steward": 1
+      },
+      "experiments": [
+        {
+          "experiment_id": "exp-real-options-cost-repair-w200-20261003-003-h1",
+          "run_id": "run-ca48e4570cad8acd50720c7b39a2ab84",
+          "state": "INGESTED",
+          "dataset_id": "local-nifty-weekly-w200-20260102-v3",
+          "source_sha256": "9bbe8a9960af2fdc6234d7d94651e129aec7606e7161684ac3a3b8c04f6683ad",
+          "result_ref": {
+            "media_type": "application/json",
+            "schema_version": "1",
+            "sha256": "bb91318562de5ef044b85c1869d5a7f7b9023e77e5db6567eae1e65c4743768d",
+            "size_bytes": null,
+            "uri": "sha256:bb91318562de5ef044b85c1869d5a7f7b9023e77e5db6567eae1e65c4743768d"
+          },
+          "outcome": "REJECTED_FINDING",
+          "evidence_grade": {
+            "fidelity": "F3",
+            "implementation": "verified",
+            "independence": "exposed_temporal",
+            "precision": "informative",
+            "replication": "independently_reconstructed",
+            "schema_version": "1"
+          },
+          "metrics": {
+            "baseline_mean_pnl_inr": -242.27951219512192,
+            "candidate_executed_cycles": 34,
+            "candidate_exposure_seconds": 20537.0,
+            "candidate_mean_pnl_inr": -278.9770731707318,
+            "candidate_rejection_rate": 0.17073170731707318,
+            "candidate_turnover_inr": 1958583.25,
+            "candidate_worst_session_inr": -609.7399999999993,
+            "fees_inr": 16499.769999999997,
+            "n_sessions": 41,
+            "net_pnl_currency": "INR",
+            "opportunities": 41,
+            "unresolved_opportunities": 0
+          },
+          "inference": {
+            "block_length": 5,
+            "ci_high": 9.91510975609764,
+            "ci_low": -92.11167073170743,
+            "estimate": -36.69756097560984,
+            "limitations": [
+              "Exploratory/post-selection intervals are descriptive",
+              "Blocks assume local dependence regularity; absent crises are not synthesized"
+            ],
+            "method": "circular_moving_block_percentile",
+            "minimum_sessions": 30,
+            "n_sessions": 41,
+            "outcome": "REJECTED_FINDING",
+            "p_value": 0.998,
+            "practical_effect": 50.0,
+            "precision": "informative",
+            "relative": false,
+            "repetitions": 999,
+            "seed": 17,
+            "unit": "session"
+          },
+          "robustness": {
+            "cost_stress": {
+              "additional_rupees_per_fill": [
+                1,
+                5
+              ],
+              "candidate_net_total": {
+                "1": -11710.060000000003,
+                "5": -12798.060000000003
+              },
+              "registered": true
+            },
+            "registered_checks": {
+              "1": {
+                "block_length": 1,
+                "ci_high": 22.222646341463342,
+                "ci_low": -92.19282926829243,
+                "estimate": -36.69756097560984,
+                "limitations": [
+                  "Exploratory/post-selection intervals are descriptive",
+                  "Blocks assume local dependence regularity; absent crises are not synthesized"
+                ],
+                "method": "circular_moving_block_percentile",
+                "minimum_sessions": 30,
+                "n_sessions": 41,
+                "outcome": "REJECTED_FINDING",
+                "p_value": 1.0,
+                "practical_effect": 50.0,
+                "precision": "informative",
+                "relative": false,
+                "repetitions": 999,
+                "seed": 17,
+                "unit": "session"
+              },
+              "10": {
+                "block_length": 10,
+                "ci_high": 13.139134146341405,
+                "ci_low": -93.9041585365855,
+                "estimate": -36.69756097560984,
+                "limitations": [
+                  "Exploratory/post-selection intervals are descriptive",
+                  "Blocks assume local dependence regularity; absent crises are not synthesized"
+                ],
+                "method": "circular_moving_block_percentile",
+                "minimum_sessions": 30,
+                "n_sessions": 41,
+                "outcome": "REJECTED_FINDING",
+                "p_value": 1.0,
+                "practical_effect": 50.0,
+                "precision": "informative",
+                "relative": false,
+                "repetitions": 999,
+                "seed": 17,
+                "unit": "session"
+              },
+              "5": {
+                "block_length": 5,
+                "ci_high": 9.91510975609764,
+                "ci_low": -92.11167073170743,
+                "estimate": -36.69756097560984,
+                "limitations": [
+                  "Exploratory/post-selection intervals are descriptive",
+                  "Blocks assume local dependence regularity; absent crises are not synthesized"
+                ],
+                "method": "circular_moving_block_percentile",
+                "minimum_sessions": 30,
+                "n_sessions": 41,
+                "outcome": "REJECTED_FINDING",
+                "p_value": 0.998,
+                "practical_effect": 50.0,
+                "precision": "informative",
+                "relative": false,
+                "repetitions": 999,
+                "seed": 17,
+                "unit": "session"
+              }
+            },
+            "sign_stable": true
+          },
+          "primitive_accounting_reconstruction": {
+            "cycles": 82,
+            "disagreements": [],
+            "independence": "accounting reconstruction from immutable primitive fills",
+            "max_cash_error": 3.467448550509289e-12,
+            "method": "independent_decimal_cash_and_signed_inventory_reduce",
+            "status": "PASS"
+          },
+          "resources": {
+            "artifact_bytes": 145822,
+            "cpu_seconds": 50.539387,
+            "environment_hash": "e400f674e9941fc0310a7532b5fac01afc11d4bf73ddfa2a15593a12b6c73417",
+            "evaluator_hash": "29c713d9dadef66b3b23d49e55f233b288ea30ce2dd8228fd51a2092cd82bff8",
+            "peak_rss_mb": 352.59375,
+            "provenance": "HISTORICAL",
+            "sandbox": "Darwin",
+            "wall_seconds": 51.0456887090113
+          }
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "registered_hypotheses_and_preserved_repair_trials": 31,
+    "numerical_runs": 11,
+    "ingested_runs": 11,
+    "numerical_attempts": 12,
+    "failed_attempts": 1,
+    "failed_attempt_elapsed_seconds": 85.47034811973572,
+    "failed_attempt_cpu_seconds": null,
+    "active_runs": 0,
+    "peak_observed_numerical_attempt_concurrency": 1,
+    "summed_first_dispatch_queue_wait_seconds": 666.0446701049805,
+    "queue_wait_interpretation": "Includes intentional preparation/operator batching; not a saturation or throughput benchmark",
+    "codex_calls": 65,
+    "agent_call_states": {
+      "ACCEPTED": 65
+    },
+    "input_tokens": 749764,
+    "output_tokens": 69032,
+    "summed_codex_call_wall_seconds": 3177.1266951280995,
+    "successful_numerical_cpu_seconds": 369.406707,
+    "successful_numerical_wall_seconds": 372.61242137494264,
+    "successful_numerical_artifact_bytes": 1139349,
+    "registry_record_counts": {
+      "artifact": 11,
+      "campaign": 10,
+      "critic_review": 18,
+      "dataset": 12,
+      "experiment": 11,
+      "finding": 31,
+      "generation": 65,
+      "hypothesis": 31,
+      "lineage": 43,
+      "memory": 35,
+      "methodological_admission": 13,
+      "preparation": 18,
+      "review_context": 18,
+      "source": 95,
+      "spec_version": 65,
+      "trial": 31,
+      "validation": 49
+    }
+  },
+  "verification": {
+    "local_ci_status": "PASS",
+    "tests": "413 passed in 67.00s (0:01:07)",
+    "source_unchanged_during_checks": true,
+    "schemas": 15,
+    "steps": [
+      {
+        "name": "ruff-check",
+        "exit_code": 0,
+        "wall_seconds": 0.072
+      },
+      {
+        "name": "ruff-format",
+        "exit_code": 0,
+        "wall_seconds": 0.019
+      },
+      {
+        "name": "mypy-configured",
+        "exit_code": 0,
+        "wall_seconds": 2.185
+      },
+      {
+        "name": "pytest-full",
+        "exit_code": 0,
+        "wall_seconds": 67.465
+      },
+      {
+        "name": "config-check",
+        "exit_code": 0,
+        "wall_seconds": 0.126
+      },
+      {
+        "name": "config-show",
+        "exit_code": 0,
+        "wall_seconds": 0.124
+      },
+      {
+        "name": "doctor",
+        "exit_code": 0,
+        "wall_seconds": 0.236
+      },
+      {
+        "name": "offline-demo-all",
+        "exit_code": 0,
+        "wall_seconds": 15.044
+      },
+      {
+        "name": "check-demo",
+        "exit_code": 0,
+        "wall_seconds": 0.037
+      },
+      {
+        "name": "check-generated",
+        "exit_code": 0,
+        "wall_seconds": 0.131
+      },
+      {
+        "name": "schema-export",
+        "exit_code": 0,
+        "wall_seconds": 0.132
+      }
+    ]
+  },
+  "limitations": [
+    "All intervals are exploratory per-comparison, not multiplicity-adjusted confirmation.",
+    "Missing-entry zero allocations are not measured zero market returns; unresolved inventory has no aggregate P&L.",
+    "Independent reconstruction verifies artifacts/accounting, not exchange clocks, executable fills or an independently sourced market sample.",
+    "Pre-IPFT results are superseded for cost interpretation by explicit repair lineage; original findings remain immutable.",
+    "Failed-worker CPU was not measured and must not be reported as zero."
+  ],
+  "operator_reconciliation": [
+    {
+      "status": "PASS",
+      "experiment_id": "exp-real-options-cost-smoke-20261003-001-h1",
+      "run_id": "run-e95544dc2cb57c9bedc44457f524c2de",
+      "fills_reconciled": 16,
+      "path_checks": 248,
+      "errors": []
+    },
+    {
+      "status": "PASS",
+      "experiment_id": "exp-real-options-cost-repair-w200-20261003-003-h1",
+      "run_id": "run-ca48e4570cad8acd50720c7b39a2ab84",
+      "fills_reconciled": 544,
+      "path_checks": 12208,
+      "errors": []
+    },
+    {
+      "status": "PASS",
+      "experiment_id": "exp-real-options-cost-repair-w500-20261003-001-h1",
+      "run_id": "run-e739780d1ebe96f0fdd10113ea6cfac5",
+      "fills_reconciled": 336,
+      "path_checks": 7598,
+      "errors": []
+    }
+  ]
+}

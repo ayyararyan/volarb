@@ -42,6 +42,131 @@ ALLOWED = {
 }
 
 
+class DatasetExecutionScopeError(ValueError):
+    """The immutable dataset does not support the proposed execution contract."""
+
+
+def validate_dataset_execution_scope(spec: ExperimentSpec | dict, dataset: dict) -> None:
+    """Restrict a fixed archive subset; metadata can never expand the DSL.
+
+    An absent scope preserves existing datasets. A present scope is complete,
+    fail-closed and evaluated against the protected evaluator's actual defaults.
+    A shared entry spot only supports one fixed B0 entry and hold/close policies,
+    never a dynamically recentered structure.
+    """
+    meta = dataset.get("metadata", {})
+    if "execution_scope" not in meta:
+        return
+
+    def fail(reason: str) -> None:
+        raise DatasetExecutionScopeError("dataset execution_scope: " + reason)
+
+    obj = spec.model_dump(mode="json") if isinstance(spec, ExperimentSpec) else spec
+    try:
+        validate_dsl(obj)
+    except (ValueError, KeyError, TypeError) as error:
+        fail("protected DSL rejected proposal: " + str(error))
+    scope = meta["execution_scope"]
+    fields = {
+        "entry_time",
+        "width_floor",
+        "hold_minutes",
+        "management",
+        "management_after_minutes",
+        "lots",
+        "shared_selection_spot",
+    }
+    if not isinstance(scope, dict) or set(scope) != fields:
+        fail("malformed or incomplete registered subset contract")
+    if (
+        obj.get("evaluator") != "iron_butterfly"
+        or obj.get("baseline_id", "B0-simple") != "B0-simple"
+    ):
+        fail("fixed selection requires the protected iron_butterfly/B0-simple evaluator")
+    if scope["shared_selection_spot"] is not True:
+        fail("shared_selection_spot must explicitly bind the fixed construction")
+
+    def number(value: Any) -> bool:
+        return (
+            not isinstance(value, bool)
+            and isinstance(value, (int, float))
+            and math.isfinite(value)
+            and value > 0
+        )
+
+    def clock(value: Any) -> time:
+        try:
+            parsed = time.fromisoformat(value)
+            if parsed.tzinfo is not None:
+                raise ValueError("offset clock")
+            return parsed
+        except (ValueError, TypeError):
+            fail("entry_time must be a naive local ISO clock")
+            raise AssertionError("unreachable")
+
+    entry = clock(scope["entry_time"])
+    if (
+        not number(scope["width_floor"])
+        or not number(scope["hold_minutes"])
+        or scope["hold_minutes"] > 375
+    ):
+        fail("invalid registered width or intraday holding horizon")
+    if not number(scope["lots"]) or scope["lots"] != 1:
+        fail("registered subset cannot expand the one-lot research covenant")
+    policies = scope["management"]
+    if (
+        not isinstance(policies, list)
+        or not policies
+        or any(not isinstance(value, str) or value not in {"hold", "close"} for value in policies)
+        or len(set(policies)) != len(policies)
+    ):
+        fail("fixed entry spot permits only explicitly registered hold/close policies")
+    reviews = scope["management_after_minutes"]
+    if (
+        not isinstance(reviews, list)
+        or not reviews
+        or any(not number(value) or value >= scope["hold_minutes"] for value in reviews)
+        or len(set(reviews)) != len(reviews)
+    ):
+        fail("invalid registered management times")
+    params = {**obj.get("parameters", {}), **obj.get("dsl", {})}
+    if clock(params.get("entry_time", "10:00:00")) != entry:
+        fail("entry time differs from the captured construction")
+    for key, default in (("width_floor", 500), ("hold_minutes", 30), ("lots", 1)):
+        value = params.get(key, default)
+        if not number(value) or value != scope[key]:
+            fail(key + " differs from the registered subset")
+    if params.get("management", "hold") not in policies:
+        fail("management policy is not supported by the fixed archive subset")
+    if params.get("management_after_minutes", 15) not in reviews:
+        fail("management time is outside the captured execution windows")
+    if "expiry" in params:
+        constructed_expiry = meta.get("construction", {}).get("expiry")
+        if not constructed_expiry or params["expiry"] != constructed_expiry:
+            fail("expiry override is not bound to the captured construction")
+    if "opportunities" in params:
+        opportunities = params["opportunities"]
+        if not isinstance(opportunities, list) or not opportunities:
+            fail("explicit opportunities must preserve one registered entry per session")
+        seen = set()
+        registered_sessions = set(dataset.get("session_dates", []))
+        for opportunity in opportunities:
+            if not isinstance(opportunity, dict):
+                fail("malformed opportunity override")
+            session = opportunity.get("session")
+            if (
+                not isinstance(session, str)
+                or session not in registered_sessions
+                or session in seen
+            ):
+                fail("opportunity override changes the registered session/entry allocation")
+            if clock(opportunity.get("entry", "10:00:00")) != entry:
+                fail("opportunity override changes the captured entry time")
+            seen.add(session)
+        if seen != registered_sessions:
+            fail("opportunity override omits registered source sessions")
+
+
 def validate_dsl(spec: ExperimentSpec | dict) -> dict:
     obj = spec.model_dump(mode="json") if isinstance(spec, ExperimentSpec) else spec
     if obj["evaluator"] not in EVALUATORS:
@@ -265,6 +390,7 @@ def methodological_admission(
             reasons.append("revision changed deterministic scoring or confirmation criteria")
     try:
         validate_dsl(draft)
+        validate_dataset_execution_scope(draft, dataset)
     except ValueError as error:
         reasons.append(str(error))
     combined = {**draft.parameters, **draft.dsl}
