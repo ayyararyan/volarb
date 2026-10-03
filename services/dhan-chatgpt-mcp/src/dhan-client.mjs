@@ -180,6 +180,15 @@ export class DhanClient {
     return this.request('/trades');
   }
 
+  getHistoricalTrades({ fromDate, toDate, page = 0 }) {
+    const p = Number(page);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(fromDate)) || !/^\d{4}-\d{2}-\d{2}$/.test(String(toDate))) {
+      throw new Error('Historical trade dates must be YYYY-MM-DD');
+    }
+    if (!Number.isInteger(p) || p < 0) throw new Error('Historical trade page must be a non-negative integer');
+    return this.request(`/trades/${encodeURIComponent(String(fromDate))}/${encodeURIComponent(String(toDate))}/${p}`);
+  }
+
   getOptionExpiries({ underlyingScrip, underlyingSeg }) {
     return this.request('/optionchain/expirylist', {
       method: 'POST',

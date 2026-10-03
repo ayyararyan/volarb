@@ -1,51 +1,34 @@
 import { mapDhanError, dhanRejectedOrderError } from './dhan-error-mapper.mjs';
 import { ProviderOperationKind } from './provider-error.mjs';
 
-// Strategy-agnostic Dhan capability facade.
-//
-// Every failure leaving this boundary is a broker-neutral ProviderError.
-// Dhan-native codes/messages remain attached only as provider provenance.
 export class DhanProvider {
-  constructor({ client, instrumentMaster }) {
-    if (!client) throw new Error('DhanProvider requires a DhanClient');
+  constructor({ client, instrumentMaster, readiness = null }) {
+    if (!client && !readiness) throw new Error('DhanProvider requires a DhanClient or readiness gate');
     if (!instrumentMaster) throw new Error('DhanProvider requires an InstrumentMaster');
     this.client = client;
     this.instrumentMaster = instrumentMaster;
+    this.readiness = readiness;
     this.providerKey = 'dhan';
   }
 
-  _invoke(operation, kind, fn, { rejectOrderStatus = false } = {}) {
-    let result;
+  async _invoke(operation, kind, fn, { rejectOrderStatus = false } = {}) {
     try {
-      result = fn();
+      if (kind === ProviderOperationKind.COMMAND) await this.readiness?.assertCommandReady(operation);
+      else this.readiness?.assertQueryConfigured(operation);
+      const value = await fn();
+      if (rejectOrderStatus && String(value?.orderStatus || '').toUpperCase() === 'REJECTED') {
+        throw dhanRejectedOrderError(value, { operation });
+      }
+      return value;
     } catch (error) {
       throw mapDhanError(error, { operation, kind });
     }
-
-    return Promise.resolve(result).then(
-      (value) => {
-        if (rejectOrderStatus && String(value?.orderStatus || '').toUpperCase() === 'REJECTED') {
-          throw dhanRejectedOrderError(value, { operation });
-        }
-        return value;
-      },
-      (error) => {
-        throw mapDhanError(error, { operation, kind });
-      }
-    );
   }
 
-  _query(operation, fn) {
-    return this._invoke(operation, ProviderOperationKind.QUERY, fn);
-  }
+  _query(operation, fn) { return this._invoke(operation, ProviderOperationKind.QUERY, fn); }
+  _command(operation, fn) { return this._invoke(operation, ProviderOperationKind.COMMAND, fn, { rejectOrderStatus: true }); }
 
-  _command(operation, fn) {
-    return this._invoke(operation, ProviderOperationKind.COMMAND, fn, { rejectOrderStatus: true });
-  }
-
-  resolveInstrument(identity) {
-    return this._query('resolve_instrument', () => this.instrumentMaster.resolveInstrument(identity));
-  }
+  resolveInstrument(identity) { return this._query('resolve_instrument', () => this.instrumentMaster.resolveInstrument(identity)); }
 
   placeOrder(order) { return this._command('place_order', () => this.client.placeOrder(order)); }
   modifyOrder(orderId, changes) { return this._command('modify_order', () => this.client.modifyOrder(orderId, changes)); }
@@ -56,6 +39,7 @@ export class DhanProvider {
   getOrderTrades(orderId) { return this._query('get_order_trades', () => this.client.getOrderTrades(orderId)); }
   getOrders() { return this._query('get_orders', () => this.client.getOrders()); }
   getTrades() { return this._query('get_trades', () => this.client.getTrades()); }
+  getHistoricalTrades(request) { return this._query('get_historical_trades', () => this.client.getHistoricalTrades(request)); }
 
   getPositions() { return this._query('get_positions', () => this.client.getPositions()); }
   getHoldings() { return this._query('get_holdings', () => this.client.getHoldings()); }
