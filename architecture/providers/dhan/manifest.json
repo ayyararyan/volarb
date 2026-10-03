@@ -3,7 +3,7 @@
   "component_id": "provider.dhan",
   "name": "Dhan Provider",
   "kind": "broker_provider",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "ownership": "strategy_agnostic",
   "canonical_identity": {
     "identity_kind": "component_string",
@@ -29,7 +29,7 @@
         "QUERY",
         "STREAM"
       ],
-      "implements": "port.internal_execution.broker",
+      "implements": "port.execution_engine.broker",
       "semantics": "Translate, transmit, observe, normalize and report; never own strategy or execution policy.",
       "operations": {
         "query": [
@@ -100,5 +100,8 @@
       "DHAN_MARKET_FEED_WS_URL",
       "DHAN_ORDER_UPDATE_WS_URL"
     ]
-  }
+  },
+  "legacy_interface_aliases": [
+    "port.internal_execution.broker"
+  ]
 }

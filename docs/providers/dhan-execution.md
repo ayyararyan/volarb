@@ -6,11 +6,11 @@ Last provider-boundary audit: **2026-10-03**, against repository `main` at `9420
 
 This document is intentionally **outside the numbered Volarb box hierarchy**.
 
-Dhan is an **external reusable broker capability provider** with canonical component identity `provider.dhan`. `[5,0,3,6,1] Broker Execution Port` is one important client of it, but Dhan is not owned by Internal Execution and does not know which strategy, workflow or execution engine called it. It does not receive a Box number or Volarb VID. When mounted into a composition it receives a mount identity and composition-owned bindings; those do not become canonical Dhan VIDs.
+Dhan is an **external reusable broker capability provider** with canonical component identity `provider.dhan`. `[5,0,3,6,1] Broker Execution Port` is one important client of it, but Dhan is not owned by Execution Engine and does not know which strategy, workflow or execution engine called it. It does not receive a Box number or Volarb VID. When mounted into a composition it receives a mount identity and composition-owned bindings; those do not become canonical Dhan VIDs.
 
 ## Compositional identity
 
-The provider's canonical component ID is `provider.dhan`. The active Volarb composition mounts it at `mount.volarb.execution.main.broker.primary` and binds it to the mounted Internal Execution Broker Execution Port. Another strategy may mount the same provider under a different mount ID without changing Dhan itself. Canonical component identity, composition placement identity and runtime broker identifiers remain separate.
+The provider's canonical component ID is `provider.dhan`. The active Volarb composition mounts it at `mount.volarb.execution.main.broker.primary` and binds it to the mounted Execution Engine Broker Execution Port. Another strategy may mount the same provider under a different mount ID without changing Dhan itself. Canonical component identity, composition placement identity and runtime broker identifiers remain separate.
 
 ## Fundamental boundary
 
@@ -27,7 +27,7 @@ Conceptually:
                        v
                  Dhan APIs / exchange
 
-Internal Execution normally reaches Dhan through `[5,0,3,6,1] Broker Execution Port`. Strategy, research or monitoring components may also consume Dhan information through appropriate provider-facing interfaces. Dhan itself does not branch on caller identity or strategy meaning.
+Execution Engine normally reaches Dhan through `[5,0,3,6,1] Broker Execution Port`. Strategy, research or monitoring components may also consume Dhan information through appropriate provider-facing interfaces. Dhan itself does not branch on caller identity or strategy meaning.
 
 For **current production Volarb mutations**, the Command Commit Guard / Execution Ledger invariant remains upstream of the Broker Execution Port. Provider reusability must not be used as a shortcut around that safety path. The architectural point is that this rule belongs to the caller/core, not inside Dhan.
 
@@ -95,7 +95,7 @@ The Dhan provider is deliberately caller-agnostic.
 
 Possible clients include:
 
-- Broker Execution Port / Internal Execution;
+- Broker Execution Port / Execution Engine;
 - strategy and research modules that need broker or market facts;
 - monitoring / reconciliation services;
 - operator tooling;
@@ -185,7 +185,7 @@ These are provider-internal responsibilities, not new Volarb boxes and not VID a
 
 ## Broker Execution Port capabilities Dhan must implement
 
-The exact language-level interface remains an Internal Execution implementation task, but the Dhan provider needs mechanical support for the following broker-neutral operations:
+The exact language-level interface remains an Execution Engine implementation task, but the Dhan provider needs mechanical support for the following broker-neutral operations:
 
 1. Resolve a complete economic instrument identity to an opaque provider instrument reference plus normalized metadata.
 2. Place an explicitly requested order without silently changing side, quantity, order type, product profile, validity or price.
@@ -328,13 +328,13 @@ Dhan currently publishes separate limits for Order, Data, Quote and Non-Trading 
 
 The adapter may enforce mechanical throttling needed to avoid violating Dhan limits, but it must not silently turn throttling into an execution policy. In particular it must not choose a different order action, reorder actions, or hold a time-sensitive command beyond an upstream deadline without reporting that condition.
 
-Provider capability/readiness should make rate constraints observable to Internal Execution.
+Provider capability/readiness should make rate constraints observable to Execution Engine.
 
 ## Dhan-native composite actions deliberately excluded from the core port
 
 ### Native order slicing
 
-Dhan offers `/orders/slicing` for orders above freeze quantity. Volarb already owns `[5,0,7,0,1] Execution Slicing`, including slice identity, scheduling and recovery. Dhan native slicing is therefore **not used by the initial Broker Execution Port implementation**. The provider may advertise that the broker has the capability, but Internal Execution remains the owner of slicing.
+Dhan offers `/orders/slicing` for orders above freeze quantity. Volarb already owns `[5,0,7,0,1] Execution Slicing`, including slice identity, scheduling and recovery. Dhan native slicing is therefore **not used by the initial Broker Execution Port implementation**. The provider may advertise that the broker has the capability, but Execution Engine remains the owner of slicing.
 
 ### Exit All Positions
 
@@ -369,7 +369,7 @@ The provider should report the relevant broker facts; upstream Volarb decides wh
 
 The production Broker Execution Port substrate is now implemented. Remaining work is narrower and should not change the frozen provider boundary:
 
-- wire the Broker Port into the future production Internal Execution implementation once that component's runtime stack is chosen;
+- wire the Broker Port into the future production Execution Engine implementation once that component's runtime stack is chosen;
 - complete generic instrument normalization for any Dhan segment/instrument types not yet exercised by the indexed resolver;
 - add provider-local rate-limit telemetry/accounting without turning it into execution policy;
 - optionally add Dhan 20/200-level Full Market Depth as a separately advertised segment-specific capability;
@@ -442,9 +442,9 @@ The actual strategy-agnostic broker program is now implemented independently of 
 - `src/dhan-provider.mjs` remains the thin mechanical Dhan facade.
 - `src/dhan-client.mjs` remains the low-level HTTP transport/API client.
 
-Canonical call map: `docs/providers/dhan-internal-execution-call-map.md`.
+Canonical call map: `docs/providers/dhan-execution-engine-call-map.md`.
 
-The production connector does not require MCP or an LLM. Internal Execution can import the runtime/broker-port library directly.
+The production connector does not require MCP or an LLM. Execution Engine can import the runtime/broker-port library directly.
 
 ### Configuration behavior
 
@@ -452,7 +452,7 @@ Missing broker identity/credential source is `PROVIDER.NOT_CONFIGURED`. Mutation
 
 Read-only queries do not require static-IP readiness because Dhan documents static-IP whitelisting as required for order placement/modification/cancellation, while order/trade retrieval is available without that mutation whitelist requirement.
 
-### Implemented Internal Execution operations
+### Implemented Execution Engine operations
 
 `GET_READINESS`, `GET_CAPABILITIES`, `RESOLVE_INSTRUMENT`, `GET_ACCOUNT_SNAPSHOT`, `GET_POSITIONS`, `GET_FUNDS`, `GET_ORDERS`, `GET_ORDER`, `GET_ORDER_BY_CORRELATION`, `GET_TRADES`, `GET_ORDER_TRADES`, `GET_HISTORICAL_TRADES`, `GET_MARGIN`, `GET_BASKET_MARGIN`, `GET_LTP`, `GET_QUOTE`, `PLACE_ORDER`, `MODIFY_ORDER`, `CANCEL_ORDER`.
 
@@ -490,7 +490,7 @@ The provider intentionally implements Dhan's standard 5-level FULL packet here. 
 
 ### Broker-neutral request translation
 
-Internal Execution does not construct Dhan API payloads.
+Execution Engine does not construct Dhan API payloads.
 
 The connector accepts broker-neutral order requests carrying:
 
