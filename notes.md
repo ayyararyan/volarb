@@ -14,6 +14,10 @@ Transform the existing Volarb research and market-outlook ecosystem into an auto
 - Keep research, market-state assessment, trade construction, execution, monitoring, risk management, and post-trade learning conceptually separable unless a later design decision intentionally combines them.
 - Do not assume that an existing research result automatically authorizes live trading behavior.
 
+## Living graph
+
+The current master decision graph is maintained in [docs/autonomous-butterfly-workflow.md](docs/autonomous-butterfly-workflow.md). It is the visual counterpart to these notes and should be updated as architectural decisions are added or changed.
+
 ## Notes log
 
 ### 2026-10-03 — Initial direction
