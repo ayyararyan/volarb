@@ -562,6 +562,85 @@ Constrained optimizer
 - how long Graph X may remain in this state before its higher-level selection expires,
 - and what happens to W_X while Graph X is waiting.
 
+
+### 2026-10-03 — Sticky daily underlying commitment and reserved capital
+
+**Raw intent:** Once the system has decided that an underlying X should be traded today, that decision should persist. The next question is no longer whether X should be traded, unless some higher-level condition explicitly changes that decision. The question becomes **when** to trade X and **which structure** to use.
+
+If NIFTY is selected for the day, the capital assigned to the NIFTY graph should remain reserved for NIFTY even if no acceptable structure is available immediately. The trade may happen 15 minutes later, 20 minutes later, an hour later, or not happen at all that day, but the capital slot remains reserved because the system has already committed to NIFTY as a target underlying for that trading day.
+
+**Interpretation:** Underlying selection creates a durable **daily commitment state** for Graph X.
+
+Once Graph X is activated:
+- X remains selected,
+- W_X remains reserved,
+- structure search may pause and resume,
+- and the graph keeps asking **when/how to trade X**, not **whether X should still be traded**.
+
+The selection is only reconsidered if an explicit higher-level invalidation or revocation condition is triggered.
+
+Conceptually:
+
+```text
+Underlying X selected for today
+        |
+        v
+Reserve W_X
+        |
+        v
+Graph X = ACTIVE / COMMITTED
+        |
+        v
+Search candidate set C_X
+        |
+   candidate found?
+    /          \
+  YES           NO
+   |             |
+   v             v
+trade path   within-hour scheduler
+                 |
+                 v
+            search again
+                 |
+                 +------> W_X still reserved
+```
+
+**Key rule:** Capital reservation follows the underlying commitment, not the immediate existence of a candidate structure.
+
+Therefore:
+- no acceptable candidate does **not** release W_X,
+- a delayed trade does **not** release W_X,
+- and another graph may not consume W_X merely because Graph X is temporarily waiting.
+
+**State hierarchy:** The system should distinguish:
+- `UNDERLYING_SELECTED`
+- `CAPITAL_RESERVED`
+- `WAITING_FOR_STRUCTURE`
+- `STRUCTURE_SELECTED`
+- `POSITION_OPEN`
+
+These are different states. A graph can be `UNDERLYING_SELECTED + CAPITAL_RESERVED + WAITING_FOR_STRUCTURE` for an extended period.
+
+**Daily persistence:** The commitment is conceptually tied to the current trading day unless explicitly revoked earlier. If the entire day passes without a suitable structure, the system may finish the day having made no trade in X while still having correctly reserved capacity for it throughout the session.
+
+**Revocation remains separate:** A later architecture decision must define what can revoke the daily commitment before the day ends. Examples might include:
+- the broader regime becoming invalid,
+- a hard risk event,
+- capital becoming unavailable due to an external account change,
+- market closure or a time cutoff,
+- or an explicit portfolio-level cancellation rule.
+
+Until such a revocation occurs, the graph should not silently fall back to asking whether X belongs in the selected set.
+
+**Portfolio consequence:** Portfolio capital allocation becomes sticky after underlying selection. The portfolio allocator cannot reclaim W_X opportunistically just because Graph X has not yet executed.
+
+**Future design task:** Define:
+- what events are permitted to revoke an active underlying commitment,
+- whether the commitment expires automatically at market close,
+- whether unused W_X may be reallocated only after explicit revocation,
+- and how the next trading day rebuilds the selected set and allocations from scratch.
+
 ## Open questions / unresolved design choices
 
 - What decisions should be fully autonomous versus require human approval?
@@ -582,7 +661,9 @@ Constrained optimizer
 - What happens to unused capital when a graph finds no feasible or attractive candidate?
 - How should the Within-Hour Structure Recheck Scheduler choose its next candidate-search time?
 - How long can Graph X remain selected without finding a structure before the higher-level underlying decision must be reconsidered?
-- Is W_X fully reserved while Graph X is waiting for a structure, partially released, or dynamically reclaimable?
+- W_X is fully reserved once X is selected for the day; define only the explicit revocation conditions that can release it.
+- What events may revoke a daily underlying commitment before market close?
+- Does every daily underlying commitment automatically expire at the end of the trading session?
 - Should the regime gate output only eligible/ineligible/uncertain, or also a confidence score and risk-intensity recommendation?
 - How should the research laboratory feed evidence into the live trading system without creating look-ahead or uncontrolled adaptation?
 - What are the hard portfolio, loss, margin, liquidity, and execution-risk limits?
