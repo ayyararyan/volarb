@@ -1,4 +1,4 @@
-# Autonomous Butterfly Trading Workflow — Preliminary Graph v0.5
+# Autonomous Butterfly Trading Workflow — Preliminary Graph v0.6
 
 This is the living master decision graph for the autonomous Volarb butterfly trading system.
 
@@ -53,8 +53,13 @@ flowchart TD
         DX --> RX[Volarb Execution + Risk Management Engine]
     end
 
-    RX --> EX[Canonical broker execution command]
-    EX --> BX[Broker Executor Plug-in]
+    RX --> MP[Pre-trade Margin Feasibility Check]
+    MP --> MPORT[BrokerMarginFeasibilityPort]
+    MPORT -->|provider implementation| BX[Broker Provider Plug-in]
+    BX -->|normalized margin/account facts| MP
+    MP -->|Feasible| EX[Canonical broker execution command]
+    MP -->|Infeasible| RX
+    EX --> BX
     BX -->|Dhan today| BR[Dhan API / Broker]
     BX -. replaceable .-> ALT[Kotak / ICICI / other broker]
     BR -->|fills / status / errors / account state| BX
@@ -145,6 +150,8 @@ MASTER GRAPH
 - Selecting a StructureSpec marks the end of the decision layer for Graph X.
 - The selected trade is handed to the broker-neutral Volarb Execution + Risk Management Engine.
 - Volarb owns execution and risk intelligence; the broker executor is a thin plug-in that translates explicit commands into broker API actions.
+- Before sending an execution command, Volarb must query a broker-neutral `BrokerMarginFeasibilityPort` backed by the active broker's authoritative margin/account API.
+- Broker-specific margin facts are a legitimate input to Volarb execution logic, but broker-specific decision logic is not.
 - Dhan can be replaced by Kotak, ICICI Securities, or another executor without changing Volarb's strategy logic.
 
 ## Scheduling hierarchy
@@ -179,6 +186,7 @@ The graph is expected to expand primarily at these nodes:
 - Within-Hour Structure Recheck Scheduler
 - Volarb Execution + Risk Management subgraph
 - Broker-neutral execution command/event contract
+- BrokerMarginFeasibilityPort and provider-specific margin adapters
 - Thin broker executor plug-ins: Dhan / Kotak / ICICI / others
 - Order realization and fill handling
 - Position monitoring
