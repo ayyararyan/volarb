@@ -1407,3 +1407,26 @@ Canonical detail: `docs/providers/dhan-execution.md`.
 
 
 **Broker-neutral translation:** Internal Execution no longer needs to construct Dhan-native order/margin/quote payloads. `dhan-translator.mjs` translates provider-neutral order fields and opaque provider instrument references into Dhan mechanics. Core correlation IDs are deterministically projected to stable 30-character Dhan correlation references and reused by correlation lookup/recovery.
+
+
+### 2026-10-03 — Execution Engine rename and deterministic testbed
+
+**Rename:** the reusable strategy-agnostic `[5,0,...]` component is canonically **Execution Engine** (`component.execution_engine`). All VIDs remain unchanged. `component.internal_execution` is a compatibility alias only.
+
+**Strategy-specific boundary:** any execution logic that interprets butterfly/condor/recenter/strategy semantics belongs upstream in an optional Strategy Execution Adapter. Volarb may bind directly when Position Management already emits a broker-neutral economic execution requirement.
+
+**Environment rule:** there is one Execution Engine implementation. No `test_mode` branch is permitted inside it. Broker, market, clock, ledger/persistence and randomness are injected dependencies.
+
+**Testbed:** added `execution-testkit/` with deterministic VirtualClock, SeededRng, EventTrace, MemoryExecutionLedger, SimulatedMarket, SimulatedBroker, FaultInjector, ComponentHarness, scenario/mass runners and invariant checking.
+
+**Test levels:** box-only, selected composition, whole-engine deterministic scenario, seed-addressable mass simulation, replay/shadow, then production.
+
+**Production separation:** `environments/execution/production.json` explicitly mounts only real runtime classes and forbids `execution-testkit`; test/replay/shadow explicitly prohibit real broker mutations.
+
+**Broker contract:** the provider-neutral Broker Operation vocabulary is now owned by `execution-engine/ports/broker-port.mjs`; Dhan and the simulator implement the same contract.
+
+**Simulation semantics:** simulator supports partial fills, fill/cancel races, definitive rejection, acknowledgement loss after application, query/reconciliation, positions/trades, margin facts, market/order streams and injected faults on virtual time.
+
+**Initial invariants:** no overfill; ledger before mutation; no blind retry after ambiguous broker outcome until reconciliation; no stale-intent mutation.
+
+**VID:** no new execution VID allocated for the testkit. Test infrastructure is external tooling, not execution architecture.

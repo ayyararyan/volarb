@@ -2570,11 +2570,11 @@
         0,
         0
       ],
-      "name": "Internal Execution",
+      "name": "Execution Engine",
       "kind": "root",
       "status": "active_design",
-      "note": "Broker-neutral reusable Internal Execution component. Canonical namespace [5,0,...] is strategy-agnostic and provider-agnostic; strategy placement is represented by a composition mount. Normal flow remains Margin Optimization -> Execution Slicing -> Optimal Execution with cross-cutting State Integrity, Execution Recovery/Ledger and Interrupt Control.",
-      "canonical_component_id": "component.internal_execution",
+      "note": "Broker-neutral reusable Execution Engine component. Canonical namespace [5,0,...] is strategy-agnostic and provider-agnostic; strategy placement is represented by a composition mount. Normal flow remains Margin Optimization -> Execution Slicing -> Optimal Execution with cross-cutting State Integrity, Execution Recovery/Ledger and Interrupt Control.",
+      "canonical_component_id": "component.execution_engine",
       "identity_scope": "canonical",
       "canonical_registry": "architecture/components/internal-execution/vector-id-registry.json"
     },
@@ -2680,7 +2680,7 @@
         0,
         0
       ],
-      "note": "Authoritative broker order/fill/status/account execution facts normalized before use by Internal Execution or Position Management. Exact taxonomy TBD."
+      "note": "Authoritative broker order/fill/status/account execution facts normalized before use by Execution Engine or Position Management. Exact taxonomy TBD."
     },
     {
       "vid": [
@@ -2958,7 +2958,7 @@
         0,
         0
       ],
-      "note": "Second Internal Execution sub-box. Enforces the sequence from Margin Optimization, then converts only the current allowed step plus live LOB/order state into time-indexed order-management actions."
+      "note": "Second Execution Engine sub-box. Enforces the sequence from Margin Optimization, then converts only the current allowed step plus live LOB/order state into time-indexed order-management actions."
     },
     {
       "vid": [
@@ -3184,7 +3184,7 @@
         0,
         0
       ],
-      "note": "First Internal Execution sub-box. Determines hedge/margin dependencies and releases only currently eligible instrument quantity to Optimal Execution."
+      "note": "First Execution Engine sub-box. Determines hedge/margin dependencies and releases only currently eligible instrument quantity to Optimal Execution."
     },
     {
       "vid": [

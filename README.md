@@ -12,11 +12,14 @@ The personal covenant overrides generic engine carry branches: **intraday only, 
 
 ## Layout
 
-- `architecture/` — compositional identity system: reusable component manifests, canonical Internal Execution VID registry, Volarb mounts/bindings, identity helpers and validation.
+- `architecture/` — compositional identity system: reusable component manifests, canonical Execution Engine VID registry, Volarb mounts/bindings, identity helpers and validation.
 - `skill/butterfly-market-outlook/` — controller, references, scripts and regressions.
 - `skill/intraday-realized-volatility-forecast/` — five-minute HF observation model and fixtures.
 - `skill/market-news-signal-filter/` — normalized event/news risk filter.
-- `services/dhan-chatgpt-mcp/` — office-Mac MCP, browser web-token recovery, margin preflight, optional separately gated execution code and synthetic tests.
+- `execution-engine/` — broker-neutral runtime contracts and, next, the reusable execution implementation.
+- `execution-testkit/` — deterministic virtual clock, simulator, fault injector, scenario/mass-testing harness and invariants; never a production dependency.
+- `environments/execution/` — explicit test/replay/shadow/production dependency mounts.
+- `services/dhan-chatgpt-mcp/` — Dhan broker provider, office-Mac MCP facade, browser web-token recovery and legacy compatibility surfaces.
 - [services/essvi-dashboard/](services/essvi-dashboard/) — dark eSSVI surface, ATM IV, 1/5/22-session HAR forecasts and Q ratio; requires external Shaurya packages and local authentication.
 - `services/day-workflow/` — offline SHADOW state machine and lifecycle/failure tests; no live orders or jobs.
 - `market-outlook/` — append-only daily research journals.
@@ -29,7 +32,7 @@ The personal covenant overrides generic engine carry branches: **intraday only, 
 
 ## Boundaries
 
-Internal Execution is a reusable strategy-agnostic component, not a Volarb-owned box. Existing `[5,0,...]` VIDs are preserved as its canonical namespace; Volarb mounts that component through `architecture/strategies/volarb/composition.json`. Dhan is independently mounted as an unnumbered broker provider.
+Execution Engine is the reusable strategy-agnostic execution component. Existing `[5,0,...]` VIDs are preserved exactly; `component.internal_execution` is now a legacy alias. A strategy-specific execution adapter may sit upstream when needed. Dhan is independently mounted as an unnumbered broker provider.
 
 Fresh broker positions/orders and executable quotes precede recommendations. First terminal gate wins; attractive theta cannot override missing data or hard risk. Margin checks retain ₹1,000 free cash against peak entry-stage requirement; entry-only packets cannot approve an overlapping recenter. RND is a pricing measure, not a physical forecast.
 
