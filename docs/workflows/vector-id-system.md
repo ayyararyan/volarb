@@ -12,7 +12,7 @@ where:
 
 | Coordinate | Meaning | Rule |
 |---|---|---|
-| `B` | Box / top-level scope | `0` master/global, `1` regime, `2` intraday selection, `3` per-underlying, `4` execution/risk |
+| `B` | Box / top-level scope | `0` master/global, `1` regime, `2` intraday selection, `3` per-underlying, `4` execution/risk, `5` external Dhan executor |
 | `I` | Instance | `0` canonical/template/shared instance; Box 3 uses `1=NIFTY`, `2=BANKNIFTY`, `3=SENSEX` for instantiated graphs |
 | `L` | Logical layer/depth inside the box | `0` for the box root; positive integers for deeper architectural layers |
 | `T` | Entity type code | identifies whether the entity is a node, state, scheduler, edge, worker, port, contract, adapter, resource, etc. |
@@ -43,6 +43,7 @@ Box 1 — Regime Decision                          [1,0,0,0,0]
 Box 2 — Intraday Selection & Capital Allocation  [2,0,0,0,0]
 Box 3 — Per-Underlying Graph template            [3,0,0,0,0]
 Box 4 — Shared Execution & Risk Management       [4,0,0,0,0]
+External Dhan Execution Layer                    [5,0,0,0,0]
 ```
 
 ## Box 3 instance convention
