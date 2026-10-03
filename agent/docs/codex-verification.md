@@ -2,7 +2,7 @@
 
 ## Full live lifecycle and revision verification — 2026-10-02
 
-Branch `fix/full-live-codex-workflow`, [PR #4](https://github.com/ayyararyan/volarb/pull/4).
+Historical verification for [PR #4](https://github.com/ayyararyan/volarb/pull/4), now merged. The temporary source branch is not an operational entrypoint.
 Final live-tested source commit: `adaf1cd143de5e3b4797f19d3ac879ace8c8e585`.
 The [root-cause/context audit and real lifecycle](live-research-lifecycle.md) explain
 the ordering, typed review, two-revision bound, deterministic gates and resume rules.
@@ -93,7 +93,7 @@ or output-token caps. No requested lifecycle stage remains unimplemented.
 
 ## Historical provider-release verification
 
-Date: 2026-10-02. Branch: `feat/codex-appserver-env`.
+Date: 2026-10-02. Historical verification for [PR #2](https://github.com/ayyararyan/volarb/pull/2), now merged.
 Initial implementation commit: `e9f0d64d52c2d58feb306b335eb3b92a43957817`;
 the release follow-ups also fix uncached annotation checks and deterministic
 source resolution between editable and wheel installations.
@@ -279,7 +279,7 @@ artifacts were committed. Final source revision tested from the clean wheel inst
 checkout sources in both environments; the final schema, fixture and demo checks
 also pass. Documentation-only release receipts do not change numerical logic.
 
-- [Published branch](https://github.com/ayyararyan/volarb/tree/feat/codex-appserver-env/agent)
+- [Immutable tested source](https://github.com/ayyararyan/volarb/tree/fa31f248bbbbc7ee1d8624548c5fef64f7b3a6cd/agent)
 - [PR #2 and current merge/check status](https://github.com/ayyararyan/volarb/pull/2)
 - [Tested source commit](https://github.com/ayyararyan/volarb/commit/fa31f248bbbbc7ee1d8624548c5fef64f7b3a6cd)
 - [Scoped workflow runs](https://github.com/ayyararyan/volarb/actions/workflows/test-research-agent.yml)

@@ -38,6 +38,54 @@ The boundary is **Strategy → optional Strategy Execution Adapter → Execution
 ## Maintenance and history
 
 - [Validation guide](VALIDATION.md), `.github/workflows/` and `tests/` explain practical offline checks.
+- [Branch naming and lifecycle](#branch-naming-and-lifecycle) is the single branch convention; the [release guide](RELEASING.md) covers immutable version tags.
 - [Current notes](../notes.md) route decisions to canonical documents; [tasks](../tasks.md) distinguish outstanding implementation from completed design.
 - [Development history](DEVELOPMENT_HISTORY.md) records changes; [file classification](audits/2026-10-03-file-classification.tsv) accounts for every cleanup-baseline tracked file; its historical financial-record dispositions were superseded by the public-release privacy boundary.
 - [Archive](../archive/README.md) separates superseded architecture, research reports and retired deployment policy. Archived content is historical evidence, never a runtime dependency or current instruction.
+
+### Branch naming and lifecycle
+
+**`main` is the default and only permanent integration branch.** Work uses short-lived branches:
+
+```text
+<type>/<short-description>
+```
+
+Allowed types: `feature`, `fix`, `refactor`, `docs`, `test`, `chore`, `release`,
+`hotfix`, `research`, `experiment`, `archive`.
+
+- Use lowercase words separated by hyphens. Choose a short description of the
+  work, not the author. Avoid spaces, underscores, camelCase, personal prefixes,
+  unexplained abbreviations and dates unless the work genuinely needs a date.
+  Generic descriptions such as `test`, `new`, `temp`, `final`, `working`, `misc`,
+  `changes` or `update` are not sufficient on their own.
+- Examples: `feature/execution-engine-runtime`, `fix/dhan-stream-reconnect`,
+  `docs/repository-map`, `test/execution-recovery-races`, `chore/branch-hygiene`.
+- `research/execution-slicing` denotes research intended to inform canonical
+  architecture; `experiment/alternative-fill-model` denotes exploratory work
+  with uncertain disposition. Neither becomes production behavior by naming it.
+- Releases normally use immutable tags on validated `main`, not permanent release
+  branches. If temporary release preparation needs a branch, use
+  `release/vMAJOR.MINOR.PATCH` (for example `release/v0.4.0`); semantic-version
+  punctuation is the explicit exception to hyphen-only descriptions.
+- Use `archive/<topic>` only when a meaningful unmerged line must remain available.
+  Do not create archive branches or tags merely to retain integrated work; Git
+  history, merged PRs and deliberate private recovery backups preserve provenance.
+- Open a PR into `main`; satisfy the required, uniquely named CI checks and
+  resolved review threads before merging. The branch describes the unit of work;
+  commit messages describe its atomic changes. No workflow should depend on a
+  short-lived task branch.
+- Delete an integrated task branch once no open PR, automation or documentation
+  depends on it. Check both remote and local tips: ancestry proves a normal merge;
+  a squash merge requires verified content equivalence and preservation of any
+  useful original commit sequence. Preserve uncertain or genuinely unique work.
+- Before deleting a checked-out local branch, coordinate its worktree. A clean
+  historical checkout may be detached at the **same SHA**; preserve its files and
+  environments. Never reset, switch or discard a dirty checkout merely for hygiene.
+
+Keep `main` protected from deletion and force pushes, with PRs and current required
+checks. GitHub-hosted protection must be verified separately from the proposed
+ruleset file; plan/visibility limitations do not justify claiming enforcement.
+Prefer automatic deletion of merged PR branches, while retaining the local
+ancestry/worktree checks above. Changes to repository visibility, sensitive Git
+history or production runtime are separate operations, not branch cleanup.

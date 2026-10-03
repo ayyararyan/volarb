@@ -121,7 +121,7 @@ assertions and generated-file checks. Capacity tests are local/manual.
 
 ## Repository delivery
 
-Published branch: [feat/butterfly-research-agent](https://github.com/ayyararyan/volarb/tree/feat/butterfly-research-agent).
+Published work: [merged PR #1](https://github.com/ayyararyan/volarb/pull/1); [immutable source snapshot](https://github.com/ayyararyan/volarb/tree/879e88c6989058fcf0edc54f69291bce438b2133). The temporary branch name is not an active entrypoint.
 [Pull request #1](https://github.com/ayyararyan/volarb/pull/1) is the authoritative
 final-head CI and merge receipt. Remote tree hashes were compared with local Git;
 implementation, tests, configs, documentation and diagrams were verified present.
