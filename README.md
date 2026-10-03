@@ -11,7 +11,7 @@ Volarb brings Indian index-option research and strategy workflows together with 
 [Architecture](#architecture) · [Start here](#start-here) · [Development](#local-development) · [Repository map](docs/REPOSITORY_MAP.md)
 
 <picture>
-  <source media="(max-width: 600px)" srcset="docs/assets/volarb-architecture-mobile.svg">
+  <source media="(max-width: 768px)" srcset="docs/assets/volarb-architecture-mobile.svg">
   <img src="docs/assets/volarb-architecture.svg" width="960" alt="Volarb architecture: strategy through an optional adapter into the Execution Engine, then the Broker Execution Port with simulated and Dhan providers. The deterministic testbed injects runtime dependencies. Contracts are implemented; the complete engine pipeline is in development.">
 </picture>
 
@@ -19,13 +19,11 @@ Volarb brings Indian index-option research and strategy workflows together with 
 
 ## Capabilities and status
 
-| Area | Available today | Implementation boundary |
-|---|---|---|
-| **Execution infrastructure** | Provider-neutral ports, global Provider Error Envelope, immutable component identities and validated composition bindings | Policy/convergence pipeline and production environment loader are designed, not yet implemented |
-| **Dhan integration** | REST/WebSocket connector; normalized commands, queries and streams; instrument translation and readiness gates | Mechanical broker operations, not strategy or execution policy |
-| **Deterministic testing** | Virtual clock, seeded scenarios, simulated broker/market, faults, traces, invariants and composition harnesses | Exercises implemented components and fixtures; full-engine coverage awaits the engine |
-| **Quantitative research** | Option-surface analytics, physical realized-volatility forecasting, event/news filtering and butterfly decision workflows | Decision support and experimental research, not order authority |
-| **Research laboratory** | Offline experiments, isolated workers, dataset provenance and evidence grading | Separate scientific baseline; not the live decision controller |
+- **Execution contracts — implemented.** Provider-neutral ports, the global Provider Error Envelope, immutable component identities and validated composition bindings. The policy/convergence pipeline and production environment loader remain in development.
+- **Dhan Provider — implemented.** REST/WebSocket integration; normalized commands, queries and streams; instrument translation and readiness gates. Broker mechanics, not trading policy.
+- **Execution Testbed — implemented.** Virtual time, seeded scenarios, simulated broker/market, faults, traces and composition harnesses. Complete-engine coverage awaits the engine.
+- **Research skills — implemented decision support.** Option-surface analytics, physical realized-volatility forecasting, event/news filtering and butterfly workflows. No order authority.
+- **Research laboratory — experimental.** Offline experiments, isolated workers, dataset provenance and evidence grading. A separate scientific baseline, not the live decision controller.
 
 The [SHADOW day-workflow prototype](services/day-workflow/README.md) and optional [eSSVI/IV/HAR dashboard](services/essvi-dashboard/README.md) are supporting services. Their deployment-specific dependencies are documented separately.
 
@@ -50,11 +48,11 @@ See the [architecture index](architecture/README.md) for identities and composit
 
 The testing model requires **the same engine code**, with dependencies supplied through ports—not a second engine or test-only policy branches.
 
-| Dependency | Deterministic test environment | Production target |
-|---|---|---|
-| Broker | Simulated broker | Dhan Provider |
-| Time and market | Virtual clock, simulated observations | Real clock, live observations |
-| Failure conditions | Seeded faults and recorded traces | Normalized provider errors and reconciliation |
+| Test dependencies | Production target |
+|---|---|
+| Simulated broker | Dhan Provider |
+| Virtual clock, simulated observations | Real clock, live observations |
+| Seeded faults and recorded traces | Normalized provider errors and reconciliation |
 
 The five intended levels are **box tests → composition tests → full-engine scenarios → mass simulation → replay/shadow**. Box/composition harnesses and scenario/mass drivers exist; complete-engine mounting and dedicated replay/shadow runners remain planned. Environment manifests are declarations, not an executable loader.
 
@@ -66,16 +64,16 @@ Choose a path by the work you want to do. The [full repository map](docs/REPOSIT
 
 | Work on | Canonical entrypoint |
 |---|---|
-| Architecture and identities | [`architecture/`](architecture/README.md) — manifests, registries, composition and validation |
-| Generic execution | [`execution-engine/`](execution-engine/README.md) — implemented contracts and the runtime boundary |
-| Execution testing | [`execution-testkit/`](execution-testkit/README.md) and [`environments/execution/`](environments/execution/README.md) |
-| Broker integration | [`services/dhan-chatgpt-mcp/`](services/dhan-chatgpt-mcp/README.md) — Dhan Provider and service interfaces |
+| Architecture and identities | [architecture/](architecture/README.md) — manifests, registries, composition and validation |
+| Generic execution | [execution-engine/](execution-engine/README.md) — implemented contracts and the runtime boundary |
+| Execution testing | [execution-testkit/](execution-testkit/README.md) and [environments/execution/](environments/execution/README.md) |
+| Broker integration | [services/dhan-chatgpt-mcp/](services/dhan-chatgpt-mcp/README.md) — Dhan Provider and service interfaces |
 | Volarb strategy | [Strategy composition/design](docs/autonomous-butterfly-workflow.md); [current operating algorithm](docs/DAILY_OPERATING_ALGORITHM.md) |
-| Research and decision modules | [`skill/`](skill/README.md) — butterfly outlook, realized volatility and market news |
-| Offline experiments | [`agent/`](agent/README.md) — Butterfly Research Laboratory |
-| Source/workspace packaging | [`agent-kit/`](agent-kit/README.md) — distinct from the research laboratory |
-| Operations and documentation | [`docs/`](docs/README.md) and [`prompts/`](prompts/README.md) — canonical procedures and bounded prompts |
-| Historical generations | [`archive/`](archive/README.md) — superseded designs and reports, not operational instructions |
+| Research and decision modules | [skill/](skill/README.md) — butterfly outlook, realized volatility and market news |
+| Offline experiments | [agent/](agent/README.md) — Butterfly Research Laboratory |
+| Source/workspace packaging | [agent-kit/](agent-kit/README.md) — distinct from the research laboratory |
+| Operations and documentation | [docs/](docs/README.md) and [prompts/](prompts/README.md) — canonical procedures and bounded prompts |
+| Historical generations | [archive/](archive/README.md) — superseded designs and reports, not operational instructions |
 
 ## Local development
 
