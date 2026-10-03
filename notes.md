@@ -694,6 +694,80 @@ DECISION COMPLETE
 
 **Current stopping point:** The internal design of the Execution + Risk Management layer is intentionally left unresolved for now and will be developed as a separate subgraph.
 
+
+### 2026-10-03 — Smart Volarb execution/risk layer vs thin broker executor
+
+**Raw intent:** The execution layer being designed belongs to Volarb itself. This is where the strategy continues to make intelligent decisions about how the chosen trade should actually be established and managed. That intelligent layer should then hand explicit broker actions to a separate Dhan executor.
+
+The Dhan executor is a plug-in and should contain very little trading intelligence. Its job is to faithfully execute instructions through Dhan's API. Tomorrow the same interface could be implemented by Kotak, ICICI Securities, or another broker without changing the Volarb execution/risk logic.
+
+**Interpretation:** The previously named **Execution + Risk Management layer** must itself be split into two architectural levels:
+
+1. **Volarb Execution + Risk Management Engine**
+   - owns trading intelligence after the StructureSpec has been selected;
+   - decides how and when to express the approved trade in the market;
+   - determines execution sequencing, monitoring, risk responses, adjustments, exits, and other strategy decisions that will be designed later;
+   - remains broker-neutral.
+
+2. **Broker Executor / Adapter**
+   - receives explicit execution commands from the Volarb engine;
+   - translates canonical commands into broker-specific API requests;
+   - handles broker-specific authentication, instrument/token mapping, IP whitelisting, order IDs, API responses, retries/errors, and status synchronization;
+   - should not decide whether a trade is desirable or how the strategy should manage risk.
+
+Conceptually:
+
+```text
+Selected StructureSpec
+        |
+        v
++--------------------------------+
+| VOLARB EXECUTION + RISK ENGINE |
+|                                |
+| smart strategy decisions       |
+| execution policy               |
+| live risk decisions            |
+| adjustments / exits            |
++--------------------------------+
+        |
+        | canonical execution commands
+        v
++-------------------------------+
+| BROKER EXECUTOR PLUG-IN       |
+| Dhan / Kotak / ICICI / ...    |
+|                               |
+| thin translation + execution  |
++-------------------------------+
+        |
+        v
+Broker / Exchange
+```
+
+**Key boundary:** Volarb decides **what action should happen**. The broker executor decides only **how to express that already-decided action through a specific broker API**.
+
+**Broker executor should be intentionally dumb:** It should not independently choose strikes, alter the strategy, resize because it "thinks" another size is better, decide to recenter, change exit logic, or substitute another structure. If an instruction cannot be executed, it reports the execution state/failure back to the Volarb engine, which decides what to do next.
+
+**Canonical command layer:** The interface between the Volarb execution/risk engine and the broker plug-in should eventually use broker-neutral commands such as:
+- place order,
+- modify order,
+- cancel order,
+- query order status,
+- query fills,
+- query positions,
+- query margin/account state.
+
+The exact command schemas remain TBD.
+
+**Feedback direction:** Although the broker executor contains little intelligence, it must return authoritative execution facts to Volarb: accepted/rejected orders, fills, partial fills, prices, quantities, broker errors, position state, and account/margin state. Volarb then uses those facts for subsequent risk and execution decisions.
+
+**Replacement test:** Replacing Dhan with Kotak or ICICI Securities should require changing/configuring the broker executor plug-in, not rewriting the Volarb execution/risk engine.
+
+**Architectural naming clarification:**
+- **Volarb Execution + Risk Management Engine** = intelligent strategy layer.
+- **Dhan Executor** = thin provider-specific implementation of the broker execution interface.
+
+The internal structure of the intelligent Volarb execution/risk engine remains to be designed separately.
+
 ## Open questions / unresolved design choices
 
 - What decisions should be fully autonomous versus require human approval?
@@ -723,7 +797,9 @@ DECISION COMPLETE
 - What should trigger hold, recenter, hedge, scale, or square-off actions?
 - What broker/execution infrastructure should the bot eventually control?
 - What canonical TradeIntent/StructureSpec contract should cross the decision-to-execution boundary?
-- How should the Execution + Risk Management subgraph be structured internally?
+- How should the Volarb Execution + Risk Management subgraph be structured internally?
+- What canonical broker-neutral execution command and execution-event schemas should connect Volarb to broker executor plug-ins?
+- Which broker/API failures should be handled entirely inside the adapter versus escalated to the Volarb engine?
 - Should research data and decision-time historical data share one canonical market-data schema while retaining separate provider capabilities?
 - Which broker-neutral identifiers should Volarb own for underlyings, expiries, strikes, option types and contracts, and where should broker token mapping live?
 - How should the system express provider capability differences without contaminating strategy logic?
