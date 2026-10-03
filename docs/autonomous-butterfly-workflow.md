@@ -1,4 +1,4 @@
-# Autonomous Butterfly Trading Workflow — Preliminary Graph v0.1
+# Autonomous Butterfly Trading Workflow — Preliminary Graph v0.2
 
 This is the living master decision graph for the autonomous Volarb butterfly trading system.
 
@@ -41,9 +41,10 @@ flowchart TD
 
         MX --> NX[Constrained Structure Optimizer]
 
-        NX -->|No feasible / attractive candidate| OX[Per-underlying no-trade state]
-        OX --> PX[Per-underlying recheck timing TBD]
-        PX --> LX
+        NX -->|No feasible / attractive candidate| OX[Graph X remains selected]
+        OX --> PX[Within-Hour Structure Recheck Scheduler]
+        PX --> WX[Wait until next structure scan]
+        WX --> LX
 
         NX -->|Candidate selected| QX[Selected StructureSpec]
         QX --> RX[Next stage: trade construction / execution / management TBD]
@@ -56,13 +57,16 @@ flowchart TD
 
 ## Current interpretation
 
-The master graph currently has two different waiting loops:
+The master graph currently has three different waiting loops:
 
 1. **Multi-day regime loop**  
    Used when the broader short-gamma environment is unfavorable.
 
 2. **Intraday opportunity loop**  
    Used when the broader regime is favorable but none of NIFTY, BANKNIFTY, or SENSEX is currently selected.
+
+3. **Within-hour structure loop**  
+   Used when an underlying X has already been selected, but Graph X cannot currently find an acceptable candidate structure. Graph X remains active and retries its candidate search on a faster, within-hour schedule.
 
 When the underlying selector returns a non-empty set (S), the portfolio layer allocates capital to each selected underlying. Each selected underlying then receives its own independent graph.
 
@@ -102,7 +106,7 @@ MASTER GRAPH
      +-- build candidate set C_X
      +-- constrained optimizer
           |
-          |-- no candidate -> recheck path TBD
+          |-- no candidate -> Within-Hour Structure Recheck Scheduler -> candidate search again
           |
           +-- selected StructureSpec
                |
@@ -121,7 +125,27 @@ MASTER GRAPH
 - A favorable regime does not force a trade.
 - A selected underlying does not force a structure.
 - An optimizer may return **NO FEASIBLE CANDIDATE**.
+- A no-candidate result does not revoke the underlying decision; Graph X remains active and rechecks within the hour.
 - Broker execution remains downstream of the broker-neutral decision graph.
+
+## Scheduling hierarchy
+
+```text
+DAYS / WEEKS
+Regime unfavorable
+    -> Regime Recheck Scheduler
+    -> Regime Gate
+
+INTRADAY
+Regime favorable, no underlying selected
+    -> Intraday Opportunity Recheck Scheduler
+    -> Underlying Opportunity Selector
+
+WITHIN THE HOUR
+Underlying X selected, no acceptable C_X candidate
+    -> Within-Hour Structure Recheck Scheduler
+    -> refresh candidate set / optimizer
+```
 
 ## Next expansion points
 
@@ -133,7 +157,7 @@ The graph is expected to expand primarily at these nodes:
 - Intraday Opportunity Recheck Scheduler
 - Portfolio Capital Allocator
 - Per-underlying Structure Optimizer
-- No-candidate recheck path
+- Within-Hour Structure Recheck Scheduler
 - Trade construction
 - Order execution
 - Position monitoring
