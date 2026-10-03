@@ -62,7 +62,7 @@
         0,
         0
       ],
-      "name": "Box 1 — Regime Decision Graph",
+      "name": "Regime Gate",
       "kind": "root"
     },
     {
@@ -73,7 +73,7 @@
         0,
         0
       ],
-      "name": "Box 2 — Intraday Instrument Selection & Capital Allocation",
+      "name": "Underlying Allocation",
       "kind": "root"
     },
     {
@@ -84,7 +84,7 @@
         0,
         0
       ],
-      "name": "Box 3 — Per-Underlying Trade Selection Template",
+      "name": "Trade Selection",
       "kind": "root"
     },
     {
@@ -95,7 +95,7 @@
         0,
         0
       ],
-      "name": "Box 4 — Shared Execution & Risk Management",
+      "name": "Position Management",
       "kind": "root"
     },
     {
@@ -124,7 +124,7 @@
         1,
         1
       ],
-      "name": "Fan out one Box 3 instance per selected X",
+      "name": "Fan out one Trade Selection instance per selected X",
       "kind": "node",
       "parent_vid": [
         0,
@@ -142,7 +142,7 @@
         4,
         1
       ],
-      "name": "Start -> Box 1",
+      "name": "Start -> Regime Gate",
       "kind": "edge",
       "source_vid": [
         0,
@@ -167,7 +167,7 @@
         4,
         2
       ],
-      "name": "Box 1 favorable -> Box 2",
+      "name": "Regime Gate favorable -> Underlying Allocation",
       "kind": "edge",
       "source_vid": [
         1,
@@ -192,7 +192,7 @@
         4,
         3
       ],
-      "name": "Box 2 selected set -> fan out",
+      "name": "Underlying Allocation selected set -> fan out",
       "kind": "edge",
       "source_vid": [
         2,
@@ -217,7 +217,7 @@
         4,
         1
       ],
-      "name": "Fan out -> Box 3 instance",
+      "name": "Fan out -> Trade Selection instance",
       "kind": "edge",
       "source_vid": [
         0,
@@ -242,7 +242,7 @@
         4,
         2
       ],
-      "name": "Box 3 TradeIntent -> Box 4",
+      "name": "Trade Selection TradeIntent -> Position Management",
       "kind": "edge",
       "source_vid": [
         3,
@@ -339,7 +339,7 @@
         1,
         1
       ],
-      "name": "Hand off to Box 2",
+      "name": "Hand off to Underlying Allocation",
       "kind": "node",
       "parent_vid": [
         1,
@@ -931,7 +931,7 @@
         1,
         1
       ],
-      "name": "Launch Box 3 Graph X",
+      "name": "Launch Trade Selection X",
       "kind": "node",
       "parent_vid": [
         2,
@@ -1981,7 +1981,7 @@
         0,
         0
       ],
-      "note": "One desired instrument-level economic action. Multiple instances may be handed to Box 5 concurrently. Strategy meaning remains in Box 4; broker-specific identifiers remain below the broker port."
+      "note": "One desired instrument-level economic action. Multiple instances may be handed to Internal Execution concurrently. Strategy meaning remains in Position Management; broker identifiers remain below the broker port."
     },
     {
       "vid": [
@@ -1991,7 +1991,7 @@
         6,
         1
       ],
-      "name": "OptimalExecutionPort",
+      "name": "InternalExecutionPort",
       "kind": "interface",
       "parent_vid": [
         4,
@@ -2000,7 +2000,7 @@
         0,
         0
       ],
-      "note": "Box 4 handoff to broker-neutral Box 5. Supersedes the earlier interpretation as a thin broker executor."
+      "note": "Position Management handoff to broker-neutral Internal Execution."
     },
     {
       "vid": [
@@ -2566,10 +2566,10 @@
         0,
         0
       ],
-      "name": "Broker-Neutral Optimal Execution Layer",
+      "name": "Internal Execution",
       "kind": "root",
       "status": "active_design",
-      "note": "Originally reserved provisionally for a Dhan-specific layer; corrected before Box 5 internals were allocated. Box 5 is broker-neutral optimal execution. Concrete broker providers are external plug-ins without Volarb VIDs."
+      "note": "Broker-neutral internal execution module with two layered sub-boxes: Margin Optimization then Optimal Execution. Concrete brokers remain external plug-ins."
     },
     {
       "vid": [
@@ -2633,7 +2633,9 @@
         0,
         0
       ],
-      "note": "Reusable optimal-execution algorithm over the active registry. Objective and algorithm intentionally TBD."
+      "note": "Reusable optimal-execution algorithm over the active registry. Objective and algorithm intentionally TBD.",
+      "status": "retired",
+      "retired_reason": "Superseded by explicit layered sub-boxes: Margin Optimization followed by Optimal Execution."
     },
     {
       "vid": [
@@ -2671,7 +2673,7 @@
         0,
         0
       ],
-      "note": "Authoritative broker order/fill/status/account execution facts normalized before use by Box 5 or Box 4. Exact taxonomy TBD."
+      "note": "Authoritative broker order/fill/status/account execution facts normalized before use by Internal Execution or Position Management. Exact taxonomy TBD."
     },
     {
       "vid": [
@@ -2696,7 +2698,9 @@
         2,
         1,
         1
-      ]
+      ],
+      "status": "retired",
+      "retired_reason": "Superseded by direct inputs into the Margin Optimization sub-box."
     },
     {
       "vid": [
@@ -2783,7 +2787,7 @@
         4,
         1
       ],
-      "name": "Box 4 instrument execution intents -> Box 5 registry",
+      "name": "Position Management intents -> Internal Execution registry",
       "kind": "edge",
       "source_vid": [
         4,
@@ -2808,7 +2812,7 @@
         4,
         1
       ],
-      "name": "Box 5 execution facts -> Box 4 engine",
+      "name": "Internal Execution facts -> Position Management",
       "kind": "edge",
       "source_vid": [
         5,
@@ -2877,7 +2881,7 @@
         5,
         0,
         2,
-        1,
+        0,
         1
       ],
       "note": "Infers structural risk-offset and coverage relationships from instruments, current positions and desired actions without strategy labels."
@@ -2896,7 +2900,7 @@
         5,
         0,
         2,
-        1,
+        0,
         1
       ],
       "note": "Quantity-aware precedence constraints derived from inferred hedge relationships."
@@ -2909,16 +2913,16 @@
         1,
         3
       ],
-      "name": "Margin-Aware Sequence Optimizer",
+      "name": "Margin Sequence Optimizer",
       "kind": "node",
       "parent_vid": [
         5,
         0,
         2,
-        1,
+        0,
         1
       ],
-      "note": "Chooses which instrument and maximum quantity are currently eligible to be worked, preserving hedge dependencies and account-resource constraints. It does not choose price, order type, or timing."
+      "note": "Final node of Margin Optimization. Chooses which instrument and maximum quantity are currently eligible to be worked. It does not choose order price, order type, or timing."
     },
     {
       "vid": [
@@ -2928,7 +2932,7 @@
         0,
         1
       ],
-      "name": "Time-Space Execution Sub-Box",
+      "name": "Optimal Execution",
       "kind": "root",
       "parent_vid": [
         5,
@@ -2937,7 +2941,7 @@
         0,
         0
       ],
-      "note": "Broker-neutral micro-execution subgraph that converts eligible work plus LOB/order state into time-indexed order-management actions."
+      "note": "Second Internal Execution sub-box. Converts eligible work plus live LOB/order state into time-indexed order-management actions through a plug-and-play algorithm."
     },
     {
       "vid": [
@@ -3023,7 +3027,7 @@
         4,
         2
       ],
-      "name": "Margin-aware optimizer -> eligible execution work",
+      "name": "Margin Optimization -> eligible work",
       "kind": "edge",
       "source_vid": [
         5,
@@ -3138,6 +3142,200 @@
         3,
         6,
         1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        0,
+        1
+      ],
+      "name": "Margin Optimization",
+      "kind": "root",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "First Internal Execution sub-box. Determines hedge/margin dependencies and releases only currently eligible instrument quantity to Optimal Execution."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        4,
+        2
+      ],
+      "name": "Registry -> Margin Optimization",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        1,
+        9,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        2,
+        0,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        4,
+        3
+      ],
+      "name": "Market state -> Margin Optimization",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        1,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        2,
+        0,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        4,
+        4
+      ],
+      "name": "Account state -> Margin Optimization",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        1,
+        7,
+        2
+      ],
+      "target_vid": [
+        5,
+        0,
+        2,
+        0,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        4,
+        5
+      ],
+      "name": "Market state -> Optimal Execution",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        1,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        4,
+        3
+      ],
+      "name": "Margin Optimization -> hedge analyzer",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        2,
+        0,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        2,
+        1,
+        2
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        4,
+        4
+      ],
+      "name": "Hedge analyzer -> dependency graph",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        2,
+        1,
+        2
+      ],
+      "target_vid": [
+        5,
+        0,
+        2,
+        7,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        4,
+        5
+      ],
+      "name": "Dependency graph -> margin sequence optimizer",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        2,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        2,
+        1,
+        3
       ]
     }
   ]
