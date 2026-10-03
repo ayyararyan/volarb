@@ -1,6 +1,11 @@
-# Engine v2 additions
+# Supporting market-analysis framework
 
-Before the legacy research checklist below, enforce these v2 rules:
+This is a data/interpretation reference, not a competing controller or a checklist
+to preload. Follow [decision-algorithm.md](decision-algorithm.md) gate-by-gate and
+load only the relevant sections. The [personal covenant](https://github.com/ayyararyan/volarb/blob/main/docs/PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md)
+overrides generic carry examples: intraday only and flat by 15:00 IST.
+
+Apply these principles within the current controller:
 
 - Build one canonical MarketState and compare it with the previous review when available.
 - Run data-health/freshness gates before interpreting option metrics.
@@ -12,7 +17,7 @@ Before the legacy research checklist below, enforce these v2 rules:
 
 See `architecture-v2.md` and `market-state.md`.
 
-# Market Outlook Research Framework
+## Detailed market context
 
 ## Purpose
 
@@ -111,7 +116,11 @@ Interpretation:
 - high smile curvature is primarily a relative-value/distribution-shape input, not a direction call;
 - falling IV can help or hurt a long fly depending on spot and the exact surface; avoid blanket vega claims without checking the legs.
 
-Historical realized-volatility modelling is **not** part of the current workflow unless the user later enables it.
+The current workflow consumes the qualified historical HAR/session-VRP forecast
+through [session-vrp-gate.md](session-vrp-gate.md), then the separate fresh HF
+physical-RV/drift child for eligible intraday work. Do not fit a new historical
+model or backtest during current-observation selection. Neither historical HAR
+nor session OHLC substitutes for the mandatory fresh HF observation block.
 
 ## 6. Cross-asset overnight dashboard
 
@@ -163,7 +172,8 @@ Examples:
 - unexpected political/security incidents;
 - natural disasters affecting markets.
 
-For each material event, ask:
+Use the normalized [news-signal child packet](news-signal-integration.md) rather
+than rescoring raw articles in this parent reference. For each material event, ask:
 1. Did it happen before or after the last NSE/BSE option-surface print?
 2. Did it happen before or after the last GIFT/futures print?
 3. Have crude/FX/global equities had a chance to react?
@@ -230,7 +240,8 @@ If useful, add an upside stress separately; do not assume downside is always the
 
 ## 14. Carry-state mapping
 
-The final action must come from the interaction of:
+Supply these diagnostics to the canonical controller; they do not independently
+choose the final action or override an earlier terminal gate:
 - position geometry;
 - option-implied distribution centre and tails;
 - skew/curvature/term structure;

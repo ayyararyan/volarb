@@ -1,6 +1,10 @@
-# Canonical MarketState — v2.5
+# Canonical MarketState — current analytical state
 
 Use one state object per decision pass. It is an internal contract between modules, not a user-facing artifact.
+This nested analytical object is not the flat JSON input to
+`scripts/decision_controller.py`. The orchestrator explicitly maps supported
+evidence into the [v2.6 controller contract](decision-algorithm.md); missing fields
+must not be inferred from permissive script defaults.
 
 ```json
 {
@@ -125,6 +129,17 @@ Use one state object per decision pass. It is an internal contract between modul
     "current_action": null,
     "dominant_reason": null,
     "next_review_ist": null
+  },
+  "controller_evidence": {
+    "daily_loss_budget_rupees": null,
+    "session_loss_rupees": null,
+    "session_vrp_state": "FAVOURABLE|UNFAVOURABLE|UNKNOWN|null",
+    "re_entry_after_square_off": null,
+    "fresh_candidate_pass": null,
+    "candidate_ids": [],
+    "candidate_specs": {},
+    "candidate_margin_checks": {},
+    "recenter_margin_check": null
   }
 }
 ```
@@ -133,6 +148,7 @@ Use one state object per decision pass. It is an internal contract between modul
 
 - Populate only evidence-supported fields; use `null`, not guesses.
 - Populate `news_filter` once from `market-news-signal-filter`.
+- Record loss-budget/session-VRP/re-entry evidence before candidate HF work. Preserve exact candidate/transition margin packets from `margin-affordability.md`; a status label is not sufficient evidence.
 - For a fresh intraday candidate, populate `intraday_rv` from `intraday-realized-volatility-forecast` before candidate optimization.
 - Session OHLC or sparse snapshots may not be represented as `intraday_rv.short_gamma_state=FAVOURABLE`.
 - Keep RND, physical RV forecast and path scenario probabilities conceptually separate.
@@ -140,4 +156,4 @@ Use one state object per decision pass. It is an internal contract between modul
 - For an existing intraday position, medium/high-confidence `UNFAVOURABLE` is exit-level; `MARGINAL` shortens review cadence.
 - A previous state may come from an earlier review; never invent missing history.
 - Do not persist sensitive account identifiers.
-- If intended hold crosses market close, populate the overnight fields and use the overnight control path instead.
+- Generic cross-close diagnostics populate the overnight fields; they never override the [personal covenant](https://github.com/ayyararyan/volarb/blob/main/docs/PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md), which requires intraday-only exposure and flat by 15:00 IST.

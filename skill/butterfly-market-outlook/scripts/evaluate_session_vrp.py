@@ -65,23 +65,32 @@ def evaluate(state: Dict[str, Any], config: Optional[Dict[str, Any]] = None) -> 
     reasons = []
     warnings = []
 
-    verdict = state.get("verdict") or {}
-    health = state.get("health") or {}
-    forecast = state.get("forecast") or {}
-    atm = state.get("atm") or {}
-    front = atm.get("front") or {}
-    arbitrage = state.get("arbitrage") or {}
+    def object_field(value: Any, name: str) -> Dict[str, Any]:
+        if isinstance(value, dict):
+            return value
+        reasons.append(f"{name} must be an object")
+        return {}
+
+    state = object_field(state, "state")
+    verdict = object_field(state.get("verdict", {}), "verdict")
+    health = object_field(state.get("health", {}), "health")
+    forecast = object_field(state.get("forecast", {}), "forecast")
+    atm = object_field(state.get("atm", {}), "atm")
+    front = object_field(atm.get("front", {}), "atm.front")
+    arbitrage = object_field(state.get("arbitrage", {}), "arbitrage")
 
     if str(verdict.get("status", health.get("status", ""))).lower() != "live":
         reasons.append("surface feed is not live")
     if verdict.get("surface_is_stale") or state.get("surface_is_stale"):
         reasons.append("surface flagged stale")
-    if state.get("fit_ok") is False:
-        reasons.append("surface fit failed")
+    if state.get("fit_ok") is not True:
+        reasons.append("surface fit failed or is unverified")
     fit_age = _finite(state.get("fit_age_seconds"))
     if fit_age is None or fit_age > max_fit_age:
         reasons.append(f"fit age unavailable or above {max_fit_age:.0f}s")
-    if arbitrage.get("checked") and not arbitrage.get("passed", False):
+    if arbitrage.get("checked") is not True:
+        reasons.append("surface arbitrage checks are unverified")
+    elif arbitrage.get("passed") is not True:
         reasons.append("surface fails butterfly/calendar arbitrage checks")
     if str(front.get("status", "")).lower() != "fitted":
         reasons.append("front-expiry ATM IV is not fitted")

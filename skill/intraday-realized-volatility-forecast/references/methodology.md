@@ -226,7 +226,7 @@ Define robust edge only when:
 
 Implementation precedence matters: a failed HF block returns insufficient data first; after a usable physical estimate, a missing IV anchor also returns insufficient data before event/drift classification. With those inputs available, event override precedes HIGH drift, which precedes the central RV-IV comparison. A favourable state additionally requires no developing event warning. Missing data never implies that an event or drift hazard is absent.
 
-The parent owns the action: see [the intraday exit mapping](../../butterfly-market-outlook/references/decision-algorithm.md#how-drift-changes-an-exit-check). Forecast outcomes are scored over the exact recorded horizon against realized variance and centre migration for later human-reviewed calibration; they are not awaited before today's decision and do not silently retune live thresholds.
+The parent owns the action: see [the intraday exit mapping](https://github.com/ayyararyan/volarb/blob/main/skill/butterfly-market-outlook/references/decision-algorithm.md#how-drift-changes-an-exit-check). Forecast outcomes are scored over the exact recorded horizon against realized variance and centre migration for later human-reviewed calibration; they are not awaited before today's decision and do not silently retune live thresholds.
 
 ## 10. No-action fallback
 

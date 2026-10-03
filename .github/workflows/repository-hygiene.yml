@@ -1,0 +1,22 @@
+name: Repository source hygiene
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-consistency:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.13'
+      - name: Local Markdown paths and anchors, JSON, imports and archive navigation
+        run: python -B tools/check_repository.py
+      - name: Hygiene checker regressions
+        run: python -B -m unittest discover -s tests -p 'test_repository_hygiene.py' -v
+      - name: Reject whitespace errors
+        run: git show --format= --check HEAD

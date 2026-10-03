@@ -5,6 +5,10 @@ description: Filter financial news for Indian index butterfly decisions. Separat
 
 # Market News Signal Filter
 
+## Adopted Volarb calibration boundary
+
+For the current manual Volarb workflow, use the existing calibration with its date and limitations disclosed. Monthly recalibration instructions below are a reusable research procedure, **not automatic permission to refit during a live review**. Run a refresh only on an explicit research/calibration request; do not expand current-observation selection into historical research.
+
 ## Objective
 
 Convert raw news flow into event-level signals for short-horizon Indian index risk. Separate four things that must never be collapsed into one sentiment score:

@@ -17,7 +17,8 @@ import zipfile
 
 SOURCE = Path(__file__).resolve().parents[1]
 MANIFEST = json.loads((SOURCE / 'agent-kit/manifest.json').read_text())
-SKIP_PARTS = {'.git', '.venv', 'node_modules', '__pycache__', '.pytest_cache', '.private', '.logs', 'dist'}
+SKIP_PARTS = {'.git', '.venv', 'node_modules', '__pycache__', '.pytest_cache', '.private', '.logs', 'dist',
+              'runtime', 'artifacts', '.mypy_cache', '.ruff_cache', '.ipynb_checkpoints'}
 DEFAULT_DATA = Path.home() / '.local/share/volarb'
 
 
@@ -74,7 +75,7 @@ def safe_target(path, root):
 
 def source_files(root):
     for p in sorted(root.rglob('*')):
-        if any(part in SKIP_PARTS for part in p.relative_to(root).parts):
+        if any(part in SKIP_PARTS or part.endswith('.egg-info') for part in p.relative_to(root).parts):
             continue
         require(not p.is_symlink(), 'Source symlink not allowed: ' + str(p))
         if p.is_file() and p.suffix not in {'.pyc', '.log'} and not p.name.endswith('~'):
@@ -188,7 +189,8 @@ def runtime_env(c):
     env.update(VOLARB_SOURCE_DIR=str(SOURCE), VOLARB_DATA_DIR=c['data_dir'],
                DHAN_RUNTIME_DIR=str(Path(c['data_dir'])/'dhan'),
                VOLARB_OBSERVE_ENABLED=str(c['mode'] == 'read-only').lower(),
-               DHAN_EXECUTION_ENABLED='false', DHAN_BROWSER_RECOVERY_ENABLED='false',
+               DHAN_PROVIDER_COMMANDS_ENABLED='false', DHAN_EXECUTION_ENABLED='false',
+               DHAN_BROWSER_RECOVERY_ENABLED='false',
                PYTHONDONTWRITEBYTECODE='1', PYTHONNOUSERSITE='1')
     env['PATH'] = str(SOURCE/'.venv/bin') + os.pathsep + env.get('PATH', '')
     return env
@@ -259,8 +261,12 @@ def doctor(args):
         check('canonical_ledger:'+name, (data/'Trading/ledger'/name).is_file(),
               'Restore authoritative private ledger; never substitute repository trade-log or synthesize balances', required=args.require_read_only)
     check('read_only_mode', c['mode'] == 'read-only', 'Shadow mode intentionally disables broker capture', required=args.require_read_only)
-    check('execution_disabled', values.get('DHAN_EXECUTION_ENABLED', 'false').lower() != 'true',
-          'Set DHAN_EXECUTION_ENABLED=false in private .env before direct service use')
+    # Match the canonical provider's truthy syntax; legacy execution uses true.
+    provider_enabled = values.get('DHAN_PROVIDER_COMMANDS_ENABLED',
+                                  values.get('DHAN_EXECUTION_ENABLED', 'false')).strip().lower() in {'1', 'true', 'yes', 'on'}
+    legacy_enabled = values.get('DHAN_EXECUTION_ENABLED', 'false').strip().lower() == 'true'
+    check('execution_disabled', not provider_enabled and not legacy_enabled,
+          'Set DHAN_PROVIDER_COMMANDS_ENABLED=false and DHAN_EXECUTION_ENABLED=false in private .env before direct service use')
     check('browser_recovery', platform.system() == 'Darwin' and
           Path(values.get('DHAN_BROWSER_EXECUTABLE') or '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome').is_file(),
           'Optional: macOS Chrome recovery; Linux/WSL requires a privately supplied Web token', required=False)
@@ -295,15 +301,30 @@ def package(args):
             continue
         if any(part in {'ledger', 'snapshots', 'market-outlook', 'trade-log', 'memory'} for part in rel.parts):
             continue
-        if p.suffix in {'.log', '.pyc'} or p.name in {'.DS_Store', 'Thumbs.db'}:
+        if p.suffix in {'.log', '.pyc', '.sqlite', '.sqlite3', '.db'} or '.sqlite-' in p.name or '.db-' in p.name or p.name in {'.DS_Store', 'Thumbs.db'}:
             continue
         allowed.append(p)
     require(not output.exists(), 'Package already exists; choose another output path')
     output.parent.mkdir(parents=True, exist_ok=True)
+    # Navigation stubs, not fabricated account records: all history stays omitted.
+    omitted_history = {}
+    for directory, title in [('market-outlook', 'Market outlook history'), ('trade-log', 'Trade history')]:
+        omitted_history[directory+'/README.md'] = (
+            '# '+title+' — intentionally omitted from this source kit\n\n'
+            'This directory is a navigation placeholder only. No journals, trades, '
+            'account snapshots or financial records are packaged here.\n\n'
+            'Authorized users can consult the [private source repository]('
+            'https://github.com/ayyararyan/volarb/tree/main/'+directory+'). '
+            'Those records are historical evidence, never a substitute for the '
+            'restored private Trading/ledger shared-writer store.\n'
+        ).encode()
     hashes = {str(p.relative_to(SOURCE)): digest(p.read_bytes()) for p in allowed}
+    hashes.update({name: digest(content) for name, content in omitted_history.items()})
     with zipfile.ZipFile(output, 'x', compression=zipfile.ZIP_DEFLATED) as archive:
         for p in allowed:
             archive.write(p, 'volarb-agent-kit/'+str(p.relative_to(SOURCE)))
+        for name, content in omitted_history.items():
+            archive.writestr('volarb-agent-kit/'+name, content)
         archive.writestr('volarb-agent-kit/SHA256SUMS.json', json_bytes(hashes))
     return {'status': 'PACKAGED', 'path': str(output), 'files': len(hashes), 'sha256': digest(output.read_bytes()),
             'private_state_included': False}

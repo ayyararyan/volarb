@@ -1,5 +1,10 @@
 # Expiry Exit Algorithm
 
+This diagnostic layer is subordinate to [decision-algorithm.md](decision-algorithm.md)
+and cannot overturn an earlier terminal gate. The [personal covenant](https://github.com/ayyararyan/volarb/blob/main/docs/PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md)
+requires intraday-only exposure and flat by 15:00 IST; generic carry or settlement
+examples below are not permission to hold past that deadline.
+
 Use this reference for every open butterfly review when the position is close to expiry. The objective is to decide whether the **remaining state-conditioned decay harvest** is still worth the short-gamma/path risk. Keep these diagnostics internal unless the user explicitly asks for the exit logic.
 
 ## Activation

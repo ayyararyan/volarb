@@ -59,6 +59,14 @@ Supply `daily_loss_budget_rupees` (owner policy, currently 1,000) and `session_l
 - `session_loss_rupees >= daily_loss_budget_rupees`: existing position -> **SQUARE OFF**; candidate -> **NO TRADE**. Terminal gate `LOSS_BUDGET`.
 - Either value missing: warning only for an existing position; the review must state that the budget was not evaluated. A new structure should not be proposed without both values.
 
+Implementation boundary: `scripts/decision_controller.py` currently emits a
+missing-budget warning in **both** open-position and candidate modes; it does
+not independently terminate candidate mode for omission. The caller must supply
+and validate both inputs before proposing a new structure. An otherwise returned
+`CANDIDATES` action with this warning is not approval or proof that the operational
+budget requirement passed. The laboratory's frozen observed-controller snapshot
+preserves historical behavior and must not be synchronized with live changes.
+
 The budget is a decision rule, not a broker-side stop. It does not cap realized loss through slippage.
 
 ## 3b. Session variance-risk-premium gate (candidates only)
@@ -115,7 +123,7 @@ If this gate terminates, do not let high theta override it.
 
 ### How drift changes an exit check
 
-The child maps `HIGH` drift to `UNFAVOURABLE` when its HF data and IV anchor are available. Pass the child's `short_gamma_state` and `confidence` as the controller's `intraday_rv_state` and `intraday_rv_confidence`. The exact drift diagnostics and thresholds are in the [RV methodology](../../intraday-realized-volatility-forecast/references/methodology.md#6-drift--centre-stability).
+The child maps `HIGH` drift to `UNFAVOURABLE` when its HF data and IV anchor are available. Pass the child's `short_gamma_state` and `confidence` as the controller's `intraday_rv_state` and `intraday_rv_confidence`. The exact drift diagnostics and thresholds are in the [RV methodology](https://github.com/ayyararyan/volarb/blob/main/skill/intraday-realized-volatility-forecast/references/methodology.md#6-drift--centre-stability).
 
 For `OPEN_INTRADAY`, a medium/high-confidence unfavourable state terminates at `INTRADAY_RV_DRIFT`, before expiry-harvest or recenter evaluation. Current profit, positive theta, being inside expiry break-evens, or a proposed replacement cannot overturn that exit. For example, an otherwise profitable position still receives `SQUARE_OFF` at this gate; no loss or break-even breach is required first.
 
@@ -123,7 +131,7 @@ For `OPEN_INTRADAY`, a medium/high-confidence unfavourable state terminates at `
 
 This is a conservative rule-based exit, not a calibrated proof that closing has higher expected P&L. Drift measures absolute market/centre movement, not signed movement relative to the held body: movement back toward the body may initially help the position and still fail the market-wide drift rule. Low drift likewise cannot guarantee profitable holding. The actual-leg Greeks, costs, liquidity and remaining reward belong to the later position-specific checks.
 
-The [personal covenant](../../../docs/PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md) remains stricter than generic branch outputs: intraday only, flat by 15:00 IST, no entry/recenter thereafter. Apply it even when the generic controller changes to `OPEN_CARRY_GATE` at 14:45. Recommendations are for Aryan to execute; this gate neither places orders nor configures monitoring or review reminders.
+The [personal covenant](https://github.com/ayyararyan/volarb/blob/main/docs/PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md) remains stricter than generic branch outputs: intraday only, flat by 15:00 IST, no entry/recenter thereafter. Apply it even when the generic controller changes to `OPEN_CARRY_GATE` at 14:45. Recommendations are for Aryan to execute; this gate neither places orders nor configures monitoring or review reminders.
 
 ## 5. Overnight branch: normalize news, then classify regime
 

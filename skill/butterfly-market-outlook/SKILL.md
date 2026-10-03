@@ -7,6 +7,11 @@ description: Analyze, optimize, manage, and journal Indian index option butterfl
 
 Treat every request as an options risk-desk decision, not generic market commentary. Use Asia/Kolkata time.
 
+Repository deployment: the [personal covenant](https://github.com/ayyararyan/volarb/blob/main/docs/PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md)
+overrides generic overnight branches and examples: intraday only, flat by 15:00 IST,
+no entry/recenter thereafter. `CARRY` is a generic policy output, never permission
+for Aryan to carry overnight. Aryan executes; no orders or monitoring are implied.
+
 ## Prime directive
 
 **Always read `references/decision-algorithm.md` first and follow it literally.**
@@ -250,6 +255,9 @@ Dhan positions are authoritative when connected. Use screenshots as cross-check/
 ## Strict output contract
 
 Unless the user explicitly asks for explanation, output one small markdown table only and no prose outside it.
+These are rendering templates for the already-computed controller action, not
+independent decision rules. Apply the personal covenant before rendering; the
+generic overnight template does not authorize overnight exposure.
 
 ### Open position before 14:45 IST
 

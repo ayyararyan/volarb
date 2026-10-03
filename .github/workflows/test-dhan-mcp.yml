@@ -1,9 +1,9 @@
 name: Test Dhan MCP
 on:
   push:
-    paths: ['services/dhan-chatgpt-mcp/**', '.github/workflows/test-dhan-mcp.yml']
+    paths: ['services/dhan-chatgpt-mcp/**', 'execution-engine/**', '.github/workflows/test-dhan-mcp.yml']
   pull_request:
-    paths: ['services/dhan-chatgpt-mcp/**', '.github/workflows/test-dhan-mcp.yml']
+    paths: ['services/dhan-chatgpt-mcp/**', 'execution-engine/**', '.github/workflows/test-dhan-mcp.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -23,3 +23,6 @@ jobs:
       - run: npm install --global npm@11.17.0 --ignore-scripts
       - run: npm ci --ignore-scripts
       - run: npm test
+      - name: Verify repository-root Docker build and shared contract imports
+        working-directory: .
+        run: docker build -f services/dhan-chatgpt-mcp/Dockerfile -t volarb-dhan-ci .

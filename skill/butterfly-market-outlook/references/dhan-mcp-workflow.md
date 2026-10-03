@@ -2,6 +2,11 @@
 
 Use this reference whenever the connected **Dhan** app is available. Dhan is the preferred live source for the user's actual positions and for the full option-chain snapshot because it exposes IV, Greeks, OI, volume and top bid/ask in one structured response. Official NSE/BSE pages remain useful for validation, market-status checks and fallback.
 
+This reference acquires evidence; [decision-algorithm.md](decision-algorithm.md)
+owns strategy decisions and gate order. Dhan's mechanical provider responses and
+surface analytics do not authorize entry or own execution policy. Never optimize
+before the earlier controller gates pass.
+
 ## 1. Tool priority
 
 Prefer the highest-level available Dhan tool:
@@ -54,7 +59,7 @@ After fallback:
 
 The ordinary Dhan option-surface and market-quote tools are snapshot interfaces. A single quote or session OHLC is **not** a five-minute HF block.
 
-For `CANDIDATE_INTRADAY`, the v2.5 controller requires a genuine fresh observation block for `intraday-realized-volatility-forecast`:
+For `CANDIDATE_INTRADAY`, the current v2.6 controller requires a genuine fresh observation block for `intraday-realized-volatility-forecast`, after the loss-budget and session-VRP gates pass:
 
 - prefer a supported streaming/polling source for liquid index futures at roughly 1-2 second cadence;
 - the child skill will aggregate to roughly 5-second efficient-price observations;

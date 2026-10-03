@@ -13,7 +13,9 @@ AT = DAY+'T10:00:00+05:30'
 
 
 def gates(open_position=False):
-    return {'data_health': 'HEALTHY', 'intraday_rv_state': 'FAVOURABLE',
+    return {'data_health': 'HEALTHY', 'session_vrp_state': 'FAVOURABLE',
+            'daily_loss_budget_rupees': 1000, 'session_loss_rupees': 0,
+            'intraday_rv_state': 'FAVOURABLE',
             'intraday_rv_confidence': 'high', 'hard_risk_gate': 'PASS',
             'news_filter_status': 'CURRENT', 'expiry_exit_gate': 'PASS',
             'recenter_gate': 'NOT_APPLICABLE'}

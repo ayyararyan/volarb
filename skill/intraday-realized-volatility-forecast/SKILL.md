@@ -19,10 +19,10 @@ This skill is designed for intraday short-gamma decisions. It is a live state fo
 6. A recent jump does not imply another jump with certainty. Treat it as evidence of an elevated conditional volatility/jump state and decay its influence through time.
 7. Treat futures/parity forward as carry/arbitrage references. Use their migration, not their level, as a centre-stability diagnostic.
 8. If the high-frequency block is incomplete or noisy, return `INSUFFICIENT_HF_DATA` or low confidence rather than inventing precision.
-10. Always pass the decision clock as `asof`. A block whose newest quote is older than 120 seconds against `asof` is stale and returns `INSUFFICIENT_HF_DATA`; the script never assesses freshness only against itself.
-11. Always pass the normalized news packet. Without it the exogenous-jump channel is unobserved and the state is capped at `MARGINAL`; it can never be `FAVOURABLE`.
-12. Run the five-minute sampler as a local process on the office Mac and convert its evidence with `scripts/build_rv_input.py`.
-9. The parent butterfly skill owns geometry, liquidity, margin, break-even and final trade decisions.
+9. Always pass the decision clock as `asof`. A block whose newest quote is older than 120 seconds against `asof` is stale and returns `INSUFFICIENT_HF_DATA`; the script never assesses freshness only against itself.
+10. Always pass the normalized news packet. Without it the exogenous-jump channel is unobserved and the state is capped at `MARGINAL`; it can never be `FAVOURABLE`.
+11. Run the five-minute sampler as a local process on the office Mac and convert its evidence with `scripts/build_rv_input.py`.
+12. The parent butterfly skill owns geometry, liquidity, margin, break-even and final trade decisions.
 
 Read `references/methodology.md` before forecasting. Read `references/input-output-schema.md` before constructing script input. Read `references/research-basis.md` when explaining or modifying the model.
 
@@ -158,18 +158,11 @@ Persist at each actionable forecast:
 
 After the exact forecast horizon elapses, record realized variance over that interval and the realized centre migration. Use these only for later human-reviewed calibration; do not silently retune parameters from a handful of forecasts.
 
----
-To read any file's contents, use `functions.exec` to run `text(await tools.skills__read({"uri": "skills://intraday-realized-volatility-forecast/<relative_file_path>"}))`.
-Read once per file. Available relative file paths:
+## Package navigation
 
-SKILL.md
-agents/openai.yaml
-assets/icon.svg
-references/input-output-schema.md
-references/methodology.md
-references/research-basis.md
-scripts/forecast_intraday_rv.py
-scripts/build_rv_input.py
-scripts/test_stable.json
-scripts/test_jump.json
-scripts/test_trend.json
+Resolve `references/` and `scripts/` relative to this skill's directory using the
+current host's file/skill reader. No provider-specific tool URI is required.
+The office-Mac sampler requirement above is the current live deployment rule,
+not an instruction to run a sampler during installation or offline validation.
+The four `scripts/test_*.json` inputs are offline regression fixtures; see the
+repository [skills index](https://github.com/ayyararyan/volarb/blob/main/skill/README.md) for validation and packaging commands.

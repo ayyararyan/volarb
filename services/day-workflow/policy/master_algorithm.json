@@ -186,7 +186,7 @@
       "dispatch": "candidate acquisition and selection remain agent-supplied; validation runs in code"
     },
     "research_engine": {
-      "provider": "workflow_decision.compose -> adopted HF model + v2.5 controller",
+      "provider": "workflow_decision.compose -> adopted HF model + v2.6 controller",
       "config_overrides": false
     },
     "ownership_accounting": {

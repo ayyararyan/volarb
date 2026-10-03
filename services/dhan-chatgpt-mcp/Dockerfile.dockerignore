@@ -1,0 +1,14 @@
+# Dockerfile-specific whitelist for the repository-root build context.
+**
+!services/
+!services/dhan-chatgpt-mcp/
+!services/dhan-chatgpt-mcp/package.json
+!services/dhan-chatgpt-mcp/package-lock.json
+!services/dhan-chatgpt-mcp/src/
+!services/dhan-chatgpt-mcp/src/**
+!execution-engine/
+!execution-engine/**
+**/.env
+**/.private/**
+**/node_modules/**
+**/__pycache__/**

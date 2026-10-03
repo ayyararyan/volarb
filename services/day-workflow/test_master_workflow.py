@@ -31,7 +31,7 @@ def research():
         for x in raw[key]:
             x['timestamp'] = (w.stamp(x['timestamp'])+delta).isoformat()
     raw.pop('config',None)
-    raw.update(evidence_ref='synthetic',instrument_ref='synthetic-futures',current_asof=AT.isoformat())
+    raw.update(evidence_ref='synthetic',instrument_ref='synthetic-futures',current_asof=AT.isoformat(),asof=AT.isoformat())
     news = {'producer':'market-news-signal-filter','asof':AT.isoformat(),'horizon_minutes':30,
         'valid_until':(AT+dt.timedelta(minutes=30)).isoformat(),'source_refs':['fixture'],
         'normalized':{'status':'CURRENT','calibration_asof':'2026-09-20','aggregate_state':'CALM',
@@ -48,8 +48,15 @@ def research():
                 'resolver_ref':'fixture','quote':{'asof':AT.isoformat(),'exchange_time':AT.isoformat(),
                 'bid':price,'ask':price,'bid_size':10,'ask_size':10}}
         indices[sym]={'asof':AT.isoformat(),'data_health':'HEALTHY','hf':hf,'hard_risk_gate':'PASS',
+            'session_vrp_snapshot': {'symbol':sym, 'asof':AT.isoformat(), 'evidence_ref':'synthetic-per-index-surface',
+                'state': {'now':AT.isoformat(), 'verdict':{'status':'live'}, 'fit_ok':True,
+                    'fit_age_seconds':1, 'arbitrage':{'checked':True,'passed':True},
+                    'atm':{'front':{'status':'fitted','implied_volatility':0.20,'expiry':'2026-10-06'}},
+                    'forecast':{'status':'ok','age_calendar_days':1,'annualized_volatility':0.12,
+                                'asof_session':'2026-09-28'}}},
             'risk_evidence_ref':'fixture','expiry_exit_gate':'PASS','expiry_evidence_ref':'fixture','candidates':[c]}
     return {'horizon_minutes':30,'news':news,'indices':indices,
+        'session_loss':{'asof':AT.isoformat(),'rupees':0,'evidence_ref':'synthetic-session-accounting'},
         'ranking':{'asof':AT.isoformat(),'evidence_ref':'fixture','candidate_ids':['nifty','banknifty','sensex']}}
 
 
@@ -62,6 +69,85 @@ class MasterTest(unittest.TestCase):
         self.assertEqual(result['selected']['checked_max_loss_rupees'],900)
         self.assertFalse(result['execution_authorized'])
         self.assertEqual(len(result['indices']),3)
+
+    def test_missing_unfavourable_stale_or_wrong_index_vrp_stops_before_hf(self):
+        for variant in ('missing', 'unfavourable', 'stale', 'wrong-index'):
+            with self.subTest(variant=variant):
+                r = research()
+                for sym, item in r['indices'].items():
+                    snapshot = item['session_vrp_snapshot']
+                    if variant == 'missing':
+                        item.pop('session_vrp_snapshot')
+                        item['session_vrp_state'] = 'FAVOURABLE'  # unbound flag cannot authorize
+                    elif variant == 'unfavourable':
+                        snapshot['state']['atm']['front']['implied_volatility'] = 0.10
+                    elif variant == 'stale':
+                        snapshot['state']['now'] = (AT-dt.timedelta(minutes=5)).isoformat()
+                    else:
+                        snapshot['symbol'] = 'NOT_'+sym
+                with patch.object(d, 'forecast', side_effect=AssertionError('VRP must be first')):
+                    result = d.compose(r, AT)
+                self.assertEqual(result['action'], 'NO_TRADE')
+                self.assertTrue(all(x['terminal_gate'] == 'SESSION_VRP' for x in result['indices'].values()))
+
+    def test_loss_evidence_is_explicit_and_breach_precedes_news_or_vrp(self):
+        r = research(); r.pop('session_loss')
+        self.assertEqual(d.compose(r, AT)['action'], 'NEED_EVIDENCE')
+        r = research(); r['session_loss']['rupees'] = 1000; r.pop('news')
+        for item in r['indices'].values(): item.pop('session_vrp_snapshot')
+        result = d.compose(r, AT)
+        self.assertEqual(result['action'], 'NO_TRADE')
+        self.assertTrue(all(x['terminal_gate'] == 'LOSS_BUDGET' for x in result['indices'].values()))
+
+    def test_malformed_or_unproven_vrp_stops_before_later_research(self):
+        variants = [
+            lambda item: item.update(session_vrp_snapshot=None),
+            lambda item: item['session_vrp_snapshot'].update(state=None),
+            lambda item: item['session_vrp_snapshot'].update(asof=None),
+            lambda item: item['session_vrp_snapshot']['state'].update(now=None),
+            lambda item: item['session_vrp_snapshot']['state'].pop('fit_ok'),
+            lambda item: item['session_vrp_snapshot']['state'].pop('arbitrage'),
+            lambda item: item['session_vrp_snapshot']['state'].update(arbitrage={'checked':False,'passed':True}),
+            lambda item: item['session_vrp_snapshot']['state'].update(arbitrage={'checked':True,'passed':False}),
+            lambda item: item['session_vrp_snapshot']['state']['atm'].update(front=[]),
+        ]
+        variants.extend(lambda item, key=key: item['session_vrp_snapshot']['state'].update({key: []})
+                        for key in ('health', 'verdict', 'forecast', 'atm', 'arbitrage'))
+        for index, mutate in enumerate(variants):
+            with self.subTest(variant=index):
+                r = research(); r.pop('news')
+                for item in r['indices'].values(): mutate(item)
+                with patch.object(d, 'forecast', side_effect=AssertionError('Invalid VRP must terminate first')):
+                    result = d.compose(r, AT)
+                self.assertEqual(result['action'], 'NO_TRADE')
+                self.assertTrue(all(x['terminal_gate'] == 'SESSION_VRP' for x in result['indices'].values()))
+
+    def test_unavailable_optional_loss_cannot_mask_open_position_exit(self):
+        for invalid_loss in (None, {}, [], {'asof':None,'rupees':0,'evidence_ref':'fixture'},
+                             {'asof':(AT-dt.timedelta(minutes=5)).isoformat(),'rupees':0,'evidence_ref':'fixture'},
+                             {'asof':AT.isoformat(),'rupees':-1,'evidence_ref':'fixture'}):
+            with self.subTest(loss=invalid_loss):
+                r = research(); r['position_symbol'] = 'NIFTY'
+                r['indices'] = {'NIFTY':r['indices']['NIFTY']}
+                r['indices']['NIFTY']['hard_risk_gate'] = 'BLOCK'
+                r['session_loss'] = invalid_loss
+                result = d.compose(r, AT, True)
+                self.assertEqual(result['action'], 'SQUARE_OFF')
+                self.assertTrue(any('loss budget not evaluated' in x for x in result['warnings']))
+                candidate_result = d.compose({**research(), 'session_loss':invalid_loss}, AT)
+                self.assertEqual(candidate_result['action'], 'NEED_EVIDENCE')
+        r = research(); r['position_symbol'] = 'NIFTY'
+        r['indices'] = {'NIFTY':r['indices']['NIFTY']}
+        r['session_loss']['rupees'] = 1000; r.pop('news')
+        self.assertEqual(d.compose(r, AT, True)['terminal_gate'], 'LOSS_BUDGET')
+
+    def test_rv_child_uses_verified_decision_clock_not_raw_payload_clock(self):
+        r = research()
+        for item in r['indices'].values():
+            item['hf']['asof'] = (AT+dt.timedelta(hours=4)).isoformat()
+        result = d.compose(r, AT)
+        self.assertEqual(result['action'], 'CANDIDATE_VALIDATED')
+        self.assertTrue(all(x['rv']['asof'] == AT.isoformat() for x in result['indices'].values()))
 
     def test_live_rejected(self):
         p=packet();p['mode']='LIVE'

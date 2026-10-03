@@ -124,6 +124,11 @@ def gate_packet(raw, candidate):
     out = copy.deepcopy(raw)
     out.update(mode='CANDIDATE' if candidate else 'OPEN_POSITION',
                branch='CANDIDATE_INTRADAY' if candidate else 'OPEN_INTRADAY')
+    if candidate:
+        need(raw.get('session_vrp_state') in {'FAVOURABLE', 'UNFAVOURABLE', 'UNKNOWN'},
+             'Session VRP evidence required')
+        need(number(raw.get('daily_loss_budget_rupees')) == POLICY['daily_loss_rupees']
+             and number(raw.get('session_loss_rupees')) >= 0, 'Explicit session loss evidence required')
     if not candidate:
         need(raw.get('expiry_exit_gate') in {'PASS', 'BLOCK', 'FAIL', 'EXIT', 'NOT_APPLICABLE'}, 'Expiry gate unverified')
         need(raw.get('recenter_gate') == 'NOT_APPLICABLE', 'Automatic recenter not enabled')

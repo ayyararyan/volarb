@@ -1,4 +1,12 @@
-# Butterfly Engine v2.5 Controller Architecture
+# Butterfly strategy controller architecture — v2.6
+
+The filename is a retained reference path, not a frozen v2 architecture. This
+describes strategy-specific decision analytics, **not** the strategy-agnostic
+[Execution Engine](https://github.com/ayyararyan/volarb/blob/main/execution-engine/README.md). Strategy semantics stay
+outside `component.execution_engine`; Dhan supplies mechanical broker evidence.
+The [personal covenant](https://github.com/ayyararyan/volarb/blob/main/docs/PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md)
+overrides generic overnight branches: intraday only, flat by 15:00 IST and no
+entry/recenter thereafter.
 
 ## Module 0 - canonical decision controller
 
@@ -23,6 +31,8 @@ This is the control architecture behind every live butterfly review and candidat
 13. **Broker feasibility is part of the state.** A defined-risk payoff does not eliminate RMS/auto-squareoff risk; new expiry-eve overnight entries require validated broker feasibility.
 14. **News interpretation is a child-skill responsibility.** Current raw news is classified once by `market-news-signal-filter`; the parent reuses its normalized packet and never independently re-scores the same headlines.
 15. **Every closed trade can become a calibration episode.** Store forecasts and outcomes separately from the live decision logic; use them to measure whether rules add value before changing thresholds.
+16. **v2.6 policy prerequisites precede candidate research.** Supply daily loss-budget/session-loss evidence; candidates require favourable session VRP and a complete fresh pass for same-session re-entry before HF sampling or optimization.
+17. **Affordability is an exact-contract gate.** Ranked candidates still require fresh bound margin PASS packets; recentering requires separately verified full-transition margin, never entry-only evidence.
 
 ## Modules
 
@@ -114,7 +124,15 @@ Create at least:
 Use probabilities only when defensible. If judgmental scenario weights are used, label them internally as subjective and never mix them with RND probabilities as though they were the same measure.
 
 
-### 6A. Intraday HF realized-volatility / drift engine
+### 6A. Session VRP and loss/re-entry prerequisites
+
+The controller checks the daily loss budget for every review. Before candidates
+reach HF acquisition, it checks session variance-risk-premium state and any
+same-session re-entry requirement. See [decision-algorithm.md](decision-algorithm.md)
+and [session-vrp-gate.md](session-vrp-gate.md); this module list does not establish
+a different gate order.
+
+### 6B. Intraday HF realized-volatility / drift engine
 
 Before any fresh `CANDIDATE_INTRADAY` reaches theta ranking, invoke `intraday-realized-volatility-forecast` on a fresh approximately five-minute futures/price block for the exact next-review horizon. The child estimates fast/slow continuous variance, recent jump pressure, same-horizon physical RV versus IV, and centre drift.
 
@@ -122,13 +140,13 @@ New intraday candidates require `FAVOURABLE`; `MARGINAL`, `UNFAVOURABLE`, or ins
 
 The HF child packet is P-measure state. Keep it separate from the RND/Q-measure surface. Pass its upper forecast move into width/stress construction after the gate passes.
 
-### 6A. Market-regime engine
+### 6C. Market-regime engine
 
 Before any actionable overnight carry decision, combine recent realized/gap state, option-implied state and the calibrated Market News Signal Filter hazard into one deterministic regime: `CALM_CARRY / TRANSITION / LATENT_JUMP_RISK / ACTIVE_STRESS / UNKNOWN`. See `regime-engine.md` and `scripts/classify_market_regime.py`.
 
 The classifier explicitly detects a **complacency gap**: event/tail hazard materially above implied-volatility stress. A low VIX must not overrule this mismatch. Severe/unknown regimes block new next-session-expiry overnight carry; `TRANSITION` tightens the overnight thresholds.
 
-### 6B. Overnight event-latency / broker-feasibility engine
+### 6D. Overnight event-latency / broker-feasibility engine
 
 When the intended hold crosses market close, run the v2.4 overnight gate before candidate ranking or a carry decision. Track the next actionable exit, a rolling 20-30-open realized-gap regime, current-spot-to-break-even buffer, gap-gamma burden, untradeable-window events, broker feasibility, and full-reprice +/-1.0/1.5/2.0 straddle joint spot/IV stresses. See `overnight-carry-gate.md` and `scripts/evaluate_overnight_carry.py`.
 
@@ -156,6 +174,9 @@ For a new fly:
 - rank the Pareto set on theta efficiency, low carry burden and combined tail/path risk, with liquidity as a hard filter and tie-break.
 
 Use `scripts/optimize_butterflies.py` whenever chain data are structured enough.
+The ranked calculation is not yet an executable recommendation: apply the
+[exact-candidate affordability gate](margin-affordability.md) and return only
+the controller's margin-eligible candidate IDs.
 
 ### 9. Recenter evaluator
 
@@ -171,6 +192,8 @@ Run `scripts/evaluate_recentre.py` when the current distribution/body alignment 
 - event regime and liquidity.
 
 Do not claim positive EV unless a real-world scenario distribution has actually been supplied. Without it, call the result a **risk/carry improvement diagnostic**, not expected value.
+An attractive diagnostic does not authorize RECENTRE without fresh verified
+close/reopen transition evidence with scope `RECENTRE` and all earlier gates.
 
 ### 10. Decision policy
 

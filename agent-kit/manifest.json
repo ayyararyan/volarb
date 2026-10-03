@@ -79,7 +79,15 @@
     "tests",
     "skill",
     "services",
-    ".github/skill-tools"
+    ".github",
+    "architecture",
+    "execution-engine",
+    "execution-testkit",
+    "environments/execution",
+    "docs",
+    "archive",
+    "agent",
+    "prompts"
   ],
   "package_files": [
     "README.md",
@@ -89,10 +97,8 @@
     "requirements.lock",
     "requirements-dev.in",
     "requirements-dev.lock",
-    "docs/AGENT_KIT.md",
-    "docs/DEPENDENCY_INVENTORY.md",
-    "docs/PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md",
-    "docs/AUTONOMOUS_EXECUTION_POLICY_DRAFT.md",
-    "docs/WORKFLOW.md"
+    "notes.md",
+    "tasks.md",
+    ".gitignore"
   ]
 }

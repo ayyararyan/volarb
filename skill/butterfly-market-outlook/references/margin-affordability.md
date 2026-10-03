@@ -6,7 +6,7 @@ Use after higher-priority strategy/data/event gates, before returning executable
 
 - `dhan_check_butterfly_margin`: symbol, expiry, lower, center, upper, exact lots; optional explicit `reserveRupees` and/or `reservePercent` (percentage of available funds; larger reserve wins). No implicit reserve default and no invented capital. Use an already-approved policy; if unavailable, report UNVERIFIED rather than routinely asking during every review.
 - `dhan_calculate_basket_margin`: exact legs, unit quantities, prices and INTRADAY product. Raw indicative requirement only; cannot establish affordability.
-- Current adapter: `/Users/maheit/dhan-chatgpt-mcp/src/margin-preflight.mjs`; both tools on the research `/mcp` endpoint. These tools cannot place, modify or cancel orders. REST calculator uses `POST /v2/margincalculator/multi` with `scripList`, `includePosition: true`, `includeOrder: true`. Funds use `GET /v2/fundlimit`. The official SDK and a live read-only probe verified this payload on 2026-09-29; do not use conflicting `scripts/includeOrders` examples blindly.
+- Repository adapter: [`services/dhan-chatgpt-mcp/src/margin-preflight.mjs`](https://github.com/ayyararyan/volarb/blob/main/services/dhan-chatgpt-mcp/src/margin-preflight.mjs); both tools on the research `/mcp` endpoint. Deployment checkout locations are host configuration, not package paths. These tools cannot place, modify or cancel orders. REST calculator uses `POST /v2/margincalculator/multi` with `scripList`, `includePosition: true`, `includeOrder: true`. Funds use `GET /v2/fundlimit`. The official SDK and a live read-only probe verified this payload on 2026-09-29; do not use conflicting `scripts/includeOrders` examples blindly.
 
 ## Algorithm and interpretation
 

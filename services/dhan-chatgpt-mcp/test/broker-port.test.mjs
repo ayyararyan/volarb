@@ -151,3 +151,10 @@ test('correlation lookup projects the same core identity used on placement',asyn
   assert.equal(out.data.coreCorrelationId,core);
   assert.equal(out.data.providerCorrelationRef,expected);
 });
+
+
+test('capability query advertises the implemented shared operation vocabulary',async()=>{
+  const runtime=createDhanRuntime({env:{}});
+  const {data}=await runtime.port.call({kind:Q,operation:DhanBrokerOperation.GET_CAPABILITIES});
+  assert.deepEqual(new Set(Object.values(data.operations).flat()),new Set(Object.values(DhanBrokerOperation)));
+});

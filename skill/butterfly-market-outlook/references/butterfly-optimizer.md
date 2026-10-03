@@ -1,8 +1,15 @@
-# Wide Butterfly Optimizer — Engine v2.5 Candidate
+# Wide Butterfly Optimizer — current candidate calculation module
 
 Use this reference for **new butterfly search/optimization**. The optimizer is for wide symmetric **short iron butterflies** by default, evaluated through their payoff-equivalent long-fly debit where useful.
 
 The user-facing output remains only `Rank | Butterfly | Why` or one `NO TRADE` row.
+
+[decision-algorithm.md](decision-algorithm.md) is the only control plane: the v2.6
+loss-budget, session-VRP, fresh re-entry and HF/path gates precede this module;
+fresh exact-candidate margin validation follows ranking before any executable
+recommendation. The optimizer alone cannot authorize entry. Generic overnight
+calculations remain subordinate to the [personal covenant](https://github.com/ayyararyan/volarb/blob/main/docs/PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md):
+intraday only, flat by 15:00 IST, no entry/recenter thereafter.
 
 ## 1. Objective
 

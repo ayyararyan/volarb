@@ -12,7 +12,7 @@ The local eSSVI/HAR dashboard (`http://127.0.0.1:8770/api/state` on the office M
 
 - `atm.front.implied_volatility` — eSSVI-fitted ATM IV for the front option expiry, forward moneyness 0;
 - `forecast.annualized_volatility` — log-HAR(1,5,22) forecast of one full session's realized variance including the overnight gap, from 5-minute NIFTY spot bars;
-- `verdict.status`, `surface_is_stale`, `fit_ok`, `fit_age_seconds`, `arbitrage.passed` — surface health;
+- `verdict.status`, `surface_is_stale`, `fit_ok`, `fit_age_seconds`, `arbitrage.checked`, `arbitrage.passed` — surface health;
 - `forecast.status`, `forecast.age_calendar_days` — forecast health.
 
 IV and HAR RV cover different horizons. The gate treats their difference as a **session-level premium screen only**, not a tradable spread, and not a substitute for the same-horizon HF RV/IV comparison in the child skill.
@@ -33,6 +33,11 @@ Defaults: margin ≥ 1.0 vol point **and** IV/RV ratio ≥ 1.05 for `FAVOURABLE`
 | `UNKNOWN` | feed not live, fit stale/failed, arbitrage violation, forecast missing/old, or values missing | NO TRADE, terminal gate `SESSION_VRP` |
 
 Pass the state into the controller snapshot as `session_vrp_state`. A missing field is `UNKNOWN`.
+An actionable result requires explicit boolean `fit_ok: true` and
+`arbitrage.checked: true, arbitrage.passed: true`; missing or unchecked proof is
+not clean-surface evidence. Malformed state/nested objects return `UNKNOWN`
+instead of raising an exception. The workflow adapter separately binds the source
+snapshot to its index, evidence reference and fresh decision-time observation.
 
 ## Limits
 

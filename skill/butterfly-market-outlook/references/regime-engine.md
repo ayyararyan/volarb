@@ -1,5 +1,10 @@
 # Market Regime Engine - v2.4
 
+This calculation module's generation label does not replace the current
+[decision controller](decision-algorithm.md). Generic overnight states never
+override the [personal covenant](https://github.com/ayyararyan/volarb/blob/main/docs/PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md):
+intraday only, flat by 15:00 IST and no entry/recenter thereafter.
+
 Use this engine before any overnight butterfly decision and as a contextual input to intraday candidate ranking. The purpose is to distinguish a genuinely quiet carry environment from a market that only **looks** quiet in implied volatility while jump/event risk is elevated.
 
 ## Core idea

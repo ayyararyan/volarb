@@ -8,6 +8,14 @@ Canonical branch: `main`
 
 Use Asia/Kolkata timestamps throughout.
 
+## Accounting and authority boundary
+
+This is the sanitized **repository publication workflow**, not the live accounting writer. The sole live book is the external configured `Trading/ledger/` shared-writer store (`simple_ledger.csv`, `butterfly_reviews.json`, `tradelog.csv`). Repository records are historical/publication projections, never fresh positions, order state or an alternate live ledger.
+
+Use one stable butterfly **cycle ID through adjustments/recenters**. A verified fully closed cycle followed by a fresh entry gets a new ID. Reconcile actual fills and accounting through the local shared writer before publishing the corresponding sanitized lifecycle facts. Do not rewrite historical records during source maintenance.
+
+Generic CARRY fields below preserve schema/history; the adopted personal covenant prohibits overnight carry. Unchanged and blocked checks are journal-worthy. Recordkeeping must never delay a time-sensitive risk decision.
+
 ## 1. Event classes
 
 Treat these as journal-worthy events:
@@ -29,7 +37,7 @@ Treat these as journal-worthy events:
    - a RECENTRE recommendation by itself is not an execution event.
 
 5. **Confirmed closure**
-   - all relevant option legs are closed / net quantity is zero, or the user provides broker-confirmed closure;
+   - all relevant option legs have verified zero remaining units and no pending strategy orders; reconcile broker-confirmed fills rather than infer closure from disappearing positions;
    - finalize gross realized P&L when available and distinguish it from net-after-charges P&L.
 
 ## 2. One market-outlook markdown file per day
@@ -107,13 +115,13 @@ Before modifying a daily file:
 
 Never claim a log was written unless the GitHub write succeeds.
 
-## 4. Trade ledger
+## 4. Published historical trade summary
 
-Canonical ledger:
+Repository summary (not the live ledger):
 
 `trade-log/trades.csv`
 
-Use one row per executed butterfly episode.
+Use one summary row per confirmed butterfly cycle, retaining the same ID through adjustments.
 
 Existing columns are:
 
@@ -125,7 +133,7 @@ Use:
 
 `YYYY-MM-DD-SYMBOL-NNN`
 
-where NNN increments if more than one distinct butterfly is opened in the same symbol on the same date.
+where NNN increments for a new cycle after verified closure/re-entry in the same symbol on the same date. It does not increment merely because the current cycle changes geometry.
 
 ### On confirmed entry
 
@@ -213,11 +221,11 @@ A RECENTRE recommendation is recorded only as a decision in the daily file.
 If the recenter is actually executed:
 
 1. finalize the old geometry's close facts if known;
-2. create a new trade row for the newly opened geometry unless the user explicitly wants the recentered structure treated as one accounting episode;
-3. link the two IDs in each row's `notes` and in the trade markdown;
+2. retain the same cycle/trade ID and row; record the changed geometry and realized adjustment effects through the shared writer;
+3. append the geometry transition and cumulative cycle context to that ID's `notes` and trade markdown;
 4. record the execution in that day's market-outlook file.
 
-Do not backfill execution merely because the model recommended it.
+A separately verified full closure followed by a fresh entry is re-entry and receives a new cycle ID. Never turn a RECENTRE recommendation or temporary geometry change into an invented closure/re-entry. Do not backfill execution merely because the model recommended it.
 
 ## 7. Post-trade episode
 

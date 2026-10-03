@@ -1,5 +1,11 @@
 # Overnight Carry Gate — Engine v2.4
 
+This retained generic calculation module runs only when reached by the current
+[decision controller](decision-algorithm.md); its generation label does not replace
+v2.6 gate precedence. For Aryan, the [personal covenant](https://github.com/ayyararyan/volarb/blob/main/docs/PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md)
+requires intraday-only trading and flat by 15:00 IST. These generic diagnostics
+cannot authorize overnight carry or entry/recenter after the deadline.
+
 Use this gate after the v2.4 market-regime classifier whenever a butterfly will remain open across a period in which the home option market is closed and the next actionable exit is in a later session. It is mandatory when <=2 trading sessions remain to expiry and especially for a new entry/recenter/rotation into next-session expiry.
 
 The objective is not to ban overnight carry. The v2.4 regime state determines how demanding this gate must be. It is to price the thing actually being traded: **next-actionable-exit MTM under gap, volatility and execution stress**, plus broker/RMS feasibility. Headline theta is considered only after these gates pass.

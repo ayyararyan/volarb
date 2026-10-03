@@ -91,8 +91,52 @@ def forecast(raw, news, symbol, at, horizon):
     w.need(times[0].date() == at.date() and 270 <= (times[-1]-times[0]).total_seconds() <= 330, 'HF_FIVE_MINUTE_BLOCK_REQUIRED')
     w.need(raw.get('evidence_ref') and raw.get('instrument_ref'), 'HF_SOURCE_REQUIRED')
     data = copy.deepcopy(raw)
+    data['asof'] = at.isoformat()  # bind the child to the verified decision clock, not an unverified payload clock
     data['news_filter'] = news  # one normalized packet shared across every index/gate
     return load_script('intraday-realized-volatility-forecast', 'forecast_intraday_rv').evaluate(data)
+
+
+def session_vrp(item, symbol, at):
+    """Recompute the existing gate from explicitly bound per-index source evidence.
+
+    Missing evidence is UNKNOWN, never an inferred cross-index favourable flag.
+    This function performs no dashboard request or other network operation.
+    """
+    try:
+        packet = item['session_vrp_snapshot']
+        w.need(isinstance(packet, dict), 'SESSION_VRP_PACKET_REQUIRED')
+        w.need(packet['symbol'] == symbol and packet['evidence_ref'], 'SESSION_VRP_SOURCE_REQUIRED')
+        w.need(isinstance(packet['asof'], str), 'SESSION_VRP_CLOCK_REQUIRED')
+        w.fresh(packet['asof'], at)
+        state = packet['state']
+        w.need(isinstance(state, dict), 'SESSION_VRP_STATE_REQUIRED')
+        w.need(isinstance(state.get('health', {}), dict), 'SESSION_VRP_HEALTH_REQUIRED')
+        observed_at = state.get('now') or state.get('health', {}).get('observation_timestamp')
+        w.need(isinstance(observed_at, str), 'SESSION_VRP_CLOCK_REQUIRED')
+        w.fresh(observed_at, at)
+        return load_script('butterfly-market-outlook', 'evaluate_session_vrp').evaluate(state)
+    except (KeyError, ValueError, TypeError):
+        return {'session_vrp_state': 'UNKNOWN', 'why': 'Fresh index-bound session VRP evidence unavailable'}
+
+
+def loss_evidence(packet, at, required):
+    """Validate an explicit session-loss assessment; never infer zero from flatness."""
+    value = packet.get('session_loss')
+    if value is None and not required:
+        return {}
+    try:
+        w.need(isinstance(value, dict) and value.get('evidence_ref'), 'SESSION_LOSS_EVIDENCE_REQUIRED')
+        w.need(isinstance(value['asof'], str), 'SESSION_LOSS_CLOCK_REQUIRED')
+        w.fresh(value['asof'], at)
+        loss = w.number(value['rupees'])
+        w.need(loss >= 0, 'SESSION_LOSS_MUST_BE_NONNEGATIVE')
+    except (KeyError, ValueError, TypeError):
+        if required:
+            raise
+        # Unavailable open-position loss data is a controller warning. It must
+        # not suppress a separately verified RV, hard-risk or expiry exit.
+        return {}
+    return {'daily_loss_budget_rupees': w.POLICY['daily_loss_rupees'], 'session_loss_rupees': loss}
 
 
 def exact_quotes(candidate, at):
@@ -139,6 +183,20 @@ def compose(packet, at, open_position=False, observed=False):
             if not open_position and item['data_health'] in {'STALE', 'INVALID'}:
                 results[symbol] = {'action': 'NO_TRADE', 'terminal_gate': 'DATA_HEALTH'}
                 continue
+            gates = {'mode': 'OPEN_POSITION' if open_position else 'CANDIDATE',
+                     'branch': 'OPEN_INTRADAY' if open_position else 'CANDIDATE_INTRADAY',
+                     'data_health': item['data_health'], **loss_evidence(packet, at, not open_position)}
+            early = w.controller(gates, at)
+            if early['terminal_gate'] == 'LOSS_BUDGET':
+                results[symbol] = early
+                continue
+            if not open_position:
+                vrp = session_vrp(item, symbol, at)
+                gates['session_vrp_state'] = vrp['session_vrp_state']
+                early = w.controller(gates, at)
+                if early['terminal_gate'] == 'SESSION_VRP':
+                    results[symbol] = {**early, 'session_vrp': vrp}
+                    continue
             if normalized_news is None:
                 normalized_news = news_packet(packet['news'], at, horizon)
             try:
@@ -148,18 +206,17 @@ def compose(packet, at, open_position=False, observed=False):
                 rv = forecast(hf, normalized_news, symbol, at, horizon)
             except (KeyError, ValueError, TypeError):
                 rv = {'short_gamma_state': 'INSUFFICIENT_DATA', 'confidence': 'low'}
-            gates = {'mode': 'OPEN_POSITION' if open_position else 'CANDIDATE',
-                     'branch': 'OPEN_INTRADAY' if open_position else 'CANDIDATE_INTRADAY',
-                     'data_health': item['data_health'], 'intraday_rv_state': rv['short_gamma_state'],
-                     'intraday_rv_confidence': rv['confidence'], 'news_filter_status': normalized_news['status']}
+            vrp_evidence = {'session_vrp': vrp} if not open_position else {}
+            gates.update(intraday_rv_state=rv['short_gamma_state'],
+                         intraday_rv_confidence=rv['confidence'], news_filter_status=normalized_news['status'])
             early = w.controller(gates, at)
             if early['terminal_gate'] == 'INTRADAY_RV_DRIFT':
-                results[symbol] = {**early, 'rv': rv}
+                results[symbol] = {**early, 'rv': rv, **vrp_evidence}
                 continue
             w.need(item['hard_risk_gate'] in {'PASS', 'BLOCK', 'FAIL'} and item['risk_evidence_ref'], 'HARD_RISK_UNVERIFIED')
             gates['hard_risk_gate'] = item['hard_risk_gate']
             if gates['hard_risk_gate'] != 'PASS':
-                results[symbol] = {**w.controller(gates, at), 'rv': rv}
+                results[symbol] = {**w.controller(gates, at), 'rv': rv, **vrp_evidence}
                 continue
             if open_position:
                 w.need(item['expiry_exit_gate'] in {'PASS', 'FAIL', 'BLOCK', 'EXIT', 'NOT_APPLICABLE'} and item['expiry_evidence_ref'], 'EXPIRY_GATE_UNVERIFIED')
@@ -180,7 +237,7 @@ def compose(packet, at, open_position=False, observed=False):
                                           'upper_forecast_sigma_move_points': rv.get('upper_forecast_sigma_move_points')}
                 except (KeyError, ValueError, TypeError) as error:
                     rejections.append({'id': c.get('id'), 'reason': str(error)})
-            results[symbol] = {'action': 'CANDIDATES' if any(c['spec']['symbol'] == symbol for c in accepted.values()) else 'NO_TRADE', 'rv': rv}
+            results[symbol] = {'action': 'CANDIDATES' if any(c['spec']['symbol'] == symbol for c in accepted.values()) else 'NO_TRADE', 'rv': rv, **vrp_evidence}
         except (KeyError, ValueError, TypeError) as error:
             results[symbol] = {'action': 'NEED_EVIDENCE', 'reason': str(error)}
     if open_position:

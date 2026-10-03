@@ -83,7 +83,9 @@ def decide(data: Dict[str, Any]) -> Dict[str, Any]:
 
     # Owner daily loss budget. Loss is positive rupees; realized plus bankable
     # (executable-close) P&L for the current session. Missing evidence is a
-    # warning for an open position and a block for a new structure.
+    # warning in this normalized controller, including candidate mode. Callers
+    # must supply/validate both inputs before proposing a new structure; this
+    # warning is not evidence that the operational entry requirement passed.
     budget = _rupees(data.get("daily_loss_budget_rupees"))
     session_loss = _rupees(data.get("session_loss_rupees"))
     if budget is not None and session_loss is not None and session_loss >= budget:

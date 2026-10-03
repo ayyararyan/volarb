@@ -80,8 +80,9 @@ class InstallerTests(unittest.TestCase):
     def test_readonly_environment_cannot_inherit_live_flags(self):
         self.install()
         config = kit.read_config(Path(self.args.data_dir)/'config.json')
-        with patch.dict(os.environ, {'DHAN_EXECUTION_ENABLED':'true', 'DHAN_BROWSER_RECOVERY_ENABLED':'true'}):
+        with patch.dict(os.environ, {'DHAN_PROVIDER_COMMANDS_ENABLED':'true', 'DHAN_EXECUTION_ENABLED':'true', 'DHAN_BROWSER_RECOVERY_ENABLED':'true'}):
             env = kit.runtime_env(config)
+        self.assertEqual(env['DHAN_PROVIDER_COMMANDS_ENABLED'], 'false')
         self.assertEqual(env['DHAN_EXECUTION_ENABLED'], 'false')
         self.assertEqual(env['DHAN_BROWSER_RECOVERY_ENABLED'], 'false')
         self.assertEqual(env['VOLARB_OBSERVE_ENABLED'], 'false')
@@ -136,6 +137,49 @@ class InstallerTests(unittest.TestCase):
         self.assertFalse(result['trading_ready'])
         self.assertIn('private_credentials', [c['name'] for c in result['checks'] if c['status']=='FAIL'])
 
+    def test_doctor_blocks_both_provider_and_legacy_mutations(self):
+        self.install()
+        data = Path(self.args.data_dir)
+        args = argparse.Namespace(config=str(data/'config.json'), require_read_only=False, probe_mcp=False)
+        cases = [('on', 'false'), ('1', 'false'), ('yes', 'false'), ('true', 'false'),
+                 ('false', 'true'), ('false', 'false')]
+        for provider, legacy in cases:
+            with self.subTest(provider=provider, legacy=legacy):
+                (data/'dhan/.env').write_text(
+                    f'DHAN_PROVIDER_COMMANDS_ENABLED={provider}\nDHAN_EXECUTION_ENABLED={legacy}\n')
+                with patch.object(kit, 'version', return_value=''), \
+                     patch.object(kit.shutil, 'which', return_value=None), \
+                     patch.object(kit, 'registration_state', side_effect=ValueError('not registered')):
+                    result = kit.doctor(args)
+                check = next(c for c in result['checks'] if c['name'] == 'execution_disabled')
+                self.assertEqual(check['status'], 'PASS' if (provider, legacy) == ('false', 'false') else 'FAIL')
+
+    def test_real_package_preserves_provider_import_closure(self):
+        output = self.base/'real-kit.zip'
+        kit.package(argparse.Namespace(output=str(output)))
+        extracted = self.base/'extracted'
+        with zipfile.ZipFile(output) as archive:
+            archive.extractall(extracted)
+        root = extracted/'volarb-agent-kit'
+        # Importing creates no runtime, uses no credentials and performs no I/O.
+        subprocess.run(['node', '--input-type=module', '-e',
+            "import {createDhanRuntime} from './services/dhan-chatgpt-mcp/src/dhan-runtime.mjs'; "
+            "import {ProviderError} from './services/dhan-chatgpt-mcp/src/provider-error.mjs'; "
+            "if (typeof createDhanRuntime !== 'function' || typeof ProviderError !== 'function') process.exit(1)"],
+            cwd=root, check=True, capture_output=True, text=True)
+        self.assertTrue((root/'environments/execution/production.json').is_file())
+        self.assertTrue((root/'architecture').is_dir())
+        self.assertTrue((root/'agent/pyproject.toml').is_file())
+        self.assertTrue((root/'prompts/README.md').is_file())
+        for directory in ('market-outlook', 'trade-log'):
+            self.assertEqual([p.name for p in (root/directory).iterdir()], ['README.md'])
+            self.assertIn('intentionally omitted', (root/directory/'README.md').read_text())
+        spec = importlib.util.spec_from_file_location('packaged_hygiene', root/'tools/check_repository.py')
+        checker = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(checker)
+        names = [str(p.relative_to(root)) for p in root.rglob('*') if p.is_file()]
+        self.assertEqual(checker.inspect(root, names), [])
+
     def test_package_excludes_private_artifacts(self):
         src=self.base/'source';src.mkdir()
         # Small controlled source fixture with the real packaging rules.
@@ -145,7 +189,9 @@ class InstallerTests(unittest.TestCase):
             p=src/root;p.mkdir(parents=True,exist_ok=True);(p/'fixture.py').write_text('# safe\n')
         for rel in ['services/dhan/.env','services/dhan/.private/token.json',
                     'services/day-workflow/ledger/tradelog.csv','services/day-workflow/snapshots/raw.json',
-                    'agent-kit/memory/MEMORY.md','services/dhan/node_modules/private.js']:
+                    'agent-kit/memory/MEMORY.md','services/dhan/node_modules/private.js',
+                    'agent/runtime/private.json','agent/artifacts/private.json',
+                    'agent/private.sqlite','agent/private.db-wal','agent/generated.egg-info/metadata']:
             p=src/rel;p.parent.mkdir(parents=True,exist_ok=True);p.write_text('PRIVATE_SENTINEL')
         output=self.base/'kit.zip'
         with patch.object(kit,'SOURCE',src):

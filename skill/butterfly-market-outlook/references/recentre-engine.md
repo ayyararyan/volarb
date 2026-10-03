@@ -2,6 +2,12 @@
 
 Use this layer only for an existing butterfly whose body/distribution alignment has moved materially. It prevents the vague rule "spot moved, so recenter."
 
+Run only after all earlier [controller gates](decision-algorithm.md) survive.
+Diagnostics do not authorize RECENTRE: the controller additionally requires fresh
+verified full-transition margin evidence with scope `RECENTRE`; entry-only margin
+is insufficient. The [personal covenant](https://github.com/ayyararyan/volarb/blob/main/docs/PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md)
+requires intraday-only exposure, flat by 15:00 IST and no recenter thereafter.
+
 ## Core question
 
 Would closing the old fly and opening a new wide fly create a **materially better risk/carry state after friction**, given the remaining time and current event regime?
