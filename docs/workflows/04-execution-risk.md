@@ -1,89 +1,69 @@
-# Box 4 — Shared Execution & Risk Management Graph
+# [4,0,0,0,0] Box 4 — Shared Execution & Risk Management Graph
 
-This graph is **shared across the selected underlyings for the trading day**.
+This graph is shared across all selected underlyings for the trading day.
 
-Box 3 instances decide **what should be traded** and emit broker-neutral `TradeIntent` objects. Box 4 owns the intelligent decisions about **how to establish, monitor, manage, modify, and close those positions in the real market**.
-
-The internal execution/risk policy is intentionally still preliminary.
+Box 3 decides **what should be traded**. Box 4 owns the intelligent decisions about **how to establish, monitor, manage, modify, and close positions**.
 
 ## Graph
 
 ```mermaid
 flowchart TD
-    A[Receive TradeIntent from any active Graph X] --> B[Volarb Execution + Risk Management Engine]
-    B --> C[Build intended execution plan]
+    A["[4,0,1,7,1] TradeIntent input"]
+    B["[4,0,2,1,1] Volarb Execution + Risk Management Engine"]
+    C["[4,0,3,1,1] Build intended execution plan"]
+    D["[4,0,4,1,1] Pre-trade Margin Feasibility Check"]
+    E["[4,0,5,6,1] BrokerMarginFeasibilityPort"]
+    F["[4,0,6,8,1] Active Broker Provider Plug-in"]
+    G["[4,0,7,8,1] Dhan API / Broker"]
+    H["[4,0,7,8,2] Kotak / ICICI / other broker"]
+    I["[4,0,5,7,1] Canonical broker-neutral execution command"]
+    J["[4,0,6,6,1] ExecutionPort / thin Broker Executor"]
+    K["[4,0,3,1,2] Live execution / risk / monitoring policy"]
+    L["[4,0,4,1,2] Hold / adjust / recenter / hedge / reduce / exit"]
 
-    C --> D[Pre-trade Margin Feasibility Check]
-    D --> E[BrokerMarginFeasibilityPort]
-    E --> F[Active Broker Provider Plug-in]
-
-    F -->|Dhan today| G[Dhan API / Broker]
-    F -. replaceable .-> H[Kotak / ICICI / other broker]
-
-    G -->|margin/account facts| F
-    H -->|margin/account facts| F
-    F -->|normalized MarginFeasibility| D
-
-    D -->|Infeasible| B
-    D -->|Feasible| I[Create canonical broker-neutral execution command]
-    I --> J[ExecutionPort / thin Broker Executor]
-    J --> F
-
-    G -->|order/fill/status facts| F
-    H -->|order/fill/status facts| F
-    F -->|normalized execution facts| B
-
-    B --> K[Live execution / risk / monitoring policy TBD]
-    K --> L[Future: hold / adjust / recenter / hedge / reduce / exit]
-    L --> B
+    A -->|"[4,0,1,4,1]"| B
+    B -->|"[4,0,2,4,1]"| C
+    C -->|"[4,0,3,4,1]"| D
+    D -->|"[4,0,4,4,1]"| E
+    E -->|"[4,0,5,4,1]"| F
+    F -->|"[4,0,6,4,1] DHAN TODAY"| G
+    F -.->|"[4,0,6,4,2] REPLACEABLE"| H
+    G -->|"[4,0,7,4,1] MARGIN / ACCOUNT FACTS"| F
+    H -->|"[4,0,7,4,2] MARGIN / ACCOUNT FACTS"| F
+    F -->|"[4,0,6,4,3] NORMALIZED MarginFeasibility"| D
+    D -->|"[4,0,4,4,2] INFEASIBLE"| B
+    D -->|"[4,0,4,4,3] FEASIBLE"| I
+    I -->|"[4,0,5,4,2]"| J
+    J -->|"[4,0,6,4,4]"| F
+    G -->|"[4,0,7,4,3] ORDER / FILL / STATUS FACTS"| F
+    H -->|"[4,0,7,4,4] ORDER / FILL / STATUS FACTS"| F
+    F -->|"[4,0,6,4,5] NORMALIZED EXECUTION FACTS"| B
+    B -->|"[4,0,2,4,2]"| K
+    K -->|"[4,0,3,4,2]"| L
+    L -->|"[4,0,4,4,4]"| B
 ```
 
 ## Architectural split
 
-### Volarb Execution + Risk Management Engine
+### [4,0,2,1,1] Volarb Execution + Risk Management Engine
 
-This is the **intelligent** layer.
+This is the intelligent layer. It will own execution sequencing, responses to fills and partial fills, live position monitoring, risk decisions, adjustment/exit logic, and coordination across positions.
 
-It will eventually own:
+### [4,0,6,8,1] Broker Provider Plug-in
 
-- execution sequencing and tactics;
-- responses to fills and partial fills;
-- live position monitoring;
-- risk decisions;
-- hold / recenter / hedge / reduce / exit logic;
-- coordination across positions/underlyings for the day.
+This is intentionally thin. It translates canonical commands, handles authentication, instrument/token mapping, IP whitelisting, order IDs, broker errors, and returns authoritative execution/account facts.
 
-### Broker Provider Plug-in
+It must not independently choose strikes, alter structures, resize because it prefers another size, recenter, or alter strategy logic.
 
-This is intentionally thin.
-
-Its responsibilities include:
-
-- translating canonical commands into broker-specific API calls;
-- authentication;
-- instrument/token mapping;
-- IP whitelisting and broker-specific connectivity;
-- order IDs and status synchronization;
-- broker/API errors;
-- returning authoritative fills, positions, account state, and margin facts.
-
-It must **not** independently choose strikes, change the structure, resize because it prefers another size, recenter, or alter strategy logic.
-
-## Margin dependency
+## Broker margin dependency
 
 Broker-independence does not mean broker-blindness.
 
-Before sending an execution command, Volarb must query the active broker through a broker-neutral:
+Before execution, Volarb queries `[4,0,5,6,1] BrokerMarginFeasibilityPort`.
 
-`BrokerMarginFeasibilityPort`
+Provider-specific implementations may include Dhan, Kotak, ICICI Securities, or another broker adapter.
 
-Provider-specific implementations may include:
-
-- `DhanMarginFeasibilityAdapter`
-- `KotakMarginFeasibilityAdapter`
-- `ICICIMarginFeasibilityAdapter`
-
-Conceptually:
+Conceptual normalized result:
 
 ```text
 MarginFeasibility
@@ -96,23 +76,21 @@ MarginFeasibility
   raw_reference: ...
 ```
 
-If the intended execution is infeasible, the broker does not improvise. Control returns to the intelligent Volarb engine for a new strategy/execution decision.
+If infeasible, control returns to `[4,0,2,1,1]`. The broker does not improvise.
 
 ## Provider-independence rule
 
-The same Box 4 intelligence should work if Dhan is replaced by Kotak, ICICI Securities, or another broker.
-
-The broker provides authoritative facts and execution transport. **Volarb provides the intelligence.**
+The broker supplies authoritative facts and execution transport. **Volarb supplies the intelligence.**
 
 ## Still TBD
 
 - internal execution-policy graph;
-- canonical `TradeIntent` schema;
+- canonical TradeIntent schema;
 - canonical execution command/event schemas;
-- behavior after a margin-infeasible result;
-- which failures the adapter handles internally versus escalates;
+- behavior after margin infeasibility;
+- adapter-local versus escalated failures;
 - fill/partial-fill policy;
 - position monitoring;
 - risk thresholds;
 - hold / recenter / hedge / reduce / exit logic;
-- coordination across multiple live Graph X positions.
+- coordination across multiple live Box 3 positions.
