@@ -1276,3 +1276,19 @@ Example: several independent long option purchases may be UNCONSTRAINED if none 
 **Emergency execution boundary:** Emergency market actions bypass Passive Chase / the plug-in Optimal Execution algorithm, but still go through the broker-neutral Broker Execution Port and authoritative broker reconciliation.
 
 **Flatten semantics:** Longs are sold; shorts are bought back. Emergency scope must be explicit and broker-neutral.
+
+### 2026-10-03 — Internal Execution completion pass
+
+The architecture audit identified three missing cross-cutting controls and one additional normal-flow layer.
+
+**Execution Slicing `[5,0,7,0,1]`:** inserted between Margin Optimization and Optimal Execution. It converts permitted instrument quantity into execution slices. Canonical terminology uses "slice" rather than "leg" to avoid confusion with option-strategy legs. Default is `slice_count=1`, `scheduling_mode=SEQUENTIAL`. Future large positions may use multiple slices; under the default scheduler each slice is sent through Optimal Execution and reconciled before the next slice is released.
+
+**Runtime intent versioning `[5,0,1,7,3]`:** live execution requirements now carry `intent_id`, `intent_version`, supersession and status. This is distinct from architectural VIDs. Broker mutations generated under stale/superseded versions are rejected.
+
+**Execution Recovery `[5,0,8,0,1]`:** broker-neutral write-ahead ledger and reconciliation layer. Every normal or interrupt broker mutation passes through Command Commit Guard and Execution Ledger before the Broker Execution Port. Ambiguous mutation outcome means reconcile, never blind retry. Recovery handles restart, timeout, partial-fill ambiguity and correlation to broker truth.
+
+**State Integrity `[5,0,9,0,1]`:** action-class-aware readiness guard over market/account/order/recovery state. Stale/unknown truth cannot create new exposure. Emergency cancel/flatten has separate minimum-integrity requirements and reports unresolved emergency if those cannot be met.
+
+**Canonical normal path:** Margin Optimization -> Execution Slicing -> Optimal Execution -> Execution Recovery / Command Commit Guard -> Broker Execution Port.
+
+**Cross-cutting:** State Integrity gates action permission; Interrupt Control can preempt normal flow; Execution Recovery applies to both normal and interrupt broker mutations.
