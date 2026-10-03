@@ -106,9 +106,9 @@ Those decisions will be designed bottom-up.
 
 ## [5,0,3,6,1] Broker Execution Port
 
-The optimal execution engine does not call Dhan-specific APIs.
+The time-space execution sub-box does not call Dhan-specific APIs.
 
-It sends generic broker operations through this port.
+It sends generic broker operations through this port after the upper Box 5 eligibility/margin logic has released work for execution.
 
 Conceptually these may later include operations such as:
 - place;
@@ -321,3 +321,113 @@ completion
 ```
 
 No new VID is allocated by this clarification. It defines the mission and completion semantics of the existing registry, optimal-execution engine and live broker account state.
+
+
+## [5,0,3,0,1] Time-Space Execution Sub-Box
+
+This sub-box is the actual broker-neutral micro-execution algorithm in time.
+
+The upper part of Box 5 decides which instrument and how much quantity is currently eligible to be worked after registry, hedge-dependency and margin constraints. The Time-Space Execution Sub-Box decides what order-management action to take now.
+
+It does not reason about butterflies, iron condors, hedge construction or margin sequencing.
+
+### [5,0,3,7,1] Eligible Execution Work Slice
+
+The Margin-Aware Sequence Optimizer no longer sends broker actions directly. It releases an eligible work slice containing the instrument, side, remaining registry quantity, maximum quantity currently permitted to work, and any inherited execution constraints.
+
+This contract says what may be executed now. It does not choose price, order type or timing.
+
+### Time is the calculation axis
+
+At decision time t, the sub-box observes the eligible work slice, current LOB/quote state, own live orders, fills/partial fills, remaining required quantity and relevant execution constraints.
+
+Conceptually:
+
+~~~text
+S_t -> A_t -> broker facts -> S_(t+1) -> A_(t+1) -> ...
+~~~
+
+The exact clock remains open: fixed interval, event-driven, or hybrid.
+
+### [5,0,4,1,1] Temporal Execution Controller
+
+The controller runs the time-indexed execution loop. It assembles the current state, invokes the selected execution algorithm, validates the returned action against the eligible quantity and upstream constraints, sends the broker-neutral action to the Broker Execution Port, consumes broker feedback, updates remaining quantity, and evaluates again.
+
+The controller is orchestration. The actual execution policy is plug-and-play.
+
+### [5,0,4,6,1] Execution Algorithm Port
+
+Interchangeable micro-execution algorithms implement this interface:
+
+~~~text
+execution_state_at_t
+        |
+        v
+selected execution algorithm
+        |
+        v
+execution_decision_at_t
+~~~
+
+Changing the active algorithm must not require changes to Box 4, the registry, hedge/dependency logic, margin-aware sequencing, Broker Execution Port, or broker provider.
+
+Specific algorithm implementations will be identified only when introduced.
+
+### [5,0,4,7,2] Temporal Execution Decision
+
+The current broker-neutral action vocabulary is:
+
+~~~text
+WAIT
+
+PLACE_LIMIT
+  quantity
+  limit_price
+
+REPRICE_LIMIT
+  existing_order_reference
+  new_limit_price
+  optional new_quantity
+
+CANCEL_LIMIT
+  existing_order_reference
+
+PLACE_MARKET
+  quantity
+~~~
+
+Limit orders are expected to be the normal case. Market orders remain an explicit possible action when allowed by the selected algorithm and upstream constraints.
+
+The temporal algorithm may choose whether to act or wait, limit versus market, limit price, quantity up to the eligible amount, and whether an existing limit order should remain, be repriced or be cancelled.
+
+It may not make an ineligible instrument eligible, exceed the quantity released by the margin/dependency layer, reinterpret hedge relationships, bypass upstream margin constraints, change the desired economic instrument, or change strategy intent.
+
+### Revised Box 5 chain
+
+~~~text
+Registry
+  |
+hedge / dependency / margin logic
+  |
+[5,0,2,1,3] Margin-Aware Sequence Optimizer
+  |
+[5,0,3,7,1] Eligible Execution Work Slice
+  |
+[5,0,3,0,1] Time-Space Execution Sub-Box
+  |
+[5,0,4,1,1] Temporal Execution Controller
+  |
+[5,0,4,6,1] Execution Algorithm Port
+  |
+plug-and-play execution algorithm
+  |
+[5,0,4,7,2] Temporal Execution Decision
+  |
+[5,0,3,6,1] Broker Execution Port
+  |
+Dhan / Kotak / ICICI / ...
+  |
+broker facts -> next time-step decision
+~~~
+
+The earlier direct conceptual path from the margin-aware optimizer to the Broker Execution Port is superseded.
