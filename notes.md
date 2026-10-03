@@ -75,11 +75,56 @@ A useful conceptual boundary is:
 
 **Acceptance test for this principle:** A broker migration should not require edits to hypothesis generation, signal/regime logic, butterfly construction, portfolio/risk rules, or trade-management policy. Changes should be confined primarily to provider adapters, configuration, and any provider-capability declarations.
 
+### 2026-10-03 — Mandatory regime gate before butterfly deployment
+
+**Raw intent:** Before trading volatility arbitrage or short-gamma butterflies, the system must first know whether the current market regime is favorable for deploying the strategy at all. The exact method for constructing this regime detector can be designed later, but the architectural box itself is mandatory.
+
+**Interpretation:** Regime assessment is a distinct, upstream decision layer. It should not be buried inside trade construction, strike selection, position sizing, or execution. The system first answers a higher-order question: **"Is short-gamma butterfly deployment currently permitted by the market regime?"** Only after that gate is satisfied should the engine consider the details of an actual trade.
+
+Conceptually:
+
+```text
+Market / historical / contextual data
+                |
+                v
+        +------------------+
+        |   REGIME GATE    |
+        | favorable?       |
+        +------------------+
+           |           |
+          NO          YES
+           |           |
+     no new short-     v
+     gamma trade   trade opportunity /
+                    construction logic
+```
+
+**Design principle:** The regime box should be treated as a first-class module with a clearly defined input contract and output contract. The eventual methodology may combine deterministic rules, statistical state classification, volatility structure, market microstructure, trend/range conditions, realized-versus-implied volatility, event/news risk, or other signals, but those details are deliberately deferred.
+
+**Minimum conceptual output:** The regime layer should at least be able to distinguish between:
+- favorable / eligible for short-gamma butterfly deployment,
+- unfavorable / ineligible,
+- uncertain or insufficient-data state where the system should fail safe rather than force a trade.
+
+A richer implementation could later add regime labels, confidence, reasons, expiry-specific suitability, and recommended risk intensity, but those are not yet decided.
+
+**Architectural consequence:** No new butterfly should be opened merely because a particular structure appears attractive in isolation. The regime layer sits above trade selection and acts as a precondition for deployment.
+
+**Important separation:** Regime suitability and individual-trade attractiveness are different questions:
+- Regime gate: *Should this type of risk be deployed now?*
+- Trade-selection layer: *If yes, which specific butterfly, expiry, strikes, width, size and timing are best?*
+
+**Future design task:** Define how the regime box is built, calibrated, validated, refreshed intraday, and how quickly it can change state. This remains open and should be designed separately rather than prematurely embedded in another module.
+
 ## Open questions / unresolved design choices
 
 - What decisions should be fully autonomous versus require human approval?
 - What exact instruments, expiries, entry windows, and butterfly constructions are in scope?
 - What market-regime conditions should permit or forbid short-gamma deployment?
+- How should the regime detector be built, calibrated and validated?
+- Should regime state be market-wide, underlying-specific, expiry-specific, or a hierarchy of all three?
+- How frequently should regime state be recomputed, and what evidence is required before switching states?
+- Should the regime gate output only eligible/ineligible/uncertain, or also a confidence score and risk-intensity recommendation?
 - How should the research laboratory feed evidence into the live trading system without creating look-ahead or uncontrolled adaptation?
 - What are the hard portfolio, loss, margin, liquidity, and execution-risk limits?
 - What should trigger hold, recenter, hedge, scale, or square-off actions?
