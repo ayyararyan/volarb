@@ -1,135 +1,71 @@
-# Autonomous Butterfly Trading Workflow — Master Graph v0.8
+# Volarb Autonomous Workflow
 
-**Master VID:** `[0,0,0,0,0]`
+The autonomous architecture is organized into five named modules. Numeric values remain only inside immutable VIDs.
 
-This is the top-level orchestration graph. Every structural entity uses the Volarb Vector Identity System:
-
-`VID = [Box, Instance, Layer, Type, Ordinal]`
-
-Specification: [workflows/vector-id-system.md](workflows/vector-id-system.md)  
-Registry: [workflows/vector-id-registry.json](workflows/vector-id-registry.json)
-
-## Master graph
-
-```mermaid
+~~~mermaid
 flowchart TD
-    A["[0,0,1,1,1] Start / Wake"]
-    B1["[1,0,0,0,0] BOX 1 — Regime Decision"]
-    B2["[2,0,0,0,0] BOX 2 — Intraday Selection + Capital Allocation"]
-    F["[0,0,2,1,1] Fan out one Box 3 instance per selected X"]
-    B3["[3,I,0,0,0] BOX 3 — Per-Underlying Graph X"]
-    B4["[4,0,0,0,0] BOX 4 — Shared Execution + Risk Management"]
-    B5["[5,0,0,0,0] BOX 5 — Broker-Neutral Optimal Execution"]
+    S["[0,0,1,1,1] Start / Wake"]
+    R["[1,0,0,0,0] Regime Gate"]
+    U["[2,0,0,0,0] Underlying Allocation"]
+    F["[0,0,2,1,1] Fan out one Trade Selection instance per selected X"]
+    T["[3,I,0,0,0] Trade Selection"]
+    P["[4,0,0,0,0] Position Management"]
+    E["[5,0,0,0,0] Internal Execution"]
 
-    A -->|"[0,0,1,4,1]"| B1
-    B1 -->|"[0,0,1,4,2] REGIME_FAVORABLE"| B2
-    B2 -->|"[0,0,1,4,3] selected set S + W_X"| F
-    F -->|"[0,0,2,4,1]"| B3
-    B3 -->|"[0,0,2,4,2] TradeIntent"| B4
-    B4 -->|"[0,0,5,4,1] atomic instrument execution intents"| B5
-    B5 -->|"[0,0,4,4,1] normalized execution facts"| B4
-```
+    S -->|"[0,0,1,4,1]"| R
+    R -->|"[0,0,1,4,2] favorable"| U
+    U -->|"[0,0,1,4,3] selected set + W_X"| F
+    F -->|"[0,0,2,4,1]"| T
+    T -->|"[0,0,2,4,2] TradeIntent"| P
+    P -->|"[0,0,5,4,1] instrument intents"| E
+    E -->|"[0,0,4,4,1] execution facts"| P
+~~~
 
-For Box 3 runtime instances:
+## [1,0,0,0,0] Regime Gate
 
-- `I=1` NIFTY
-- `I=2` BANKNIFTY
-- `I=3` SENSEX
+Determines whether the broader multi-day environment permits new short-gamma deployment.
 
-## The four boxes
+Detailed workflow: [workflows/regime-gate.md](workflows/regime-gate.md)
 
-### [1,0,0,0,0] Box 1 — Regime Decision Graph
+## [2,0,0,0,0] Underlying Allocation
 
-**Horizon:** days / weeks.
+Selects the eligible underlying set and reserves capital across NIFTY, BANKNIFTY, and SENSEX when the regime is favorable.
 
-Question: Is the broader market regime currently favorable for short-gamma deployment?
+Detailed workflow: [workflows/underlying-allocation.md](workflows/underlying-allocation.md)
 
-If unfavorable or uncertain, Box 1 owns the multi-day waiting/recheck loop. Only a favorable decision hands control to Box 2.
+## [3,0,0,0,0] Trade Selection
 
-Detailed graph: [workflows/01-regime-decision.md](workflows/01-regime-decision.md)
+Runs independently per selected underlying and chooses an admissible structure. Runtime instances keep the same local VID coordinates and use the instance coordinate for the underlying.
 
-### [2,0,0,0,0] Box 2 — Intraday Instrument Selection & Capital Allocation
+Detailed workflow: [workflows/trade-selection.md](workflows/trade-selection.md)
 
-**Horizon:** intraday.
+## [4,0,0,0,0] Position Management
 
-Question: Given a favorable regime, which of NIFTY, BANKNIFTY, and SENSEX should be committed for today, and how much capital `W_X` should each receive?
+Owns strategy/risk intelligence for establishing, supervising, adjusting, hedging, recentering, reducing, and closing positions. It emits broker-neutral instrument execution intents.
 
-If no underlying is selected, Box 2 owns the intraday opportunity-recheck loop. A non-empty set `S` creates durable daily commitments and reserved `W_X`, then launches Box 3 instances.
+Detailed workflow: [workflows/position-management.md](workflows/position-management.md)
 
-Detailed graph: [workflows/02-intraday-selection.md](workflows/02-intraday-selection.md)
+## [5,0,0,0,0] Internal Execution
 
-### [3,0,0,0,0] Box 3 — Per-Underlying Trade Selection Template
+Converges registry requirements into authoritative broker positions.
 
-**Horizon:** within the hour once X has been selected.
+Internal Execution has exactly two ordered sub-boxes:
 
-One independent instance is launched for every selected underlying.
+1. **[5,0,2,0,1] Margin Optimization**
+2. **[5,0,3,0,1] Optimal Execution**
 
-Question: Given that X is already committed for today and `W_X` is reserved, which admissible structure should be traded?
+Margin Optimization determines what instrument/quantity is currently eligible to be worked. Optimal Execution determines how to work that eligible quantity through time and the LOB.
 
-A selected `StructureSpec` becomes a broker-neutral `TradeIntent` for Box 4. No acceptable structure keeps Graph X active with `W_X` reserved and triggers the within-hour scheduler.
+Detailed workflow: [workflows/internal-execution.md](workflows/internal-execution.md)
 
-Detailed graph: [workflows/03-per-underlying-graph.md](workflows/03-per-underlying-graph.md)
+## Global rules
 
-### [4,0,0,0,0] Box 4 — Shared Execution & Risk Management Graph
-
-**Horizon:** live trading / position lifecycle for the day.
-
-This box is common to all active Box 3 instances.
-
-Question: Given an approved `TradeIntent`, how should Volarb establish, supervise, manage, modify, and eventually close the position?
-
-Volarb owns the intelligence. Thin replaceable broker adapters provide execution transport and authoritative broker facts, including margin feasibility.
-
-Detailed graph: [workflows/04-execution-risk.md](workflows/04-execution-risk.md)
-
-## Scheduling hierarchy
-
-```text
-[1,0,5,3,1] DAYS / WEEKS
-Regime Recheck Scheduler
-
-[2,0,7,3,1] INTRADAY
-Intraday Opportunity Recheck Scheduler
-
-[3,I,7,3,1] WITHIN THE HOUR
-Within-Hour Structure Recheck Scheduler
-```
-
-### [5,0,0,0,0] Box 5 — Broker-Neutral Optimal Execution
-
-**Horizon:** live order execution.
-
-Question: Given the current registry of already-decided instrument execution intentions, how should they be executed optimally without depending on a particular broker?
-
-Box 5 owns the reusable execution algorithm and execution registry. It does not need to know the strategy structure that generated the orders.
-
-Concrete brokers such as Dhan, Kotak, or ICICI Securities sit beneath a broker execution port as external plug-ins with no Volarb VID.
-
-Detailed graph: [workflows/05-optimal-execution.md](workflows/05-optimal-execution.md)
-
-## Global rules preserved
-
-- Broker providers such as Dhan are infrastructure plug-ins, not numbered core architecture.
-- Box 5 is broker-neutral optimal execution and must remain reusable when the broker changes.
-- Research data, decision-time market data, broker margin/account facts, and execution transport cross provider-neutral interfaces.
-- The broker supplies authoritative facts; Volarb supplies trading intelligence.
-- A favorable regime does not force an underlying selection.
-- Selecting an underlying does not force an immediate structure.
-- Once X is selected for the day, `W_X` remains reserved until an explicit higher-level revocation or end-of-day expiry rule says otherwise.
-- Failure to find a structure does not revoke the underlying commitment.
-- Parallel Box 3 instances cannot double-count shared capital.
-- The per-underlying optimizer may return no feasible/attractive candidate.
-- Selecting a `StructureSpec` ends the trade-selection decision for that opportunity and hands it to Box 4.
-- Broker execution must not independently alter strategy decisions.
-- Broker-derived margin feasibility is required before execution.
-- The conditions that revoke a daily underlying commitment remain intentionally unresolved.
-- Every new architectural entity must receive an immutable VID and be added to the central registry.
-
-## Detailed graph index
-
-1. [VID system](workflows/vector-id-system.md)
-2. [Box 1 — Regime Decision](workflows/01-regime-decision.md)
-3. [Box 2 — Intraday Instrument Selection & Capital Allocation](workflows/02-intraday-selection.md)
-4. [Box 3 — Per-Underlying Trade Selection](workflows/03-per-underlying-graph.md)
-5. [Box 4 — Shared Execution & Risk Management](workflows/04-execution-risk.md)
-6. [Box 5 — Broker-Neutral Optimal Execution](workflows/05-optimal-execution.md)
+- Semantic names, not numeric "Box" labels, are used in prose.
+- VIDs remain immutable and retain their numeric first coordinate.
+- Broker providers such as Dhan are external plug-ins, not core modules.
+- Strategy/risk logic remains in Position Management.
+- Margin eligibility precedes micro-execution inside Internal Execution.
+- Optimal Execution cannot exceed quantity released by Margin Optimization.
+- Concrete execution algorithms are plug-and-play behind the Execution Algorithm Port.
+- Broker execution must not independently alter strategy intent.
+- Every new architectural entity receives an immutable VID.
