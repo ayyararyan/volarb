@@ -1148,3 +1148,31 @@ The internals of the optimal-execution algorithm remain deliberately unresolved.
 **Exit nuance:** "Shown in positions" means the intended final position effect. For an entry this may mean creating/increasing a position; for an exit it may mean reducing or eliminating an existing position.
 
 **VID decision:** No new VID is required. This clarifies the purpose and terminal condition of the existing Box 5 registry/engine/account-state objects.
+
+
+### 2026-10-03 — Time-Space Execution Sub-Box inside Box 5
+
+**Raw intent:** After the Box 5 registry has passed hedge/margin eligibility rules, a separate sub-box performs true optimal execution through time. Its unit of calculation is time and current market/order state. It observes eligible remaining quantity and the LOB, then decides whether to place, reprice, cancel, wait, or use a market order.
+
+**Architecture interpretation:** Box 5 now has two conceptually separate execution stages.
+
+Upper Box 5:
+- registry;
+- hedge/offset inference;
+- dependency graph;
+- margin-aware sequencing;
+- releases only the instrument/quantity currently eligible to be worked.
+
+Lower Box 5:
+- [5,0,3,0,1] Time-Space Execution Sub-Box;
+- consumes eligible work plus current LOB/order/fill state;
+- repeatedly makes broker-neutral order-management decisions through time;
+- sends those actions to the Broker Execution Port.
+
+**Plug-and-play requirement:** Micro-execution policy is swappable behind [5,0,4,6,1] Execution Algorithm Port. The rest of Volarb must not depend on which execution algorithm is active.
+
+**Current action space:** WAIT, PLACE_LIMIT, REPRICE_LIMIT, CANCEL_LIMIT, PLACE_MARKET.
+
+**Hard boundary:** The temporal algorithm can choose timing, price, order type and quantity up to the released amount. It cannot make an ineligible instrument eligible, bypass margin/hedge constraints, alter instrument identity or reinterpret strategy intent.
+
+**Clock remains open:** fixed interval, event-driven or hybrid scheduling will be decided later.
