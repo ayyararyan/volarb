@@ -10,6 +10,8 @@ Each file is append-only during the day and may contain NIFTY, BANKNIFTY and SEN
 
 The detailed write contract lives in:
 
-`skill/butterfly-market-outlook/references/repo-logging.md`
+[repository logging contract](../skill/butterfly-market-outlook/references/repo-logging.md)
 
 Do not create separate per-symbol files unless the repository convention is explicitly changed later.
+
+These are dated research/decision records, not fresh broker truth. Source cleanup preserves their contents and chronology. Raw private evidence and live accounting stay outside this repository.

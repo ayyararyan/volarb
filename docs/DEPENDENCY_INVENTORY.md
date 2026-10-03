@@ -1,11 +1,31 @@
-# Dependency inventory — 2026-09-29
+# Dependency inventory
+
+Current source boundaries reviewed: **2026-10-03**. Host/integration observations
+below are explicitly dated to **2026-09-29**, not a fresh live deployment audit.
 
 Scope: repository plus read-only inspection of the active VolArb Python modules,
 Dhan MCP source/manifests, installed tool versions, OpenClaw skill/plugin metadata,
 automation metadata and relevant macOS service definitions. No credential contents,
 raw broker evidence, provider config, session history or live ledger copied.
 
-## Component inventory and disposition
+## Current shared execution dependencies
+
+- The canonical [Execution Engine](../execution-engine/README.md) owns the shared
+  broker vocabulary, runtime ports and global Provider Error Envelope.
+- [Dhan Provider](../services/dhan-chatgpt-mcp/README.md) imports these shared
+  contracts; service-only copies of its exported runtime are incomplete.
+- [Execution Testbed](../execution-testkit/README.md) supplies separate deterministic
+  dependencies. Production must not import `execution-testkit`.
+- The portable archive and Docker context preserve the provider's shared import
+  closure. Only the portable source archive includes the testkit; the production
+  service image does not. The launcher disables both canonical and compatibility
+  mutation flags, irrespective of inherited environment values.
+- [eSSVI dashboard](../services/essvi-dashboard/README.md) is optional and requires
+  external Shaurya packages plus deployment-specific authentication/capture paths.
+  Its offline test dependencies are separate from the kit's Python lock; it is not
+  a self-contained portable dashboard deployment.
+
+## Historical 2026-09-29 component import inventory
 
 | Component | Previous location/status | Reusable kit disposition |
 |---|---|---|

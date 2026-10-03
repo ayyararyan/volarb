@@ -11,14 +11,14 @@ Squared off. Record the closure.
 
 Cycle ID: <ID from PR03>. Exit time: <HH:MM> IST. Reason: <review said SQUARE OFF / loss budget / 15:00 deadline>.
 
-Read the exit fills from Dhan positions and orders and verify zero remaining units on all legs.
+Read exit fills from Dhan trades/order-trade execution records; reconcile positions and outstanding orders, verifying zero remaining units and no pending strategy orders.
 Compute gross cycle P&L, update the trade file and trades.csv row, close the cycle in the local simple_ledger via the shared writer, and write a short post-trade diagnosis (entry thesis vs what happened, which gate fired).
-Publish to ayyararyan/volarb main and reply with one row: cycle ID, gross P&L, session loss vs ₹1,000, remaining units (must be 0), commit hash.
+Publish to ayyararyan/volarb main and reply with one row: cycle ID, gross P&L, session loss vs ₹1,000, remaining units and pending strategy orders (both must be 0), commit hash.
 ```
 
 ## Expected reply
 
-One closure row. Remaining units must read 0; if Dhan shows residual units the reply will say so and the cycle stays open.
+One closure row. Remaining units and pending strategy orders must both read 0; residual exposure or working orders keep closure unverified.
 
 ## Notes
 

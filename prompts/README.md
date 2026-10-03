@@ -23,11 +23,11 @@ Added 2026-09-30.
 | [PR05](PR05-square-off-and-closure.md) | after squaring off | Closure record | closure row with gross P&L and commit hash |
 | [PR06](PR06-re-entry-fresh-pass.md) | after a same-session square-off, before 15:00 | Re-entry fresh pass | Mode C table, inherits day's loss |
 
-## Anytime
+## Other bounded checks
 
 | ID | When (IST) | Prompt | Reply |
 |---|---|---|---|
-| [PR07](PR07-anytime-status-check.md) | any time | Status check: positions, orders, loss vs budget, gate health | status row, no trade decision |
+| [PR07](PR07-anytime-status-check.md) | authorized review window / objective emergency | Status check: positions, orders, loss vs budget, gate health | status row, no trade decision |
 | [PR08](PR08-market-closed-outlook.md) | pre-open or after 15:30 | Market-closed outlook | Mode C with `pre-open watchlist` or NO TRADE / LOCKED OVERNIGHT |
 | [PR09](PR09-end-of-day-summary.md) | after 15:00 | End-of-day summary and journal | summary table and commit hash |
 | [PR10](PR10-tooling-readiness-check.md) | before PR01, or when a gate keeps failing | Tooling readiness: token, MCP, dashboard, sampler | one row per component |
@@ -35,7 +35,7 @@ Added 2026-09-30.
 ## How to use
 
 1. Open the file, copy the block under **Prompt**, paste it to Dhandho.
-2. Fill in anything in `<angle brackets>` (fills, prices, session loss) before sending.
+2. Fill in anything in `<angle brackets>` before sending; session loss must be verified, and user-provided fills/prices remain subject to broker reconciliation.
 3. Read the single table. NO TRADE means no trade. A blocked gate is NO TRADE.
 4. Run the next prompt in sequence only when its precondition holds (listed in each file).
 

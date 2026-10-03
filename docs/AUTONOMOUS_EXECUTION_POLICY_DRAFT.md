@@ -3,11 +3,11 @@
 Status: DRAFT — NOT ACTIVE. Prepared 2026-09-29, Asia/Kolkata.
 This document grants no runtime permission and enables no broker or scheduler.
 
-Implementation status (2026-09-29): an offline SHADOW state machine now exists at
+Source status reviewed 2026-10-03 (proposal remains unadopted): an offline SHADOW state machine now exists at
 `services/day-workflow/day_workflow.py`. It tests one-lot and
-₹1,000-budget logic, recovery and simulated lifecycle effects. Live acquisition,
-executor authorization, real scheduling, ledger and journal adapters remain
-unconnected. No amendment or activation is implied. See the repository
+₹1,000-budget logic, recovery and simulated lifecycle effects. Read-only acquisition and explicit shared-writer accounting adapters exist; the
+SHADOW state machine does not dispatch them automatically. Live executor
+authorization, real scheduling and journal dispatch remain unconnected. No amendment or activation is implied. See the repository
 `services/day-workflow/README.md` implementation section for usage and exact limitations.
 
 ## 1. Activation and precedence

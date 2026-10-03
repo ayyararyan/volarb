@@ -2,6 +2,8 @@
 
 Status: **active architecture**.
 
+Identity helpers and consistency validation are implemented. The component manifests describe intended composition, not a deployed complete execution pipeline; see the [implementation boundary](../../execution-engine/README.md) and [architecture index](../../architecture/README.md).
+
 ## Purpose
 
 Volarb no longer treats Execution Engine as strategy-owned. Execution Engine is a reusable, broker-neutral component that can be mounted into any compatible strategy. Dhan is independently reusable as a broker provider. The identity model therefore separates **what an entity is** from **where an occurrence of that entity is mounted** and from **which live runtime object is currently using it**.
@@ -65,14 +67,14 @@ The strategy owns the desired economic state. Execution Engine owns how to conve
 
 ## Authoritative files
 
-- Component catalog: `architecture/registries/component-registry.json`
-- Composition catalog: `architecture/registries/composition-registry.json`
-- Execution Engine manifest: `architecture/components/execution-engine/manifest.json`
-- Execution Engine canonical VID registry: `architecture/components/execution-engine/vector-id-registry.json`
-- Dhan provider manifest: `architecture/providers/dhan/manifest.json`
-- Volarb composition: `architecture/strategies/volarb/composition.json`
-- Identity helpers: `architecture/lib/identity.mjs`
-- Consistency validator: `architecture/validate.mjs`
+- [Component catalog](../../architecture/registries/component-registry.json)
+- [Composition catalog](../../architecture/registries/composition-registry.json)
+- [Execution Engine manifest](../../architecture/components/execution-engine/manifest.json)
+- [Execution Engine canonical VID registry](../../architecture/components/execution-engine/vector-id-registry.json)
+- [Dhan provider manifest](../../architecture/providers/dhan/manifest.json)
+- [Volarb composition](../../architecture/strategies/volarb/composition.json)
+- [Identity helpers](../../architecture/lib/identity.mjs)
+- [Consistency validator](../../architecture/validate.mjs)
 
 The historical `docs/workflows/vector-id-registry.json` remains a compatibility/assembled view. It mirrors the canonical Execution Engine entries but is no longer the ownership authority for `[5,0,...]`.
 

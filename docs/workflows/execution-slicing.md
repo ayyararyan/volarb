@@ -1,5 +1,7 @@
 # [5,0,7,0,1] Execution Slicing
 
+Status: **active reusable execution design**. The complete pipeline is not yet implemented; see [current contracts/ports](../../execution-engine/README.md). These rules specify required behavior, not a live trading service.
+
 Execution Slicing is the normal-flow sub-box between Margin Optimization and Optimal Execution.
 
 Its purpose is to decide whether a permitted instrument quantity should be executed as one execution slice or split into several smaller slices.
@@ -15,7 +17,7 @@ slice_count = 1
 scheduling_mode = SEQUENTIAL
 ~~~
 
-Therefore today's small-position behavior is unchanged: the full permitted quantity becomes one slice and is handed to Optimal Execution once.
+Under this specified baseline, the full permitted quantity becomes one slice and is handed to Optimal Execution once. A production Slice Planner has not yet been implemented in this repository.
 
 ## [5,0,7,1,1] Slice Planner
 

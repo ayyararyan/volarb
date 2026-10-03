@@ -9,7 +9,7 @@
 ```
 Candidate search for one NIFTY butterfly, one lot total, intraday only, flat by 15:00 IST.
 
-Today's session VRP screen was FAVOURABLE. Session loss so far today: ₹0. Daily loss budget: ₹1,000.
+Today's session VRP screen was FAVOURABLE. Session loss so far today: ₹<verified amount>. Daily loss budget: ₹1,000.
 
 1. Read fresh Dhan positions and orders; confirm flat with no pending orders.
 2. Pull one coherent current-expiry chain with timestamped executable-side quotes and data health.
@@ -27,6 +27,7 @@ Mode C table. Either up to three rows of `[expiry] [lower / body / upper]` with 
 
 ## Notes
 
+- Replace `<verified amount>` with reconciled session loss; use ₹0 only when verified, never as a default.
 - A blocked gate is NO TRADE. Later metrics never override an earlier failure.
 - The HF block must be under 120 s old against the decision clock, quality PASS, with a news packet. Session OHLC or prior-day RV cannot substitute.
 - Margin PASS is research affordability, not sizing or risk approval.

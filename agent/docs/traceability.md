@@ -1,11 +1,17 @@
 # Requirements and acceptance traceability
 
-Created before implementation; updated against executed evidence. Source base:
+This table preserves the **initial 2026-10-02 acceptance baseline**, not current
+capability or test-count claims. Later [Codex lifecycle verification](codex-verification.md)
+and the [real-data program](first-real-campaign.md) extend that evidence; consult
+[verified data capabilities](real-data-capabilities.md) for current source support.
+The initial release receipts are [archived](../../archive/research/laboratory/2026-10-02/README.md).
+
+Created before implementation; updated against its executed evidence. Source base:
 `98cdabea49ca45aa237b51ebe8865351c20d3125`. The original checkout's unrelated
 dashboard edit was preserved. Operational trading, authentication and ledgers
 are outside the change scope. Module names below refer to `src/butterfly_lab/`.
 
-| ID | Mandatory behavior | Implementation | Executed acceptance | Status |
+| ID | Mandatory behavior | Implementation | Executed acceptance | Initial-release status |
 |---|---|---|---|---|
 | R01 | Strict versioned contracts, units, aware clocks, immutable evidence | schemas, config | test_contracts_cli; test_registry; 14 generated schemas | Passed |
 | R02 | Complete registry, migrations, controlled writer, lineage/supersession | registry, dedup, evidence | test_registry; test_dedup; graph duplicate lineage | Passed |

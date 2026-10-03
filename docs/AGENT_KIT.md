@@ -75,6 +75,7 @@ python3.12 tools/volarb.py doctor \
 
 JSON output includes actionable PASS/FAIL/WARN checks for runtimes, dependencies,
 skill drift, workspace files, OpenClaw registration, private credential presence,
+both canonical/compatibility mutation flags,
 canonical ledger presence, browser support and GitHub CLI availability. It never
 prints secrets. `READY` means the software checks passed—not account access,
 provider authentication, broker connectivity or trading readiness. Exit 2 means
@@ -93,8 +94,9 @@ python3.12 tools/volarb.py run \
   python services/day-workflow/day_workflow.py --help
 ```
 
-The launcher sets source/data paths, prepends `.venv/bin`, disables execution and
-browser recovery, and selects whether explicit read-only capture is allowed.
+The launcher sets source/data paths, prepends `.venv/bin`, pins both
+`DHAN_PROVIDER_COMMANDS_ENABLED=false` (canonical provider) and
+`DHAN_EXECUTION_ENABLED=false` (compatibility executor), and disables browser recovery, and selects whether explicit read-only capture is allowed.
 It is an environment launcher, **not a security sandbox** for arbitrary commands.
 The profile expresses the adopted covenant; it is not authorization for trading.
 
@@ -117,8 +119,10 @@ Browser recovery is off by default. Optional **macOS** recovery uses
 setup is `npm run auth:setup` with the correct data environment. Linux/WSL needs a
 privately provisioned Web token; OTP/captcha cannot be bypassed by this kit.
 
-The Dockerfile is for the MCP service only, uses `npm ci` and non-root external
-`/data`; it does not bundle a desktop browser, enable execution, or migrate state.
+Build the [Dhan Dockerfile](../services/dhan-chatgpt-mcp/Dockerfile) from the
+repository root (`docker build -f services/dhan-chatgpt-mcp/Dockerfile .`) so its
+shared Execution Engine contracts are present. It serves MCP, uses `npm ci` and
+non-root external `/data`; it does not bundle a desktop browser, enable execution, or migrate state.
 The optional shell/ngrok launcher requires separate private tunnel configuration.
 No launcher or background service is invoked by setup.
 
@@ -128,7 +132,18 @@ No launcher or background service is invoked by setup.
 python3.12 tools/volarb.py package --output dist/volarb-agent-kit-0.1.0.zip
 ```
 
-The explicit manifest roots include code, templates, tests and locks. Private
+The explicit manifest roots include code, templates, tests, locks, canonical
+architecture, Execution Engine contracts, execution environment definitions and
+documentation. `execution-testkit` is included as a separate source-only test area,
+never as a production dependency. Dhan's exported provider library imports the
+shared `execution-engine` contracts, so those paths must travel together. Archive
+documents are included as clearly marked non-operational history; no archive is
+imported by setup or production code. The separate `agent/` research lab, prompts, workflow definitions and repository
+navigation are included as source-only context. The lab retains its own dependency
+lock and separate environment; kit setup does not install or execute it. Financial
+history directories contain generated README omission notices only, with links to
+the private repository—not dummy trades or copied journals. Raw lab runtime stores,
+artifacts, databases and environments remain excluded. Private
 state, credentials, personal memory, financial ledgers, raw evidence and historical
 journals are excluded. Each archive contains SHA256SUMS.json for its source files.
 Keep the repository private: this package is reusable, not a public-release or

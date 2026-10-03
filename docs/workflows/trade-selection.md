@@ -1,5 +1,7 @@
 # [3,0,0,0,0] Trade Selection
 
+Status: **active Volarb strategy design**, not a deployed autonomous workflow. See [workflow ownership](README.md) for the current human-executed controller and governing covenant; design schedulers and broader strategy choices do not authorize orders or monitoring.
+
 This is a parameterized graph. The canonical template uses `I=0`.
 
 Runtime graph instance convention:

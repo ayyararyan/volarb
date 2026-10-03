@@ -2,6 +2,8 @@
 
 Status: **active test architecture**.
 
+Implemented today: deterministic dependencies, `ComponentHarness`, `CompositionHarness`, scenario/mass drivers and trace invariants. The complete Execution Engine policy pipeline, recorded-input runner and live shadow runner are **not yet implemented**. The diagram and five levels below describe the required architecture, not completed end-to-end production validation. See [implementation scope and test commands](../../execution-testkit/README.md).
+
 The Execution Testbed is external infrastructure around `component.execution_engine`. It is not a second implementation of the engine and has no Execution Engine VID.
 
 ## Fundamental rule
@@ -26,7 +28,7 @@ The engine never checks a `test_mode` flag. Environment differences are dependen
 
 ### 1. Box test
 
-Mount exactly one box through `ComponentHarness`, supplying only its required ports. Margin Optimization, Execution Slicing, Optimal Execution, Recovery, State Integrity and Interrupt Control can therefore each be tested independently.
+Mount one implemented box through `ComponentHarness`, consuming only its required ports from the supplied dependencies. Margin Optimization, Execution Slicing, Optimal Execution, Recovery, State Integrity and Interrupt Control are designed to be tested this way once implemented; current tests mount fixture components.
 
 ### 2. Composition test
 
@@ -34,7 +36,7 @@ Mount a selected subset, for example Optimal Execution -> Command Commit Guard -
 
 ### 3. Full-engine scenario
 
-Run the complete engine against deterministic market/broker/clock/ledger implementations. Declarative scenario fixtures define fills, delays, acknowledgement loss, cancellation races, market changes and faults.
+The target is to run the complete engine against deterministic market/broker/clock/ledger implementations. The existing `runScenario` accepts a caller-supplied driver; declarative fixtures configure fills, delays, acknowledgement loss, cancellation races, market changes and faults. Current fixtures test the simulator boundary, not a complete engine.
 
 ### 4. Mass simulation
 
@@ -42,7 +44,7 @@ Generate seed-addressable scenarios and enforce invariants. A failure carries it
 
 ### 5. Replay / shadow
 
-Replay historical event streams under a virtual clock or consume live read-only market/account state while all mutations remain blocked/simulated. Production is entered only by mounting the real provider environment.
+The planned runners will replay recorded event streams under a virtual clock or consume live read-only market/account state while mutations remain blocked/simulated. Only the environment contracts exist today. A real provider mount would still require separately configured authorization/readiness; selecting or reading a manifest alone does not enable production.
 
 ## Current invariant library
 
@@ -62,4 +64,4 @@ More component-specific invariants should be added as the Execution Engine imple
 | shadow | live read-only | none | real | yes |
 | production | live | real mounted provider | real | **no** |
 
-Production/test separation is configuration-level and dependency-level, not an internal execution branch.
+Production/test separation is configuration-level and dependency-level, not an internal execution branch. The [environment guide](../../environments/execution/README.md) explains the declarative contract and current implementation limits.

@@ -1,7 +1,13 @@
 # Day workflow — SHADOW simulation and explicit read-only adapters
 
 
-Implemented in `day_workflow.py`, with tests in `test_day_workflow.py`.
+Status: **strategy-specific research/shadow workflow**, not the reusable
+[Execution Engine](../../execution-engine/README.md) or its
+[Execution Testbed](../../execution-testkit/README.md). The butterfly v2.6 controller
+is a research decision controller, not the generic execution pipeline.
+
+Implemented in [`day_workflow.py`](day_workflow.py), with tests in
+[`test_day_workflow.py`](test_day_workflow.py).
 This is an offline, evidence-packet-driven state machine, **not the completed live
 automation**. The SHADOW branch has no network client or effects dispatcher. Separately invoked
 read-only capture and canonical accounting adapters are now packaged alongside it. Its `SIMULATE_*`, `SCHEDULE_SIMULATION`,
@@ -19,7 +25,7 @@ Implemented behavior:
 - Net liquidation P&L from deduplicated cycle fill cash flows, signed remaining
   quantities, executable-side closing quotes, incurred charges and remaining
   exit-cost bound. The ₹1,000 threshold emits an exit simulation request.
-- Uses the repository v2.5 controller with explicit gate inputs; refuses
+- Uses the repository v2.6 controller with explicit gate inputs; refuses
   missing defaults, stale margin, mismatched geometry/sequence, missing costs or
   unverified account state. Cross-index selection consumes the existing research
   layer's evidence-backed global candidate order; it does not invent a new ranking
@@ -87,3 +93,54 @@ source remains disabled and the execution policy draft remains inactive.
 
 Source provenance is in `agent-kit/source-inventory.json`. Synthetic tests use
 temporary accounting stores; no live financial records or credentials were copied.
+
+## Source ownership and entrypoint map
+
+| Area | Entrypoints | Effects |
+|---|---|---|
+| Shadow state machine | `day_workflow.py`, `policy/master_algorithm.json` | Private synthetic state/outbox; no effect dispatcher |
+| Research composition | `master_workflow.py`, `workflow_decision.py` | First-terminal research decision from explicit evidence |
+| Observation ingress | `workflow_observation.py`, `volarb_paths.py` | Explicit read-only capture; private evidence, no broker mutation |
+| Canonical accounting | `workflow_accounting.py`, `trade_ledger.py`, `review_scorecard.py`, `simple_ledger.py` | Explicit shared-writer commits only; no new alternate ledger |
+| Current-only selection | `wide_butterfly_selector.py`, `robust_tail_selection.py` | Pure calculations; no implicit backtest |
+| Shadow audit helpers | `decision_table.py`, `forecast_shadow.py` | Forecast/outcome audit; cannot override current controller |
+
+Run the complete synthetic workflow/accounting suite from the repository root:
+
+```sh
+python3 -B -m unittest discover -s services/day-workflow -p 'test_*.py'
+```
+
+## Research packet compatibility with the current controller
+
+`workflow_decision.compose` consumes normalized, explicitly sourced assessments;
+it does not acquire a live dashboard or invent absent accounting evidence.
+
+- Top-level `session_loss` must supply `asof`, nonnegative `rupees` (positive loss),
+  and `evidence_ref` for candidate evaluation. Flatness does **not** imply zero
+  session loss. The budget comes from the existing ₹1,000 policy. Missing/stale
+  evidence is `NEED_EVIDENCE`; a verified breach terminates before VRP, news or HF.
+- Each candidate index requires its own `session_vrp_snapshot` envelope containing
+  `symbol`, `asof`, `evidence_ref`, and `state`. `state` is the source dashboard or
+  equivalent snapshot accepted by
+  [`evaluate_session_vrp.py`](../../skill/butterfly-market-outlook/scripts/evaluate_session_vrp.py),
+  with a fresh `now` or `health.observation_timestamp`. The adapter recomputes the
+  canonical gate; a bare `session_vrp_state: FAVOURABLE` flag is not accepted.
+- VRP snapshots must explicitly prove `fit_ok: true` and arbitrage
+  `checked: true, passed: true`. Missing/unchecked proof or malformed snapshot
+  objects are `UNKNOWN`, never an absent-field approval or an uncaught exception.
+- Missing, stale, wrong-index or unfavourable VRP terminates candidate evaluation
+  before HF/news. NIFTY evidence is never automatically reused for BANKNIFTY or
+  SENSEX. Equivalent per-index feeds must exist; synthetic test fixtures are not
+  evidence that those live integrations exist.
+- HF input retains `current_asof` for ingress freshness checks. Before invoking the
+  RV child, the adapter sets its canonical `asof` to the verified decision clock;
+  an unrelated payload timestamp cannot change the child's freshness decision.
+- Existing-position review does not require a favourable candidate VRP screen.
+  Missing, stale or invalid optional session-loss evidence remains an explicit
+  controller warning and cannot mask a separately verified risk/expiry exit;
+  candidate loss evidence remains mandatory and fail-closed.
+  Existing loss/deadline/expiry protections remain independent of missing later
+  research evidence. The normalized SHADOW `gates` packet includes explicit
+  `session_vrp_state`, `daily_loss_budget_rupees`, and `session_loss_rupees` for
+  candidates; these are synthetic adapter inputs, not live authorization.

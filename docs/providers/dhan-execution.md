@@ -1,10 +1,14 @@
-# Dhan Execution Provider Plug-in
+# Dhan Provider — architecture and ownership
 
 Status: **provider boundary active; COMMAND, QUERY and STREAM broker connector implemented with provider configuration/readiness, normalized facts and global error normalization.**
 
-Last provider-boundary audit: **2026-10-03**, against repository `main` at `942003ede3c3ddb4836824e8e1dab97c58445847` and the current official DhanHQ v2 API documentation.
+Historical provider-boundary audit: **2026-10-03**, against repository `main` at `942003ede3c3ddb4836824e8e1dab97c58445847` and the current official DhanHQ v2 API documentation.
 
-This document is intentionally **outside the numbered Volarb box hierarchy**.
+This is the canonical provider ownership document, **outside the numbered Volarb
+box hierarchy**. The [call map](dhan-execution-engine-call-map.md) owns connector
+usage, the [service guide](../../services/dhan-chatgpt-mcp/README.md) owns setup,
+and the [legacy executor guide](dhan-legacy-butterfly-executor.md) owns compatibility
+APIs. Source implementation is not evidence of deployment or live authorization.
 
 Dhan is an **external reusable broker capability provider** with canonical component identity `provider.dhan`. `[5,0,3,6,1] Broker Execution Port` is one important client of it, but Dhan is not owned by Execution Engine and does not know which strategy, workflow or execution engine called it. It does not receive a Box number or Volarb VID. When mounted into a composition it receives a mount identity and composition-owned bindings; those do not become canonical Dhan VIDs.
 
@@ -29,7 +33,7 @@ Conceptually:
 
 Execution Engine normally reaches Dhan through `[5,0,3,6,1] Broker Execution Port`. Strategy, research or monitoring components may also consume Dhan information through appropriate provider-facing interfaces. Dhan itself does not branch on caller identity or strategy meaning.
 
-For **current production Volarb mutations**, the Command Commit Guard / Execution Ledger invariant remains upstream of the Broker Execution Port. Provider reusability must not be used as a shortcut around that safety path. The architectural point is that this rule belongs to the caller/core, not inside Dhan.
+For **the intended production Execution Engine mutation path**, the Command Commit Guard / Execution Ledger invariant remains upstream of the Broker Execution Port. Provider reusability must not be used as a shortcut around that safety path. The architectural point is that this rule belongs to the caller/core, not inside Dhan.
 
 The Dhan implementation must be replaceable by another provider without changing Margin Optimization, Execution Slicing, Optimal Execution, Interrupt Control, State Integrity or Execution Recovery.
 
@@ -125,7 +129,7 @@ Dhan currently documents Order API limits of 10 requests/second, 250/minute, 100
 
 No arbitrary Volarb latency target is frozen yet. End-to-end and per-provider p50/p95/p99 targets will be benchmarked rather than invented.
 
-## Initial code implementation
+## Current provider implementation
 
 The canonical provider core now starts with:
 
@@ -137,22 +141,24 @@ The canonical provider core now starts with:
 
 The existing `placeLimitOrder(...)` and `ButterflyExecutor` remain temporarily as compatibility clients. They are not the canonical provider contract and can be retired only after their callers migrate safely.
 
-## Existing repository substrate: classification
+## Active implementation and compatibility boundaries
 
-| Current code | Keep as Dhan mechanics | Move conceptually upstream / separate |
+| Code | Current responsibility | Ownership boundary |
 |---|---|---|
-| `src/dhan-client.mjs` | REST transport; profile; IP; funds; positions; holdings; orders; trades; order/correlation lookup; order trades; quotes; option chain; margin calculators | Replace forced LIMIT/INTRADAY/DAY placement with a generic mechanical order translator; add modify and market-order support; classify mutation ambiguity |
-| `src/instrument-master.mjs` | CSV acquisition/cache; field parsing; Security-ID and broker metadata extraction | Replace index-only/butterfly resolution with a generic economic-instrument resolver; no strike substitution or strategy choice |
-| `src/web-token.mjs` / browser token modules | Token validation, renewal, private atomic storage, account verification, fail-closed recovery | Browser/UI recovery remains deployment-specific and sits behind provider authentication; it is not a Broker Execution Port semantic |
-| `src/execution-mcp.mjs` | Endpoint authentication, static-IP/account observations, process ownership primitive | Butterfly preview/execute/stop/reconcile tools are not the Broker Execution Port; readiness becomes dimensional provider facts rather than a single trading-policy gate |
-| `src/execution-oauth.mjs` | OAuth/PKCE can remain as service-access security when the MCP surface is retained | Decouple from `ButterflyExecutor`, `ExecutionStore` and `butterfly:execute`; this authenticates clients to the service, not Dhan brokerage semantics |
-| `src/margin-preflight.mjs` | Raw single/basket Dhan margin calls and response normalization | Butterfly geometry, sequence prefixes, reserve policy, quote-age/depth policy, session timing and PASS/FAIL affordability belong upstream |
-| `src/butterfly-executor.mjs` | Order/trade identity validation, correlation lookup, fill reconciliation patterns, broker status normalization, restart-safety lessons | Butterfly sequencing, hedge checks, passive pricing/repricing, waits, session policy, margin gating, preview confirmation, automatic cancellation/settlement and job execution loop belong upstream |
-| `src/server.mjs` | Can remain a deployment façade over Dhan provider capabilities | Research analytics and butterfly-specific tools stay separate from provider core and must not define the Broker Execution Port |
+| `src/dhan-runtime.mjs`, `src/dhan-broker-port.mjs` | Configured runtime and implemented QUERY / COMMAND / STREAM connector | Canonical entrypoint; imports shared engine contracts, not testkit |
+| `src/dhan-client.mjs`, `src/dhan-translator.mjs` | Generic place/modify/cancel and mechanical broker-neutral request translation are implemented | `placeLimitOrder` remains compatibility-only; policy stays upstream |
+| `src/instrument-master.mjs` | Cached generic exact-ID/symbol/option resolution with metadata | No strike substitution or strategy selection; broader segment coverage remains incremental |
+| `src/dhan-config.mjs`, `src/dhan-readiness.mjs` | Dimensional configuration and mutation readiness | Broker configuration is distinct from strategy approval |
+| `src/dhan-streams.mjs`, `src/dhan-normalizer.mjs` | Live market/order events and normalized broker facts | Stream loss is a fact, not a provider-owned execution decision |
+| `src/web-token.mjs`, browser modules | Token validation, renewal, private storage and account verification | Browser/UI recovery is deployment-specific and opt-in |
+| `src/execution-mcp.mjs`, `src/execution-oauth.mjs` | Retained authenticated butterfly façade | Compatibility-active service security/API, not the Broker Execution Port |
+| `src/margin-preflight.mjs` | Retained research margin/sequence preflight | Strategy-specific reserve/depth/PASS–FAIL rules, separate from generic provider margin facts |
+| `src/butterfly-executor.mjs` | Retained working butterfly executor and restart safeguards | Compatibility-active; migrate callers before retirement, never fold its policy into Dhan core |
+| `src/server.mjs`, `src/surface-analytics.mjs`, workflow capture | Research façade and explicit read-only evidence | Strategy/research consumers, not generic provider policy |
 
-## Safety behavior to preserve while moving ownership
+## Safety behavior and upstream ownership
 
-The current executor has several strong invariants that must survive the refactor even though their broker-neutral ownership moves upstream:
+The current executor has several strong invariants that must survive any compatibility migration; their broker-neutral architectural ownership is upstream:
 
 - write intent durably before a mutation;
 - never blindly retry an ambiguous placement/modification/cancellation;
@@ -183,9 +189,11 @@ These are provider-internal responsibilities, not new Volarb boxes and not VID a
 | **DhanNormalizer / Error Classifier** | Maps Dhan enums/fields/errors into normalized Broker Execution Facts and explicit mutation ambiguity |
 | **DhanRuntimeState** | Provider-local auth/stream/cache/capability state only; never a second Volarb execution ledger |
 
-## Broker Execution Port capabilities Dhan must implement
+## Implemented Broker Execution Port capabilities
 
-The exact language-level interface remains an Execution Engine implementation task, but the Dhan provider needs mechanical support for the following broker-neutral operations:
+The shared [operation vocabulary](../../execution-engine/ports/broker-port.mjs) and
+[runtime dependency contracts](../../execution-engine/ports/runtime-ports.mjs) are
+implemented in Node ESM. Dhan supplies these broker-neutral mechanical capabilities:
 
 1. Resolve a complete economic instrument identity to an opaque provider instrument reference plus normalized metadata.
 2. Place an explicitly requested order without silently changing side, quantity, order type, product profile, validity or price.
@@ -334,21 +342,22 @@ Provider capability/readiness should make rate constraints observable to Executi
 
 ### Native order slicing
 
-Dhan offers `/orders/slicing` for orders above freeze quantity. Volarb already owns `[5,0,7,0,1] Execution Slicing`, including slice identity, scheduling and recovery. Dhan native slicing is therefore **not used by the initial Broker Execution Port implementation**. The provider may advertise that the broker has the capability, but Execution Engine remains the owner of slicing.
+Dhan offers `/orders/slicing` for orders above freeze quantity. Execution Engine owns `[5,0,7,0,1] Execution Slicing`, including slice identity, scheduling and recovery. Dhan native slicing is therefore **not used by the initial Broker Execution Port implementation**. The provider may advertise that the broker has the capability, but Execution Engine remains the owner of slicing.
 
 ### Exit All Positions
 
-Dhan's `DELETE /positions` exits all active positions and cancels all open orders for the trading day. It is too broad to be the default implementation of Volarb L3 `FLATTEN_ALL`, whose scope is all **controlled** exposure and whose mutations must remain individually attributable through the Execution Ledger.
+Dhan's `DELETE /positions` exits all active positions and cancels all open orders for the trading day. It is too broad to be the default implementation of Execution Engine L3 `FLATTEN_ALL`, whose scope is all **controlled** exposure and whose mutations must remain individually attributable through the Execution Ledger.
 
 Therefore L3 should normally resolve controlled positions/orders upstream and send explicit cancel/market actions through the Broker Execution Port. Dhan Exit All may be considered later only as a separately governed broker-wide emergency/operations escape hatch.
 
 ### Kill Switch and P&L Exit
 
-Dhan's Kill Switch and P&L based auto-exit are broker account control-plane features. They are not implementations of Volarb Interrupt Control and are excluded from the standard Broker Execution Port for now.
+Dhan's Kill Switch and P&L based auto-exit are broker account control-plane features. They are not implementations of Execution Engine Interrupt Control and are excluded from the standard Broker Execution Port for now.
 
-## Existing behaviors that must be removed from provider-core semantics
+## Compatibility policy excluded from the provider core
 
-The following current `ButterflyExecutor`/preflight behavior is explicitly not part of the future Dhan provider core:
+The following retained `ButterflyExecutor`/research-preflight behavior is explicitly
+outside the implemented generic Dhan Provider core:
 
 - put-wing/body/call-wing/body roles and ordering;
 - entry/exit butterfly geometry;
@@ -363,13 +372,15 @@ The following current `ButterflyExecutor`/preflight behavior is explicitly not p
 - preview/confirmation as the execution control mechanism;
 - automatic account serialization because unrelated orders exist.
 
-The provider should report the relevant broker facts; upstream Volarb decides what those facts mean.
+The provider reports relevant broker facts; the upstream strategy/engine decides
+what those facts mean. These compatibility behaviors remain in their existing
+modules and are not removed by the repository cleanup.
 
 ## Remaining provider work
 
 The production Broker Execution Port substrate is now implemented. Remaining work is narrower and should not change the frozen provider boundary:
 
-- wire the Broker Port into the future production Execution Engine implementation once that component's runtime stack is chosen;
+- implement and validate the full generic Execution Engine pipeline and its production wiring against the existing shared Node ESM ports; ports/contracts and test doubles exist, but they are not a completed execution pipeline;
 - complete generic instrument normalization for any Dhan segment/instrument types not yet exercised by the indexed resolver;
 - add provider-local rate-limit telemetry/accounting without turning it into execution policy;
 - optionally add Dhan 20/200-level Full Market Depth as a separately advertised segment-specific capability;
@@ -422,12 +433,12 @@ The original provider-boundary audit required no new VID. The later broker-neutr
 
 ## Error implementation files
 
-- `src/provider-error.mjs` — broker-neutral Provider Error Envelope and stable categories/codes.
+- [`execution-engine/contracts/provider-error.mjs`](../../execution-engine/contracts/provider-error.mjs) — canonical broker-neutral Provider Error Envelope and stable categories/codes; `src/provider-error.mjs` is a retained compatibility re-export.
 - `src/dhan-error-mapper.mjs` — exhaustive Dhan-native -> global mapping with total UNKNOWN fallback.
 - `src/dhan-provider.mjs` — catches every canonical provider failure and exposes only ProviderError to callers.
 - `src/dhan-client.mjs` — preserves Dhan transport context (HTTP/path/method/timeout/network/protocol) for the mapper.
 
-Canonical global contract: `docs/providers/provider-error-contract.md`.
+Canonical global contract: [Provider Error Envelope](provider-error-contract.md).
 
 
 ## Production Broker Execution Port program
@@ -442,7 +453,7 @@ The actual strategy-agnostic broker program is now implemented independently of 
 - `src/dhan-provider.mjs` remains the thin mechanical Dhan facade.
 - `src/dhan-client.mjs` remains the low-level HTTP transport/API client.
 
-Canonical call map: `docs/providers/dhan-execution-engine-call-map.md`.
+Canonical call map: [Dhan ↔ Execution Engine](dhan-execution-engine-call-map.md).
 
 The production connector does not require MCP or an LLM. Execution Engine can import the runtime/broker-port library directly.
 
@@ -452,7 +463,7 @@ Missing broker identity/credential source is `PROVIDER.NOT_CONFIGURED`. Mutation
 
 Read-only queries do not require static-IP readiness because Dhan documents static-IP whitelisting as required for order placement/modification/cancellation, while order/trade retrieval is available without that mutation whitelist requirement.
 
-### Implemented Execution Engine operations
+### Implemented provider operations for Execution Engine callers
 
 `GET_READINESS`, `GET_CAPABILITIES`, `RESOLVE_INSTRUMENT`, `GET_ACCOUNT_SNAPSHOT`, `GET_POSITIONS`, `GET_FUNDS`, `GET_ORDERS`, `GET_ORDER`, `GET_ORDER_BY_CORRELATION`, `GET_TRADES`, `GET_ORDER_TRADES`, `GET_HISTORICAL_TRADES`, `GET_MARGIN`, `GET_BASKET_MARGIN`, `GET_LTP`, `GET_QUOTE`, `PLACE_ORDER`, `MODIFY_ORDER`, `CANCEL_ORDER`.
 

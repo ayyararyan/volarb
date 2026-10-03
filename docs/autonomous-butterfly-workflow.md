@@ -1,6 +1,8 @@
-# Volarb Autonomous Workflow
+# Volarb Strategy Composition — Autonomous Workflow Design
 
-The autonomous architecture is organized into five named modules. Numeric values remain only inside immutable VIDs.
+Status: **active architecture design, not an operational autonomous deployment**. The current research workflow remains human-executed under [WORKFLOW.md](WORKFLOW.md), the [butterfly controller](../skill/butterfly-market-outlook/SKILL.md), and the [personal covenant](PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md). No diagram authorizes orders, monitoring, broader structure families or overnight carry.
+
+Volarb owns four strategy modules and mounts the independently reusable Execution Engine. Numeric values remain only inside immutable VIDs. The [composition manifest](../architecture/strategies/volarb/composition.json) owns mounts and bindings; [compositional identity](architecture/compositional-identity.md) owns identity rules.
 
 ~~~mermaid
 flowchart TD
@@ -10,7 +12,7 @@ flowchart TD
     F["[0,0,2,1,1] Fan out one Trade Selection instance per selected X"]
     T["[3,I,0,0,0] Trade Selection"]
     P["[4,0,0,0,0] Position Management"]
-    E["[5,0,0,0,0] Internal Execution"]
+    E["[5,0,0,0,0] Execution Engine"]
 
     S -->|"[0,0,1,4,1]"| R
     R -->|"[0,0,1,4,2] favorable"| U
@@ -45,11 +47,11 @@ Owns strategy/risk intelligence for establishing, supervising, adjusting, hedgin
 
 Detailed workflow: [workflows/position-management.md](workflows/position-management.md)
 
-## [5,0,0,0,0] Internal Execution
+## [5,0,0,0,0] Execution Engine
 
 Converges registry requirements into authoritative broker positions.
 
-Internal Execution has three ordered normal-flow sub-boxes:
+Execution Engine has three ordered normal-flow sub-boxes:
 
 1. **[5,0,2,0,1] Margin Optimization**
 2. **[5,0,7,0,1] Execution Slicing**
@@ -59,14 +61,14 @@ It also contains cross-cutting **State Integrity**, **Execution Recovery**, and 
 
 Margin Optimization produces the mandatory Execution Ordering Plan, which is either ORDERED or UNCONSTRAINED. Optimal Execution must obey ORDERED precedence; when UNCONSTRAINED, it may choose order or concurrency among released work.
 
-Detailed workflow: [workflows/internal-execution.md](workflows/internal-execution.md)
+Detailed workflow: [workflows/execution-engine.md](workflows/execution-engine.md)
 
 ## Global rules
 
 - Semantic names, not numeric "Box" labels, are used in prose.
 - VIDs remain immutable and retain their numeric first coordinate.
 - Broker providers such as Dhan are external plug-ins, not core modules.
-- Interrupt Control has priority over normal Internal Execution and may bypass the plug-in execution algorithm for emergency cancellation/flattening.
+- Interrupt Control has priority over normal Execution Engine and may bypass the plug-in execution algorithm for emergency cancellation/flattening.
 - Strategy/risk logic remains in Position Management.
 - Margin Optimization precedes micro-execution and supplies the mandatory ordering decision: ORDERED or UNCONSTRAINED.
 - Execution Slicing defaults to one sequential slice; future large positions may be split into multiple slices without changing Optimal Execution.
@@ -76,4 +78,6 @@ Detailed workflow: [workflows/internal-execution.md](workflows/internal-executio
 - Missing or invalid ordering decision means no Optimal Execution; an explicit UNCONSTRAINED decision is valid.
 - Concrete execution algorithms are plug-and-play behind the Execution Algorithm Port.
 - Broker execution must not independently alter strategy intent.
-- Every new architectural entity receives an immutable VID.
+- New strategy-local or Execution Engine entities receive immutable VIDs in the owning namespace. Providers have component identities without Volarb VIDs; mounts/bindings have composition identities.
+- Strategy-specific translation, if required, sits in an optional Strategy Execution Adapter upstream of the generic engine.
+- The [implemented execution contracts/ports](../execution-engine/README.md) and [testkit](../execution-testkit/README.md) do not constitute an implemented full execution pipeline.

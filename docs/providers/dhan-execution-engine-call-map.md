@@ -1,6 +1,13 @@
 # Dhan <-> Execution Engine call map
 
-Status: **implementation contract active**.
+Status: **provider connector contract active; not a complete engine pipeline**.
+
+The canonical operation vocabulary is
+[`execution-engine/ports/broker-port.mjs`](../../execution-engine/ports/broker-port.mjs).
+[`createDhanRuntime`](../../services/dhan-chatgpt-mcp/src/dhan-runtime.mjs) supplies
+the real-provider port; [environment definitions](../../environments/execution/production.json)
+describe injected dependencies, not an implemented production factory or live
+activation. See [Execution Engine status](../../execution-engine/README.md).
 
 Dhan implements the mounted broker-provider boundary. Execution Engine remains broker-neutral and calls Dhan only through the Broker Execution Port.
 

@@ -4,6 +4,15 @@ Research-only, registry-centred **LangGraph** laboratory. No broker execution,
 production strategy imports, broker credentials or live-ledger writes. Synthetic examples
 are engineering evidence, never historical strategy performance.
 
+This is the retrospective research laboratory, not the reusable
+[Execution Engine](../execution-engine/README.md) or its
+[Execution Testbed](../execution-testkit/README.md). Its numerical workers simulate
+registered research experiments; they cannot submit broker orders. The live
+[butterfly decision skill](../skill/butterfly-market-outlook/SKILL.md) has a separate
+control plane. `src/butterfly_lab/observed_controller_v26.py` is an intentionally
+byte-frozen replay baseline, not a second live controller; never synchronize it
+with later skill changes.
+
 ## Install and run
 
 Requires Python **3.12** and an enforced numerical sandbox: macOS `sandbox-exec`, or
@@ -45,9 +54,14 @@ its login credentials. [First-time setup, exact campaign command and troubleshoo
 - [Scientific contract](docs/scientific-contract.md): exact definitions, F0–F4
   ceilings, inference and baseline provenance.
 - [Provider configuration](docs/providers.md) and [security boundary](docs/security.md).
-- [Codex migration verification and exact setup](docs/codex-verification.md).
-- [Requirements → tests](docs/traceability.md), [verified data audit](docs/data-audit.md),
-  [release verification](docs/verification.md).
+- [Live research lifecycle](docs/live-research-lifecycle.md) and
+  [dated Codex acceptance evidence](docs/codex-verification.md).
+- [Current verified data capabilities](docs/real-data-capabilities.md),
+  [source discovery and limitations](docs/real-data-discovery.md), and
+  [first real-data campaign findings](docs/first-real-campaign.md).
+- [Requirements → tests](docs/traceability.md),
+  [documentation index](docs/README.md), and
+  [initial-release archive](../archive/research/laboratory/2026-10-02/README.md).
 - [Architecture and diagrams](docs/architecture.md), [configuration reference](docs/configuration.md).
 
 ```sh

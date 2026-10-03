@@ -1,14 +1,16 @@
 # [5,0,6,0,1] Interrupt Control
 
-Interrupt Control is an NVIC-inspired supervisory sub-box inside Internal Execution.
+Status: **active reusable execution design**. The complete pipeline is not yet implemented; see [current contracts/ports](../../execution-engine/README.md). These rules specify required behavior, not a live trading service.
+
+Interrupt Control is an NVIC-inspired supervisory sub-box inside Execution Engine.
 
 It is **not** part of the normal sequential path:
 
 ~~~text
-Margin Optimization -> Optimal Execution
+Margin Optimization -> Execution Slicing -> Optimal Execution
 ~~~
 
-Instead, it sits orthogonally above that path and can preempt both sub-boxes.
+Instead, it sits orthogonally above that path and can preempt all three sub-boxes.
 
 Its purpose is to provide deterministic emergency behavior when an authorized upstream component raises an interrupt.
 
@@ -72,7 +74,7 @@ It:
 - vectors execution to the correct handler;
 - consumes broker facts to determine whether the interrupt action is complete.
 
-Normal Margin Optimization and Optimal Execution are lower priority than L1.
+Normal Margin Optimization, Execution Slicing and Optimal Execution are lower priority than L1.
 
 ## Nested behavior
 
@@ -130,7 +132,7 @@ While the interrupt remains latched, normal work for the affected scope is block
 
 Completion of an interrupt action does **not** automatically mean normal trading resumes.
 
-A separate authorized clear/resume decision is required to release the latched scope back to normal Internal Execution.
+A separate authorized clear/resume decision is required to release the latched scope back to normal Execution Engine.
 
 The exact upstream clear authority will be designed with the broader strategy/risk control plane.
 
@@ -183,7 +185,7 @@ Flatten means:
 
 The normal time-based execution algorithm is bypassed.
 
-Internal Execution does not infer strategy meaning here. The interrupt must carry or resolve to an explicit affected economic scope.
+Execution Engine does not infer strategy meaning here. The interrupt must carry or resolve to an explicit affected economic scope.
 
 # L3 — FLATTEN_ALL
 
@@ -193,7 +195,7 @@ This is the highest current priority.
 
 Handler:
 
-1. preempt Margin Optimization and Optimal Execution globally;
+1. preempt Margin Optimization, Execution Slicing and Optimal Execution globally;
 2. block all new normal order generation;
 3. cancel all controlled working orders;
 4. reconcile cancellations and race fills;
@@ -224,7 +226,7 @@ FLATTEN_SCOPE_MARKET
 FLATTEN_ALL_MARKET
 ~~~
 
-These actions bypass the plug-in Optimal Execution algorithm and go directly to the Broker Execution Port.
+These actions bypass the plug-in Optimal Execution algorithm, but still pass through Execution Recovery / Command Commit Guard and the write-ahead Execution Ledger before reaching the Broker Execution Port.
 
 They still require authoritative reconciliation.
 
@@ -237,7 +239,7 @@ L2 FLATTEN_SCOPE
     >
 L1 CANCEL_WORK
     >
-normal Internal Execution
+normal Execution Engine
 ~~~
 
 A higher-priority interrupt may preempt a lower-priority handler.
@@ -250,12 +252,15 @@ Interrupt Control may override:
 
 - Margin Optimization;
 - Execution Ordering Plan;
+- Execution Slicing;
 - Optimal Execution;
 - Ordering Constraint Enforcer;
 - Passive Chase or any future execution algorithm.
 
 Interrupt Control may **not** bypass:
 
+- Execution Recovery / Command Commit Guard and durable write-ahead recording;
+- action-class-specific State Integrity permission;
 - the Broker Execution Port;
 - broker authentication/transport;
 - authoritative order/fill/position reconciliation;

@@ -1,6 +1,6 @@
 # Trade log
 
-This directory separates **executed trades** from **research/review sessions**.
+This directory preserves historical execution evidence and **research/review sessions**. It is not a fresh account snapshot or a second live ledger; live accounting remains in the external shared-writer `Trading/ledger/` store.
 
 ## Files
 
@@ -28,7 +28,7 @@ If historical Dhan contract notes / tradebook exports become available, backfill
 
 ## Automatic updates from the Butterfly Market Outlook skill
 
-The skill now treats this repository as the persistent research/trading journal when GitHub is writable.
+The skill publishes sanitized records here under the [repository logging contract](../skill/butterfly-market-outlook/references/repo-logging.md). This is a publication procedure, not an installed scheduler or automatic broker adapter.
 
 - Every market outlook and position review is appended to `market-outlook/YYYY-MM-DD.md`.
 - A confirmed executed butterfly is entered in `trades.csv` and may receive a detailed `trade-log/trades/<trade_id>.md` lifecycle record.

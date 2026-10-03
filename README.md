@@ -1,52 +1,57 @@
-# volarb
+# Volarb
 
-Research, decision logic, automation source and journals for NSE/BSE NIFTY, BANKNIFTY and SENSEX butterflies.
+Indian index-option butterfly research and decision tooling, plus reusable broker-neutral execution infrastructure under development. The repository contains **three distinct systems**: the current manual trading workflow, an offline research laboratory, and the evolving execution architecture. Source publication does not deploy services or authorize trading.
 
-## Current setup
+## Architecture
 
-**Butterfly Market Outlook Engine v2.6**, with a session variance-risk-premium gate, a daily loss-budget gate, a same-session re-entry gate, the live high-frequency realized-volatility/drift dependency (now with decision-clock freshness and mandatory news-packet validation), RND-mode bucket correction, and exact-candidate entry-margin verification.
+```text
+Strategy (Volarb or another strategy)
+    │ optional Strategy Execution Adapter
+    ▼
+Execution Engine — component.execution_engine, immutable [5,0,...]
+    │ Broker Execution Port
+    ▼
+Broker Provider — Dhan / future providers
+```
 
-**Start here on a trading day:** [docs/DAILY_OPERATING_ALGORITHM.md](docs/DAILY_OPERATING_ALGORITHM.md). Ready-to-send prompts for each step are in [prompts/](prompts/README.md).
+The Execution Engine is **strategy-agnostic**, not owned by Volarb. Strategy geometry and risk decisions stay upstream; the Dhan Provider performs mechanical broker operations. `component.internal_execution` is a compatibility alias only.
 
-The personal covenant overrides generic engine carry branches: **intraday only, flat by 15:00 IST, no entry or recenter thereafter**. Dhandho researches; Aryan executes. Publishing source does not enable trading or monitoring.
+The designed normal path is **Margin Optimization → Execution Slicing → Optimal Execution → Execution Recovery / Command Commit Guard → Broker Execution Port**. State Integrity, Execution Recovery and Interrupt Control are cross-cutting. See the [architecture index](architecture/README.md) and [canonical execution design](docs/workflows/execution-engine.md).
 
-## Layout
+**Implementation status:** `execution-engine/` currently supplies runtime ports and contracts, not a completed convergence pipeline. The Dhan connector and deterministic test infrastructure are implemented. Test/replay/shadow/production inject dependencies; production must never import `execution-testkit`. Environment manifests are declarations, not deployment or activation commands.
 
-- `architecture/` — compositional identity system: reusable component manifests, canonical Execution Engine VID registry, Volarb mounts/bindings, identity helpers and validation.
-- `skill/butterfly-market-outlook/` — controller, references, scripts and regressions.
-- `skill/intraday-realized-volatility-forecast/` — five-minute HF observation model and fixtures.
-- `skill/market-news-signal-filter/` — normalized event/news risk filter.
-- `execution-engine/` — broker-neutral runtime contracts and, next, the reusable execution implementation.
-- `execution-testkit/` — deterministic virtual clock, simulator, fault injector, scenario/mass-testing harness and invariants; never a production dependency.
-- `environments/execution/` — explicit test/replay/shadow/production dependency mounts.
-- `services/dhan-chatgpt-mcp/` — Dhan broker provider, office-Mac MCP facade, browser web-token recovery and legacy compatibility surfaces.
-- [services/essvi-dashboard/](services/essvi-dashboard/) — dark eSSVI surface, ATM IV, 1/5/22-session HAR forecasts and Q ratio; requires external Shaurya packages and local authentication.
-- `services/day-workflow/` — offline SHADOW state machine and lifecycle/failure tests; no live orders or jobs.
-- `market-outlook/` — append-only daily research journals.
-- `trade-log/` — historical trade records; never fresh broker truth or a second live ledger.
-- `docs/DAILY_OPERATING_ALGORITHM.md` — the one-page daily sequence and gate order.
-- [prompts/](prompts/README.md) — copy-paste prompts PR01–PR10 for each step of the daily sequence and anytime checks.
-- `docs/WORKFLOW.md` — standing operating rules behind that sequence.
-- `docs/PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md` — governing covenant.
-- `.github/workflows/` — skill packaging, synthetic service checks and conservative housekeeping.
+## Start here
 
-## Boundaries
+| Goal | Canonical entrypoint |
+|---|---|
+| Understand the whole repository | [Repository map](docs/REPOSITORY_MAP.md) |
+| Follow the current manual trading workflow | [Daily operating algorithm](docs/DAILY_OPERATING_ALGORITHM.md), [covenant](docs/PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md), [prompts](prompts/README.md) |
+| Understand strategy composition and identities | [Architecture](architecture/README.md), [Volarb design](docs/autonomous-butterfly-workflow.md) |
+| Build reusable execution infrastructure | [Execution Engine](execution-engine/README.md) |
+| Test with deterministic broker/clock/ledger dependencies | [Execution Testbed](execution-testkit/README.md), [environments](environments/execution/README.md) |
+| Integrate a broker | [Dhan Provider](services/dhan-chatgpt-mcp/README.md), [global Provider Error Envelope](docs/providers/provider-error-contract.md) |
+| Run offline research | [Butterfly Research Laboratory](agent/README.md) |
+| Use current-observation research modules | [Skills](skill/README.md) |
+| Install a portable research kit | [Agent kit](docs/AGENT_KIT.md) |
+| Review development decisions or older generations | [Current notes](notes.md), [history](docs/DEVELOPMENT_HISTORY.md), [archive](archive/README.md) |
 
-Execution Engine is the reusable strategy-agnostic execution component. Existing `[5,0,...]` VIDs are preserved exactly; `component.internal_execution` is now a legacy alias. A strategy-specific execution adapter may sit upstream when needed. Dhan is independently mounted as an unnumbered broker provider.
+## Stable directory ownership
 
-Fresh broker positions/orders and executable quotes precede recommendations. First terminal gate wins; attractive theta cannot override missing data or hard risk. Margin checks retain ₹1,000 free cash against peak entry-stage requirement; entry-only packets cannot approve an overlapping recenter. RND is a pricing measure, not a physical forecast.
+- `architecture/` — component identities, manifests, composition bindings and validation.
+- `execution-engine/` — reusable broker-neutral runtime contracts and future pipeline implementation.
+- `execution-testkit/`, `environments/` — non-production testing tools and explicit dependency declarations.
+- `services/` — Dhan integration, SHADOW day-workflow prototype and optional eSSVI/HAR dashboard.
+- `agent/` — research-only laboratory, distinct from the portable `agent-kit/` deployment templates.
+- `skill/` — Butterfly Market Outlook v2.6, intraday HF-RV model and news filter.
+- `docs/`, `prompts/` — canonical explanations, operational procedure and bounded user-invoked prompts.
+- `tools/`, `tests/`, `.github/` — source packaging, regression checks and CI.
+- `market-outlook/`, `trade-log/` — preserved dated journals and historical execution evidence, **not live account truth**.
+- `archive/` — superseded architecture/research/deployment material, explicitly non-operational.
 
-Live financial accounting remains in the office-Mac VolArb `Trading/ledger/` shared-writer store. Credentials, PIN/mobile configuration, browser cookies, raw broker evidence and runtime logs stay local and are not published. Repository source updates do not automatically deploy to the service or refresh installed skills.
+## Operating boundaries
 
-See [operating workflow](docs/WORKFLOW.md) and [service setup](services/dhan-chatgpt-mcp/README.md).
+The personal covenant requires **intraday only, flat by 15:00 IST, no entry or recenter thereafter**. Dhandho researches; Aryan executes. New-entry research is one selected butterfly, one lot total, with the adopted ₹1,000 daily decision-loss budget and a separate ₹1,000 free-cash margin reserve. Neither is a guaranteed realized-loss cap.
 
-## Portable agent kit
+Fresh broker positions/orders and executable quotes precede recommendations; first terminal gate wins. Generic overnight diagnostics cannot override the covenant. Private credentials, browser state, raw broker evidence and the sole live `Trading/ledger/` store remain outside this repository. Installed skills and running services do not automatically track source updates.
 
-See [setup and diagnostics](docs/AGENT_KIT.md) and the [dependency inventory](docs/DEPENDENCY_INVENTORY.md).
-The kit packages source, all three skills, the Dhandho profile, canonical accounting
-writers and explicit read-only acquisition. Separate source/workspace/private-data
-paths replace machine-specific runtime paths. Hash-locked Python and locked Node
-dependencies install through `python3.12 tools/volarb.py setup`. Default SHADOW;
-no service start, broker calls, ledger creation, schedules or execution activation.
-`doctor` diagnoses gaps; `package` builds a source-only reusable archive.
-Existing office-Mac deployment is unchanged; private state restoration is separate.
+For local offline checks, see [validation](docs/VALIDATION.md). CI checks source behavior; it does not establish live broker readiness.

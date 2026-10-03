@@ -1,6 +1,6 @@
 # [5,0,5,5,1] Passive Chase
 
-**Status:** current default Optimal Execution algorithm.
+**Status:** active specification for the default Optimal Execution algorithm; a production implementation is not yet present in [execution-engine/](../../execution-engine/README.md).
 
 Passive Chase is a deliberately simple broker-neutral execution plug-in behind `[5,0,4,6,1] Execution Algorithm Port`.
 
@@ -24,7 +24,7 @@ Passive Chase operates on execution slices produced by `[5,0,7,0,1] Execution Sl
 
 It does not decide how many slices exist or their sizes.
 
-With the current default slice policy there is one slice, so behavior is identical to executing the full permitted quantity.
+With the specified default slice policy there is one slice, so its intended behavior is identical to executing the full permitted quantity.
 
 If a future Slice Planner creates multiple slices, each released slice receives its own Passive Chase lifecycle.
 
@@ -53,10 +53,10 @@ Two parameters define the passive phase:
 
 ```text
 T = passive waiting interval between execution evaluations
-N = maximum number of passive refresh cycles after initial placement
+N = maximum number of passive waiting/evaluation intervals before fallback
 ```
 
-The actual values of `T` and `N` are intentionally TBD.
+The actual values of `T` and `N` are intentionally TBD (`T > 0`, integer `N >= 1`). The final evaluation consumes an interval and initiates fallback; there are at most `N - 1` refresh opportunities after initial placement. For example, `N = 1` means one passive wait, then cancellation/reconciliation and fallback if quantity remains—not one reprice. This matches the counter semantics below.
 
 ## Passive quote rule
 
@@ -187,7 +187,7 @@ complete when required position effect is realized
 
 ## Plug-and-play boundary
 
-Passive Chase is only one implementation of the Execution Algorithm Port.
+Passive Chase is one specified algorithm behind the Execution Algorithm Port.
 
 Replacing it with another algorithm must not change:
 

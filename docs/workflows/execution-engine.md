@@ -1,5 +1,7 @@
 # [5,0,0,0,0] Execution Engine
 
+Status: **active reusable execution design**. The complete pipeline is not yet implemented; see [current contracts/ports](../../execution-engine/README.md). These rules specify required behavior, not a live trading service.
+
 Execution Engine is the reusable, strategy-agnostic convergence component that turns broker-neutral economic execution requirements into authoritative broker positions. Strategy-specific interpretation, when needed, sits upstream in a Strategy Execution Adapter.
 
 ## Canonical structure
@@ -225,7 +227,7 @@ slice_count = 1
 scheduling_mode = SEQUENTIAL
 ~~~
 
-So current behavior is unchanged for small size.
+This is the specified baseline for small size; no runtime slicer implementation is shipped yet.
 
 If future scale requires five slices:
 
@@ -309,7 +311,7 @@ For each active slice:
 2. SELL -> passive limit at best ask.
 3. wait T;
 4. reprice remaining quantity to the current passive touch when required;
-5. repeat for up to N passive cycles;
+5. repeat for up to N passive waiting/evaluation intervals (at most N − 1 refresh opportunities before fallback);
 6. cancel/reconcile the resting limit;
 7. market the exact confirmed remainder.
 
@@ -407,7 +409,7 @@ A registry requirement completes only when broker truth demonstrates that the re
 
 # Environment separation
 
-The Execution Engine has **one implementation**. It contains no production/test switch.
+The Execution Engine must have **one shared implementation** with no production/test switch. The current repository implements shared contracts and ports, not the complete pipeline.
 
 Its external dependencies are injected through ports:
 
@@ -418,8 +420,8 @@ Its external dependencies are injected through ports:
 - execution ledger/persistence;
 - randomness only where an algorithm explicitly requires it.
 
-Production mounts real implementations. Test, replay and shadow mount controlled substitutes from `execution-testkit/`.
+The [environment manifests](../../environments/execution/README.md) specify how production will mount real implementations and test/replay/shadow will inject controlled substitutes. They are declarative contracts, not implemented environment loaders.
 
-This permits the exact same component or complete engine to run as a box test, selected composition, deterministic scenario, mass simulation, replay, shadow run, or production execution.
+The architecture permits the same implemented component to be exercised by the existing box/composition/scenario harnesses. Complete-engine, replay and shadow validation require the corresponding runtime components/runners; current tests do not certify an implemented production engine.
 
 See [Execution Testbed](../testing/execution-testbed.md).

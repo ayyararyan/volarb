@@ -1,6 +1,8 @@
 # [5,0,9,0,1] State Integrity
 
-State Integrity is the broker-neutral readiness guard for Internal Execution.
+Status: **active reusable execution design**. The complete pipeline is not yet implemented; see [current contracts/ports](../../execution-engine/README.md). These rules specify required behavior, not a live trading service.
+
+State Integrity is the broker-neutral readiness guard for Execution Engine.
 
 Its job is not to decide strategy or execution quality. Its job is to decide whether the state being used is trustworthy enough for the requested action.
 

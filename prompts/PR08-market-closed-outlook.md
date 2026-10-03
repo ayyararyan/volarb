@@ -9,8 +9,8 @@
 ```
 Market-closed outlook for NIFTY butterflies for the next session.
 
-Read fresh Dhan positions and orders first; if anything is open, reply with a one-row LOCKED OVERNIGHT status and the next actionable exit window instead of an outlook.
-Otherwise: read the latest available chain and surface, the session VRP dashboard state, and run the market-news-signal-filter once for the next-session horizon. Apply the tail-risk gate.
+Read fresh Dhan positions and orders first; access failure means unknown exposure and a blocked account-specific assessment, never flatness. If a position is open, reply with a one-row LOCKED OVERNIGHT status and the next actionable exit window instead of an outlook.
+Only if verified flat with no pending orders: read the latest available chain and surface, the session VRP dashboard state, and run the market-news-signal-filter once for the next-session horizon. Apply the tail-risk gate.
 Do not run the HF sampler; there is no live block to sample.
 Publish the outlook to the daily journal on ayyararyan/volarb main before replying.
 Reply with the Mode C table only. If the gate passes, say pre-open watchlist in each Why cell; if it fails, one NO TRADE row with the dominant risk and when to re-run.

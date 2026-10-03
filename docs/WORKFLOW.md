@@ -1,6 +1,6 @@
 # Butterfly VolArb Operating Workflow — Engine v2.6
 
-Updated 2026-09-30. For the day-by-day sequence read [DAILY_OPERATING_ALGORITHM.md](DAILY_OPERATING_ALGORITHM.md) first; this file records the standing rules behind it. The [personal covenant](PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md) overrides generic CARRY eligibility. The [decision algorithm](../skill/butterfly-market-outlook/references/decision-algorithm.md) controls engine ordering.
+Operational rules updated 2026-09-30; source consistency reviewed 2026-10-03. For the day-by-day sequence read [DAILY_OPERATING_ALGORITHM.md](DAILY_OPERATING_ALGORITHM.md) first; this file records the standing rules behind it. The [personal covenant](PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md) overrides generic CARRY eligibility. The [decision algorithm](../skill/butterfly-market-outlook/references/decision-algorithm.md) controls engine ordering.
 
 ## 1. Scope and clock
 
@@ -8,7 +8,7 @@ NIFTY, BANKNIFTY and SENSEX; Asia/Kolkata. Intraday only, flat by 15:00 IST, wit
 
 ## 2. Authenticate on the office Mac
 
-Use [local web-token recovery](../services/dhan-chatgpt-mcp/README.md#office-mac-browser-token-recovery--2026-09-29) before broker access. Reuse a suitable token; recover missing/expired/rejected or short-lived tokens through Dhan Web. Verify identity before atomically updating the private MCP `.env`. No personal-Mac access or TOTP token generation. Revoke expired/superseded Dusty tokens only after replacement verification; preserve unrelated active keys. Human OTP/CAPTCHA challenges remain human steps. Close task-owned browser tabs/windows when finished, preserving cookies and unrelated tabs.
+Use [local web-token recovery](../services/dhan-chatgpt-mcp/README.md#authentication-and-runtime-state) before broker access. Reuse a suitable token; recover missing/expired/rejected or short-lived tokens through Dhan Web. Verify identity before atomically updating the private MCP `.env`. No personal-Mac access or TOTP token generation. Revoke expired/superseded Dusty tokens only after replacement verification; preserve unrelated active keys. Human OTP/CAPTCHA challenges remain human steps. Close task-owned browser tabs/windows when finished, preserving cookies and unrelated tabs.
 
 ## 2a. Session variance-risk-premium screen
 
@@ -50,8 +50,8 @@ The packaging workflow runs all butterfly regressions, validates RV fixtures and
 
 ## 9. Shadow day-workflow foundation — not live automation
 
-The [day-workflow source and 22-test suite](../services/day-workflow/README.md) simulate one selected butterfly, one lot total, and the owner’s ₹1,000 daily loss budget separately from the ₹1,000 free-cash reserve. Budget admission, executable liquidation P&L, duplicate/restart recovery, deadline events and completion are tested with synthetic evidence only. The budget is not a guaranteed realized-loss cap.
+The [day-workflow source and synthetic regression suite](../services/day-workflow/README.md) simulate one selected butterfly, one lot total, and the owner’s ₹1,000 daily loss budget separately from the ₹1,000 free-cash reserve. Budget admission, executable liquidation P&L, duplicate/restart recovery, deadline events and completion are tested with synthetic evidence only. The budget is not a guaranteed realized-loss cap.
 
-LIVE mode is unconditionally rejected. Real market-data, executor authorization, scheduling, shared-writer accounting and journal-publication adapters remain unconnected. Timing defaults are shadow-test defaults, not adopted live policy. The [policy draft](AUTONOMOUS_EXECUTION_POLICY_DRAFT.md) remains inactive; publication does not amend the covenant or authorize orders.
+LIVE mode is unconditionally rejected. Read-only observation and explicit shared-writer accounting adapters are implemented, but are not automatically dispatched by the SHADOW state machine. The live executor bridge, scheduling and journal-publication dispatch remain unconnected. Timing defaults are shadow-test defaults, not adopted live policy. The [policy draft](AUTONOMOUS_EXECUTION_POLICY_DRAFT.md) remains inactive; publication does not amend the covenant or authorize orders.
 
-The MCP source adds `entrySequence: PAIRED_HEDGES` for put wing → put body → call wing → call body, preserving WINGS_FIRST by default. Require a fresh packet bound to the actual execution sequence and `reserveRupees: 1000`. Do not reuse a WINGS_FIRST result for the paired path. Local read-only discovery on 2026-09-29 still lacked this input; deployment of this patch was not verified. No service was restarted for publication.
+The MCP source adds `entrySequence: PAIRED_HEDGES` for put wing → put body → call wing → call body, preserving WINGS_FIRST by default. Require a fresh packet bound to the actual execution sequence and `reserveRupees: 1000`. Do not reuse a WINGS_FIRST result for the paired path. Historical read-only discovery on 2026-09-29 lacked this input. That dated receipt is not a claim about the current deployment: source supports it; verify the running schema separately before use. No service was restarted for this cleanup.

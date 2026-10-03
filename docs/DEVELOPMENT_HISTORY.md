@@ -1,6 +1,6 @@
 # Development history
 
-This is a concise history of how the butterfly workflow evolved into the current Engine v2.2.
+Dated development history. Version and implementation statements inside older entries describe their period, not current deployment. Current entrypoints are in the [repository map](REPOSITORY_MAP.md).
 
 ## 2026-09-20 — Front-end discipline and wide-fly optimization
 
@@ -93,3 +93,15 @@ Changes:
 - **Documentation.** `docs/DAILY_OPERATING_ALGORITHM.md` is the single daily sequence; decision-algorithm.md is v2.6.
 
 Not changed: thresholds in the optimizer, expiry-exit or overnight engines; the covenant; live execution remains disabled.
+
+
+## 2026-10-03 — Repository-wide cleanup and consistency repair
+
+Audited all 402 baseline files against `ec534e8`, then used fresh independent reviewers. The [canonical repository map](REPOSITORY_MAP.md), [archive index](../archive/README.md), [full audit](audits/2026-10-03-repository-cleanup.md) and [per-file classification](audits/2026-10-03-file-classification.tsv) describe the final ownership and dispositions.
+
+- Archived the evolving architecture notebook, old single-owner VID guide, initial lab audit/release reports, dated Dhan/dashboard receipts and retired housekeeping policy. No historical financial record was rewritten; no disposable tracked code required deletion.
+- Standardized **Execution Engine** / `component.execution_engine` while retaining every `[5,0,...]` VID, alias/mirror and legacy provider/executor path. Distinguished implemented contracts/test infrastructure from the future full engine.
+- Repaired metadata validators, simulator correctness, packaged provider imports, non-root Docker permissions, mutation-disabled defaults, v2.6 workflow evidence/clock plumbing and missing VRP health-proof handling. No strategy thresholds or live activation changed.
+- Separated current docs from historical receipts; fixed cycle-accounting guidance, bounded prompts, source-package navigation and consumer CI filters; added offline hygiene checks.
+- Offline validation passed: 823 unit/regression tests, 9 RV fixture checks, all 3 skill packages, generated research artifacts, isolated setup twice, portable ZIP and Docker build/non-root smoke. Hosted CI is recorded separately after publication in the audit report.
+- Preserved the adopted covenant, frozen research controller, sole external live ledger, credentials, existing deployment and unrelated Drive-checkout dashboard edit. Source publication does not deploy services or refresh installed skills.

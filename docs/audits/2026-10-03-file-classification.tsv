@@ -1,0 +1,403 @@
+baseline_path	category	retained_or_archive_path	rationale
+.github/housekeeping-policy.json	D	archive/deployment/retired-housekeeping/housekeeping-policy.json	Superseded generation preserved in structured archive; original path replaced by current summary/compatibility routing when needed.
+.github/skill-tools/check_rv_fixtures.py	A	.github/skill-tools/check_rv_fixtures.py	Current tooling, locked dependency, regression, operating prompt or configuration; inspected and retained.
+.github/skill-tools/package_skill.py	A	.github/skill-tools/package_skill.py	Current tooling, locked dependency, regression, operating prompt or configuration; inspected and retained.
+.github/skill-tools/quick_validate.py	A	.github/skill-tools/quick_validate.py	Current tooling, locked dependency, regression, operating prompt or configuration; inspected and retained.
+.github/workflows/architecture-identity.yml	B	.github/workflows/architecture-identity.yml	Active navigation, operational guidance or CI dependency coverage repaired against current implementation; governance unchanged.
+.github/workflows/execution-testbed.yml	B	.github/workflows/execution-testbed.yml	Active navigation, operational guidance or CI dependency coverage repaired against current implementation; governance unchanged.
+.github/workflows/package-butterfly-skill.yml	A	.github/workflows/package-butterfly-skill.yml	Current tooling, locked dependency, regression, operating prompt or configuration; inspected and retained.
+.github/workflows/test-agent-kit.yml	B	.github/workflows/test-agent-kit.yml	Active navigation, operational guidance or CI dependency coverage repaired against current implementation; governance unchanged.
+.github/workflows/test-day-workflow.yml	B	.github/workflows/test-day-workflow.yml	Active source/reference required a consistency repair identified during tests or independent review; implementation and regression coverage updated without live activation.
+.github/workflows/test-dhan-mcp.yml	B	.github/workflows/test-dhan-mcp.yml	Active navigation, operational guidance or CI dependency coverage repaired against current implementation; governance unchanged.
+.github/workflows/test-essvi-dashboard.yml	A	.github/workflows/test-essvi-dashboard.yml	Current tooling, locked dependency, regression, operating prompt or configuration; inspected and retained.
+.github/workflows/test-research-agent.yml	A	.github/workflows/test-research-agent.yml	Current tooling, locked dependency, regression, operating prompt or configuration; inspected and retained.
+.gitignore	A	.gitignore	Current tooling, locked dependency, regression, operating prompt or configuration; inspected and retained.
+.node-version	A	.node-version	Current tooling, locked dependency, regression, operating prompt or configuration; inspected and retained.
+.python-version	A	.python-version	Current tooling, locked dependency, regression, operating prompt or configuration; inspected and retained.
+README.md	B	README.md	Active navigation, operational guidance or CI dependency coverage repaired against current implementation; governance unchanged.
+agent-kit/manifest.json	B	agent-kit/manifest.json	Packaged services depend on missing execution-engine contracts; update closure and explicit reusable kit boundaries.
+agent-kit/profiles/dhandho.json	A	agent-kit/profiles/dhandho.json	Sanitized portable workspace template or adopted governance profile; no live state.
+agent-kit/source-inventory.json	A	agent-kit/source-inventory.json	Immutable dated import/provenance evidence; retains old source hashes intentionally, not a live installed hash manifest.
+agent-kit/workspace/AGENTS.md	A	agent-kit/workspace/AGENTS.md	Sanitized portable workspace template or adopted governance profile; no live state.
+agent-kit/workspace/IDENTITY.md	A	agent-kit/workspace/IDENTITY.md	Sanitized portable workspace template or adopted governance profile; no live state.
+agent-kit/workspace/SOUL.md	A	agent-kit/workspace/SOUL.md	Sanitized portable workspace template or adopted governance profile; no live state.
+agent-kit/workspace/TOOLS.md	B	agent-kit/workspace/TOOLS.md	Clarify launcher blocks canonical provider mutations as well as legacy executor; reference canonical architecture entrypoints.
+agent-kit/workspace/USER.md	A	agent-kit/workspace/USER.md	Sanitized portable workspace template or adopted governance profile; no live state.
+agent/.env.example	A	agent/.env.example	Canonical active implementation/reference/regression/package asset; retain in place
+agent/.gitignore	A	agent/.gitignore	Canonical active implementation/reference/regression/package asset; retain in place
+agent/README.md	B	agent/README.md	Current navigation points to initial-release evidence instead of current data capabilities and live lifecycle
+agent/configs/benchmarks.json	A	agent/configs/benchmarks.json	Canonical active implementation/reference/regression/package asset; retain in place
+agent/configs/campaigns/codex.json	A	agent/configs/campaigns/codex.json	Canonical active implementation/reference/regression/package asset; retain in place
+agent/configs/seeds.json	A	agent/configs/seeds.json	Canonical active implementation/reference/regression/package asset; retain in place
+agent/docs/architecture.md	A	agent/docs/architecture.md	Canonical active implementation/reference/regression/package asset; retain in place
+agent/docs/codex-verification.md	A	agent/docs/codex-verification.md	Canonical active implementation/reference/regression/package asset; retain in place
+agent/docs/configuration.md	A	agent/docs/configuration.md	Canonical active implementation/reference/regression/package asset; retain in place
+agent/docs/data-audit.md	D	archive/research/laboratory/2026-10-02/data-audit.md	Superseded generation preserved in structured archive; original path replaced by current summary/compatibility routing when needed.
+agent/docs/diagrams/components.mmd	A	agent/docs/diagrams/components.mmd	Editable/rendered active architecture diagram or hash manifest checked by check_generated.py; not disposable
+agent/docs/diagrams/components.svg	A	agent/docs/diagrams/components.svg	Editable/rendered active architecture diagram or hash manifest checked by check_generated.py; not disposable
+agent/docs/diagrams/lineage.mmd	A	agent/docs/diagrams/lineage.mmd	Editable/rendered active architecture diagram or hash manifest checked by check_generated.py; not disposable
+agent/docs/diagrams/lineage.svg	A	agent/docs/diagrams/lineage.svg	Editable/rendered active architecture diagram or hash manifest checked by check_generated.py; not disposable
+agent/docs/diagrams/permissions.mmd	A	agent/docs/diagrams/permissions.mmd	Editable/rendered active architecture diagram or hash manifest checked by check_generated.py; not disposable
+agent/docs/diagrams/permissions.svg	A	agent/docs/diagrams/permissions.svg	Editable/rendered active architecture diagram or hash manifest checked by check_generated.py; not disposable
+agent/docs/diagrams/recovery.mmd	A	agent/docs/diagrams/recovery.mmd	Editable/rendered active architecture diagram or hash manifest checked by check_generated.py; not disposable
+agent/docs/diagrams/recovery.svg	A	agent/docs/diagrams/recovery.svg	Editable/rendered active architecture diagram or hash manifest checked by check_generated.py; not disposable
+agent/docs/diagrams/render-manifest.json	A	agent/docs/diagrams/render-manifest.json	Editable/rendered active architecture diagram or hash manifest checked by check_generated.py; not disposable
+agent/docs/diagrams/workflow.mmd	A	agent/docs/diagrams/workflow.mmd	Editable/rendered active architecture diagram or hash manifest checked by check_generated.py; not disposable
+agent/docs/diagrams/workflow.svg	A	agent/docs/diagrams/workflow.svg	Editable/rendered active architecture diagram or hash manifest checked by check_generated.py; not disposable
+agent/docs/evidence/comparison.json	A	agent/docs/evidence/comparison.json	Immutable sanitized dated research/acceptance receipt; retain stable evidence path and bytes; not current test claim
+agent/docs/evidence/first-real-campaign.json	A	agent/docs/evidence/first-real-campaign.json	Immutable sanitized dated research/acceptance receipt; retain stable evidence path and bytes; not current test claim
+agent/docs/evidence/live-codex-lifecycle.json	A	agent/docs/evidence/live-codex-lifecycle.json	Immutable sanitized dated research/acceptance receipt; retain stable evidence path and bytes; not current test claim
+agent/docs/evidence/load.json	A	agent/docs/evidence/load.json	Immutable sanitized dated research/acceptance receipt; retain stable evidence path and bytes; not current test claim
+agent/docs/evidence/release-checks.json	A	agent/docs/evidence/release-checks.json	Immutable sanitized dated research/acceptance receipt; retain stable evidence path and bytes; not current test claim
+agent/docs/evidence/release-smoke.json	A	agent/docs/evidence/release-smoke.json	Immutable sanitized dated research/acceptance receipt; retain stable evidence path and bytes; not current test claim
+agent/docs/evidence/scientific.json	A	agent/docs/evidence/scientific.json	Immutable sanitized dated research/acceptance receipt; retain stable evidence path and bytes; not current test claim
+agent/docs/first-real-campaign.md	A	agent/docs/first-real-campaign.md	Canonical active implementation/reference/regression/package asset; retain in place
+agent/docs/job-recovery.md	A	agent/docs/job-recovery.md	Canonical active implementation/reference/regression/package asset; retain in place
+agent/docs/live-research-lifecycle.md	A	agent/docs/live-research-lifecycle.md	Canonical active implementation/reference/regression/package asset; retain in place
+agent/docs/operations.md	A	agent/docs/operations.md	Canonical active implementation/reference/regression/package asset; retain in place
+agent/docs/providers.md	A	agent/docs/providers.md	Canonical active implementation/reference/regression/package asset; retain in place
+agent/docs/real-data-capabilities.md	A	agent/docs/real-data-capabilities.md	Canonical active implementation/reference/regression/package asset; retain in place
+agent/docs/real-data-discovery.md	A	agent/docs/real-data-discovery.md	Canonical active implementation/reference/regression/package asset; retain in place
+agent/docs/schemas/Approval.json	A	agent/docs/schemas/Approval.json	Generated current contract schema, checked by examples/check_generated.py; not disposable
+agent/docs/schemas/ArtifactRef.json	A	agent/docs/schemas/ArtifactRef.json	Generated current contract schema, checked by examples/check_generated.py; not disposable
+agent/docs/schemas/BacktestResult.json	A	agent/docs/schemas/BacktestResult.json	Generated current contract schema, checked by examples/check_generated.py; not disposable
+agent/docs/schemas/BudgetSpec.json	A	agent/docs/schemas/BudgetSpec.json	Generated current contract schema, checked by examples/check_generated.py; not disposable
+agent/docs/schemas/CampaignSpec.json	A	agent/docs/schemas/CampaignSpec.json	Generated current contract schema, checked by examples/check_generated.py; not disposable
+agent/docs/schemas/Capability.json	A	agent/docs/schemas/Capability.json	Generated current contract schema, checked by examples/check_generated.py; not disposable
+agent/docs/schemas/CriticContext.json	A	agent/docs/schemas/CriticContext.json	Generated current contract schema, checked by examples/check_generated.py; not disposable
+agent/docs/schemas/DatasetManifest.json	A	agent/docs/schemas/DatasetManifest.json	Generated current contract schema, checked by examples/check_generated.py; not disposable
+agent/docs/schemas/EvidenceGrade.json	A	agent/docs/schemas/EvidenceGrade.json	Generated current contract schema, checked by examples/check_generated.py; not disposable
+agent/docs/schemas/ExperimentSpec.json	A	agent/docs/schemas/ExperimentSpec.json	Generated current contract schema, checked by examples/check_generated.py; not disposable
+agent/docs/schemas/HypothesisSpec.json	A	agent/docs/schemas/HypothesisSpec.json	Generated current contract schema, checked by examples/check_generated.py; not disposable
+agent/docs/schemas/ResearchFinding.json	A	agent/docs/schemas/ResearchFinding.json	Generated current contract schema, checked by examples/check_generated.py; not disposable
+agent/docs/schemas/RunManifest.json	A	agent/docs/schemas/RunManifest.json	Generated current contract schema, checked by examples/check_generated.py; not disposable
+agent/docs/schemas/ValidationReport.json	A	agent/docs/schemas/ValidationReport.json	Generated current contract schema, checked by examples/check_generated.py; not disposable
+agent/docs/schemas/WorkerEvent.json	A	agent/docs/schemas/WorkerEvent.json	Generated current contract schema, checked by examples/check_generated.py; not disposable
+agent/docs/scientific-contract.md	A	agent/docs/scientific-contract.md	Canonical active implementation/reference/regression/package asset; retain in place
+agent/docs/security.md	A	agent/docs/security.md	Canonical active implementation/reference/regression/package asset; retain in place
+agent/docs/traceability.md	B	agent/docs/traceability.md	Initial-release statuses/counts need temporal scope and current evidence links
+agent/docs/verification.md	D	archive/research/laboratory/2026-10-02/verification.md	Superseded generation preserved in structured archive; original path replaced by current summary/compatibility routing when needed.
+agent/examples/check_demo.py	A	agent/examples/check_demo.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/examples/check_generated.py	A	agent/examples/check_generated.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/examples/check_live_campaign.py	A	agent/examples/check_live_campaign.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/examples/generate_fixtures.py	A	agent/examples/generate_fixtures.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/examples/local_session_calendar.py	A	agent/examples/local_session_calendar.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/examples/make_campaign.py	A	agent/examples/make_campaign.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/examples/prepare_live_acceptance.py	A	agent/examples/prepare_live_acceptance.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/examples/prepare_local_options.py	A	agent/examples/prepare_local_options.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/examples/prepare_local_options_batch.py	A	agent/examples/prepare_local_options_batch.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/examples/prepare_local_spot.py	A	agent/examples/prepare_local_spot.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/examples/register_real_data.py	A	agent/examples/register_real_data.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/pyproject.toml	A	agent/pyproject.toml	Canonical active implementation/reference/regression/package asset; retain in place
+agent/requirements.lock	A	agent/requirements.lock	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/__init__.py	A	agent/src/butterfly_lab/__init__.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/accounting.py	A	agent/src/butterfly_lab/accounting.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/agents.py	A	agent/src/butterfly_lab/agents.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/artifacts.py	A	agent/src/butterfly_lab/artifacts.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/backup.py	A	agent/src/butterfly_lab/backup.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/baselines.py	A	agent/src/butterfly_lab/baselines.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/benchmarks.py	A	agent/src/butterfly_lab/benchmarks.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/cli.py	A	agent/src/butterfly_lab/cli.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/codex_provider.py	A	agent/src/butterfly_lab/codex_provider.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/compiler.py	A	agent/src/butterfly_lab/compiler.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/config.py	A	agent/src/butterfly_lab/config.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/confirmation.py	A	agent/src/butterfly_lab/confirmation.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/data.py	A	agent/src/butterfly_lab/data.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/dedup.py	A	agent/src/butterfly_lab/dedup.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/evaluators.py	A	agent/src/butterfly_lab/evaluators.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/evidence.py	A	agent/src/butterfly_lab/evidence.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/fixtures.py	A	agent/src/butterfly_lab/fixtures.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/graph.py	A	agent/src/butterfly_lab/graph.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/local_archive.py	A	agent/src/butterfly_lab/local_archive.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/local_option_archive.py	A	agent/src/butterfly_lab/local_option_archive.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/observed_controller_v26.py	C	agent/src/butterfly_lab/observed_controller_v26.py	Deliberately byte-frozen research replay baseline; checksum-bound; never synchronize to active controller
+agent/src/butterfly_lab/provider_factory.py	A	agent/src/butterfly_lab/provider_factory.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/providers.py	A	agent/src/butterfly_lab/providers.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/registry.py	A	agent/src/butterfly_lab/registry.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/replication.py	A	agent/src/butterfly_lab/replication.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/resources/benchmarks.json	A	agent/src/butterfly_lab/resources/benchmarks.json	Intentional installed package mirror of configs, byte equality enforced by check_generated.py; not removable duplicate
+agent/src/butterfly_lab/resources/seeds.json	A	agent/src/butterfly_lab/resources/seeds.json	Intentional installed package mirror of configs, byte equality enforced by check_generated.py; not removable duplicate
+agent/src/butterfly_lab/review_context.py	A	agent/src/butterfly_lab/review_context.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/schemas.py	A	agent/src/butterfly_lab/schemas.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/security.py	A	agent/src/butterfly_lab/security.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/settings.py	A	agent/src/butterfly_lab/settings.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/statistics.py	A	agent/src/butterfly_lab/statistics.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/src/butterfly_lab/workers.py	A	agent/src/butterfly_lab/workers.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/conftest.py	A	agent/tests/conftest.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/fixtures/fake_codex_server.py	A	agent/tests/fixtures/fake_codex_server.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_accounting.py	A	agent/tests/test_accounting.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_agents.py	A	agent/tests/test_agents.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_backup.py	A	agent/tests/test_backup.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_baselines.py	A	agent/tests/test_baselines.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_codex_integration.py	A	agent/tests/test_codex_integration.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_codex_provider.py	A	agent/tests/test_codex_provider.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_confirmation.py	A	agent/tests/test_confirmation.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_context_security.py	A	agent/tests/test_context_security.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_contracts_cli.py	A	agent/tests/test_contracts_cli.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_critic_context.py	A	agent/tests/test_critic_context.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_data.py	A	agent/tests/test_data.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_dedup.py	A	agent/tests/test_dedup.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_evaluators.py	A	agent/tests/test_evaluators.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_evidence.py	A	agent/tests/test_evidence.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_graph.py	A	agent/tests/test_graph.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_independent_review.py	A	agent/tests/test_independent_review.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_local_archive.py	A	agent/tests/test_local_archive.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_local_archive_scope.py	A	agent/tests/test_local_archive_scope.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_local_option_archive.py	A	agent/tests/test_local_option_archive.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_local_session_calendar.py	A	agent/tests/test_local_session_calendar.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_preparation_graph.py	A	agent/tests/test_preparation_graph.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_prepare_local_options.py	A	agent/tests/test_prepare_local_options.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_providers.py	A	agent/tests/test_providers.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_registry.py	A	agent/tests/test_registry.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_replication.py	A	agent/tests/test_replication.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_secret_hygiene.py	A	agent/tests/test_secret_hygiene.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_security.py	A	agent/tests/test_security.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_settings.py	A	agent/tests/test_settings.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_statistics.py	A	agent/tests/test_statistics.py	Canonical active implementation/reference/regression/package asset; retain in place
+agent/tests/test_workers.py	A	agent/tests/test_workers.py	Canonical active implementation/reference/regression/package asset; retain in place
+architecture/components/execution-engine/manifest.json	A	architecture/components/execution-engine/manifest.json	Current canonical implementation, design registry, deterministic fixture, or structural environment contract; retain
+architecture/components/execution-engine/vector-id-registry.json	B	architecture/components/execution-engine/vector-id-registry.json	Normalized Broker Execution Facts note still says exact taxonomy TBD despite implemented provider response envelopes; clarify remaining component aggregation work
+architecture/components/internal-execution/manifest.json	C	architecture/components/internal-execution/manifest.json	Explicit backward-compatible alias; keep path and pointer to canonical component
+architecture/components/internal-execution/vector-id-registry.json	C	architecture/components/internal-execution/vector-id-registry.json	Legacy alias mirror; currently identical canonical entities; retain compatibility and validate equality
+architecture/lib/identity.mjs	A	architecture/lib/identity.mjs	Current canonical implementation, design registry, deterministic fixture, or structural environment contract; retain
+architecture/lib/identity.test.mjs	A	architecture/lib/identity.test.mjs	Current canonical implementation, design registry, deterministic fixture, or structural environment contract; retain
+architecture/providers/dhan/manifest.json	B	architecture/providers/dhan/manifest.json	Provider-neutral boundary error rule still says Volarb component; otherwise canonical implementation manifest
+architecture/registries/component-registry.json	A	architecture/registries/component-registry.json	Current canonical implementation, design registry, deterministic fixture, or structural environment contract; retain
+architecture/registries/composition-registry.json	B	architecture/registries/composition-registry.json	Composition version 1.0.0 differs from definition 1.1.0
+architecture/strategies/volarb/composition.json	B	architecture/strategies/volarb/composition.json	Dhan mounted version 1.0.0 differs from provider manifest 1.4.0
+architecture/testing/execution-testbed.json	B	architecture/testing/execution-testbed.json	Five-level architecture must distinguish existing harness from unimplemented complete engine and replay/shadow runtime
+architecture/validate.mjs	B	architecture/validate.mjs	Does not detect stale composition versions, alias mirror drift, metadata ownership, manifest paths, or port references
+docs/AGENT_KIT.md	B	docs/AGENT_KIT.md	Clarify research-kit vs execution-testbed packaging; describe both canonical and legacy mutation disable flags.
+docs/AUTONOMOUS_EXECUTION_POLICY_DRAFT.md	B	docs/AUTONOMOUS_EXECUTION_POLICY_DRAFT.md	Active navigation, operational guidance or CI dependency coverage repaired against current implementation; governance unchanged.
+docs/DAILY_OPERATING_ALGORITHM.md	B	docs/DAILY_OPERATING_ALGORITHM.md	Active navigation, operational guidance or CI dependency coverage repaired against current implementation; governance unchanged.
+docs/DEPENDENCY_INVENTORY.md	B	docs/DEPENDENCY_INVENTORY.md	Retain dated import provenance but update current dependency inventory for Execution Engine/provider contract dependency.
+docs/DEVELOPMENT_HISTORY.md	B	docs/DEVELOPMENT_HISTORY.md	Active navigation, operational guidance or CI dependency coverage repaired against current implementation; governance unchanged.
+docs/PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md	A	docs/PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md	Adopted personal covenant; retained byte-for-byte without amendment.
+docs/WORKFLOW.md	B	docs/WORKFLOW.md	Active navigation, operational guidance or CI dependency coverage repaired against current implementation; governance unchanged.
+docs/architecture/compositional-identity.md	B	docs/architecture/compositional-identity.md	Canonical design accurate; add implementation-status boundary and clickable authority paths
+docs/autonomous-butterfly-workflow.md	B	docs/autonomous-butterfly-workflow.md	Active navigation, operational guidance or CI dependency coverage repaired against current implementation; governance unchanged.
+docs/execution-algorithms/passive-chase.md	B	docs/execution-algorithms/passive-chase.md	Design specification incorrectly reads as implemented default algorithm
+docs/providers/dhan-execution-engine-call-map.md	B	docs/providers/dhan-execution-engine-call-map.md	Link canonical operation contract and environment factory; distinguish implemented broker adapter from partial engine pipeline.
+docs/providers/dhan-execution.md	B	docs/providers/dhan-execution.md	Remove completed-work TODOs and future-runtime-stack contradiction; clarify upstream engine ownership and source/deployment status.
+docs/providers/dhan-internal-execution-call-map.md	C	docs/providers/dhan-internal-execution-call-map.md	Keep historical-path redirect to canonical Execution Engine call map; external bookmarks may exist.
+docs/providers/provider-error-contract.md	B	docs/providers/provider-error-contract.md	Point implementation ownership to execution-engine/contracts/provider-error.mjs; Dhan path is compatibility export.
+docs/testing/execution-testbed.md	B	docs/testing/execution-testbed.md	Overstates complete pipeline and replay/shadow availability; distinguish implemented harness from intended coverage
+docs/workflows/execution-engine.md	B	docs/workflows/execution-engine.md	Canonical design needs implementation status, environment loader distinction and clear links
+docs/workflows/execution-recovery.md	B	docs/workflows/execution-recovery.md	Unqualified legacy name; caller Position Management assumption; needs active-design status
+docs/workflows/execution-slicing.md	B	docs/workflows/execution-slicing.md	Active design mistaken for shipped behavior; needs implementation status
+docs/workflows/internal-execution.md	C	docs/workflows/internal-execution.md	Correct explicit legacy redirect; keep stable inbound path
+docs/workflows/interrupt-control.md	B	docs/workflows/interrupt-control.md	Legacy name; missing slicing in sequence; direct-to-broker statement contradicts mandatory commit guard
+docs/workflows/position-management.md	B	docs/workflows/position-management.md	Legacy naming; root label differs; stale TBD policy list; intent port differs from registry display name
+docs/workflows/regime-gate.md	B	docs/workflows/regime-gate.md	Strategy design needs explicit non-operational status and distinction from current controller/covenant
+docs/workflows/state-integrity.md	B	docs/workflows/state-integrity.md	Unqualified legacy name; needs active-design status
+docs/workflows/trade-selection.md	B	docs/workflows/trade-selection.md	Strategy design needs explicit non-operational status and distinction from current controller/covenant
+docs/workflows/underlying-allocation.md	B	docs/workflows/underlying-allocation.md	Strategy design needs explicit non-operational status and distinction from current controller/covenant
+docs/workflows/vector-id-registry.json	B	docs/workflows/vector-id-registry.json	Retain assembled view but repair stale canonical owner/path metadata and active display names
+docs/workflows/vector-id-system.md	D	archive/architecture/internal-execution-era/vector-id-system.md	Superseded generation preserved in structured archive; original path replaced by current summary/compatibility routing when needed.
+environments/execution/production.json	A	environments/execution/production.json	Current canonical implementation, design registry, deterministic fixture, or structural environment contract; retain
+environments/execution/replay.json	A	environments/execution/replay.json	Current canonical implementation, design registry, deterministic fixture, or structural environment contract; retain
+environments/execution/shadow.json	A	environments/execution/shadow.json	Current canonical implementation, design registry, deterministic fixture, or structural environment contract; retain
+environments/execution/test.json	A	environments/execution/test.json	Current canonical implementation, design registry, deterministic fixture, or structural environment contract; retain
+execution-engine/README.md	B	execution-engine/README.md	Only contracts/ports implemented; needs truthful implementation inventory and spec links
+execution-engine/contracts/provider-error.mjs	A	execution-engine/contracts/provider-error.mjs	Current canonical implementation, design registry, deterministic fixture, or structural environment contract; retain
+execution-engine/ports/broker-port.mjs	A	execution-engine/ports/broker-port.mjs	Current canonical implementation, design registry, deterministic fixture, or structural environment contract; retain
+execution-engine/ports/runtime-ports.mjs	A	execution-engine/ports/runtime-ports.mjs	Current canonical implementation, design registry, deterministic fixture, or structural environment contract; retain
+execution-testkit/README.md	B	execution-testkit/README.md	CompositionHarness missing from entrypoints; full-engine/replay claims need qualification and test commands
+execution-testkit/scenarios/ack-loss-reconcile.json	A	execution-testkit/scenarios/ack-loss-reconcile.json	Current canonical implementation, design registry, deterministic fixture, or structural environment contract; retain
+execution-testkit/scenarios/partial-fill-cancel-race.json	A	execution-testkit/scenarios/partial-fill-cancel-race.json	Current canonical implementation, design registry, deterministic fixture, or structural environment contract; retain
+execution-testkit/src/event-trace.mjs	A	execution-testkit/src/event-trace.mjs	Current canonical implementation, design registry, deterministic fixture, or structural environment contract; retain
+execution-testkit/src/fault-injector.mjs	A	execution-testkit/src/fault-injector.mjs	Current canonical implementation, design registry, deterministic fixture, or structural environment contract; retain
+execution-testkit/src/harness.mjs	A	execution-testkit/src/harness.mjs	Current canonical implementation, design registry, deterministic fixture, or structural environment contract; retain
+execution-testkit/src/invariants.mjs	B	execution-testkit/src/invariants.mjs	Active source/reference required a consistency repair identified during tests or independent review; implementation and regression coverage updated without live activation.
+execution-testkit/src/memory-ledger.mjs	A	execution-testkit/src/memory-ledger.mjs	Current canonical implementation, design registry, deterministic fixture, or structural environment contract; retain
+execution-testkit/src/seeded-rng.mjs	A	execution-testkit/src/seeded-rng.mjs	Current canonical implementation, design registry, deterministic fixture, or structural environment contract; retain
+execution-testkit/src/simulated-broker.mjs	B	execution-testkit/src/simulated-broker.mjs	Active source/reference required a consistency repair identified during tests or independent review; implementation and regression coverage updated without live activation.
+execution-testkit/src/simulated-market.mjs	A	execution-testkit/src/simulated-market.mjs	Current canonical implementation, design registry, deterministic fixture, or structural environment contract; retain
+execution-testkit/src/virtual-clock.mjs	B	execution-testkit/src/virtual-clock.mjs	Active source/reference required a consistency repair identified during tests or independent review; implementation and regression coverage updated without live activation.
+execution-testkit/test/environment.test.mjs	B	execution-testkit/test/environment.test.mjs	Active source/reference required a consistency repair identified during tests or independent review; implementation and regression coverage updated without live activation.
+execution-testkit/test/testkit.test.mjs	B	execution-testkit/test/testkit.test.mjs	Scenario fixtures unused and separately duplicated inline; imports should cover maintained JSON fixtures
+market-outlook/2026-09-22.md	D	market-outlook/2026-09-22.md	Historical financial/research evidence retained byte-for-byte at established paths by explicit preservation requirement; never current broker truth.
+market-outlook/2026-09-23.md	D	market-outlook/2026-09-23.md	Historical financial/research evidence retained byte-for-byte at established paths by explicit preservation requirement; never current broker truth.
+market-outlook/2026-09-24.md	D	market-outlook/2026-09-24.md	Historical financial/research evidence retained byte-for-byte at established paths by explicit preservation requirement; never current broker truth.
+market-outlook/2026-09-25.md	D	market-outlook/2026-09-25.md	Historical financial/research evidence retained byte-for-byte at established paths by explicit preservation requirement; never current broker truth.
+market-outlook/2026-09-26.md	D	market-outlook/2026-09-26.md	Historical financial/research evidence retained byte-for-byte at established paths by explicit preservation requirement; never current broker truth.
+market-outlook/2026-09-28.md	D	market-outlook/2026-09-28.md	Historical financial/research evidence retained byte-for-byte at established paths by explicit preservation requirement; never current broker truth.
+market-outlook/2026-09-29.md	D	market-outlook/2026-09-29.md	Historical financial/research evidence retained byte-for-byte at established paths by explicit preservation requirement; never current broker truth.
+market-outlook/2026-09-30.md	D	market-outlook/2026-09-30.md	Historical financial/research evidence retained byte-for-byte at established paths by explicit preservation requirement; never current broker truth.
+market-outlook/README.md	B	market-outlook/README.md	Active navigation, operational guidance or CI dependency coverage repaired against current implementation; governance unchanged.
+notes.md	D	archive/architecture/design-notes/2026-10-03-autonomous-butterfly-notes.md	Superseded generation preserved in structured archive; original path replaced by current summary/compatibility routing when needed.
+prompts/PR01-morning-session-vrp-screen.md	A	prompts/PR01-morning-session-vrp-screen.md	Current tooling, locked dependency, regression, operating prompt or configuration; inspected and retained.
+prompts/PR02-candidate-search.md	B	prompts/PR02-candidate-search.md	Active navigation, operational guidance or CI dependency coverage repaired against current implementation; governance unchanged.
+prompts/PR03-confirm-entry.md	B	prompts/PR03-confirm-entry.md	Active navigation, operational guidance or CI dependency coverage repaired against current implementation; governance unchanged.
+prompts/PR04-open-position-review.md	A	prompts/PR04-open-position-review.md	Current tooling, locked dependency, regression, operating prompt or configuration; inspected and retained.
+prompts/PR05-square-off-and-closure.md	B	prompts/PR05-square-off-and-closure.md	Active navigation, operational guidance or CI dependency coverage repaired against current implementation; governance unchanged.
+prompts/PR06-re-entry-fresh-pass.md	B	prompts/PR06-re-entry-fresh-pass.md	Active navigation, operational guidance or CI dependency coverage repaired against current implementation; governance unchanged.
+prompts/PR07-anytime-status-check.md	B	prompts/PR07-anytime-status-check.md	Active source/reference required a consistency repair identified during tests or independent review; implementation and regression coverage updated without live activation.
+prompts/PR08-market-closed-outlook.md	B	prompts/PR08-market-closed-outlook.md	Active navigation, operational guidance or CI dependency coverage repaired against current implementation; governance unchanged.
+prompts/PR09-end-of-day-summary.md	A	prompts/PR09-end-of-day-summary.md	Current tooling, locked dependency, regression, operating prompt or configuration; inspected and retained.
+prompts/PR10-tooling-readiness-check.md	A	prompts/PR10-tooling-readiness-check.md	Current tooling, locked dependency, regression, operating prompt or configuration; inspected and retained.
+prompts/README.md	B	prompts/README.md	Active navigation, operational guidance or CI dependency coverage repaired against current implementation; governance unchanged.
+requirements-dev.in	A	requirements-dev.in	Current tooling, locked dependency, regression, operating prompt or configuration; inspected and retained.
+requirements-dev.lock	A	requirements-dev.lock	Current tooling, locked dependency, regression, operating prompt or configuration; inspected and retained.
+requirements.in	A	requirements.in	Current tooling, locked dependency, regression, operating prompt or configuration; inspected and retained.
+requirements.lock	A	requirements.lock	Current tooling, locked dependency, regression, operating prompt or configuration; inspected and retained.
+services/day-workflow/README.md	B	services/day-workflow/README.md	Add entrypoint ownership/index links and distinguish workflow research controller from generic Execution Engine/testbed.
+services/day-workflow/day_workflow.py	B	services/day-workflow/day_workflow.py	Normalized SHADOW gate ingress lacked required current session-VRP and loss inputs; preserve gates and require explicit evidence.
+services/day-workflow/decision_table.py	A	services/day-workflow/decision_table.py	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/day-workflow/forecast_shadow.py	A	services/day-workflow/forecast_shadow.py	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/day-workflow/master_workflow.py	A	services/day-workflow/master_workflow.py	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/day-workflow/policy/master_algorithm.json	B	services/day-workflow/policy/master_algorithm.json	Active source/reference required a consistency repair identified during tests or independent review; implementation and regression coverage updated without live activation.
+services/day-workflow/review_scorecard.py	A	services/day-workflow/review_scorecard.py	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/day-workflow/robust_tail_selection.py	A	services/day-workflow/robust_tail_selection.py	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/day-workflow/simple_ledger.py	A	services/day-workflow/simple_ledger.py	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/day-workflow/test_day_workflow.py	B	services/day-workflow/test_day_workflow.py	Synthetic fixtures lacked current controller session-VRP/loss inputs.
+services/day-workflow/test_master_workflow.py	B	services/day-workflow/test_master_workflow.py	Synthetic fixture clocks and current controller evidence drifted; add meaningful adapter integration regressions.
+services/day-workflow/test_review_json_storage.py	A	services/day-workflow/test_review_json_storage.py	Active synthetic regression coverage; keep with its implementation and CI references.
+services/day-workflow/test_review_pipeline.py	A	services/day-workflow/test_review_pipeline.py	Active synthetic regression coverage; keep with its implementation and CI references.
+services/day-workflow/test_robust_tail_selection.py	A	services/day-workflow/test_robust_tail_selection.py	Active synthetic regression coverage; keep with its implementation and CI references.
+services/day-workflow/test_simple_ledger.py	A	services/day-workflow/test_simple_ledger.py	Active synthetic regression coverage; keep with its implementation and CI references.
+services/day-workflow/test_trade_ledger.py	A	services/day-workflow/test_trade_ledger.py	Active synthetic regression coverage; keep with its implementation and CI references.
+services/day-workflow/test_wide_butterfly_selector.py	A	services/day-workflow/test_wide_butterfly_selector.py	Active synthetic regression coverage; keep with its implementation and CI references.
+services/day-workflow/test_workflow_accounting.py	A	services/day-workflow/test_workflow_accounting.py	Active synthetic regression coverage; keep with its implementation and CI references.
+services/day-workflow/test_workflow_observation.py	A	services/day-workflow/test_workflow_observation.py	Active synthetic regression coverage; keep with its implementation and CI references.
+services/day-workflow/trade_ledger.py	A	services/day-workflow/trade_ledger.py	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/day-workflow/volarb_paths.py	A	services/day-workflow/volarb_paths.py	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/day-workflow/wide_butterfly_selector.py	A	services/day-workflow/wide_butterfly_selector.py	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/day-workflow/workflow_accounting.py	A	services/day-workflow/workflow_accounting.py	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/day-workflow/workflow_decision.py	B	services/day-workflow/workflow_decision.py	Adapter omitted current session-VRP and loss inputs and forwarded unverified RV asof; recompute bound snapshot gate and bind verified decision clock.
+services/day-workflow/workflow_observation.py	A	services/day-workflow/workflow_observation.py	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/dhan-chatgpt-mcp/.dockerignore	B	services/dhan-chatgpt-mcp/Dockerfile.dockerignore	Replaced by Dockerfile-specific root-context allowlist so shared contract imports remain valid and private state stays excluded.
+services/dhan-chatgpt-mcp/.env.example	A	services/dhan-chatgpt-mcp/.env.example	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/dhan-chatgpt-mcp/.gitignore	A	services/dhan-chatgpt-mcp/.gitignore	Active reproducibility/private-artifact exclusion configuration; preserve.
+services/dhan-chatgpt-mcp/Dockerfile	B	services/dhan-chatgpt-mcp/Dockerfile	Local build context excludes shared engine contracts required by public provider exports; either support repo-root build closure or clearly MCP-only exclusion.
+services/dhan-chatgpt-mcp/README.md	B	services/dhan-chatgpt-mcp/README.md	Separate canonical provider/library, current research facade, retained compatibility executor, dated deployment and token-validation history; fix external state install paths.
+services/dhan-chatgpt-mcp/package-lock.json	A	services/dhan-chatgpt-mcp/package-lock.json	Active reproducibility/private-artifact exclusion configuration; preserve.
+services/dhan-chatgpt-mcp/package.json	A	services/dhan-chatgpt-mcp/package.json	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/dhan-chatgpt-mcp/src/butterfly-executor.mjs	C	services/dhan-chatgpt-mcp/src/butterfly-executor.mjs	Working strategy-specific compatibility executor; authenticated endpoint and tests depend on it. No move/delete.
+services/dhan-chatgpt-mcp/src/dhan-broker-port.mjs	B	services/dhan-chatgpt-mcp/src/dhan-broker-port.mjs	Capabilities omitted implemented GET_CAPABILITIES from declared operation vocabulary.
+services/dhan-chatgpt-mcp/src/dhan-client.mjs	A	services/dhan-chatgpt-mcp/src/dhan-client.mjs	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/dhan-chatgpt-mcp/src/dhan-config.mjs	A	services/dhan-chatgpt-mcp/src/dhan-config.mjs	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/dhan-chatgpt-mcp/src/dhan-error-mapper.mjs	A	services/dhan-chatgpt-mcp/src/dhan-error-mapper.mjs	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/dhan-chatgpt-mcp/src/dhan-normalizer.mjs	A	services/dhan-chatgpt-mcp/src/dhan-normalizer.mjs	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/dhan-chatgpt-mcp/src/dhan-provider.mjs	A	services/dhan-chatgpt-mcp/src/dhan-provider.mjs	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/dhan-chatgpt-mcp/src/dhan-readiness.mjs	A	services/dhan-chatgpt-mcp/src/dhan-readiness.mjs	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/dhan-chatgpt-mcp/src/dhan-runtime.mjs	A	services/dhan-chatgpt-mcp/src/dhan-runtime.mjs	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/dhan-chatgpt-mcp/src/dhan-streams.mjs	A	services/dhan-chatgpt-mcp/src/dhan-streams.mjs	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/dhan-chatgpt-mcp/src/dhan-translator.mjs	A	services/dhan-chatgpt-mcp/src/dhan-translator.mjs	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/dhan-chatgpt-mcp/src/execution-mcp.mjs	C	services/dhan-chatgpt-mcp/src/execution-mcp.mjs	Active authenticated legacy butterfly facade; server imports it. Keep stable path.
+services/dhan-chatgpt-mcp/src/execution-oauth.mjs	C	services/dhan-chatgpt-mcp/src/execution-oauth.mjs	OAuth used by legacy executor facade; keep API/path and tests.
+services/dhan-chatgpt-mcp/src/instrument-master.mjs	A	services/dhan-chatgpt-mcp/src/instrument-master.mjs	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/dhan-chatgpt-mcp/src/login-setup.mjs	A	services/dhan-chatgpt-mcp/src/login-setup.mjs	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/dhan-chatgpt-mcp/src/margin-preflight.mjs	A	services/dhan-chatgpt-mcp/src/margin-preflight.mjs	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/dhan-chatgpt-mcp/src/provider-error.mjs	C	services/dhan-chatgpt-mcp/src/provider-error.mjs	Compatibility re-export of canonical execution-engine/contracts/provider-error.mjs; imports and package export must remain.
+services/dhan-chatgpt-mcp/src/runtime-paths.mjs	A	services/dhan-chatgpt-mcp/src/runtime-paths.mjs	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/dhan-chatgpt-mcp/src/server.mjs	A	services/dhan-chatgpt-mcp/src/server.mjs	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/dhan-chatgpt-mcp/src/surface-analytics.mjs	A	services/dhan-chatgpt-mcp/src/surface-analytics.mjs	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/dhan-chatgpt-mcp/src/token-cli.mjs	A	services/dhan-chatgpt-mcp/src/token-cli.mjs	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/dhan-chatgpt-mcp/src/web-token-browser.mjs	A	services/dhan-chatgpt-mcp/src/web-token-browser.mjs	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/dhan-chatgpt-mcp/src/web-token.mjs	A	services/dhan-chatgpt-mcp/src/web-token.mjs	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/dhan-chatgpt-mcp/src/workflow-data-cli.mjs	A	services/dhan-chatgpt-mcp/src/workflow-data-cli.mjs	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/dhan-chatgpt-mcp/src/workflow-data.mjs	A	services/dhan-chatgpt-mcp/src/workflow-data.mjs	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/dhan-chatgpt-mcp/src/workflow-hf.mjs	A	services/dhan-chatgpt-mcp/src/workflow-hf.mjs	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/dhan-chatgpt-mcp/start-dhan-mcp.sh	A	services/dhan-chatgpt-mcp/start-dhan-mcp.sh	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/dhan-chatgpt-mcp/test/broker-port.test.mjs	B	services/dhan-chatgpt-mcp/test/broker-port.test.mjs	Add assertion all implemented canonical operations are discoverable.
+services/dhan-chatgpt-mcp/test/core.test.mjs	A	services/dhan-chatgpt-mcp/test/core.test.mjs	Active synthetic regression coverage; keep with its implementation and CI references.
+services/dhan-chatgpt-mcp/test/executor.test.mjs	C	services/dhan-chatgpt-mcp/test/executor.test.mjs	Synthetic regression coverage for retained working compatibility executor.
+services/dhan-chatgpt-mcp/test/margin.test.mjs	A	services/dhan-chatgpt-mcp/test/margin.test.mjs	Active synthetic regression coverage; keep with its implementation and CI references.
+services/dhan-chatgpt-mcp/test/oauth.test.mjs	C	services/dhan-chatgpt-mcp/test/oauth.test.mjs	Synthetic regression coverage for retained authenticated compatibility endpoint.
+services/dhan-chatgpt-mcp/test/provider.test.mjs	A	services/dhan-chatgpt-mcp/test/provider.test.mjs	Active synthetic regression coverage; keep with its implementation and CI references.
+services/dhan-chatgpt-mcp/test/runtime-paths.test.mjs	A	services/dhan-chatgpt-mcp/test/runtime-paths.test.mjs	Active synthetic regression coverage; keep with its implementation and CI references.
+services/dhan-chatgpt-mcp/test/streams.test.mjs	A	services/dhan-chatgpt-mcp/test/streams.test.mjs	Active synthetic regression coverage; keep with its implementation and CI references.
+services/dhan-chatgpt-mcp/test/web-token.test.mjs	A	services/dhan-chatgpt-mcp/test/web-token.test.mjs	Active synthetic regression coverage; keep with its implementation and CI references.
+services/dhan-chatgpt-mcp/test/workflow-data.test.mjs	A	services/dhan-chatgpt-mcp/test/workflow-data.test.mjs	Active synthetic regression coverage; keep with its implementation and CI references.
+services/dhan-chatgpt-mcp/test/workflow-hf.test.mjs	A	services/dhan-chatgpt-mcp/test/workflow-hf.test.mjs	Active synthetic regression coverage; keep with its implementation and CI references.
+services/essvi-dashboard/.gitignore	A	services/essvi-dashboard/.gitignore	Active reproducibility/private-artifact exclusion configuration; preserve.
+services/essvi-dashboard/README.md	B	services/essvi-dashboard/README.md	Separate current methodology/deployment constraints from dated validation and initial-launch narrative; add navigation.
+services/essvi-dashboard/app.py	A	services/essvi-dashboard/app.py	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/essvi-dashboard/har.py	A	services/essvi-dashboard/har.py	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/essvi-dashboard/index.html	A	services/essvi-dashboard/index.html	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/essvi-dashboard/prepare.py	A	services/essvi-dashboard/prepare.py	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/essvi-dashboard/requirements-test.txt	A	services/essvi-dashboard/requirements-test.txt	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/essvi-dashboard/run.py	C	services/essvi-dashboard/run.py	Retain working office-Mac integration adapter and document explicit non-portable source/runtime path assumptions; no credential/runtime change.
+services/essvi-dashboard/start.command	A	services/essvi-dashboard/start.command	Current implementation/configuration with active callers or tests; preserve stable source path.
+services/essvi-dashboard/test_har.py	A	services/essvi-dashboard/test_har.py	Active synthetic regression coverage; keep with its implementation and CI references.
+services/essvi-dashboard/vendor/plotly.min.js	A	services/essvi-dashboard/vendor/plotly.min.js	Intentionally vendored Plotly runtime with embedded license; not disposable generated output.
+skill/butterfly-market-outlook/SKILL.md	B	skill/butterfly-market-outlook/SKILL.md	Make existing personal covenant precedence visible at entrypoint and output examples
+skill/butterfly-market-outlook/agents/openai.yaml	A	skill/butterfly-market-outlook/agents/openai.yaml	Canonical active implementation/reference/regression/package asset; retain in place
+skill/butterfly-market-outlook/assets/icon.svg	A	skill/butterfly-market-outlook/assets/icon.svg	Shared intentional per-skill packaged icon; identical across skills but required standalone assets
+skill/butterfly-market-outlook/references/analysis-framework.md	B	skill/butterfly-market-outlook/references/analysis-framework.md	Legacy prose conflicts with active RV/news/controller precedence
+skill/butterfly-market-outlook/references/architecture-v2.md	B	skill/butterfly-market-outlook/references/architecture-v2.md	v2.5 architecture omits v2.6 loss/session-VRP/reentry/margin gates and duplicate module label
+skill/butterfly-market-outlook/references/butterfly-optimizer.md	B	skill/butterfly-market-outlook/references/butterfly-optimizer.md	Mark subordinate calculation-only authority and existing covenant/entry-gate prerequisites
+skill/butterfly-market-outlook/references/decision-algorithm.md	B	skill/butterfly-market-outlook/references/decision-algorithm.md	Distinguish controller missing-budget warning from required caller evidence before new-entry recommendations
+skill/butterfly-market-outlook/references/dhan-mcp-workflow.md	B	skill/butterfly-market-outlook/references/dhan-mcp-workflow.md	Current controller version and acquisition-only versus final authorization boundary
+skill/butterfly-market-outlook/references/exchange-surface-workflow.md	A	skill/butterfly-market-outlook/references/exchange-surface-workflow.md	Canonical active implementation/reference/regression/package asset; retain in place
+skill/butterfly-market-outlook/references/expiry-exit-algorithm.md	B	skill/butterfly-market-outlook/references/expiry-exit-algorithm.md	Explicit calculation-module/controller authority and covenant boundary
+skill/butterfly-market-outlook/references/margin-affordability.md	B	skill/butterfly-market-outlook/references/margin-affordability.md	Hard-coded old checkout path instead of repository implementation link
+skill/butterfly-market-outlook/references/market-state.md	B	skill/butterfly-market-outlook/references/market-state.md	v2.5 state example omits current controller evidence; preserve current data fields
+skill/butterfly-market-outlook/references/news-signal-integration.md	A	skill/butterfly-market-outlook/references/news-signal-integration.md	Canonical active implementation/reference/regression/package asset; retain in place
+skill/butterfly-market-outlook/references/nse-option-chain.md	A	skill/butterfly-market-outlook/references/nse-option-chain.md	Canonical active implementation/reference/regression/package asset; retain in place
+skill/butterfly-market-outlook/references/output-template.md	B	skill/butterfly-market-outlook/references/output-template.md	Stale tail-first/default-recommendation language and overnight examples conflict with canonical controller/covenant
+skill/butterfly-market-outlook/references/overnight-carry-gate.md	B	skill/butterfly-market-outlook/references/overnight-carry-gate.md	Explicitly mark generic overnight module subordinate personal intraday covenant
+skill/butterfly-market-outlook/references/position-screenshots.md	A	skill/butterfly-market-outlook/references/position-screenshots.md	Canonical active implementation/reference/regression/package asset; retain in place
+skill/butterfly-market-outlook/references/post-trade-learning.md	A	skill/butterfly-market-outlook/references/post-trade-learning.md	Canonical active implementation/reference/regression/package asset; retain in place
+skill/butterfly-market-outlook/references/recentre-engine.md	B	skill/butterfly-market-outlook/references/recentre-engine.md	Clarify higher-gate precedence and required transition margin before actual recommendation
+skill/butterfly-market-outlook/references/regime-engine.md	B	skill/butterfly-market-outlook/references/regime-engine.md	Explicit generic module/controller authority and covenant boundary
+skill/butterfly-market-outlook/references/repo-logging.md	B	skill/butterfly-market-outlook/references/repo-logging.md	Active source/reference required a consistency repair identified during tests or independent review; implementation and regression coverage updated without live activation.
+skill/butterfly-market-outlook/references/research-basis.md	A	skill/butterfly-market-outlook/references/research-basis.md	Canonical active implementation/reference/regression/package asset; retain in place
+skill/butterfly-market-outlook/references/session-vrp-gate.md	B	skill/butterfly-market-outlook/references/session-vrp-gate.md	Active source/reference required a consistency repair identified during tests or independent review; implementation and regression coverage updated without live activation.
+skill/butterfly-market-outlook/scripts/analyze_option_surface.py	A	skill/butterfly-market-outlook/scripts/analyze_option_surface.py	Canonical active implementation/reference/regression/package asset; retain in place
+skill/butterfly-market-outlook/scripts/analyze_position.py	A	skill/butterfly-market-outlook/scripts/analyze_position.py	Canonical active implementation/reference/regression/package asset; retain in place
+skill/butterfly-market-outlook/scripts/classify_market_regime.py	A	skill/butterfly-market-outlook/scripts/classify_market_regime.py	Canonical active implementation/reference/regression/package asset; retain in place
+skill/butterfly-market-outlook/scripts/compare_market_states.py	A	skill/butterfly-market-outlook/scripts/compare_market_states.py	Canonical active implementation/reference/regression/package asset; retain in place
+skill/butterfly-market-outlook/scripts/decision_controller.py	B	skill/butterfly-market-outlook/scripts/decision_controller.py	Correct misleading missing-budget comment only; existing warning behavior retained and frozen replay unchanged
+skill/butterfly-market-outlook/scripts/evaluate_expiry_exit.py	A	skill/butterfly-market-outlook/scripts/evaluate_expiry_exit.py	Canonical active implementation/reference/regression/package asset; retain in place
+skill/butterfly-market-outlook/scripts/evaluate_overnight_carry.py	A	skill/butterfly-market-outlook/scripts/evaluate_overnight_carry.py	Canonical active implementation/reference/regression/package asset; retain in place
+skill/butterfly-market-outlook/scripts/evaluate_recentre.py	A	skill/butterfly-market-outlook/scripts/evaluate_recentre.py	Canonical active implementation/reference/regression/package asset; retain in place
+skill/butterfly-market-outlook/scripts/evaluate_session_vrp.py	B	skill/butterfly-market-outlook/scripts/evaluate_session_vrp.py	Active source/reference required a consistency repair identified during tests or independent review; implementation and regression coverage updated without live activation.
+skill/butterfly-market-outlook/scripts/fetch_nse_option_chain.py	A	skill/butterfly-market-outlook/scripts/fetch_nse_option_chain.py	Canonical active implementation/reference/regression/package asset; retain in place
+skill/butterfly-market-outlook/scripts/news_signal_adapter.py	A	skill/butterfly-market-outlook/scripts/news_signal_adapter.py	Canonical active implementation/reference/regression/package asset; retain in place
+skill/butterfly-market-outlook/scripts/normalize_dhan_option_chain.py	A	skill/butterfly-market-outlook/scripts/normalize_dhan_option_chain.py	Canonical active implementation/reference/regression/package asset; retain in place
+skill/butterfly-market-outlook/scripts/optimize_butterflies.py	A	skill/butterfly-market-outlook/scripts/optimize_butterflies.py	Canonical active implementation/reference/regression/package asset; retain in place
+skill/butterfly-market-outlook/scripts/summarize_trade_log.py	A	skill/butterfly-market-outlook/scripts/summarize_trade_log.py	Canonical active implementation/reference/regression/package asset; retain in place
+skill/butterfly-market-outlook/tests/fixtures_session_vrp_state_20260930.json	A	skill/butterfly-market-outlook/tests/fixtures_session_vrp_state_20260930.json	Canonical active implementation/reference/regression/package asset; retain in place
+skill/butterfly-market-outlook/tests/test_decision_controller.py	A	skill/butterfly-market-outlook/tests/test_decision_controller.py	Canonical active implementation/reference/regression/package asset; retain in place
+skill/butterfly-market-outlook/tests/test_session_vrp.py	B	skill/butterfly-market-outlook/tests/test_session_vrp.py	Active source/reference required a consistency repair identified during tests or independent review; implementation and regression coverage updated without live activation.
+skill/butterfly-market-outlook/tests/test_v24_overnight.py	A	skill/butterfly-market-outlook/tests/test_v24_overnight.py	Canonical active implementation/reference/regression/package asset; retain in place
+skill/butterfly-market-outlook/tests/test_v24_regime.py	A	skill/butterfly-market-outlook/tests/test_v24_regime.py	Canonical active implementation/reference/regression/package asset; retain in place
+skill/intraday-realized-volatility-forecast/SKILL.md	B	skill/intraday-realized-volatility-forecast/SKILL.md	Provider-specific skills__read footer not portable; numbered rules out of order
+skill/intraday-realized-volatility-forecast/agents/openai.yaml	A	skill/intraday-realized-volatility-forecast/agents/openai.yaml	Canonical active implementation/reference/regression/package asset; retain in place
+skill/intraday-realized-volatility-forecast/assets/icon.svg	A	skill/intraday-realized-volatility-forecast/assets/icon.svg	Shared intentional per-skill packaged icon; identical across skills but required standalone assets
+skill/intraday-realized-volatility-forecast/references/input-output-schema.md	A	skill/intraday-realized-volatility-forecast/references/input-output-schema.md	Canonical active implementation/reference/regression/package asset; retain in place
+skill/intraday-realized-volatility-forecast/references/methodology.md	B	skill/intraday-realized-volatility-forecast/references/methodology.md	Active source/reference required a consistency repair identified during tests or independent review; implementation and regression coverage updated without live activation.
+skill/intraday-realized-volatility-forecast/references/research-basis.md	A	skill/intraday-realized-volatility-forecast/references/research-basis.md	Canonical active implementation/reference/regression/package asset; retain in place
+skill/intraday-realized-volatility-forecast/scripts/build_rv_input.py	A	skill/intraday-realized-volatility-forecast/scripts/build_rv_input.py	Canonical active implementation/reference/regression/package asset; retain in place
+skill/intraday-realized-volatility-forecast/scripts/forecast_intraday_rv.py	A	skill/intraday-realized-volatility-forecast/scripts/forecast_intraday_rv.py	Canonical active implementation/reference/regression/package asset; retain in place
+skill/intraday-realized-volatility-forecast/scripts/test_jump.json	A	skill/intraday-realized-volatility-forecast/scripts/test_jump.json	Offline RV scenario fixture consumed by .github/skill-tools/check_rv_fixtures.py; retain stable paths
+skill/intraday-realized-volatility-forecast/scripts/test_mode_bucket_jump.json	A	skill/intraday-realized-volatility-forecast/scripts/test_mode_bucket_jump.json	Offline RV scenario fixture consumed by .github/skill-tools/check_rv_fixtures.py; retain stable paths
+skill/intraday-realized-volatility-forecast/scripts/test_stable.json	A	skill/intraday-realized-volatility-forecast/scripts/test_stable.json	Offline RV scenario fixture consumed by .github/skill-tools/check_rv_fixtures.py; retain stable paths
+skill/intraday-realized-volatility-forecast/scripts/test_trend.json	A	skill/intraday-realized-volatility-forecast/scripts/test_trend.json	Offline RV scenario fixture consumed by .github/skill-tools/check_rv_fixtures.py; retain stable paths
+skill/market-news-signal-filter/SKILL.md	B	skill/market-news-signal-filter/SKILL.md	Active source/reference required a consistency repair identified during tests or independent review; implementation and regression coverage updated without live activation.
+skill/market-news-signal-filter/agents/openai.yaml	A	skill/market-news-signal-filter/agents/openai.yaml	Canonical active implementation/reference/regression/package asset; retain in place
+skill/market-news-signal-filter/assets/icon.svg	A	skill/market-news-signal-filter/assets/icon.svg	Shared intentional per-skill packaged icon; identical across skills but required standalone assets
+skill/market-news-signal-filter/references/calibration.md	A	skill/market-news-signal-filter/references/calibration.md	Canonical active implementation/reference/regression/package asset; retain in place
+skill/market-news-signal-filter/references/examples.md	A	skill/market-news-signal-filter/references/examples.md	Canonical active implementation/reference/regression/package asset; retain in place
+skill/market-news-signal-filter/references/monthly-recalibration.md	A	skill/market-news-signal-filter/references/monthly-recalibration.md	Canonical active implementation/reference/regression/package asset; retain in place
+skill/market-news-signal-filter/references/research-basis.md	A	skill/market-news-signal-filter/references/research-basis.md	Canonical active implementation/reference/regression/package asset; retain in place
+skill/market-news-signal-filter/references/rubric.md	A	skill/market-news-signal-filter/references/rubric.md	Canonical active implementation/reference/regression/package asset; retain in place
+tasks.md	B	tasks.md	Active navigation, operational guidance or CI dependency coverage repaired against current implementation; governance unchanged.
+tests/test_agent_kit.py	B	tests/test_agent_kit.py	Add meaningful regressions for new-provider mutation flag and real extracted-archive provider imports.
+tools/volarb.py	B	tools/volarb.py	Disable inherited DHAN_PROVIDER_COMMANDS_ENABLED as well as legacy flag; doctor must recognize both plus provider truthy values; package must preserve import closure.
+trade-log/README.md	B	trade-log/README.md	Active navigation, operational guidance or CI dependency coverage repaired against current implementation; governance unchanged.
+trade-log/episodes.jsonl	D	trade-log/episodes.jsonl	Historical financial/research evidence retained byte-for-byte at established paths by explicit preservation requirement; never current broker truth.
+trade-log/reviews/2026-09-21-banknifty-research.md	D	trade-log/reviews/2026-09-21-banknifty-research.md	Historical financial/research evidence retained byte-for-byte at established paths by explicit preservation requirement; never current broker truth.
+trade-log/reviews/2026-09-21-nifty-near-expiry.md	D	trade-log/reviews/2026-09-21-nifty-near-expiry.md	Historical financial/research evidence retained byte-for-byte at established paths by explicit preservation requirement; never current broker truth.
+trade-log/reviews/2026-09-22-sensex-research.md	D	trade-log/reviews/2026-09-22-sensex-research.md	Historical financial/research evidence retained byte-for-byte at established paths by explicit preservation requirement; never current broker truth.
+trade-log/snapshots/2026-09-22T1656-IST-dhan.json	D	trade-log/snapshots/2026-09-22T1656-IST-dhan.json	Historical financial/research evidence retained byte-for-byte at established paths by explicit preservation requirement; never current broker truth.
+trade-log/trades.csv	D	trade-log/trades.csv	Historical financial/research evidence retained byte-for-byte at established paths by explicit preservation requirement; never current broker truth.
+trade-log/trades/2026-09-23-NIFTY-001.md	D	trade-log/trades/2026-09-23-NIFTY-001.md	Historical financial/research evidence retained byte-for-byte at established paths by explicit preservation requirement; never current broker truth.
+trade-log/trades/2026-09-23-SENSEX-001.md	D	trade-log/trades/2026-09-23-SENSEX-001.md	Historical financial/research evidence retained byte-for-byte at established paths by explicit preservation requirement; never current broker truth.
+trade-log/trades/2026-09-25-BANKNIFTY-001.md	D	trade-log/trades/2026-09-25-BANKNIFTY-001.md	Historical financial/research evidence retained byte-for-byte at established paths by explicit preservation requirement; never current broker truth.
+trade-log/trades/2026-09-28-BANKNIFTY-001.md	D	trade-log/trades/2026-09-28-BANKNIFTY-001.md	Historical financial/research evidence retained byte-for-byte at established paths by explicit preservation requirement; never current broker truth.
+trade-log/trades/2026-09-29-SENSEX-001.md	D	trade-log/trades/2026-09-29-SENSEX-001.md	Historical financial/research evidence retained byte-for-byte at established paths by explicit preservation requirement; never current broker truth.
+trade-log/trades/2026-09-30-NIFTY-001.md	D	trade-log/trades/2026-09-30-NIFTY-001.md	Historical financial/research evidence retained byte-for-byte at established paths by explicit preservation requirement; never current broker truth.
+trade-log/trades/2026-09-30-NIFTY-002.md	D	trade-log/trades/2026-09-30-NIFTY-002.md	Historical financial/research evidence retained byte-for-byte at established paths by explicit preservation requirement; never current broker truth.

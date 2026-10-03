@@ -1,13 +1,14 @@
-# PR07 — Anytime status check
+# PR07 — Bounded status check
 
-**When:** any time you want a factual snapshot without a trading decision.
-**Precondition:** none.
+**When:** an authorized scheduled review window or an objective material-risk/emergency trigger, when a factual snapshot is needed without a trading decision.
+**Precondition:** the covenant permits this review window. Curiosity, anxiety or an urge to check P&L is not a trigger.
 **Output:** positions, orders, session loss vs budget, gate inputs available. No HOLD/SQUARE OFF/candidate output.
 
 ## Prompt
 
 ```
-Status check only, no trading decision.
+Status check within the current authorized review window or objective emergency trigger; no trading decision.
+Reason/window: <scheduled review time or material-risk trigger>.
 
 Read fresh Dhan positions and orders. Report: open butterfly (or flat), pending orders, today's realized P&L from Dhan, bankable P&L at executable close if a position is open, session loss vs the ₹1,000 budget, the current session VRP state from the dashboard, and the time remaining to the 15:00 IST flat deadline.
 Publish the check to the daily journal on ayyararyan/volarb main before replying.

@@ -1,16 +1,17 @@
 # Daily Operating Algorithm — one butterfly, one lot, intraday
 
-Updated 2026-09-30. This is the single page to follow on a trading day. It sits on top of the
+Operational rules updated 2026-09-30; source consistency reviewed 2026-10-03. This is the single page to follow on a trading day. It sits on top of the
 [personal covenant](PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md) (intraday only, flat by 15:00 IST) and the
 engine's [decision algorithm](../skill/butterfly-market-outlook/references/decision-algorithm.md), which
 controls gate order. Nothing here loosens either. Dhandho researches and records; Aryan executes.
 
 ## Why the strategy exists
 
-A short-gamma butterfly earns money only when option-implied variance exceeds the variance the market
-actually realizes over the holding window. That difference is the variance risk premium (VRP). When it is
-absent, the structure pays to be short volatility and every adjustment adds friction. Therefore the first
-question every day is not "which strikes" but "is there a premium at all".
+The strategy seeks compensation for short-volatility exposure when option-implied variance exceeds a
+physical realized-variance forecast over a comparable horizon. This is a variance-risk-premium screen,
+not a sufficient or necessary pathwise profit condition for a finite-width butterfly: location, skew,
+path, executable prices and costs also matter. The adopted entry rule nevertheless requires a
+FAVOURABLE session VRP screen before selecting strikes.
 
 ## The day, in order
 
@@ -20,7 +21,7 @@ question every day is not "which strikes" but "is there a premium at all".
 | 1 | 09:30 | If not `FAVOURABLE`: the day is closed for new entries. Journal the blocked check. Stop. | both | NO TRADE |
 | 2 | 09:45–09:55 | **Candidate search** (only if step 0 passed). Fresh Dhan positions and orders, one full chain, data health, five-minute HF block via the local sampler, one news packet, RV/drift gate, hard-risk gate, optimizer, margin preflight with ₹1,000 reserve. | Dhandho | one table, up to three candidates or NO TRADE |
 | 3 | — | **Honour the table.** NO TRADE means no trade. A blocked gate is NO TRADE. | Aryan | — |
-| 4 | after fills | **Confirm entry.** Tell Dhandho it filled. Fills are read from Dhan and the trade file, `trades.csv` row and journal entry are written before anything else. | both | trade ID |
+| 4 | after fills | **Confirm entry.** Tell Dhandho it filled. Reconcile fills from Dhan and record them first through the local shared-writer accounting store; sanitized trade and journal records follow without delaying risk management. | both | trade ID |
 | 5 | every 30 min | **Review.** Returns HOLD, SQUARE OFF or (rarely) RECENTRE. Cadence drops to 15–20 min when the RV state is MARGINAL or a break-even is within half an ATM straddle. Each review states session loss against the ₹1,000 budget. | Dhandho | one row |
 | 6 | — | **No self-directed rolls.** RECENTRE is only valid as a controller output with verified transition margin; today the preflight is entry-only, so RECENTRE is effectively unavailable. If the body is wrong, the answer is SQUARE OFF. | Aryan | — |
 | 7 | on trigger | **SQUARE OFF** when the review says so, when session loss reaches ₹1,000, or at 15:00 IST at the latest. | Aryan | flat |
@@ -34,7 +35,7 @@ override an earlier failure.
 
 1. `DATA_HEALTH` — chain INVALID/STALE → NO TRADE (candidates).
 2. `POST_CLOSE` — market shut → LOCKED_OVERNIGHT, no fresh executable decision.
-3. `LOSS_BUDGET` — session realized + bankable loss ≥ ₹1,000 → SQUARE OFF / NO TRADE. Missing inputs are a warning for an open position, never a pass for a new one.
+3. `LOSS_BUDGET` — session realized + bankable loss ≥ ₹1,000 → SQUARE OFF / NO TRADE. The generic controller warns on missing inputs; the operational caller must supply and validate them before any candidate approval. A warning is not a verified budget pass.
 4. `SESSION_VRP` — candidates only; requires `FAVOURABLE` from step 0. `UNKNOWN` blocks.
 5. `RE_ENTRY_REQUIRES_FRESH_PASS` — a candidate after a same-session square-off needs a fresh full pass.
 6. `INTRADAY_RV_DRIFT` — five-minute HF block must be fresh (≤120 s old against the decision clock), quality PASS, with a news packet present and an IV anchor; candidates need `FAVOURABLE`; open positions exit on medium/high-confidence `UNFAVOURABLE`.
@@ -53,13 +54,13 @@ override an earlier failure.
 | Position truth | local read-only MCP on port 3000 | `dhan_get_positions`, `dhan_get_orders`, `dhan_get_butterfly_state` |
 | Chain / surface | local MCP | `dhan_analyze_option_surface`, `dhan_get_option_chain_by_symbol` |
 | HF block | local sampler, run **directly on the office Mac**, never via a remote node exec | `node src/workflow-data-cli.mjs --scope hf` in the dhan-chatgpt-mcp project (about five minutes) |
-| RV input | RV skill helper | `python skill/intraday-realized-volatility-forecast/scripts/build_rv_input.py --hf-evidence <file> --symbol NIFTY --spot … --atm-iv … --atm-straddle … --news-packet <file> --output rv_input.json` |
+| RV input | RV skill helper | `python skill/intraday-realized-volatility-forecast/scripts/build_rv_input.py --hf-evidence <file> --symbol NIFTY --spot … --atm-iv … --atm-straddle … --news-packet <file> --asof <decision-ISO-time> --output rv_input.json` |
 | RV forecast | RV skill | `python skill/intraday-realized-volatility-forecast/scripts/forecast_intraday_rv.py --input rv_input.json` |
 | News packet | `market-news-signal-filter` skill, once per horizon | — |
 | Margin | local MCP | `dhan_check_butterfly_margin` with `reserveRupees: 1000` |
 | Decision | controller | `python skill/butterfly-market-outlook/scripts/decision_controller.py --input controller_snapshot.json` |
 
-If any of these is unavailable, the corresponding gate fails closed. Missing evidence is never benign.
+Missing required candidate evidence blocks entry. For an existing position, missing HF data or a missing loss measurement is degraded evidence handled exactly as the controller specifies; it is not automatically an exit and never establishes flatness. Account/quote failures cannot support an actionable HOLD. The first terminal gate still wins.
 
 ## Controller inputs added on 2026-09-30
 
