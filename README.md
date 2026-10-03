@@ -13,11 +13,6 @@ VolArb brings Indian index-option research and strategy workflows together with 
 
 [Architecture](#architecture) · [Start here](#start-here) · [Development](#local-development) · [Repository map](docs/REPOSITORY_MAP.md)
 
-<picture>
-  <source media="(max-width: 768px)" srcset="docs/assets/volarb-architecture-mobile.svg">
-  <img src="docs/assets/volarb-architecture.svg" width="1000" alt="VolArb architecture: strategy through an optional adapter into the Execution Engine, then the Broker Execution Port with simulated and Dhan providers. The deterministic testbed injects runtime dependencies. Contracts are implemented; the complete engine pipeline is in development.">
-</picture>
-
 **Current scope:** broker contracts, the Dhan Provider, deterministic test infrastructure and research tooling are implemented. The complete generic Execution Engine is **under development**, not a deployed autonomous trading system.
 
 ## Capabilities and status
