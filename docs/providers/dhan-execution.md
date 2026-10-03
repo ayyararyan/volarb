@@ -423,9 +423,9 @@ References:
 
 ## VID decision
 
-No new VID is allocated by this audit.
+The Dhan provider and all Dhan-specific implementation components remain unnumbered external implementation details.
 
-The existing Volarb-owned `[5,0,3,6,1] Broker Execution Port`, `[5,0,4,7,1] Normalized Broker Execution Facts`, runtime identity and Execution Recovery contracts are sufficient. Dhan and its provider-internal components remain unnumbered external implementation details.
+The original provider-boundary audit required no new VID. The later broker-neutral error design introduced one genuinely Volarb-global contract: `[0,0,1,7,1] Provider Error Envelope`. It belongs to Master Architecture because every external provider must emit it and any Volarb box may consume it.
 
 
 ## Error implementation files
