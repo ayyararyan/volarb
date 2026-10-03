@@ -4120,7 +4120,9 @@
         7,
         2,
         1
-      ]
+      ],
+      "status": "retired",
+      "retired_reason": "VID layer violated edge-layer rule; replaced by [5,0,4,4,9] because source is Normalized Broker Execution Facts at layer 4."
     },
     {
       "vid": [
@@ -4829,6 +4831,56 @@
         8,
         1,
         2
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        4,
+        9
+      ],
+      "name": "Broker facts -> Slice Progress State",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        4,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        7,
+        2,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        4,
+        9
+      ],
+      "name": "Interrupt Control -> Execution Slicing preemption",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        6,
+        2,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        7,
+        0,
+        1
       ]
     }
   ]
