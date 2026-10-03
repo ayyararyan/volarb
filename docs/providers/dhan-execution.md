@@ -109,3 +109,33 @@ Future providers can use keys such as `kotak` or `icici` while implementing the 
 The Dhan provider should normalize the execution facts needed by Internal Execution, including executable market depth/quotes, current positions, pending orders, available cash/collateral/margin and authoritative margin-calculator results where applicable.
 
 Dhan supplies these facts; it does not own the broker-neutral sequencing policy.
+
+## Recovery responsibility split
+
+Dhan provides provider-specific recovery primitives; Internal Execution owns the broker-neutral recovery policy.
+
+The Dhan provider should expose/normalize enough information for:
+
+- stable correlation/order lookup;
+- order status;
+- trade/fill history;
+- current positions;
+- funds/margin state;
+- cancellation/modification outcome;
+- ambiguous transport/API errors.
+
+`[5,0,8,0,1] Execution Recovery` decides when to reconcile, when mutations are blocked, and whether broker truth is sufficient to resume.
+
+Provider code must not independently retry an ambiguous order mutation merely because an HTTP/API response was missing.
+
+## Runtime identity boundary
+
+Volarb runtime `intent_id`, `intent_version`, `slice_id`, and `action_id` are core identities.
+
+Dhan Security IDs, Dhan order IDs and Dhan correlation fields are provider identities.
+
+The provider maps between them through the Execution Action Envelope / Execution Ledger boundary without leaking Dhan-specific identifiers into strategy or execution-policy logic.
+
+## State-integrity inputs
+
+The Dhan provider should expose normalized freshness/validity metadata for market/account/order/position facts so `[5,0,9,0,1] State Integrity` can decide whether an action class is permitted.
