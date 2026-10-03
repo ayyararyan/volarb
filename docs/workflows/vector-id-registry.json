@@ -1,5 +1,5 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "schema": {
     "vector": [
       "box",
@@ -26,7 +26,7 @@
       "2": "underlying_allocation",
       "3": "trade_selection",
       "4": "position_management",
-      "5": "internal_execution"
+      "5": "internal_execution_canonical_component_namespace"
     },
     "box3_instance_codes": {
       "0": "template",
@@ -40,7 +40,11 @@
     "reuse_retired_ids": false,
     "edge_layer_rule": "edge layer equals source node logical layer",
     "cross_box_edges_use_box_0": true,
-    "graph_topology_authority": "explicit source/target relationships, not numeric adjacency"
+    "graph_topology_authority": "explicit source/target relationships, not numeric adjacency",
+    "canonical_component_ownership": "Entities whose VID begins [5,...] are canonically owned by component.internal_execution, not strategy.volarb.",
+    "mount_identity": "A mounted occurrence is addressed by composition_id + mount_id + canonical VID; mounting never renumbers canonical VIDs.",
+    "binding_identity": "Cross-component connections are composition-owned first-class bindings with immutable binding_id values.",
+    "runtime_identity_separation": "Runtime intent/action/order identities are not architectural VIDs."
   },
   "entities": [
     {
@@ -2569,7 +2573,10 @@
       "name": "Internal Execution",
       "kind": "root",
       "status": "active_design",
-      "note": "Broker-neutral Internal Execution: normal Margin Optimization -> Execution Slicing -> Optimal Execution flow, with cross-cutting State Integrity, Execution Recovery/Ledger and Interrupt Control."
+      "note": "Broker-neutral reusable Internal Execution component. Canonical namespace [5,0,...] is strategy-agnostic and provider-agnostic; strategy placement is represented by a composition mount. Normal flow remains Margin Optimization -> Execution Slicing -> Optimal Execution with cross-cutting State Integrity, Execution Recovery/Ledger and Interrupt Control.",
+      "canonical_component_id": "component.internal_execution",
+      "identity_scope": "canonical",
+      "canonical_registry": "architecture/components/internal-execution/vector-id-registry.json"
     },
     {
       "vid": [
@@ -2802,7 +2809,12 @@
         1,
         9,
         1
-      ]
+      ],
+      "identity_scope": "composition_binding",
+      "composition_id": "composition.volarb",
+      "binding_id": "binding.volarb.position-management-to-execution.intent",
+      "composition_authority": "architecture/strategies/volarb/composition.json",
+      "note": "Compatibility edge only: architectural ownership is the explicit composition binding above."
     },
     {
       "vid": [
@@ -2827,7 +2839,12 @@
         2,
         1,
         1
-      ]
+      ],
+      "identity_scope": "composition_binding",
+      "composition_id": "composition.volarb",
+      "binding_id": "binding.volarb.execution-to-position-management.facts",
+      "composition_authority": "architecture/strategies/volarb/composition.json",
+      "note": "Compatibility edge only: architectural ownership is the explicit composition binding above."
     },
     {
       "vid": [
@@ -3883,7 +3900,12 @@
         6,
         7,
         1
-      ]
+      ],
+      "identity_scope": "composition_binding",
+      "composition_id": "composition.volarb",
+      "binding_id": "binding.volarb.position-management-to-execution.interrupt",
+      "composition_authority": "architecture/strategies/volarb/composition.json",
+      "note": "Compatibility edge only: architectural ownership is the explicit composition binding above."
     },
     {
       "vid": [
@@ -4929,5 +4951,18 @@
       ],
       "note": "Global broker/provider-neutral error contract consumed by any Volarb box calling an external provider. Every provider-native failure must map into a stable global category/code/outcome while retaining provider provenance; unknown native errors map to UNKNOWN rather than leaking raw exceptions."
     }
-  ]
+  ],
+  "registry_role": "compatibility_assembled_view",
+  "identity_model": {
+    "version": "2.0",
+    "canonical_component_identity": "Components own immutable canonical identities.",
+    "bound_identity": "Compositions derive placement identities from composition_id + mount_id + canonical identity.",
+    "runtime_identity": "Live intent/slice/action/correlation/provider identities remain ephemeral and reference bound/canonical context.",
+    "canonical_component_registries": {
+      "component.internal_execution": "architecture/components/internal-execution/vector-id-registry.json"
+    },
+    "composition_registry": "architecture/registries/composition-registry.json",
+    "current_composition": "architecture/strategies/volarb/composition.json",
+    "compatibility_rule": "This file remains an assembled compatibility view; it is not the ownership authority for reusable component namespaces."
+  }
 }
