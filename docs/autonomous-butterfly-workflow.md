@@ -1,4 +1,4 @@
-# Autonomous Butterfly Trading Workflow — Preliminary Graph v0.3
+# Autonomous Butterfly Trading Workflow — Preliminary Graph v0.4
 
 This is the living master decision graph for the autonomous Volarb butterfly trading system.
 
@@ -49,10 +49,11 @@ flowchart TD
         WX -. W_X remains reserved .-> KXR
 
         NX -->|Candidate selected| QX[Selected StructureSpec]
-        QX --> RX[Next stage: trade construction / execution / management TBD]
+        QX --> DX[Decision complete: emit TradeIntent]
+        DX --> RX[Execution + Risk Management Layer]
     end
 
-    RX --> SX[Future trade lifecycle subgraph TBD]
+    RX --> SX[Execution / fills / monitoring / adjustments / exit TBD]
 
     H -. shared capital and risk constraints .-> JX
 ```
@@ -133,6 +134,8 @@ MASTER GRAPH
 - A no-candidate result does not revoke the underlying decision; Graph X remains active and rechecks within the hour.
 - Waiting for a structure does not release W_X to another graph.
 - Broker execution remains downstream of the broker-neutral decision graph.
+- Selecting a StructureSpec marks the end of the decision layer for Graph X.
+- The selected trade is handed to a separate Execution + Risk Management layer.
 
 ## Scheduling hierarchy
 
@@ -164,8 +167,8 @@ The graph is expected to expand primarily at these nodes:
 - Portfolio Capital Allocator
 - Per-underlying Structure Optimizer
 - Within-Hour Structure Recheck Scheduler
-- Trade construction
-- Order execution
+- Execution + Risk Management subgraph
+- Order realization and fill handling
 - Position monitoring
 - Hold / recenter / hedge / reduce / exit decisions
 - Portfolio risk coordination
