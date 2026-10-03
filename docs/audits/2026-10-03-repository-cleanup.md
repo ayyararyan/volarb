@@ -84,7 +84,23 @@ Total unit/regression cases across the seven suites: **823**, plus the nine RV f
 
 Initial local failures were investigated, not ignored: the old workflow adapter lacked v2.6 gate evidence; macOS sandbox tests needed the canonical `/private/tmp` interpreter path; dashboard tests require their documented separate pandas environment. Final checks passed after source repairs or correct environment selection.
 
-**Hosted CI:** publication checks are pending at the time this source receipt is committed. Local success is not described as hosted success; the subsequent verification record will identify the tested commit and results.
+### Hosted publication verification
+
+All **nine workflow families passed** after publication. The implementation/archive tree was tested at `84368b0cdb931700a89f8b5c3922ca435ff8c771`. The first hygiene run exposed a CI-only shallow-checkout issue: `git show --check HEAD` treated the shallow tip as a root commit and inspected unchanged historical whitespace. Commit `1eff16ab551facaae6916a83771081476a71942f` retains HEAD's parent; hygiene and portable-kit CI then passed. Historical records and the covenant were not changed to appease the check.
+
+| Workflow | Tested commit | Verified result |
+|---|---|---|
+| Architecture identity checks | `84368b0` | [PASS](https://github.com/ayyararyan/volarb/actions/runs/37141960598) |
+| Execution testbed | `84368b0` | [PASS](https://github.com/ayyararyan/volarb/actions/runs/37141960429) |
+| Dhan Provider/MCP, including Docker build | `84368b0` | [PASS](https://github.com/ayyararyan/volarb/actions/runs/37141960664) |
+| Shadow day workflow | `84368b0` | [PASS](https://github.com/ayyararyan/volarb/actions/runs/37141960636) |
+| Butterfly skill regressions, RV fixtures and packages | `84368b0` | [PASS](https://github.com/ayyararyan/volarb/actions/runs/37141960534) |
+| Research laboratory | `84368b0` | [PASS](https://github.com/ayyararyan/volarb/actions/runs/37141960652) |
+| Dashboard HAR | `84368b0` | [PASS](https://github.com/ayyararyan/volarb/actions/runs/37141960620) |
+| Portable Agent Kit | `1eff16a` | [PASS](https://github.com/ayyararyan/volarb/actions/runs/37142016600) |
+| Repository source hygiene | `1eff16a` | [PASS](https://github.com/ayyararyan/volarb/actions/runs/37142016589) |
+
+These are source-validation receipts, not deployment or broker-readiness claims. This subsequent documentation-only receipt records observed results without implying that all workflows ran on one identical SHA. The final tree has **439 tracked files**; the isolated worktree is clean and the original Drive checkout's unrelated dashboard edit remains intact.
 
 ## Independent second pass
 
@@ -119,4 +135,6 @@ See [open tasks](../../tasks.md), [validation commands](../VALIDATION.md) and th
 
 - `ed8050b` — execution identities, validators and deterministic testbed correctness.
 - `50b532a` — provider packaging, portable source closure, current workflow evidence gates and skill consistency.
-- The following documentation commit archives historical generations and publishes this map/classification/report. Publication verification is recorded separately after hosted CI.
+- `84368b0` — historical archives, current navigation, classification and audit report.
+- `1eff16a` — preserve the parent commit for accurate hosted whitespace checks.
+- This final documentation-only verification receipt records the completed CI results; its SHA is supplied in the handoff.
