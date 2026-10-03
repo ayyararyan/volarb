@@ -16,7 +16,15 @@ Transform the existing Volarb research and market-outlook ecosystem into an auto
 
 ## Living graph
 
-The current master decision graph is maintained in [docs/autonomous-butterfly-workflow.md](docs/autonomous-butterfly-workflow.md). It is the visual counterpart to these notes and should be updated as architectural decisions are added or changed.
+The architecture is now split into one small master orchestrator and four detailed graphs:
+
+- [Master workflow](docs/autonomous-butterfly-workflow.md)
+- [Box 1 — Regime Decision](docs/workflows/01-regime-decision.md)
+- [Box 2 — Intraday Instrument Selection & Capital Allocation](docs/workflows/02-intraday-selection.md)
+- [Box 3 — Per-Underlying Trade Selection Graph X](docs/workflows/03-per-underlying-graph.md)
+- [Box 4 — Shared Execution & Risk Management](docs/workflows/04-execution-risk.md)
+
+The master graph should remain deliberately small. New decision detail should be added to the owning box rather than expanding the master unless a genuinely new top-level phase appears.
 
 ## Notes log
 
@@ -852,6 +860,36 @@ The exact schema is TBD.
 **Relationship to the thin broker executor:** The margin interface may be implemented by the same provider plug-in package as order execution, but it is conceptually a separate capability:
 - **MarginFeasibilityPort** = broker facts needed before a decision is executable.
 - **ExecutionPort** = enact already-approved broker-neutral commands.
+
+
+### 2026-10-03 — Refactor into master graph plus four owned subgraphs
+
+**Decision:** The previous single workflow graph had become too detailed and difficult to reason about. The architecture is now explicitly decomposed into one small orchestration graph and four independently evolvable graphs.
+
+1. **Box 1 — Regime Decision Graph**
+   - days/weeks horizon;
+   - owns regime eligibility and the multi-day regime recheck loop.
+
+2. **Box 2 — Intraday Instrument Selection & Capital Allocation**
+   - intraday horizon;
+   - chooses the subset of NIFTY/BANKNIFTY/SENSEX;
+   - owns the intraday no-selection recheck loop;
+   - allocates and reserves W_X for each selected daily commitment.
+
+3. **Box 3 — Per-Underlying Trade Selection Graph X**
+   - one independent instance for every selected X;
+   - owns structure universe C_X, constrained optimization, sticky W_X reservation, and the within-hour no-candidate recheck loop;
+   - emits a broker-neutral TradeIntent when a StructureSpec is selected.
+
+4. **Box 4 — Shared Execution & Risk Management Graph**
+   - common across all Graph X instances for the day;
+   - owns intelligent execution and live risk decisions;
+   - queries broker-derived margin feasibility;
+   - delegates broker-specific transport to thin replaceable provider plug-ins such as Dhan.
+
+**Preservation rule:** No prior decision has been discarded by this decomposition. Existing loops, capital-reservation rules, broker-independence rules, margin-feasibility dependency, optimizer behavior, and unresolved commitment-revocation question are assigned to the box that owns them.
+
+**Architecture rule going forward:** The master graph should describe only transitions between major phases. Detailed decisions belong in the relevant box graph.
 
 ## Open questions / unresolved design choices
 
