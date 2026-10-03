@@ -2922,7 +2922,7 @@
         0,
         1
       ],
-      "note": "Produces the ordered Execution Sequence Plan, specifying which instrument actions occur first, next, and later, with quantity constraints that preserve hedge and account-resource requirements."
+      "note": "Produces the Execution Ordering Plan. It decides whether precedence constraints exist. If required, emits ORDERED with sequence/quantity constraints; if genuinely unnecessary, emits UNCONSTRAINED."
     },
     {
       "vid": [
@@ -2951,7 +2951,7 @@
         7,
         1
       ],
-      "name": "Eligible Execution Work Slice",
+      "name": "Eligible Execution Work Set",
       "kind": "data_contract",
       "parent_vid": [
         5,
@@ -2960,7 +2960,7 @@
         0,
         1
       ],
-      "note": "Current sequence step released by Sequence Enforcer: instrument, side, remaining quantity and maximum quantity currently permitted. Optimal Execution algorithms may work only this slice."
+      "note": "Work released by Ordering Constraint Enforcer. ORDERED mode contains only currently permitted step(s); UNCONSTRAINED mode may contain all otherwise eligible items. Algorithms may act only within this set."
     },
     {
       "vid": [
@@ -2998,7 +2998,7 @@
         0,
         1
       ],
-      "note": "Plug-and-play broker-neutral micro-execution interface. Every algorithm is sequence-constrained and receives only the currently released sequence step."
+      "note": "Plug-and-play broker-neutral micro-execution interface. Algorithms receive only the work set released under the upstream ordering decision."
     },
     {
       "vid": [
@@ -3477,7 +3477,7 @@
         7,
         2
       ],
-      "name": "Execution Sequence Plan",
+      "name": "Execution Ordering Plan",
       "kind": "data_contract",
       "parent_vid": [
         5,
@@ -3486,7 +3486,7 @@
         0,
         1
       ],
-      "note": "Ordered instrument-level execution plan emitted by Margin Optimization. Every executable item has an explicit sequence position and quantity constraint. Optimal Execution may not reorder or skip it."
+      "note": "Mandatory Margin Optimization output declaring ORDERED or UNCONSTRAINED execution. ORDERED supplies explicit precedence/sequence constraints; UNCONSTRAINED explicitly declares that no ordering constraint exists."
     },
     {
       "vid": [
@@ -3496,7 +3496,7 @@
         1,
         1
       ],
-      "name": "Sequence Enforcer",
+      "name": "Ordering Constraint Enforcer",
       "kind": "node",
       "parent_vid": [
         5,
@@ -3505,7 +3505,7 @@
         0,
         1
       ],
-      "note": "Hard constraint gate inside Optimal Execution. Requires a valid Execution Sequence Plan and releases only the currently permitted sequence step. No plan means no execution."
+      "note": "Interprets the Execution Ordering Plan. In ORDERED mode it releases only currently permitted step(s); in UNCONSTRAINED mode it releases all otherwise eligible work without imposing sequence. Missing/invalid ordering decision means no execution."
     },
     {
       "vid": [
@@ -3515,7 +3515,7 @@
         4,
         6
       ],
-      "name": "Margin Sequence Optimizer -> Execution Sequence Plan",
+      "name": "Margin Sequence Optimizer -> Execution Ordering Plan",
       "kind": "edge",
       "source_vid": [
         5,
@@ -3540,7 +3540,7 @@
         4,
         7
       ],
-      "name": "Execution Sequence Plan -> Sequence Enforcer",
+      "name": "Execution Ordering Plan -> Ordering Constraint Enforcer",
       "kind": "edge",
       "source_vid": [
         5,
@@ -3565,7 +3565,7 @@
         4,
         3
       ],
-      "name": "Sequence Enforcer -> eligible execution work",
+      "name": "Ordering Constraint Enforcer -> eligible execution work set",
       "kind": "edge",
       "source_vid": [
         5,
