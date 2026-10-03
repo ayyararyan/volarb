@@ -2,22 +2,64 @@
 
 Internal Execution is the broker-neutral convergence module that turns outstanding instrument-level position requirements into authoritative broker positions.
 
-It has exactly two ordered sub-boxes:
+## Canonical structure
+
+Normal execution has three ordered sub-boxes:
 
 1. **[5,0,2,0,1] Margin Optimization**
-2. **[5,0,3,0,1] Optimal Execution**
+2. **[5,0,7,0,1] Execution Slicing**
+3. **[5,0,3,0,1] Optimal Execution**
 
-Margin Optimization decides both **whether ordering constraints exist** and, if they do, what those constraints are. Optimal Execution must obey that decision.
+Three cross-cutting supervisory sub-boxes protect the normal path:
 
-A third, orthogonal supervisory sub-box — **[5,0,6,0,1] Interrupt Control** — is not part of the normal chain and may preempt both when an interrupt is raised.
+- **[5,0,9,0,1] State Integrity**
+- **[5,0,8,0,1] Execution Recovery**
+- **[5,0,6,0,1] Interrupt Control**
+
+Conceptually:
+
+~~~text
+Registry
+   |
+   v
+Margin Optimization
+   |
+Execution Ordering Plan
+   |
+   v
+Execution Slicing
+   |
+Execution Slice Plan
+   |
+   v
+Optimal Execution
+   |
+Temporal Execution Decision
+   |
+   v
+Command Commit Guard + Execution Ledger
+   |
+   v
+Broker Execution Port
+   |
+   v
+external broker provider
+~~~
+
+State Integrity and Execution Recovery gate this flow. Interrupt Control can preempt it.
 
 ## Architecture
 
 ~~~mermaid
 flowchart TD
     R["[5,0,1,9,1] Active Instrument Execution Registry"]
+    RI["[5,0,1,7,3] Runtime Intent Identity"]
     M["[5,0,1,7,1] Live Market Execution State"]
     A["[5,0,1,7,2] Live Broker Account State"]
+
+    SI["[5,0,9,0,1] State Integrity"]
+    SIG["[5,0,9,1,1] State Integrity Guard"]
+    SIA["[5,0,9,7,1] Integrity Assessment"]
 
     MO["[5,0,2,0,1] Margin Optimization"]
     H["[5,0,2,1,2] Hedge / Offset Relationship Analyzer"]
@@ -25,417 +67,308 @@ flowchart TD
     S["[5,0,2,1,3] Margin Sequence Optimizer"]
     Q["[5,0,2,7,2] Execution Ordering Plan"]
 
+    SL["[5,0,7,0,1] Execution Slicing"]
+    SP["[5,0,7,1,1] Slice Planner"]
+    SLP["[5,0,7,7,1] Execution Slice Plan"]
+    SPS["[5,0,7,2,1] Slice Progress State"]
+
     OE["[5,0,3,0,1] Optimal Execution"]
     G["[5,0,3,1,1] Ordering Constraint Enforcer"]
     W["[5,0,3,7,1] Eligible Execution Work Set"]
     C["[5,0,4,1,1] Temporal Execution Controller"]
     P["[5,0,4,6,1] Execution Algorithm Port"]
-    X["[5,0,5,5,1] Passive Chase\n(current default plug-in)"]
+    X["[5,0,5,5,1] Passive Chase"]
     O["[5,0,4,7,2] Temporal Execution Decision"]
+
+    ER["[5,0,8,0,1] Execution Recovery"]
+    CG["[5,0,8,1,2] Command Commit Guard"]
+    L["[5,0,8,9,1] Execution Ledger"]
+    RE["[5,0,8,1,1] Reconciliation Engine"]
+    RS["[5,0,8,2,1] Recovery State"]
 
     IC["[5,0,6,0,1] Interrupt Control"]
     ID["[5,0,6,7,1] Interrupt Directive"]
     IA["[5,0,6,1,1] Interrupt Arbiter"]
-    IS["[5,0,6,2,1] Latched Interrupt State"]
     IP["[5,0,6,7,2] Interrupt Action Plan"]
 
     B["[5,0,3,6,1] Broker Execution Port"]
     F["[5,0,4,7,1] Normalized Broker Execution Facts"]
-    E["External broker provider\nDhan / Kotak / ICICI / ..."]
+    E["External broker provider"]
 
+    RI --> R
     R --> MO
+    M --> SIG
+    A --> SIG
+    F --> SIG
+    RS --> SIG
+    SIG --> SIA
+    SIA -. permission .-> MO
+    SIA -. permission .-> OE
+    SIA -. permission .-> CG
+
     M --> MO
     A --> MO
     MO --> H --> D --> S --> Q
+    Q --> SL --> SP --> SLP
+    F --> SPS
+    SPS --> SP
 
-    Q --> OE
+    SLP --> G --> W --> C --> P --> X --> O
     M --> OE
-    OE --> G --> W --> C --> P --> X --> O --> B
 
-    ID --> IC --> IA
-    IA --> IS
-    IA --> IP --> B
-    IS -. preempt .-> MO
-    IS -. preempt .-> OE
-    F --> IA
+    O --> CG
+    ID --> IA --> IP --> CG
+
+    R -. current version .-> CG
+    CG --> L
+    CG --> B
 
     B --> E
     E --> B
     B --> F
+
+    F --> RE
+    L --> RE
+    RE --> L
+    RE --> RS
+
     F --> R
     F --> M
     F --> A
+
+    IA -. preempt .-> MO
+    IA -. preempt .-> SL
+    IA -. preempt .-> OE
 ~~~
 
 Concrete broker providers are external plug-ins and do not receive Volarb VIDs.
 
-# Inputs
+# Runtime execution identity
+
+## [5,0,1,7,3] Runtime Intent Identity
+
+Architectural VIDs identify components. Live execution requirements use separate runtime identity.
+
+Each registry requirement carries at least:
+
+~~~text
+intent_id
+intent_version
+supersedes_version
+created_at
+status
+~~~
+
+A new intent version supersedes stale downstream decisions generated under an older version.
 
 ## [5,0,1,9,1] Active Instrument Execution Registry
 
-The registry contains outstanding required economic position deltas, not broker order tickets.
+The registry contains outstanding economic position requirements, not broker order tickets.
 
-A registry item remains active until authoritative broker state shows that its required position effect has been achieved, Position Management changes or revokes the requirement, or execution enters a fail-safe state requiring escalation.
+It is version-aware and tracks what remains required after authoritative fills and supersession.
 
-## [5,0,1,7,1] Live Market Execution State
+# [5,0,9,0,1] State Integrity
 
-Broker-neutral market microstructure used by execution, including as available:
+State Integrity determines whether current broker-neutral state is trustworthy enough for the requested action.
 
-- bid and ask;
-- executable depth / LOB;
-- spread;
-- quote freshness;
-- price bands and tradability.
+Normal risk-adding execution requires sufficiently fresh and consistent market/account/order state.
 
-## [5,0,1,7,2] Live Broker Account State
+Emergency actions have separate minimum-integrity requirements. For example, cancellation does not require a fresh LOB, while emergency flattening requires sufficiently authoritative position/order state and broker connectivity.
 
-Authoritative execution-capacity state, including:
+Possible assessments include:
 
-- available cash / collateral / margin;
-- current positions;
-- pending orders;
-- resources already locked by working orders;
-- other account facts required for execution feasibility.
+~~~text
+VALID
+STALE
+INCOMPLETE
+INCONSISTENT
+UNKNOWN
+~~~
 
-These inputs are dynamically refreshed.
+Unknown broker truth must not create new exposure.
+
+Detailed workflow: [state-integrity.md](state-integrity.md)
 
 # [5,0,2,0,1] Margin Optimization
 
-Margin Optimization is the first sub-box.
+Margin Optimization decides:
 
-Its job is to determine whether execution ordering matters and to impose ordering only when needed to preserve hedge dependencies or account-resource feasibility.
+1. what instrument quantities are currently feasible;
+2. whether ordering constraints exist;
+3. if ordering matters, what the precedence is.
 
-It does not choose order price, order type, or order timing.
+Its output is [5,0,2,7,2] Execution Ordering Plan.
 
-## [5,0,2,1,2] Hedge / Offset Relationship Analyzer
-
-This node infers structural protection relationships from instrument economics, current positions, pending orders, and desired position changes.
-
-It does not use strategy labels such as butterfly, condor, wing, or body.
-
-Coverage may be partial or quantity-dependent.
-
-A protective order counts only when the relevant quantity is actually filled; submission alone does not establish protection.
-
-## [5,0,2,7,1] Execution Dependency Graph
-
-Hedge relationships become quantity-aware precedence constraints only where such constraints genuinely exist.
-
-For risk-adding actions, protection required to avoid an unnecessary naked or high-margin intermediate state must be established before the dependent exposure may execute.
-
-For reductions or exits, the dependency reverses when removing protection first would leave avoidable unhedged exposure.
-
-If the dependency analysis finds that several instruments are independent from a margin/hedge perspective, no artificial ordering is created among them.
-
-## [5,0,2,1,3] Margin Sequence Optimizer
-
-This node converts the dependency graph and live account state into an execution-ordering decision.
-
-Its output has two valid modes:
+Valid modes:
 
 ~~~text
 ORDERED
 UNCONSTRAINED
 ~~~
 
-**ORDERED** means one or more precedence constraints genuinely matter.
+ORDERED carries binding precedence.
 
-**UNCONSTRAINED** means Margin Optimization has explicitly determined that no sequencing constraint is needed among the eligible items.
+UNCONSTRAINED explicitly means no ordering constraint exists among the eligible items.
 
-Its objective component remains:
+Margin Optimization does not choose order price, order type, micro-execution timing, or slice count.
 
-1. preserve required protection;
-2. avoid unnecessary high-margin intermediate states;
-3. reduce peak cash / collateral / margin required;
-4. use only broker-confirmed cash or margin effects from completed execution;
-5. avoid inventing sequence constraints when none are necessary.
+# [5,0,7,0,1] Execution Slicing
 
-Structural hedge logic is broker-neutral. Actual rupee margin impact is broker-authoritative and may be queried through the Broker Execution Port.
+Execution Slicing decides how many execution chunks are used for each permitted instrument quantity.
 
-## [5,0,2,7,2] Execution Ordering Plan
+This is the "leg layer" in execution terms. To avoid confusion with option-strategy legs, the canonical name is **execution slice**.
 
-This is the mandatory output of Margin Optimization.
-
-It records the **ordering decision**, not necessarily a sequence.
-
-### ORDERED mode
-
-Conceptually:
+## Current default
 
 ~~~text
-ordering_mode = ORDERED
-ordering_version = ...
-
-steps:
-  1. instrument A / side / quantity constraint
-  2. instrument B / side / quantity constraint
-  3. instrument C / side / quantity constraint
-  ...
+slice_count = 1
+scheduling_mode = SEQUENTIAL
 ~~~
 
-Optimal Execution must obey the supplied precedence.
+So current behavior is unchanged for small size.
 
-### UNCONSTRAINED mode
-
-Conceptually:
+If future scale requires five slices:
 
 ~~~text
-ordering_mode = UNCONSTRAINED
-ordering_version = ...
-
-eligible_items:
-  - instrument A / side / quantity constraint
-  - instrument B / side / quantity constraint
-  - instrument C / side / quantity constraint
-  - instrument D / side / quantity constraint
+permitted quantity
+   |
+   +-> slice 1 -> Optimal Execution -> reconcile
+   +-> slice 2 -> Optimal Execution -> reconcile
+   +-> slice 3 -> Optimal Execution -> reconcile
+   +-> slice 4 -> Optimal Execution -> reconcile
+   +-> slice 5 -> Optimal Execution -> reconcile
 ~~~
 
-This explicitly means there is **no sequencing constraint among those items**.
+Under the default sequential policy, the next slice is released only after the previous slice is authoritatively resolved.
 
-Optimal Execution may then work them in any order, or concurrently, according to the active execution algorithm and other execution constraints.
+Future slice planners may dynamically choose count, sizes, or scheduling without changing Optimal Execution.
 
-For example, four independent long option purchases may legitimately receive an UNCONSTRAINED plan if none depends on another for margin or hedge feasibility.
-
-A valid ordering decision is always required. The decision may be ORDERED or UNCONSTRAINED.
-
-**Missing / invalid ordering decision -> no execution.**
-
-Only Margin Optimization may decide or revise the ordering mode and constraints.
+Detailed workflow: [execution-slicing.md](execution-slicing.md)
 
 # [5,0,3,0,1] Optimal Execution
 
-Optimal Execution is the second sub-box.
+Optimal Execution operates on the currently released execution slice(s).
 
-Its first responsibility is to obey the Execution Ordering Plan.
+It does not decide total position size or slice count.
 
-Its second responsibility is to optimize the permitted work through time and the LOB.
+It receives:
 
-When the plan is ORDERED, the ordering constraint is binding.
-
-When the plan is UNCONSTRAINED, Optimal Execution receives no sequencing constraint from Margin Optimization.
+- runtime intent/version;
+- inherited ORDERED or UNCONSTRAINED constraints;
+- slice identity and quantity;
+- live market state;
+- own working-order/fill state.
 
 ## [5,0,3,1,1] Ordering Constraint Enforcer
 
-This is an algorithm-independent gate inside Optimal Execution.
+The enforcer applies the ordering metadata carried through the Execution Slice Plan.
 
-It interprets the ordering mode.
+In ORDERED mode it prevents a later dependent item from being worked early.
 
-### ORDERED
-
-It:
-
-- identifies the currently permitted sequence step or steps;
-- blocks later dependent work from being selected early;
-- prevents plug-ins from violating supplied precedence;
-- advances only when authoritative broker state satisfies the relevant completion condition.
-
-### UNCONSTRAINED
-
-It:
-
-- imposes no artificial sequence;
-- releases all otherwise eligible items;
-- allows the active execution algorithm to choose order or concurrency among them.
-
-### Invalid state
-
-It stops execution if the ordering decision is missing, invalid, stale, or cannot be reconciled with authoritative broker state.
-
-A different execution algorithm may change **how** released work is executed, but it cannot override an ORDERED plan or manufacture ordering constraints upstream did not impose.
+In UNCONSTRAINED mode it imposes no artificial ordering among otherwise released work.
 
 ## [5,0,3,7,1] Eligible Execution Work Set
 
-This is the work released by Ordering Constraint Enforcer to the micro-execution layer.
-
-In ORDERED mode it contains only the currently permitted step or steps.
-
-In UNCONSTRAINED mode it may contain all otherwise eligible items.
+This is the exact slice-level work the selected algorithm may touch.
 
 Conceptually:
 
 ~~~text
+intent_id
+intent_version
 ordering_mode
-ordering_version
-eligible_items:
-  - instrument
-    side
-    remaining quantity
-    maximum quantity currently eligible to work
-    ordering metadata if applicable
-    execution constraints inherited from upstream
+slice_id
+slice_index
+instrument
+side
+remaining_slice_quantity
+maximum_quantity_currently_allowed
+execution_constraints
 ~~~
-
-The execution algorithm may act only within this set.
-
-## Time-indexed state
-
-At decision time t:
-
-~~~text
-state_t
-  = eligible execution work set
-  + ordering mode / constraints
-  + LOB / quote state
-  + own live orders
-  + fills / partial fills
-  + remaining eligible quantities
-  + inherited execution constraints
-~~~
-
-The execution loop is:
-
-~~~text
-S_t -> A_t -> broker facts -> S_(t+1) -> A_(t+1) -> ...
-~~~
-
-The exact clock may be fixed interval, event-driven, or hybrid depending on the selected algorithm.
-
-## [5,0,4,1,1] Temporal Execution Controller
-
-The controller:
-
-- assembles the current time-t execution state;
-- invokes the active execution algorithm;
-- validates returned actions against the Eligible Execution Work Set;
-- enforces ORDERED precedence when present;
-- sends broker-neutral actions to the Broker Execution Port;
-- consumes authoritative order/fill feedback;
-- updates remaining quantities;
-- invokes the algorithm again when required.
-
-The controller is orchestration. Execution policy is plug-and-play.
 
 ## [5,0,4,6,1] Execution Algorithm Port
 
-Interchangeable execution algorithms implement this interface:
+The algorithm is plug-and-play.
 
-~~~text
-ordering-aware eligible execution state
-        |
-        v
-selected execution algorithm
-        |
-        v
-execution decision(s) at time t
-~~~
+The current default is [5,0,5,5,1] Passive Chase.
 
-The current default implementation is [5,0,5,5,1] Passive Chase.
+A replacement may change how the active slice is executed through time and the LOB, but it may not:
 
-Changing the selected algorithm must not require changes to Margin Optimization, Ordering Constraint Enforcer, Position Management, the Broker Execution Port, or the broker provider.
+- change the instrument or side;
+- exceed slice quantity;
+- violate upstream ordering;
+- bypass interrupts;
+- bypass State Integrity;
+- bypass runtime-version validation.
 
-Every algorithm must obey ORDERED constraints.
+# [5,0,5,5,1] Passive Chase
 
-In UNCONSTRAINED mode, an algorithm may choose execution order or concurrency among the released items.
+For each active slice:
 
-## Current default: [5,0,5,5,1] Passive Chase
-
-Passive Chase applies its simple passive-limit policy to the work released by Ordering Constraint Enforcer.
-
-- In ORDERED mode, it works only the currently permitted ordered step or steps.
-- In UNCONSTRAINED mode, it may work all released items independently; the default behavior is to place passive limits for each released item at its own same-side best quote.
-
-For each active item:
-
-1. BUY -> place a limit order at the current best bid.
-2. SELL -> place a limit order at the current best ask.
-3. Do not deliberately cross the spread during the passive phase.
-4. Wait parameter T.
-5. If quantity remains, refresh the LOB and reprice the remaining quantity to the current passive touch when that touch has changed.
-6. Repeat for up to N passive refresh cycles.
-7. After the passive phase is exhausted, cancel the working limit, confirm/reconcile that cancellation, and use a market order for the exact confirmed remainder.
-8. Partial fills always reduce the quantity worked by subsequent actions.
-
-In UNCONSTRAINED mode, each released item maintains its own Passive Chase state and timer.
+1. BUY -> passive limit at best bid.
+2. SELL -> passive limit at best ask.
+3. wait T;
+4. reprice remaining quantity to the current passive touch when required;
+5. repeat for up to N passive cycles;
+6. cancel/reconcile the resting limit;
+7. market the exact confirmed remainder.
 
 T and N remain configuration parameters.
 
 Detailed plug-in specification: [../execution-algorithms/passive-chase.md](../execution-algorithms/passive-chase.md)
 
-## [5,0,4,7,2] Temporal Execution Decision
+# [5,0,8,0,1] Execution Recovery
 
-Current broker-neutral action vocabulary:
+Every broker mutation, whether produced by normal Optimal Execution or Interrupt Control, passes through Execution Recovery before the Broker Execution Port.
 
-~~~text
-WAIT
-PLACE_LIMIT
-REPRICE_LIMIT
-CANCEL_LIMIT
-PLACE_MARKET
-~~~
+## [5,0,8,1,2] Command Commit Guard
 
-A decision applies to one or more items within the released work set, subject to the active ordering mode.
+The guard:
 
-The execution algorithm may choose timing, order type, price, and quantity up to the released amount.
+1. verifies the action still belongs to the current runtime intent/version when applicable;
+2. rejects stale/superseded actions;
+3. checks interrupt compatibility;
+4. checks State Integrity permission for the action class;
+5. assigns/validates durable action and correlation identity;
+6. writes the intended mutation to the Execution Ledger;
+7. only then releases it to the broker.
 
-It may not:
+## [5,0,8,9,1] Execution Ledger
 
-- violate an ORDERED precedence constraint;
-- act outside the Eligible Execution Work Set;
-- make an ineligible instrument eligible;
-- exceed released quantity;
-- reinterpret hedge relationships;
-- bypass margin constraints;
-- change the economic instrument;
-- change strategy intent.
-
-# Ordering invariant
-
-For every Optimal Execution algorithm:
+Durably links:
 
 ~~~text
-Margin Optimization decides WHETHER ORDER MATTERS.
-
-If ORDERED:
-    Margin Optimization decides the precedence.
-    Optimal Execution decides how to execute the permitted step(s).
-
-If UNCONSTRAINED:
-    Margin Optimization explicitly declares no sequencing constraint.
-    Optimal Execution may choose order or concurrency among released items.
+intent/version
+-> slice
+-> action
+-> broker correlation/order
+-> trades/fills
+-> position effect
 ~~~
 
-Therefore:
+## [5,0,8,1,1] Reconciliation Engine
 
-~~~text
-Execution Ordering Plan
-        |
-        v
-Ordering Constraint Enforcer
-        |
-        v
-Eligible Execution Work Set
-        |
-        v
-Execution Algorithm
-~~~
+After timeout, disconnect, ambiguity or restart, Internal Execution reconciles authoritative broker truth before issuing another mutation in the affected scope.
 
-**No valid ordering decision -> no execution.**
+There is no blind retry of an unknown mutation.
+
+Detailed workflow: [execution-recovery.md](execution-recovery.md)
 
 # [5,0,6,0,1] Interrupt Control
 
-Interrupt Control is an NVIC-inspired supervisory sub-box.
+Interrupt Control preempts the normal path.
 
-It is orthogonal to the normal:
-
-~~~text
-Margin Optimization -> Optimal Execution
-~~~
-
-path and can preempt either or both.
-
-Current interrupt levels are:
+Current levels:
 
 | Level | Action |
 |---|---|
-| L1 | CANCEL_WORK — cancel unfilled/working orders in scope and suppress new work |
-| L2 | FLATTEN_SCOPE — cancel/reconcile scoped orders, then market-flatten confirmed scoped positions |
-| L3 | FLATTEN_ALL — highest priority; cancel/reconcile all controlled working orders, then market-flatten all controlled positions |
+| L1 | CANCEL_WORK |
+| L2 | FLATTEN_SCOPE |
+| L3 | FLATTEN_ALL |
 
-Higher levels preempt lower levels. Every interrupt is higher priority than normal execution.
+Interrupt actions bypass Margin Optimization, Execution Slicing, and the plug-in Optimal Execution algorithm as required.
 
-Interrupt state is latched so the normal convergence loop cannot recreate work that was intentionally cancelled.
-
-Emergency market-flatten actions bypass Passive Chase and the normal time-space optimizer, but they still go through the Broker Execution Port and authoritative reconciliation.
+They do **not** bypass Execution Recovery, Command Commit Guard, Broker Execution Port, or authoritative reconciliation.
 
 Detailed workflow: [interrupt-control.md](interrupt-control.md)
 
@@ -443,28 +376,30 @@ Detailed workflow: [interrupt-control.md](interrupt-control.md)
 
 ## [5,0,3,6,1] Broker Execution Port
 
-This is the broker-neutral interface to external providers.
+The Broker Execution Port is the only core interface for provider-specific order/account operations.
 
-Provider implementations handle:
+Provider implementations handle broker mechanics such as:
 
-- broker authentication;
-- instrument/security identifier translation;
-- place / modify / cancel / query operations;
-- broker-specific connectivity and operational requirements;
-- authoritative order, fill, position, funds and margin facts.
-
-Dhan, Kotak, ICICI Securities, and future providers sit below this port.
+- authentication;
+- broker instrument identifiers;
+- place / modify / cancel / query;
+- broker-specific rate/security/connectivity requirements;
+- authoritative orders, trades, positions, funds and margin queries.
 
 ## [5,0,4,7,1] Normalized Broker Execution Facts
 
-Provider facts are normalized before they update Internal Execution state.
+Broker facts are normalized before returning to Internal Execution.
 
-These facts include authoritative order acknowledgement, fills, partial fills, rejection, cancellation, positions, and relevant account/margin state.
+They feed:
+
+- registry convergence;
+- slice progress;
+- State Integrity;
+- Execution Recovery;
+- Interrupt Control.
 
 # Completion invariant
 
-Internal Execution optimizes toward **position-state convergence**, not API acknowledgement.
+Internal Execution optimizes toward authoritative position-state convergence, not API acknowledgement.
 
-Broker orders are transient attempts used to satisfy persistent registry requirements.
-
-A registry item completes only when authoritative broker state shows that the required economic position delta has been realized.
+A registry requirement completes only when broker truth demonstrates that the required economic effect has been realized or the requirement has been superseded/cancelled by an authorized upstream state transition.
