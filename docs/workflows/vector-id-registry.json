@@ -2721,7 +2721,9 @@
         3,
         6,
         1
-      ]
+      ],
+      "status": "retired",
+      "retired_reason": "Superseded by the Time-Space Execution Sub-Box; margin-aware sequencing now releases eligible work rather than sending broker actions."
     },
     {
       "vid": [
@@ -2916,7 +2918,227 @@
         1,
         1
       ],
-      "note": "Chooses feasible execution ordering that preserves hedge dependencies and reduces peak account-resource use using broker-authoritative account and margin facts."
+      "note": "Chooses which instrument and maximum quantity are currently eligible to be worked, preserving hedge dependencies and account-resource constraints. It does not choose price, order type, or timing."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ],
+      "name": "Time-Space Execution Sub-Box",
+      "kind": "root",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "Broker-neutral micro-execution subgraph that converts eligible work plus LOB/order state into time-indexed order-management actions."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        3,
+        7,
+        1
+      ],
+      "name": "Eligible Execution Work Slice",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ],
+      "note": "Instrument, side, remaining quantity and maximum quantity currently released by hedge/dependency/margin logic. Contains no price/order-type/timing decision."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        1,
+        1
+      ],
+      "name": "Temporal Execution Controller",
+      "kind": "node",
+      "parent_vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ],
+      "note": "Runs the time-indexed micro-execution loop, invokes the selected algorithm, validates its action, sends broker-neutral actions and consumes broker feedback."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        6,
+        1
+      ],
+      "name": "Execution Algorithm Port",
+      "kind": "interface",
+      "parent_vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ],
+      "note": "Plug-and-play broker-neutral interface for micro-execution algorithms. Concrete algorithms are identified when introduced."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        7,
+        2
+      ],
+      "name": "Temporal Execution Decision",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ],
+      "note": "Time-t action: WAIT, PLACE_LIMIT, REPRICE_LIMIT, CANCEL_LIMIT, or PLACE_MARKET, with applicable quantity, price and order-reference fields."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        4,
+        2
+      ],
+      "name": "Margin-aware optimizer -> eligible execution work",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        2,
+        1,
+        3
+      ],
+      "target_vid": [
+        5,
+        0,
+        3,
+        7,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        3,
+        4,
+        2
+      ],
+      "name": "Eligible work -> temporal execution controller",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        3,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        4,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        4,
+        2
+      ],
+      "name": "Temporal controller -> Execution Algorithm Port",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        4,
+        1,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        4,
+        6,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        4,
+        3
+      ],
+      "name": "Execution Algorithm Port -> temporal execution decision",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        4,
+        6,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        4,
+        7,
+        2
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        4,
+        4
+      ],
+      "name": "Temporal execution decision -> Broker Execution Port",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        4,
+        7,
+        2
+      ],
+      "target_vid": [
+        5,
+        0,
+        3,
+        6,
+        1
+      ]
     }
   ]
 }
