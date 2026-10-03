@@ -1403,7 +1403,7 @@
         0,
         0
       ],
-      "note": "Runtime identity/version carried by each live execution requirement: intent_id, intent_version, supersedes_version/status and timestamps. Distinct from immutable architectural VIDs.",
+      "note": "Runtime identity carried by each live execution requirement: composition_id, execution mount_id, canonical component/VID context, intent_id, intent_version, supersedes_version/status and timestamps. The composition/mount context disambiguates concurrent uses of the same canonical execution component. Runtime identity remains distinct from immutable architectural CVIDs/BVIDs.",
       "identity_scope": "canonical",
       "canonical_component_id": "component.internal_execution"
     },
@@ -1714,7 +1714,7 @@
         0,
         1
       ],
-      "note": "Durable append/update record linking runtime intent/version -> slice -> execution action -> correlation/order IDs -> authoritative fills/status/positions.",
+      "note": "Durable append/update record linking composition/mount/canonical execution context -> runtime intent/version -> slice -> execution action -> correlation/order IDs -> authoritative fills/status/positions. Canonical VIDs are never repurposed as runtime IDs.",
       "identity_scope": "canonical",
       "canonical_component_id": "component.internal_execution"
     },
@@ -1798,7 +1798,7 @@
         0,
         1
       ],
-      "note": "Broker-neutral mutation envelope carrying action_id, origin/intent or interrupt identity, intent_version, slice_id, action_class, correlation_id and requested broker operation.",
+      "note": "Broker-neutral mutation envelope carrying composition_id, execution mount_id, canonical execution context, action_id, origin/intent or interrupt identity, intent_version, slice_id, action_class, correlation_id and requested broker operation.",
       "identity_scope": "canonical",
       "canonical_component_id": "component.internal_execution"
     },
