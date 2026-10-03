@@ -2569,7 +2569,7 @@
       "name": "Internal Execution",
       "kind": "root",
       "status": "active_design",
-      "note": "Broker-neutral internal execution module with two layered sub-boxes: Margin Optimization then Optimal Execution. Concrete brokers remain external plug-ins."
+      "note": "Broker-neutral Internal Execution module with normal Margin Optimization -> Optimal Execution flow plus orthogonal Interrupt Control that can preempt both."
     },
     {
       "vid": [
@@ -3578,6 +3578,301 @@
         5,
         0,
         3,
+        7,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        0,
+        1
+      ],
+      "name": "Interrupt Control",
+      "kind": "root",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "NVIC-inspired supervisory sub-box. Orthogonal to the normal Margin Optimization -> Optimal Execution chain and authorized to preempt both according to interrupt priority."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        7,
+        1
+      ],
+      "name": "Interrupt Directive",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        6,
+        0,
+        1
+      ],
+      "note": "Broker-neutral interrupt input carrying interrupt_id, level, scope, reason/source, issue time and target position/order scope. Levels currently: L1 CANCEL_WORK, L2 FLATTEN_SCOPE, L3 FLATTEN_ALL."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        1,
+        1
+      ],
+      "name": "Interrupt Arbiter",
+      "kind": "node",
+      "parent_vid": [
+        5,
+        0,
+        6,
+        0,
+        1
+      ],
+      "note": "Prioritizes and vectors interrupts. Higher levels preempt lower levels; normal execution is lower priority than every interrupt."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        2,
+        1
+      ],
+      "name": "Latched Interrupt State",
+      "kind": "state",
+      "parent_vid": [
+        5,
+        0,
+        6,
+        0,
+        1
+      ],
+      "note": "Persists active/pending interrupt priority, scope and completion state. Prevents normal convergence from recreating cancelled work until the interrupt is explicitly cleared."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        7,
+        2
+      ],
+      "name": "Interrupt Action Plan",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        6,
+        0,
+        1
+      ],
+      "note": "Deterministic emergency handler output: cancel working orders, flatten explicit scope, or flatten all controlled positions. Emergency flatten uses market actions for confirmed net positions after cancellation/reconciliation."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        4,
+        1
+      ],
+      "name": "Interrupt Directive -> Interrupt Arbiter",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        6,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        6,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        4,
+        2
+      ],
+      "name": "Interrupt Arbiter -> latched interrupt state",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        6,
+        1,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        6,
+        2,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        4,
+        3
+      ],
+      "name": "Interrupt Arbiter -> interrupt action plan",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        6,
+        1,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        6,
+        7,
+        2
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        4,
+        4
+      ],
+      "name": "Interrupt Action Plan -> Broker Execution Port",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        6,
+        7,
+        2
+      ],
+      "target_vid": [
+        5,
+        0,
+        3,
+        6,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        4,
+        5
+      ],
+      "name": "Interrupt Control -> Margin Optimization preemption",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        6,
+        2,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        2,
+        0,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        4,
+        6
+      ],
+      "name": "Interrupt Control -> Optimal Execution preemption",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        6,
+        2,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        4,
+        7
+      ],
+      "name": "Broker facts -> Interrupt Control",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        4,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        6,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        0,
+        0,
+        6,
+        4,
+        1
+      ],
+      "name": "Position Management interrupt -> Interrupt Control",
+      "kind": "edge",
+      "source_vid": [
+        4,
+        0,
+        2,
+        1,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        6,
         7,
         1
       ]
