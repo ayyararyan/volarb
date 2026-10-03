@@ -49,10 +49,12 @@ Detailed workflow: [workflows/position-management.md](workflows/position-managem
 
 Converges registry requirements into authoritative broker positions.
 
-Internal Execution has exactly two ordered sub-boxes:
+Internal Execution has two ordered normal-flow sub-boxes:
 
 1. **[5,0,2,0,1] Margin Optimization**
 2. **[5,0,3,0,1] Optimal Execution**
+
+It also contains the orthogonal supervisory **[5,0,6,0,1] Interrupt Control**, which can preempt either normal-flow sub-box.
 
 Margin Optimization produces the mandatory Execution Ordering Plan, which is either ORDERED or UNCONSTRAINED. Optimal Execution must obey ORDERED precedence; when UNCONSTRAINED, it may choose order or concurrency among released work.
 
@@ -63,6 +65,7 @@ Detailed workflow: [workflows/internal-execution.md](workflows/internal-executio
 - Semantic names, not numeric "Box" labels, are used in prose.
 - VIDs remain immutable and retain their numeric first coordinate.
 - Broker providers such as Dhan are external plug-ins, not core modules.
+- Interrupt Control has priority over normal Internal Execution and may bypass the plug-in execution algorithm for emergency cancellation/flattening.
 - Strategy/risk logic remains in Position Management.
 - Margin Optimization precedes micro-execution and supplies the mandatory ordering decision: ORDERED or UNCONSTRAINED.
 - Optimal Execution cannot exceed quantity released by Margin Optimization.
