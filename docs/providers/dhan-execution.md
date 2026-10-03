@@ -1,6 +1,6 @@
 # Dhan Execution Provider Plug-in
 
-Status: **provider boundary active; strategy-agnostic core implemented; low-latency path under active refinement; error architecture intentionally pending.**
+Status: **provider boundary active; strategy-agnostic core and global error normalization implemented; low-latency path under active refinement.**
 
 Last provider-boundary audit: **2026-10-03**, against repository `main` at `942003ede3c3ddb4836824e8e1dab97c58445847` and the current official DhanHQ v2 API documentation.
 
@@ -221,11 +221,56 @@ Dhan identities remain provider-owned:
 
 Dhan correlation IDs are limited by the broker contract. The new adapter must therefore project the core `correlation_id` deterministically into a Dhan-valid correlation value before transmission. It must not generate a fresh random butterfly correlation ID. The projection must be stable across restart and collision-checked so an ambiguous POST can be reconciled by correlation after process loss.
 
-## Error architecture — intentionally pending
+## Error connector: Dhan -> global Provider Error Envelope
 
-The detailed Dhan error model is the **next design layer** and is intentionally not finalized in this pass.
+The error layer is now frozen around one invariant:
 
-One existing safety invariant remains active while that design is pending: a mutation whose outcome is unknown must not be blindly repeated merely because a response was missing. The exact error classes, propagation contract, retryability semantics, transport-vs-broker distinctions and recovery metadata will be designed separately.
+> **No Dhan-native error crosses the provider boundary.**
+
+Every failure from the canonical `DhanProvider` is translated into the Volarb-global `[0,0,1,7,1] Provider Error Envelope`. The caller therefore never needs to know whether the active broker is Dhan, ICICI Securities, Kotak, or another provider.
+
+The provider preserves Dhan provenance for diagnosis — native error code/type/message, HTTP status, OMS rejection code/description and endpoint — but caller control flow keys only off global category/code/outcome.
+
+### Global categories
+
+`AUTHENTICATION`, `AUTHORIZATION`, `ACCOUNT_STATE`, `RATE_LIMIT`, `INVALID_REQUEST`, `ORDER_REJECTED`, `DATA_UNAVAILABLE`, `RESOURCE_NOT_FOUND`, `PROVIDER_INTERNAL`, `NETWORK`, `TIMEOUT`, `PROTOCOL`, `UNSUPPORTED`, `UNKNOWN`.
+
+`UNKNOWN` makes the mapping total: a newly introduced or undocumented Dhan error is still converted into the global convention rather than leaking a raw broker exception.
+
+### Current DhanHQ v2 mappings
+
+| Dhan native code | Global category |
+|---|---|
+| `DH-901` | `AUTHENTICATION` |
+| `DH-902` | `AUTHORIZATION` |
+| `DH-903` | `ACCOUNT_STATE` |
+| `DH-904` | `RATE_LIMIT` |
+| `DH-905` | `INVALID_REQUEST` |
+| `DH-906` | `ORDER_REJECTED` |
+| `DH-907` | `DATA_UNAVAILABLE` |
+| `DH-908` | `PROVIDER_INTERNAL` |
+| `DH-909` | `NETWORK` |
+| `DH-910` | `UNKNOWN` |
+| Data `800` | `PROVIDER_INTERNAL` |
+| Data `804` | `INVALID_REQUEST` |
+| Data `805` | `RATE_LIMIT` |
+| Data `806` | `AUTHORIZATION` |
+| Data `807`-`810` | `AUTHENTICATION` |
+| Data `811`-`814` | `INVALID_REQUEST` |
+
+Transport timeout/network/protocol errors are normalized even when Dhan supplies no native code.
+
+A successful HTTP response carrying `orderStatus=REJECTED` is also converted into `ORDER_REJECTED`; querying an already-rejected historical order remains a normal broker fact, not a failed query.
+
+### Mutation certainty is separate from category
+
+The envelope also carries `outcome`:
+
+- `KNOWN_NOT_APPLIED` for definitive command rejection/refusal;
+- `UNKNOWN` when a mutating command may have crossed the transport boundary but its effect cannot be proven;
+- `NOT_APPLICABLE` for query/stream failures.
+
+The Dhan mapper does not decide retry/recovery policy. It only tells the caller what failed and how certain the command outcome is.
 
 ## Normalized fact metadata
 
@@ -322,7 +367,6 @@ The current substrate is strong but incomplete for the Broker Execution Port. Th
 
 - wire the new generic `DhanProvider` into production callers while retiring legacy butterfly-only surfaces safely;
 - complete generic instrument normalization across all Dhan segments beyond the currently indexed exact option/security/trading-symbol paths;
-- normalized mutation outcome/error/ambiguity types;
 - deterministic core-to-Dhan correlation projection;
 - normalized order/trade/position/funds/quote fact envelopes with provenance/timestamps;
 - historical trade retrieval for restart/backfill recovery;
@@ -382,3 +426,13 @@ References:
 No new VID is allocated by this audit.
 
 The existing Volarb-owned `[5,0,3,6,1] Broker Execution Port`, `[5,0,4,7,1] Normalized Broker Execution Facts`, runtime identity and Execution Recovery contracts are sufficient. Dhan and its provider-internal components remain unnumbered external implementation details.
+
+
+## Error implementation files
+
+- `src/provider-error.mjs` — broker-neutral Provider Error Envelope and stable categories/codes.
+- `src/dhan-error-mapper.mjs` — exhaustive Dhan-native -> global mapping with total UNKNOWN fallback.
+- `src/dhan-provider.mjs` — catches every canonical provider failure and exposes only ProviderError to callers.
+- `src/dhan-client.mjs` — preserves Dhan transport context (HTTP/path/method/timeout/network/protocol) for the mapper.
+
+Canonical global contract: `docs/providers/provider-error-contract.md`.

@@ -2,12 +2,14 @@ const DEFAULT_BASE_URL = 'https://api.dhan.co/v2';
 const DEFAULT_TIMEOUT_MS = 15000;
 
 export class DhanApiError extends Error {
-  constructor(message, { status, payload, path } = {}) {
-    super(message);
+  constructor(message, { status, payload, path, method, transportKind, cause } = {}) {
+    super(message, cause ? { cause } : undefined);
     this.name = 'DhanApiError';
     this.status = status;
     this.payload = payload;
     this.path = path;
+    this.method = method;
+    this.transportKind = transportKind;
   }
 }
 
@@ -28,7 +30,15 @@ export class DhanClient {
   }
 
   async request(path, { method = 'GET', body } = {}) {
-    const accessToken = this.tokenProvider ? await this.tokenProvider() : this.accessToken;
+    let accessToken;
+    try {
+      accessToken = this.tokenProvider ? await this.tokenProvider() : this.accessToken;
+    } catch (error) {
+      throw new DhanApiError('Dhan authentication provider failed', {
+        path, method, transportKind: 'AUTHENTICATION', cause: error
+      });
+    }
+
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
 
@@ -48,12 +58,24 @@ export class DhanClient {
 
       const raw = await response.text();
       let payload = null;
+      let jsonParseFailed = false;
       if (raw) {
         try {
           payload = JSON.parse(raw);
         } catch {
+          jsonParseFailed = true;
           payload = { raw };
         }
+      }
+
+      if (response.ok && jsonParseFailed) {
+        throw new DhanApiError('Dhan API returned a non-JSON success response', {
+          status: response.status,
+          payload,
+          path,
+          method,
+          transportKind: 'PROTOCOL'
+        });
       }
 
       if (!response.ok) {
@@ -62,16 +84,22 @@ export class DhanClient {
         throw new DhanApiError(`Dhan API request failed: ${apiMessage}`, {
           status: response.status,
           payload,
-          path
+          path,
+          method
         });
       }
 
       return payload;
     } catch (error) {
+      if (error instanceof DhanApiError) throw error;
       if (error?.name === 'AbortError') {
-        throw new DhanApiError(`Dhan API request timed out after ${this.timeoutMs}ms`, { path });
+        throw new DhanApiError(`Dhan API request timed out after ${this.timeoutMs}ms`, {
+          path, method, transportKind: 'TIMEOUT', cause: error
+        });
       }
-      throw error;
+      throw new DhanApiError('Dhan API transport failed', {
+        path, method, transportKind: 'NETWORK', cause: error
+      });
     } finally {
       clearTimeout(timer);
     }

@@ -4909,6 +4909,25 @@
         1,
         1
       ]
+    },
+    {
+      "vid": [
+        0,
+        0,
+        1,
+        7,
+        1
+      ],
+      "name": "Provider Error Envelope",
+      "kind": "data_contract",
+      "parent_vid": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "Global broker/provider-neutral error contract consumed by any Volarb box calling an external provider. Every provider-native failure must map into a stable global category/code/outcome while retaining provider provenance; unknown native errors map to UNKNOWN rather than leaking raw exceptions."
     }
   ]
 }

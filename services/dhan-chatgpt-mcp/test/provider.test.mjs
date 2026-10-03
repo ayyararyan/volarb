@@ -115,3 +115,163 @@ test('DhanProvider is a thin strategy-agnostic command/query facade', async () =
   assert.deepEqual(await provider.getPositions(), [{ securityId: '1', netQty: 65 }]);
   assert.deepEqual(calls.map(x => x[0]), ['place', 'modify', 'cancel']);
 });
+
+
+test('all documented Dhan trading error codes map into the global provider convention', async () => {
+  const cases = {
+    'DH-901': 'AUTHENTICATION',
+    'DH-902': 'AUTHORIZATION',
+    'DH-903': 'ACCOUNT_STATE',
+    'DH-904': 'RATE_LIMIT',
+    'DH-905': 'INVALID_REQUEST',
+    'DH-906': 'ORDER_REJECTED',
+    'DH-907': 'DATA_UNAVAILABLE',
+    'DH-908': 'PROVIDER_INTERNAL',
+    'DH-909': 'NETWORK',
+    'DH-910': 'UNKNOWN'
+  };
+
+  for (const [nativeCode, expected] of Object.entries(cases)) {
+    const provider = new DhanProvider({
+      client: {
+        getFunds: async () => {
+          const error = new Error('native');
+          error.name = 'DhanApiError';
+          error.status = 400;
+          error.payload = { errorType: 'test', errorCode: nativeCode, errorMessage: 'native message' };
+          error.path = '/fundlimit';
+          throw error;
+        }
+      },
+      instrumentMaster: {}
+    });
+    await assert.rejects(provider.getFunds(), (error) => {
+      assert.equal(error.name, 'ProviderError');
+      assert.equal(error.category, expected);
+      assert.equal(error.provider.key, 'dhan');
+      assert.equal(error.provider.nativeCode, nativeCode);
+      assert.equal(error.kind, 'QUERY');
+      assert.equal(error.outcome, 'NOT_APPLICABLE');
+      return true;
+    });
+  }
+});
+
+test('all documented Dhan data error codes map and no native error escapes', async () => {
+  const cases = {
+    '800': 'PROVIDER_INTERNAL',
+    '804': 'INVALID_REQUEST',
+    '805': 'RATE_LIMIT',
+    '806': 'AUTHORIZATION',
+    '807': 'AUTHENTICATION',
+    '808': 'AUTHENTICATION',
+    '809': 'AUTHENTICATION',
+    '810': 'AUTHENTICATION',
+    '811': 'INVALID_REQUEST',
+    '812': 'INVALID_REQUEST',
+    '813': 'INVALID_REQUEST',
+    '814': 'INVALID_REQUEST'
+  };
+
+  for (const [nativeCode, expected] of Object.entries(cases)) {
+    const provider = new DhanProvider({
+      client: {
+        getQuote: async () => {
+          const error = new Error('native');
+          error.name = 'DhanApiError';
+          error.payload = { errorCode: nativeCode, errorMessage: 'data native message' };
+          throw error;
+        }
+      },
+      instrumentMaster: {}
+    });
+    await assert.rejects(provider.getQuote([]), (error) => {
+      assert.equal(error.name, 'ProviderError');
+      assert.equal(error.category, expected);
+      assert.equal(error.provider.nativeCode, nativeCode);
+      return true;
+    });
+  }
+});
+
+test('unknown Dhan errors map to UNKNOWN rather than leaking raw exceptions', async () => {
+  const provider = new DhanProvider({
+    client: { getFunds: async () => { throw new Error('new undocumented Dhan failure'); } },
+    instrumentMaster: {}
+  });
+  await assert.rejects(provider.getFunds(), (error) => {
+    assert.equal(error.name, 'ProviderError');
+    assert.equal(error.category, 'UNKNOWN');
+    assert.equal(error.code, 'PROVIDER.UNKNOWN');
+    assert.match(error.message, /undocumented/);
+    return true;
+  });
+});
+
+test('mutation timeout becomes broker-neutral TIMEOUT with unknown command outcome', async () => {
+  const provider = new DhanProvider({
+    client: {
+      placeOrder: async () => {
+        const error = new Error('timeout');
+        error.name = 'DhanApiError';
+        error.transportKind = 'TIMEOUT';
+        error.path = '/orders';
+        throw error;
+      }
+    },
+    instrumentMaster: {}
+  });
+  await assert.rejects(provider.placeOrder({ securityId: '1' }), (error) => {
+    assert.equal(error.category, 'TIMEOUT');
+    assert.equal(error.kind, 'COMMAND');
+    assert.equal(error.outcome, 'UNKNOWN');
+    assert.equal(error.operation, 'place_order');
+    return true;
+  });
+});
+
+test('definitive rejected order response becomes ORDER_REJECTED with known-not-applied outcome', async () => {
+  const provider = new DhanProvider({
+    client: {
+      placeOrder: async () => ({
+        orderId: 'o1',
+        orderStatus: 'REJECTED',
+        omsErrorCode: 'RMS123',
+        omsErrorDescription: 'RMS rejected'
+      })
+    },
+    instrumentMaster: {}
+  });
+  await assert.rejects(provider.placeOrder({ securityId: '1' }), (error) => {
+    assert.equal(error.category, 'ORDER_REJECTED');
+    assert.equal(error.code, 'PROVIDER.ORDER_REJECTED');
+    assert.equal(error.outcome, 'KNOWN_NOT_APPLIED');
+    assert.equal(error.provider.omsCode, 'RMS123');
+    return true;
+  });
+});
+
+test('provider error serialization exposes global fields plus Dhan provenance', async () => {
+  const provider = new DhanProvider({
+    client: {
+      getFunds: async () => {
+        const error = new Error('rate');
+        error.name = 'DhanApiError';
+        error.status = 429;
+        error.payload = { errorCode: 'DH-904', errorMessage: 'Too many requests' };
+        error.path = '/fundlimit';
+        throw error;
+      }
+    },
+    instrumentMaster: {}
+  });
+  await assert.rejects(provider.getFunds(), (error) => {
+    const json = error.toJSON();
+    assert.equal(json.contractVersion, '1.0');
+    assert.equal(json.category, 'RATE_LIMIT');
+    assert.equal(json.code, 'PROVIDER.RATE_LIMITED');
+    assert.equal(json.provider.nativeCode, 'DH-904');
+    assert.equal(json.provider.path, '/fundlimit');
+    return true;
+  });
+});

@@ -1344,6 +1344,25 @@ Canonical detail: `docs/providers/dhan-execution.md`.
 
 **Implementation:** added strategy-agnostic `src/dhan-provider.mjs`; added generic exact `placeOrder` and `modifyOrder` while retaining legacy `placeLimitOrder`; added indexed exact `InstrumentMaster.resolveInstrument`. Existing butterfly executor remains compatibility code, not the canonical Dhan provider contract.
 
-**Errors:** deliberately deferred. Aryan's next Dhan design point is the error layer. Do not freeze a detailed error taxonomy before that discussion.
+**Errors (superseded below):** this was deliberately deferred until Aryan specified the broker-neutral error connector requirement.
 
 **VID decision:** none. Dhan remains an external unnumbered provider.
+
+
+### 2026-10-03 — Global provider error convention
+
+**Raw intent:** Dhan has two jobs: provide requested information and perform requested broker actions. Failure to do either is an error. No caller should need to understand Dhan-specific errors because the active broker may later be ICICI Securities, Kotak, or another provider.
+
+**Global invariant:** no provider-native error crosses into a Volarb box. Every provider adapter maps every native failure into `[0,0,1,7,1] Provider Error Envelope`.
+
+**Stable categories:** AUTHENTICATION, AUTHORIZATION, ACCOUNT_STATE, RATE_LIMIT, INVALID_REQUEST, ORDER_REJECTED, DATA_UNAVAILABLE, RESOURCE_NOT_FOUND, PROVIDER_INTERNAL, NETWORK, TIMEOUT, PROTOCOL, UNSUPPORTED, UNKNOWN.
+
+**Total mapping rule:** documented native codes receive explicit mappings; every undocumented/new/uncategorized provider failure maps to UNKNOWN while retaining provider-native diagnostic provenance. Therefore there is no unmapped error path.
+
+**Provenance:** preserve provider key, native error code/type/message, HTTP status, OMS rejection code/description and endpoint. Callers must branch on global category/code/outcome, never on Dhan-specific values.
+
+**Mutation certainty:** error category is separate from whether a command may have taken effect. Query/stream failures use NOT_APPLICABLE; definitive command refusal uses KNOWN_NOT_APPLIED; timeout/network/protocol/provider-internal/unknown command failures use UNKNOWN when the mutation may have crossed the transport boundary. This is information only; recovery/retry policy remains upstream.
+
+**Dhan implementation:** `provider-error.mjs` defines the global contract, `dhan-error-mapper.mjs` maps all currently documented Dhan Trading/Data codes and fallbacks, and every canonical `DhanProvider` method passes failures through that mapper. A 2xx order response with REJECTED status is normalized as ORDER_REJECTED. Raw Dhan exceptions remain internal.
+
+**VID:** allocated `[0,0,1,7,1] Provider Error Envelope` under Master Architecture because the convention is global rather than owned by any one strategy, Position Management, Internal Execution, or broker.
