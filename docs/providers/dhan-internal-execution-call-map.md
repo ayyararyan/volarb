@@ -113,3 +113,31 @@ DhanBrokerPort.openStream({
 For market data, TICKER / QUOTE / FULL subscriptions use the persistent Dhan v2 WebSocket and normalized little-endian binary parsing. For order state, the account-wide order-update WebSocket is normalized into the same order fact vocabulary used by REST.
 
 REST GET_QUOTE / GET_LTP and order/trade/position queries remain available for bootstrap, explicit snapshots and authoritative reconciliation.
+
+
+## Broker-neutral payload rule
+
+Internal Execution never sends a Dhan API body. For example, placement uses:
+
+```text
+{
+  correlationId: <core runtime correlation>,
+  providerInstrumentRef: {
+    provider: "dhan",
+    providerInstrumentId: <opaque provider ID>,
+    exchangeSegment: <opaque provider segment>
+  },
+  side: BUY | SELL,
+  productType,
+  orderType,
+  validity,
+  quantity,
+  price,
+  triggerPrice,
+  ...
+}
+```
+
+The Dhan translator converts this into the exact Dhan order payload. The provider-instrument reference may travel through the broker port as an opaque mounted-provider handle; strategy/execution policy must not interpret its Dhan fields.
+
+Core correlation identity is projected deterministically to a Dhan-safe 30-character correlation reference. The same projection is used for placement and later `GET_ORDER_BY_CORRELATION`, including after restart because the projection is deterministic.

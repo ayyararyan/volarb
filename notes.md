@@ -1404,3 +1404,6 @@ Canonical detail: `docs/providers/dhan-execution.md`.
 **Streams:** live Dhan market and account-wide order-update WebSockets are now implemented behind the Broker Port. Market TICKER/QUOTE/FULL binary packets are normalized, subscriptions are batched to Dhan limits, and account-wide order updates are normalized into broker facts. REST remains the bootstrap/snapshot/reconciliation path.
 
 **VID:** no new provider VID. Existing global `[0,0,1,7,1] Provider Error Envelope` remains the error contract.
+
+
+**Broker-neutral translation:** Internal Execution no longer needs to construct Dhan-native order/margin/quote payloads. `dhan-translator.mjs` translates provider-neutral order fields and opaque provider instrument references into Dhan mechanics. Core correlation IDs are deterministically projected to stable 30-character Dhan correlation references and reused by correlation lookup/recovery.

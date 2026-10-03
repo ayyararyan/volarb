@@ -223,7 +223,7 @@ Dhan identities remain provider-owned:
 
 `securityId` and other Dhan identifiers must not leak into strategy or execution-policy logic. The Broker Execution Port may carry an opaque provider instrument/order handle, but only the provider interprets its Dhan fields.
 
-Dhan correlation IDs are limited by the broker contract. The new adapter must therefore project the core `correlation_id` deterministically into a Dhan-valid correlation value before transmission. It must not generate a fresh random butterfly correlation ID. The projection must be stable across restart and collision-checked so an ambiguous POST can be reconciled by correlation after process loss.
+Dhan correlation IDs are limited by the broker contract. The adapter now projects each core `correlation_id` deterministically to a 30-character Dhan-safe value using a stable SHA-256-derived representation. The projection is reproducible after restart and collision-checked within the running provider. It never generates a fresh random butterfly correlation ID, so the same core correlation can be used for Dhan correlation lookup during reconciliation.
 
 ## Error connector: Dhan -> global Provider Error Envelope
 
@@ -498,3 +498,32 @@ A stream event uses the same provider envelope shape as synchronous facts:
 Stream connection/error state is observation only. A disconnect does not cause Dhan to make an execution decision; State Integrity / Execution Recovery decide the consequence.
 
 The provider intentionally implements Dhan's standard 5-level FULL packet here. Dhan's separate 20/200-level Full Market Depth service remains a distinct optional capability rather than being falsely treated as universal across segments.
+
+
+### Broker-neutral request translation
+
+Internal Execution does not construct Dhan API payloads.
+
+The connector accepts broker-neutral order requests carrying:
+
+```text
+correlationId
+providerInstrumentRef {
+  provider
+  providerInstrumentId
+  exchangeSegment
+}
+side
+productType
+orderType
+validity
+quantity
+price
+triggerPrice
+disclosedQuantity
+afterMarketOrder
+```
+
+`src/dhan-translator.mjs` alone converts those fields to Dhan's `correlationId`, `securityId`, `exchangeSegment`, `transactionType` and order/margin/market-data request shapes.
+
+The same translator is used for margin requests, quote/LTP instrument lists, market-stream subscriptions, modifications and correlation lookup. This makes the Broker Execution Port genuinely provider-neutral rather than merely giving a Dhan-shaped request a neutral method name.

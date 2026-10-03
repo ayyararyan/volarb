@@ -3,7 +3,7 @@
   "component_id": "provider.dhan",
   "name": "Dhan Provider",
   "kind": "broker_provider",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "ownership": "strategy_agnostic",
   "canonical_identity": {
     "identity_kind": "component_string",
@@ -18,7 +18,8 @@
     "config": "services/dhan-chatgpt-mcp/src/dhan-config.mjs",
     "readiness": "services/dhan-chatgpt-mcp/src/dhan-readiness.mjs",
     "normalizer": "services/dhan-chatgpt-mcp/src/dhan-normalizer.mjs",
-    "streams": "services/dhan-chatgpt-mcp/src/dhan-streams.mjs"
+    "streams": "services/dhan-chatgpt-mcp/src/dhan-streams.mjs",
+    "translator": "services/dhan-chatgpt-mcp/src/dhan-translator.mjs"
   },
   "interfaces": [
     {
@@ -80,7 +81,9 @@
     "Mutations are rejected before transmission when Dhan static-IP/account readiness is not verified.",
     "Margin calculators return broker facts only; affordability remains caller-owned.",
     "Low-latency market and order observations use Dhan WebSocket streams; REST remains available for snapshots and reconciliation.",
-    "Stream disconnection is reported as provider state/error and never converted into a provider-owned trading decision."
+    "Stream disconnection is reported as provider state/error and never converted into a provider-owned trading decision.",
+    "Broker Port callers submit broker-neutral requests; only the Dhan translator constructs Dhan-native payload fields.",
+    "Core correlation identity is deterministically projected to a Dhan-safe 30-character reference and reused for reconciliation."
   ],
   "configuration": {
     "query_required": [
