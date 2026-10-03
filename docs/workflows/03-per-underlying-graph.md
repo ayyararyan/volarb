@@ -36,7 +36,7 @@ flowchart TD
     F -->|"[3,I,6,4,1]"| G
     G -->|"[3,I,7,4,1]"| H
     H -->|"[3,I,8,4,1]"| C
-    F -.->|"[3,I,6,4,2] W_X STAYS RESERVED"| A
+    F -. "[3,I,6,4,2] W_X STAYS RESERVED" .-> A
     E -->|"[3,I,5,4,2] CANDIDATE SELECTED"| I1
     I1 -->|"[3,I,6,4,3]"| J
     J -->|"[3,I,7,4,2]"| K
