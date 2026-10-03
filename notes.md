@@ -1309,3 +1309,24 @@ Do not implement these now; resume after the Dhan broker layer is designed.
 - [ ] Execution Slicing research: later design dynamic slice count/size/scheduling for large positions (e.g. 100-200 lots), while keeping default slice_count=1 and SEQUENTIAL until validated.
 - [ ] Optimal Execution algorithm research: keep Passive Chase as default baseline, then compare more sophisticated plug-ins without changing the Execution Algorithm Port or workflow.
 - [ ] Internal Execution paper-trading / shadow deployment: run against live market/broker state without live mutation first, compare intended versus hypothetical/actual fills, and validate reconciliation before enabling production execution.
+
+
+### 2026-10-03 — Dhan provider boundary audit
+
+**Scope:** Audited the live `services/dhan-chatgpt-mcp/` implementation against the now-frozen broker-neutral Internal Execution boundary and current official DhanHQ v2 capabilities.
+
+**Keep as Dhan mechanics:** authentication/token renewal and private credential handling; static-IP/account observations; instrument-master acquisition and broker metadata; HTTP transport; order/correlation/trade/position/funds reads; single/basket margin APIs; quote APIs; order/trade identity-validation patterns; correlation-based investigation; provider-local process/auth/stream safety primitives.
+
+**Move conceptually upstream:** butterfly leg roles and sequencing, hedge rules, session/deadline policy, quote/spread/depth acceptance policy, passive repricing/wait loops, automatic cancel/replace decisions, capital reserve/affordability policy, preview confirmation, and broker-neutral write-ahead/recovery policy. The current `ButterflyExecutor` is a mixed legacy implementation, not the future Broker Execution Port.
+
+**Target provider shape:** unnumbered DhanProvider façade with auth/readiness, generic instrument catalog/resolver, transport, generic order gateway, broker-state reader, margin reader, market-data adapter, order-event adapter, normalization/error classification, and provider-local runtime state.
+
+**Critical missing Dhan primitives:** generic placement instead of forced LIMIT/INTRADAY/DAY, modify-order, MARKET-order support, generic contract resolution, deterministic core-correlation -> Dhan-correlation projection, normalized ambiguity/provenance/timestamps, historical trade backfill, live market feed, live order updates, rate-limit/capability state, and separation of provider runtime state from the Volarb Execution Ledger.
+
+**Composite Dhan actions:** do not use native `/orders/slicing` for the initial port because Volarb owns Execution Slicing. Do not use Dhan `DELETE /positions` as the default L3 `FLATTEN_ALL` because it is broker-wide and can touch unmanaged exposure. Dhan Kill Switch/P&L exits remain broker operations/control-plane features, not implementations of Volarb Interrupt Control.
+
+**Recovery rule preserved:** no provider-side blind retry of an ambiguous mutation. Dhan exposes correlation/order/trade/position primitives; `[5,0,8,0,1] Execution Recovery` owns the decision to reconcile/resume.
+
+**VID decision:** no new VID. Concrete Dhan provider internals remain outside the Volarb VID namespace.
+
+Canonical detail: `docs/providers/dhan-execution.md`.
