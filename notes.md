@@ -1355,7 +1355,7 @@ Canonical detail: `docs/providers/dhan-execution.md`.
 
 **Global invariant:** no provider-native error crosses into a Volarb box. Every provider adapter maps every native failure into `[0,0,1,7,1] Provider Error Envelope`.
 
-**Stable categories:** AUTHENTICATION, AUTHORIZATION, ACCOUNT_STATE, RATE_LIMIT, INVALID_REQUEST, ORDER_REJECTED, DATA_UNAVAILABLE, RESOURCE_NOT_FOUND, PROVIDER_INTERNAL, NETWORK, TIMEOUT, PROTOCOL, UNSUPPORTED, UNKNOWN.
+**Stable categories:** CONFIGURATION, AUTHENTICATION, AUTHORIZATION, ACCOUNT_STATE, RATE_LIMIT, INVALID_REQUEST, ORDER_REJECTED, DATA_UNAVAILABLE, RESOURCE_NOT_FOUND, PROVIDER_INTERNAL, NETWORK, TIMEOUT, PROTOCOL, UNSUPPORTED, UNKNOWN.
 
 **Total mapping rule:** documented native codes receive explicit mappings; every undocumented/new/uncategorized provider failure maps to UNKNOWN while retaining provider-native diagnostic provenance. Therefore there is no unmapped error path.
 

@@ -237,7 +237,7 @@ The provider preserves Dhan provenance for diagnosis — native error code/type/
 
 ### Global categories
 
-`AUTHENTICATION`, `AUTHORIZATION`, `ACCOUNT_STATE`, `RATE_LIMIT`, `INVALID_REQUEST`, `ORDER_REJECTED`, `DATA_UNAVAILABLE`, `RESOURCE_NOT_FOUND`, `PROVIDER_INTERNAL`, `NETWORK`, `TIMEOUT`, `PROTOCOL`, `UNSUPPORTED`, `UNKNOWN`.
+`CONFIGURATION`, `AUTHENTICATION`, `AUTHORIZATION`, `ACCOUNT_STATE`, `RATE_LIMIT`, `INVALID_REQUEST`, `ORDER_REJECTED`, `DATA_UNAVAILABLE`, `RESOURCE_NOT_FOUND`, `PROVIDER_INTERNAL`, `NETWORK`, `TIMEOUT`, `PROTOCOL`, `UNSUPPORTED`, `UNKNOWN`.
 
 `UNKNOWN` makes the mapping total: a newly introduced or undocumented Dhan error is still converted into the global convention rather than leaking a raw broker exception.
 

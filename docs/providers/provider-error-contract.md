@@ -18,6 +18,7 @@ Known broker codes receive explicit mappings. New, undocumented or otherwise unm
 
 | Category | Meaning |
 |---|---|
+| `CONFIGURATION` | Provider is not configured or required provider-side mutation configuration is not ready |
 | `AUTHENTICATION` | Credentials/token/client identity invalid, expired or unavailable |
 | `AUTHORIZATION` | Authenticated but not permitted/subscribed/entitled |
 | `ACCOUNT_STATE` | Account/segment/control state prevents the operation |
@@ -34,6 +35,13 @@ Known broker codes receive explicit mappings. New, undocumented or otherwise unm
 | `UNKNOWN` | Catch-all for any failure not yet explicitly classified |
 
 The category set is deliberately small and semantic. Provider-specific detail belongs in provenance, not in global control flow.
+
+The global configuration codes currently include:
+
+- `PROVIDER.NOT_CONFIGURED` — minimum provider identity/credential configuration is absent;
+- `PROVIDER.MUTATION_NOT_READY` — a requested mutation is blocked before transmission because provider-side mutation readiness is not satisfied (for example Dhan static-IP readiness).
+
+Both are broker-neutral codes. Another broker may reach the same codes through different native configuration requirements.
 
 ## Envelope
 
