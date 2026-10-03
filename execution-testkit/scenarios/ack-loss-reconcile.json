@@ -1,0 +1,17 @@
+{
+  "name": "ack_lost_after_apply",
+  "purpose": "Broker applies placement but acknowledgement disappears; caller must reconcile before any retry.",
+  "broker": {
+    "scripts": {
+      "byCorrelation": {
+        "corr-amb": {
+          "ackLost": true
+        }
+      }
+    }
+  },
+  "expected_invariants": [
+    "NO_BLIND_RETRY_AFTER_AMBIGUITY",
+    "LEDGER_BEFORE_MUTATION"
+  ]
+}

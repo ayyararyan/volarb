@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "environment": "shadow",
+  "strategy_input": "live_or_recorded",
+  "broker": "shadow_sink",
+  "market": "live_read_only",
+  "clock": "real",
+  "ledger": "shadow",
+  "randomness": "seeded_when_needed",
+  "live_broker_mutations": false,
+  "allow_execution_testkit": true,
+  "mutation_target": "none"
+}

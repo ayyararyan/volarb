@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "environment": "production",
+  "strategy_input": "mounted_strategy_adapter_or_direct_broker_neutral_intent",
+  "broker": "mounted_real_provider",
+  "market": "mounted_live_provider_stream",
+  "clock": "real",
+  "ledger": "durable_execution_ledger",
+  "randomness": "production_source_if_required",
+  "live_broker_mutations": true,
+  "allow_execution_testkit": false,
+  "mutation_target": "real_broker"
+}

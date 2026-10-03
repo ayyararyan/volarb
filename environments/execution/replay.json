@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "environment": "replay",
+  "strategy_input": "recorded_or_generated",
+  "broker": "simulated_broker",
+  "market": "historical_replay",
+  "clock": "virtual",
+  "ledger": "memory_or_temp",
+  "randomness": "seeded",
+  "live_broker_mutations": false,
+  "allow_execution_testkit": true,
+  "mutation_target": "simulated_only"
+}

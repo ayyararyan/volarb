@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "environment": "test",
+  "strategy_input": "scenario_driver",
+  "broker": "simulated_broker",
+  "market": "simulated_market",
+  "clock": "virtual",
+  "ledger": "memory",
+  "randomness": "seeded",
+  "live_broker_mutations": false,
+  "allow_execution_testkit": true,
+  "mutation_target": "simulated_only"
+}

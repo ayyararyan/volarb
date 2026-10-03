@@ -1,0 +1,44 @@
+{
+  "name": "partial_fill_cancel_race",
+  "purpose": "Exercise fills racing with cancellation without overfill.",
+  "initial": {
+    "funds": {
+      "availableBalance": 100000
+    },
+    "positions": []
+  },
+  "broker": {
+    "scripts": {
+      "byCorrelation": {
+        "corr-race": {
+          "fills": [
+            {
+              "afterMs": 10,
+              "quantity": 30,
+              "price": 100
+            },
+            {
+              "afterMs": 40,
+              "quantity": 50,
+              "price": 100
+            }
+          ],
+          "cancel": {
+            "ackDelayMs": 10,
+            "fillsBeforeConfirm": [
+              {
+                "afterMs": 5,
+                "quantity": 10,
+                "price": 100
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "expected_invariants": [
+    "NO_OVERFILL",
+    "LEDGER_BEFORE_MUTATION"
+  ]
+}
