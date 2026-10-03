@@ -97,7 +97,7 @@ For Python regression suites, isolated environments, research-lab checks, skill 
 
 Repository code and passing CI do not activate trading or establish live broker readiness. Credentials and account state stay private; test, replay, shadow and production dependencies are separate. **Production must never depend on `execution-testkit`.** Live mutations require explicit production configuration, broker readiness and operating authorization; they are not a quickstart step.
 
-The current strategy workflow remains human-executed under the [adopted covenant](docs/PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md). Historical journals are not live account truth. Publishing source does not deploy services or refresh installed skills.
+The current strategy workflow remains human-executed under the [adopted covenant](docs/PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md). Account journals remain in private storage outside this source repository; they are not live account truth. Publishing source does not deploy services or refresh installed skills.
 
 ### Development conventions
 
@@ -107,3 +107,9 @@ The current strategy workflow remains human-executed under the [adopted covenant
 - Update canonical documentation with code, and run the affected suites plus architecture validation.
 
 Repository release: **v0.1.0 — Execution Infrastructure Foundation**. See the [changelog](CHANGELOG.md) and [release/versioning policy](docs/RELEASING.md). Component, schema and skill versions remain independently scoped. Follow [development history](docs/DEVELOPMENT_HISTORY.md) for milestones and [open implementation work](tasks.md) for what remains.
+
+## Licensing
+
+VolArb is proprietary software owned by **[Shunya](https://www.shunya.solutions)**, the sole proprietorship of Aryan Ayyar. Source is provided for transparency, inspection and evaluation; public visibility does **not** make this an open-source project. Use, modification, redistribution, commercialization and derivative works require written permission except as expressly permitted by the [LICENSE](LICENSE), applicable GitHub terms or third-party licenses. Licensing enquiries: [shunya.solutions](https://www.shunya.solutions).
+
+Copyright © 2026 Shunya. All Rights Reserved.

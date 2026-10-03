@@ -15,7 +15,7 @@ broker observations/fitted models, never demonstration prices.
 | [`har.py`](har.py) | Pure research calculations; independently testable offline |
 | [`app.py`](app.py), [`index.html`](index.html) | Loopback read-only `/api/state`, eSSVI fitting and dashboard UI |
 | [`test_har.py`](test_har.py), [`requirements-test.txt`](requirements-test.txt) | Synthetic offline model tests |
-| [`vendor/plotly.min.js`](vendor/plotly.min.js) | Deliberately vendored Plotly 2.35.2 with embedded license; no CDN |
+| [`vendor/plotly.min.js`](vendor/plotly.min.js) | Deliberately vendored Plotly 2.35.2 with accompanying license notices; no CDN |
 
 Live use needs Python 3.11+, the external
 [Shaurya data/research packages](https://github.com/ayyararyan/shaurya) and an existing

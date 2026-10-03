@@ -1,0 +1,6 @@
+# Preserve upstream notice bytes, including original line endings/whitespace.
+# These exceptions do not disable whitespace checks for project-owned source.
+agent/docs/diagrams/Recursive-OFL.txt -text -whitespace
+services/essvi-dashboard/vendor/plotly.LICENSE.txt -text -whitespace
+services/essvi-dashboard/vendor/plotly.min.js.LICENSE.txt -text -whitespace
+services/essvi-dashboard/vendor/plotly-dependencies.NOTICES.txt -text -whitespace
