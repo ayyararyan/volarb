@@ -54,7 +54,7 @@ Internal Execution has exactly two ordered sub-boxes:
 1. **[5,0,2,0,1] Margin Optimization**
 2. **[5,0,3,0,1] Optimal Execution**
 
-Margin Optimization produces the mandatory ordered Execution Sequence Plan. Optimal Execution must follow that sequence and decides only how to work the current released step through time and the LOB.
+Margin Optimization produces the mandatory Execution Ordering Plan, which is either ORDERED or UNCONSTRAINED. Optimal Execution must obey ORDERED precedence; when UNCONSTRAINED, it may choose order or concurrency among released work.
 
 Detailed workflow: [workflows/internal-execution.md](workflows/internal-execution.md)
 
@@ -64,9 +64,9 @@ Detailed workflow: [workflows/internal-execution.md](workflows/internal-executio
 - VIDs remain immutable and retain their numeric first coordinate.
 - Broker providers such as Dhan are external plug-ins, not core modules.
 - Strategy/risk logic remains in Position Management.
-- Margin Optimization precedes micro-execution and supplies the mandatory execution sequence.
+- Margin Optimization precedes micro-execution and supplies the mandatory ordering decision: ORDERED or UNCONSTRAINED.
 - Optimal Execution cannot exceed quantity released by Margin Optimization.
-- No valid execution sequence means no Optimal Execution.
+- Missing or invalid ordering decision means no Optimal Execution; an explicit UNCONSTRAINED decision is valid.
 - Concrete execution algorithms are plug-and-play behind the Execution Algorithm Port.
 - Broker execution must not independently alter strategy intent.
 - Every new architectural entity receives an immutable VID.
