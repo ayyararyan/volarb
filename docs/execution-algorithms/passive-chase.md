@@ -4,28 +4,38 @@
 
 Passive Chase is a deliberately simple broker-neutral execution plug-in behind `[5,0,4,6,1] Execution Algorithm Port`.
 
-It consumes only the state exposed by Optimal Execution. It does not reason about strategy structure, hedge relationships, margin sequencing, or why an instrument is being traded. Passive Chase receives only the current sequence step released by Sequence Enforcer. It cannot reorder, skip, or select a different step.
+It consumes only the state exposed by Optimal Execution. It does not reason about strategy structure, hedge relationships, margin sequencing, or why an instrument is being traded. Passive Chase receives only the work released by Ordering Constraint Enforcer. In ORDERED mode it cannot reorder, skip, or select a later step. In UNCONSTRAINED mode it may work all released items independently.
 
 ## Sequence constraint
 
-Passive Chase is subordinate to the mandatory Execution Sequence Plan produced by Margin Optimization.
+Passive Chase is subordinate to the mandatory Execution Ordering Plan produced by Margin Optimization.
 
-It can operate only on the current sequence step released by Sequence Enforcer.
+If the plan is ORDERED, it can operate only on the currently permitted ordered work released by Ordering Constraint Enforcer.
 
-No valid sequence step means no Passive Chase action.
+If the plan is UNCONSTRAINED, it may operate on all released eligible items without any sequencing restriction. The default behavior is to run the same Passive Chase logic independently for each item.
 
-This rule is algorithm-independent: any future Optimal Execution plug-in must obey the same sequence constraint.
+No valid ordering decision means no Passive Chase action.
+
+This rule is algorithm-independent: any future Optimal Execution plug-in must obey ORDERED constraints and may exploit freedom only when the upstream plan is UNCONSTRAINED.
 
 ## Inputs
 
 At each decision point the algorithm receives:
 
-- the current `[5,0,3,7,1] Eligible Execution Work Slice`;
+- the current `[5,0,3,7,1] Eligible Execution Work Set`;
 - current best bid / best ask and relevant LOB state;
 - its own working order state;
 - confirmed fills / partial fills;
 - remaining eligible quantity;
 - inherited execution constraints.
+
+### ORDERED mode
+
+Passive Chase follows the supplied precedence exactly and works only currently permitted ordered work.
+
+### UNCONSTRAINED mode
+
+Passive Chase does not invent a sequence. Each released item may be worked independently using the same passive-limit / wait / reprice / fallback logic. Multiple independent items may therefore have simultaneous working orders and independent T/N counters.
 
 ## [5,0,5,7,1] Passive Chase Parameters
 
@@ -172,7 +182,7 @@ Passive Chase is only one implementation of the Execution Algorithm Port.
 Replacing it with another algorithm must not change:
 
 - Margin Optimization;
-- Eligible Execution Work Slice;
+- Eligible Execution Work Set;
 - Temporal Execution Controller;
 - Temporal Execution Decision contract;
 - Broker Execution Port;
