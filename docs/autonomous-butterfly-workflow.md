@@ -1,4 +1,4 @@
-# Autonomous Butterfly Trading Workflow — Preliminary Graph v0.4
+# Autonomous Butterfly Trading Workflow — Preliminary Graph v0.5
 
 This is the living master decision graph for the autonomous Volarb butterfly trading system.
 
@@ -50,10 +50,18 @@ flowchart TD
 
         NX -->|Candidate selected| QX[Selected StructureSpec]
         QX --> DX[Decision complete: emit TradeIntent]
-        DX --> RX[Execution + Risk Management Layer]
+        DX --> RX[Volarb Execution + Risk Management Engine]
     end
 
-    RX --> SX[Execution / fills / monitoring / adjustments / exit TBD]
+    RX --> EX[Canonical broker execution command]
+    EX --> BX[Broker Executor Plug-in]
+    BX -->|Dhan today| BR[Dhan API / Broker]
+    BX -. replaceable .-> ALT[Kotak / ICICI / other broker]
+    BR -->|fills / status / errors / account state| BX
+    ALT -->|fills / status / errors / account state| BX
+    BX -->|normalized execution facts| RX
+
+    RX --> SX[Execution policy / monitoring / adjustments / exit TBD]
 
     H -. shared capital and risk constraints .-> JX
 ```
@@ -135,7 +143,9 @@ MASTER GRAPH
 - Waiting for a structure does not release W_X to another graph.
 - Broker execution remains downstream of the broker-neutral decision graph.
 - Selecting a StructureSpec marks the end of the decision layer for Graph X.
-- The selected trade is handed to a separate Execution + Risk Management layer.
+- The selected trade is handed to the broker-neutral Volarb Execution + Risk Management Engine.
+- Volarb owns execution and risk intelligence; the broker executor is a thin plug-in that translates explicit commands into broker API actions.
+- Dhan can be replaced by Kotak, ICICI Securities, or another executor without changing Volarb's strategy logic.
 
 ## Scheduling hierarchy
 
@@ -167,7 +177,9 @@ The graph is expected to expand primarily at these nodes:
 - Portfolio Capital Allocator
 - Per-underlying Structure Optimizer
 - Within-Hour Structure Recheck Scheduler
-- Execution + Risk Management subgraph
+- Volarb Execution + Risk Management subgraph
+- Broker-neutral execution command/event contract
+- Thin broker executor plug-ins: Dhan / Kotak / ICICI / others
 - Order realization and fill handling
 - Position monitoring
 - Hold / recenter / hedge / reduce / exit decisions
