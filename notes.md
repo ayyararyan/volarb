@@ -1196,3 +1196,29 @@ Canonical modules:
 Margin Optimization must release an Eligible Execution Work Slice before Optimal Execution may act. Optimal Execution may choose timing, price, order type and quantity only within that released slice.
 
 **Repository cleanup:** Canonical workflow documents now use semantic filenames. Older numbered workflow files and the superseded Dhan-specific handoff are historical artifacts and are being removed from the active workflow set. Earlier notes that use "Box" terminology remain historical context only and are superseded by this naming rule.
+
+
+### 2026-10-03 — Passive Chase default execution algorithm
+
+**Raw intent:** Use a deliberately simple default micro-execution algorithm so the Optimal Execution workflow can be built and tested without committing to a sophisticated execution model. More complex algorithms must later be replaceable without changing the workflow.
+
+**Name:** `[5,0,5,5,1] Passive Chase`.
+
+**Boundary:** Passive Chase sits behind `[5,0,4,6,1] Execution Algorithm Port`. It receives only the Eligible Execution Work Slice already released by Margin Optimization plus live LOB/order/fill state. It does not reorder margin dependencies or make additional quantity eligible.
+
+**Policy:**
+- BUY: place a passive limit at the current best bid.
+- SELL: place a passive limit at the current best ask.
+- Do not deliberately cross the spread during the passive phase.
+- Wait parameter `T`.
+- Refresh the LOB and work only the confirmed unfilled remainder.
+- If the passive touch moved, reprice the remaining limit to the new passive touch; if unchanged, leave it resting.
+- Repeat for up to `N` passive refresh cycles.
+- If quantity remains after the passive phase, cancel the resting limit, confirm/reconcile cancellation, then submit a market order for the exact confirmed remainder.
+- Partial fills reduce all subsequent quantities.
+
+**Parameters:** `T` and `N` are intentionally unspecified for now.
+
+**Safety invariant:** Never submit the market fallback while an earlier passive limit could still fill. Ambiguous cancellation must reconcile before a market order is allowed.
+
+**Plug-and-play rule:** Passive Chase is the current default only. Replacing it with a future execution algorithm must not change Margin Optimization, Position Management, the Temporal Execution Decision contract, Broker Execution Port, or provider implementations.
