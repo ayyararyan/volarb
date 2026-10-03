@@ -869,22 +869,22 @@ The exact schema is TBD.
 
 **Decision:** The previous single workflow graph had become too detailed and difficult to reason about. The architecture is now explicitly decomposed into one small orchestration graph and four independently evolvable graphs.
 
-1. **Box 1 — Regime Decision Graph**
+1. **Regime Gate — Regime Decision Graph**
    - days/weeks horizon;
    - owns regime eligibility and the multi-day regime recheck loop.
 
-2. **Box 2 — Intraday Instrument Selection & Capital Allocation**
+2. **Underlying Allocation — Intraday Instrument Selection & Capital Allocation**
    - intraday horizon;
    - chooses the subset of NIFTY/BANKNIFTY/SENSEX;
    - owns the intraday no-selection recheck loop;
    - allocates and reserves W_X for each selected daily commitment.
 
-3. **Box 3 — Per-Underlying Trade Selection Graph X**
+3. **Trade Selection — Per-Underlying Trade Selection Graph X**
    - one independent instance for every selected X;
    - owns structure universe C_X, constrained optimization, sticky W_X reservation, and the within-hour no-candidate recheck loop;
    - emits a broker-neutral TradeIntent when a StructureSpec is selected.
 
-4. **Box 4 — Shared Execution & Risk Management Graph**
+4. **Position Management — Shared Execution & Risk Management Graph**
    - common across all Graph X instances for the day;
    - owns intelligent execution and live risk decisions;
    - queries broker-derived margin feasibility;
@@ -906,15 +906,15 @@ Canonical form:
 The coordinates encode top-level box, graph instance, logical layer, entity class, and stable ordinal. This applies to boxes, nodes, states, schedulers, arrows/transitions, future workers/agents, interfaces/ports, data contracts, broker adapters, and capital/resources.
 
 Examples:
-- Box 1 root: `[1,0,0,0,0]`
+- Regime Gate root: `[1,0,0,0,0]`
 - Multi-day Regime Gate: `[1,0,3,1,1]`
 - Regime Recheck Scheduler: `[1,0,5,3,1]`
 - Portfolio Capital Allocator: `[2,0,7,1,1]`
-- Box 3 template optimizer: `[3,0,5,1,1]`
+- Trade Selection template optimizer: `[3,0,5,1,1]`
 - NIFTY optimizer instance: `[3,1,5,1,1]`
 - BrokerMarginFeasibilityPort: `[4,0,5,6,1]`
 
-**Box 3 instance convention:**
+**Trade Selection instance convention:**
 - `I=0` template
 - `I=1` NIFTY
 - `I=2` BANKNIFTY
@@ -931,18 +931,18 @@ Examples:
 
 ### [5,0,0,0,0] External Dhan Execution Layer — bottom-up design
 
-The next dedicated design session should focus only on the **Dhan-specific execution layer**, not on the intelligent Volarb strategy execution/risk engine in Box 4.
+The next dedicated design session should focus only on the **Dhan-specific execution layer**, not on the intelligent Volarb strategy execution/risk engine in Position Management.
 
 Scope for the next chat:
 - treat the Dhan execution layer as an external plug-in / provider box;
-- define the exact interface between Box 4 and Dhan;
+- define the exact interface between Position Management and Dhan;
 - map canonical Volarb execution commands into Dhan API operations;
 - map Dhan responses, fills, rejects, positions, order states, and margin/account facts back into normalized Volarb events;
 - cover Dhan-specific authentication, IP whitelisting, instrument/token mapping, connectivity, retries, idempotency, failure handling, and reconciliation;
 - keep Dhan intentionally low-intelligence: it executes instructions and reports authoritative facts;
 - preserve replaceability so Kotak, ICICI Securities, or another broker can later implement the same external contract.
 
-Do **not** redesign Box 4 strategy intelligence in that session unless an interface requirement from Dhan forces a contract change.
+Do **not** redesign Position Management strategy intelligence in that session unless an interface requirement from Dhan forces a contract change.
 
 The internal graph for [5,0,0,0,0] is intentionally undefined at this point and should be designed in the next chat from the bottom up.
 
@@ -985,11 +985,11 @@ The internal graph for [5,0,0,0,0] is intentionally undefined at this point and 
 - How should the system express provider capability differences without contaminating strategy logic?
 
 
-### 2026-10-03 — Box 5 discovery baseline: existing Dhan execution substrate
+### 2026-10-03 — Internal Execution discovery baseline: existing Dhan execution substrate
 
 **Raw intent:** Begin the bottom-up design of `[5,0,0,0,0] External Dhan Execution Layer` without inventing its final internal graph. Inspect the live `main` branch and Dhan's actual broker capabilities first. Preserve any useful existing implementation rather than rebuilding it.
 
-**Architecture interpretation:** Box 5 remains a thin Dhan-specific provider/execution boundary. Box 4 owns strategy and risk intelligence. This discovery pass records facts about the current implementation and broker surface; it does **not** yet assign internal Box 5 nodes or settle unresolved design choices.
+**Architecture interpretation:** Internal Execution remains a thin Dhan-specific provider/execution boundary. Position Management owns strategy and risk intelligence. This discovery pass records facts about the current implementation and broker surface; it does **not** yet assign internal Internal Execution nodes or settle unresolved design choices.
 
 **Existing implementation discovered:** `services/dhan-chatgpt-mcp/` is already a substantial Dhan integration and should be treated as reusable substrate.
 
@@ -1008,7 +1008,7 @@ Current capabilities include:
 - Per-leg and sequence-bound margin checks.
 - An existing four-leg butterfly ENTRY/EXIT executor using LIMIT / INTRADAY / DAY orders.
 
-**Important limitation of the current executor:** `ButterflyExecutor` is not yet the final Box 5 abstraction. It embeds butterfly-specific sequencing, entry/exit semantics, timing rules, price-repricing policy, hedge-coverage rules and other execution-policy intelligence. Under the new architecture, we must decide which of those controls belong in Box 4 versus which are purely mechanical broker safeguards that legitimately remain in Box 5.
+**Important limitation of the current executor:** `ButterflyExecutor` is not yet the final Internal Execution abstraction. It embeds butterfly-specific sequencing, entry/exit semantics, timing rules, price-repricing policy, hedge-coverage rules and other execution-policy intelligence. Under the new architecture, we must decide which of those controls belong in Position Management versus which are purely mechanical broker safeguards that legitimately remain in Internal Execution.
 
 **Observed gaps relative to the eventual external Dhan layer:**
 - no generic broker-neutral Box-4 <-> Box-5 command/event contract;
@@ -1028,28 +1028,28 @@ Current capabilities include:
 - Dhan exposes order-book/trade-book REST endpoints, order lookup by correlation ID, live order-update WebSocket and access-token-level postbacks/webhooks;
 - Dhan exposes positions, funds, single-order margin and multi-order/basket margin calculation;
 - Dhan exposes order slicing for quantities above freeze limits;
-- Dhan exposes broker-side Super Orders, account Kill Switch, P&L-based exit and Exit All, but these are only broker capabilities at this stage and are **not** adopted as Box 5 policy.
+- Dhan exposes broker-side Super Orders, account Kill Switch, P&L-based exit and Exit All, but these are only broker capabilities at this stage and are **not** adopted as Internal Execution policy.
 
-**Preservation rule:** Reuse the mature safety/recovery primitives already present where they fit the new boundary. Do not preserve butterfly-specific policy in Box 5 merely because it already exists.
+**Preservation rule:** Reuse the mature safety/recovery primitives already present where they fit the new boundary. Do not preserve butterfly-specific policy in Internal Execution merely because it already exists.
 
-**VID decision:** No new internal Box 5 VIDs are allocated by this discovery pass. `[5,0,0,0,0]` remains the only Box 5 VID until the first internal architectural object is actually decided.
+**VID decision:** No new internal Internal Execution VIDs are allocated by this discovery pass. `[5,0,0,0,0]` remains the only Internal Execution VID until the first internal architectural object is actually decided.
 
 
-### 2026-10-03 — Box 5 atomicity boundary: instrument-level commands, never butterflies
+### 2026-10-03 — Internal Execution atomicity boundary: instrument-level commands, never butterflies
 
 **Raw intent:** By the time control reaches the external Dhan execution layer, the strategy/execution intelligence has already selected the exact option contract to transact. Dhan should not be asked to "execute a butterfly" as a strategic object. Its unit of work is an individual tradable instrument instruction such as buy/sell a specific call or put at a specific strike and maturity.
 
-**Architecture interpretation:** The Box 4 -> Box 5 execution boundary is **atomic at the instrument level**. A butterfly remains an upstream Volarb concept. Box 4 decomposes any multi-leg structure into individual instrument commands and determines when each command should be issued. Box 5 does not need to know whether a given leg belongs to a butterfly, hedge, recenter, exit, or some future strategy.
+**Architecture interpretation:** The Position Management -> Internal Execution execution boundary is **atomic at the instrument level**. A butterfly remains an upstream Volarb concept. Position Management decomposes any multi-leg structure into individual instrument commands and determines when each command should be issued. Internal Execution does not need to know whether a given leg belongs to a butterfly, hedge, recenter, exit, or some future strategy.
 
 The existing `[4,0,5,7,1]` contract is therefore clarified as an **Atomic Broker-Neutral Instrument Execution Command**.
 
 Conceptually:
 
 ```text
-Box 4 knows:
+Position Management knows:
   "this is a butterfly and these are its legs / desired sequence"
 
-Box 5 receives only:
+Internal Execution receives only:
   BUY or SELL
   + exact economic instrument identity
   + size
@@ -1063,22 +1063,22 @@ Example semantic identity:
   expiry = YYYY-MM-DD
 ```
 
-**Important provider boundary:** Box 4 should identify the economic contract, not pass a Dhan-specific Security ID. Box 5 mechanically resolves the semantic instrument identity into Dhan-specific identifiers and metadata such as Security ID, exchange segment, lot size, tick size and freeze quantity. The existing Dhan instrument-master code is reusable for this translation.
+**Important provider boundary:** Position Management should identify the economic contract, not pass a Dhan-specific Security ID. Internal Execution mechanically resolves the semantic instrument identity into Dhan-specific identifiers and metadata such as Security ID, exchange segment, lot size, tick size and freeze quantity. The existing Dhan instrument-master code is reusable for this translation.
 
-**Explicitly not part of the Box 5 command:** butterfly geometry, wing/body role, strategy name, recenter intent, substitute strikes, alternative structures or any other strategy-level meaning.
+**Explicitly not part of the Internal Execution command:** butterfly geometry, wing/body role, strategy name, recenter intent, substitute strikes, alternative structures or any other strategy-level meaning.
 
 **Still unresolved:** exact quantity representation (lots versus units), price/limit fields, order type, repricing authority, sequencing rules, modification semantics and fill-driven progression. This decision fixes only the atomic execution unit.
 
-**VID decision:** No new Box 5 VID is created yet. This is a clarification of the existing boundary contract `[4,0,5,7,1]`, whose VID remains unchanged.
+**VID decision:** No new Internal Execution VID is created yet. This is a clarification of the existing boundary contract `[4,0,5,7,1]`, whose VID remains unchanged.
 
 
-### 2026-10-03 — Fundamental correction: Box 5 is broker-neutral optimal execution
+### 2026-10-03 — Fundamental correction: Internal Execution is broker-neutral optimal execution
 
 **Raw intent:** The execution layer should not be Dhan-specific. At a given moment it may receive several already-decided instrument instructions — for example the four legs that happen to constitute a butterfly — but it does not need to know that the collection is a butterfly, caterpillar, mouse, hedge, recenter, or any other strategy object. It maintains a registry of the instrument executions currently required and an optimal-execution algorithm works that registry.
 
 Dhan itself should be much thinner: it is the broker plug-in that actually translates and places/modifies/cancels orders and reports broker facts. If Dhan is replaced by Kotak, ICICI Securities, or another broker, Volarb should not need a new optimal-execution engine.
 
-**Architecture interpretation:** The previous provisional meaning of Box 5 as the "External Dhan Execution Layer" is superseded before any Box 5 internals were allocated.
+**Architecture interpretation:** The previous provisional meaning of Internal Execution as the "External Dhan Execution Layer" is superseded before any Internal Execution internals were allocated.
 
 The corrected chain is:
 
@@ -1100,20 +1100,20 @@ Broker Execution Port
 ```
 
 **Responsibility split:**
-- Box 4 decides **what economic instrument actions are desired** as part of strategy/risk management.
-- Box 5 decides **how to execute the currently registered instrument intentions optimally**.
+- Position Management decides **what economic instrument actions are desired** as part of strategy/risk management.
+- Internal Execution decides **how to execute the currently registered instrument intentions optimally**.
 - The broker plug-in performs **broker-specific translation and transport** and returns authoritative broker facts.
 - The broker plug-in does not contain the reusable optimal-execution algorithm.
 
-**Execution registry:** Box 5 maintains a live registry containing the atomic instrument execution intentions currently awaiting, undergoing, or completing execution. If four butterfly legs are handed down together, they appear as four instrument-level entries. Their common strategy meaning is not required by the execution algorithm unless a future explicit execution constraint says otherwise.
+**Execution registry:** Internal Execution maintains a live registry containing the atomic instrument execution intentions currently awaiting, undergoing, or completing execution. If four butterfly legs are handed down together, they appear as four instrument-level entries. Their common strategy meaning is not required by the execution algorithm unless a future explicit execution constraint says otherwise.
 
-**Important supersession:** The earlier note that Box 4 would necessarily determine when every individual leg command is issued is superseded. Box 4 supplies the required instrument actions; Box 5 owns the broker-neutral optimal execution algorithm over the registry.
+**Important supersession:** The earlier note that Position Management would necessarily determine when every individual leg command is issued is superseded. Position Management supplies the required instrument actions; Internal Execution owns the broker-neutral optimal execution algorithm over the registry.
 
 **Provider identity rule:** Concrete broker plug-ins such as Dhan are now outside the numbered Volarb box/VID namespace. The Volarb-owned port through which they plug in receives a VID; the concrete provider implementation uses a provider key/name and implementation version instead of a Volarb architectural VID.
 
-**Preserved Dhan work:** Existing code in `services/dhan-chatgpt-mcp/` remains valuable as provider-specific substrate — authentication, Security-ID resolution, order transport, broker-state retrieval, recovery primitives, etc. Its current butterfly-specific optimal/execution-policy logic is not automatically retained in the Dhan plug-in; reusable optimization belongs in Box 5.
+**Preserved Dhan work:** Existing code in `services/dhan-chatgpt-mcp/` remains valuable as provider-specific substrate — authentication, Security-ID resolution, order transport, broker-state retrieval, recovery primitives, etc. Its current butterfly-specific optimal/execution-policy logic is not automatically retained in the Dhan plug-in; reusable optimization belongs in Internal Execution.
 
-**New Box 5 internal identities:**
+**New Internal Execution internal identities:**
 - `[5,0,1,9,1]` Active Instrument Execution Registry
 - `[5,0,2,1,1]` Broker-Neutral Optimal Execution Engine
 - `[5,0,3,6,1]` Broker Execution Port
@@ -1122,48 +1122,48 @@ Broker Execution Port
 The internals of the optimal-execution algorithm remain deliberately unresolved.
 
 
-### 2026-10-03 — Box 5 margin-aware dependency sequencing
+### 2026-10-03 — Internal Execution margin-aware dependency sequencing
 
-**Raw intent:** Box 5 uses dynamically refreshed market microstructure, account margin/capital and the current execution registry. It must infer which instruments hedge or offset others without knowing the parent strategy, and sequence execution to use margin and cash efficiently.
+**Raw intent:** Internal Execution uses dynamically refreshed market microstructure, account margin/capital and the current execution registry. It must infer which instruments hedge or offset others without knowing the parent strategy, and sequence execution to use margin and cash efficiently.
 
-**Architecture interpretation:** Add normalized live market state and live broker account state as first-class Box 5 inputs. The account state includes current positions and pending orders because existing protection and locked resources affect what can safely execute next.
+**Architecture interpretation:** Add normalized live market state and live broker account state as first-class Internal Execution inputs. The account state includes current positions and pending orders because existing protection and locked resources affect what can safely execute next.
 
 **Rule:** Convert inferred hedge relationships into quantity-aware execution dependencies. Protection that is required to avoid an unnecessary unhedged/high-margin intermediate state must be confirmed before the dependent risk-adding action may proceed. On reduction/unwind, the dependency reverses when removing protection first would expose the remaining position.
 
 **Dynamic rule:** Recompute after authoritative execution/account changes. Do not treat an expected fill, premium credit or margin release as available before the broker confirms it.
 
-**Broker-neutrality:** Box 5 infers structural hedge relationships. The active broker supplies authoritative current and hypothetical margin/account facts. The optimizer therefore remains reusable across brokers.
+**Broker-neutrality:** Internal Execution infers structural hedge relationships. The active broker supplies authoritative current and hypothetical margin/account facts. The optimizer therefore remains reusable across brokers.
 
 
-### 2026-10-03 — Box 5 mission clarified as registry-to-position convergence
+### 2026-10-03 — Internal Execution mission clarified as registry-to-position convergence
 
-**Raw intent:** Box 5 takes whatever exists in the execution registry and must optimally push it through execution until it actually appears in the broker account/positions. The registry is the source; the broker position state is the drain.
+**Raw intent:** Internal Execution takes whatever exists in the execution registry and must optimally push it through execution until it actually appears in the broker account/positions. The registry is the source; the broker position state is the drain.
 
-**Architecture interpretation:** Box 5 is a convergence engine. It does not optimize toward "order submitted" or "order accepted." It optimizes until authoritative broker fills/positions demonstrate that the required economic position change has actually occurred.
+**Architecture interpretation:** Internal Execution is a convergence engine. It does not optimize toward "order submitted" or "order accepted." It optimizes until authoritative broker fills/positions demonstrate that the required economic position change has actually occurred.
 
 **Important semantic distinction:** Registry items are outstanding required position deltas, not broker order tickets. One registry item may require multiple place/modify/cancel/replace attempts over time. Those broker orders are transient mechanisms for satisfying the persistent economic execution requirement.
 
-**Completion invariant:** A registry item remains active until its required position delta is satisfied by authoritative broker state, Box 4 changes/revokes the requirement, or execution enters a fail-safe/error state requiring escalation.
+**Completion invariant:** A registry item remains active until its required position delta is satisfied by authoritative broker state, Position Management changes/revokes the requirement, or execution enters a fail-safe/error state requiring escalation.
 
 **Exit nuance:** "Shown in positions" means the intended final position effect. For an entry this may mean creating/increasing a position; for an exit it may mean reducing or eliminating an existing position.
 
-**VID decision:** No new VID is required. This clarifies the purpose and terminal condition of the existing Box 5 registry/engine/account-state objects.
+**VID decision:** No new VID is required. This clarifies the purpose and terminal condition of the existing Internal Execution registry/engine/account-state objects.
 
 
-### 2026-10-03 — Time-Space Execution Sub-Box inside Box 5
+### 2026-10-03 — Time-Space Execution Sub-Box inside Internal Execution
 
-**Raw intent:** After the Box 5 registry has passed hedge/margin eligibility rules, a separate sub-box performs true optimal execution through time. Its unit of calculation is time and current market/order state. It observes eligible remaining quantity and the LOB, then decides whether to place, reprice, cancel, wait, or use a market order.
+**Raw intent:** After the Internal Execution registry has passed hedge/margin eligibility rules, a separate sub-box performs true optimal execution through time. Its unit of calculation is time and current market/order state. It observes eligible remaining quantity and the LOB, then decides whether to place, reprice, cancel, wait, or use a market order.
 
-**Architecture interpretation:** Box 5 now has two conceptually separate execution stages.
+**Architecture interpretation:** Internal Execution now has two conceptually separate execution stages.
 
-Upper Box 5:
+Upper Internal Execution:
 - registry;
 - hedge/offset inference;
 - dependency graph;
 - margin-aware sequencing;
 - releases only the instrument/quantity currently eligible to be worked.
 
-Lower Box 5:
+Lower Internal Execution:
 - [5,0,3,0,1] Time-Space Execution Sub-Box;
 - consumes eligible work plus current LOB/order/fill state;
 - repeatedly makes broker-neutral order-management decisions through time;
@@ -1180,7 +1180,7 @@ Lower Box 5:
 
 ### 2026-10-03 — Architecture naming and execution cleanup
 
-**Canonical naming rule:** Top-level modules are referred to by short semantic names, never as "Box 1", "Box 2", etc. Numeric identity remains only inside immutable VIDs.
+**Canonical naming rule:** Top-level modules are referred to by short semantic names, never as "Regime Gate", "Underlying Allocation", etc. Numeric identity remains only inside immutable VIDs.
 
 Canonical modules:
 - `[1,0,0,0,0]` Regime Gate
