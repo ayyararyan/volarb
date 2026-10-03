@@ -49,12 +49,13 @@ Detailed workflow: [workflows/position-management.md](workflows/position-managem
 
 Converges registry requirements into authoritative broker positions.
 
-Internal Execution has two ordered normal-flow sub-boxes:
+Internal Execution has three ordered normal-flow sub-boxes:
 
 1. **[5,0,2,0,1] Margin Optimization**
-2. **[5,0,3,0,1] Optimal Execution**
+2. **[5,0,7,0,1] Execution Slicing**
+3. **[5,0,3,0,1] Optimal Execution**
 
-It also contains the orthogonal supervisory **[5,0,6,0,1] Interrupt Control**, which can preempt either normal-flow sub-box.
+It also contains cross-cutting **State Integrity**, **Execution Recovery**, and **Interrupt Control**. Interrupt Control can preempt the normal flow; all broker mutations still pass through durable recovery/commit safeguards.
 
 Margin Optimization produces the mandatory Execution Ordering Plan, which is either ORDERED or UNCONSTRAINED. Optimal Execution must obey ORDERED precedence; when UNCONSTRAINED, it may choose order or concurrency among released work.
 
@@ -68,6 +69,9 @@ Detailed workflow: [workflows/internal-execution.md](workflows/internal-executio
 - Interrupt Control has priority over normal Internal Execution and may bypass the plug-in execution algorithm for emergency cancellation/flattening.
 - Strategy/risk logic remains in Position Management.
 - Margin Optimization precedes micro-execution and supplies the mandatory ordering decision: ORDERED or UNCONSTRAINED.
+- Execution Slicing defaults to one sequential slice; future large positions may be split into multiple slices without changing Optimal Execution.
+- Runtime intents are versioned; stale superseded actions cannot reach the broker.
+- Unknown or ambiguous broker truth blocks normal new mutations until reconciliation.
 - Optimal Execution cannot exceed quantity released by Margin Optimization.
 - Missing or invalid ordering decision means no Optimal Execution; an explicit UNCONSTRAINED decision is valid.
 - Concrete execution algorithms are plug-and-play behind the Execution Algorithm Port.
