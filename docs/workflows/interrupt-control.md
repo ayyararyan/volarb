@@ -173,7 +173,7 @@ Handler:
 4. reconcile cancellations/fills;
 5. refresh authoritative positions;
 6. generate market flatten actions for the confirmed net positions in scope;
-7. send those actions directly through the Broker Execution Port;
+7. send those actions through Execution Recovery / Command Commit Guard and then the Broker Execution Port;
 8. reconcile until the scoped positions are flat or an unresolved broker failure is reported.
 
 Flatten means:
@@ -199,7 +199,7 @@ Handler:
 4. reconcile cancellations and race fills;
 5. refresh authoritative broker positions;
 6. generate market flatten actions for every controlled non-zero position;
-7. send those actions directly through the Broker Execution Port;
+7. send those actions through Execution Recovery / Command Commit Guard and then the Broker Execution Port;
 8. continue reconciling until all controlled positions are flat or an unresolved emergency is explicitly reported.
 
 The normal execution algorithm, passive waiting, T/N timers, ordering mode, and Passive Chase are bypassed.
@@ -262,3 +262,19 @@ Interrupt Control may **not** bypass:
 - mechanical venue validity.
 
 This keeps emergency behavior fast while preserving broker-neutral safety and state correctness.
+
+## Recovery boundary
+
+Interrupt Control bypasses normal optimization policy, but it does not bypass durable execution safety.
+
+Every interrupt mutation is wrapped as an Execution Action Envelope and passes through `[5,0,8,1,2] Command Commit Guard`.
+
+Therefore interrupt cancellation and emergency flattening retain:
+
+- durable write-ahead recording;
+- unique action/correlation identity;
+- authoritative reconciliation;
+- restart recovery;
+- protection against duplicate mutation after ambiguous timeout.
+
+The guard does not force emergency actions back through Passive Chase or Margin Optimization. It only preserves execution-state correctness.
