@@ -1922,7 +1922,7 @@
         0
       ],
       "status": "retired",
-      "retired_reason": "Provider implementation moved outside the numbered Volarb architecture; Box 5 now owns broker-neutral optimal execution."
+      "retired_reason": "Provider implementation moved outside the numbered Volarb architecture; Internal Execution now owns broker-neutral optimal execution."
     },
     {
       "vid": [
@@ -1942,7 +1942,7 @@
         0
       ],
       "status": "retired",
-      "retired_reason": "Dhan is now an unnumbered external provider plug-in beneath the Box 5 Broker Execution Port."
+      "retired_reason": "Dhan is now an unnumbered external provider plug-in beneath the Internal Execution Broker Execution Port."
     },
     {
       "vid": [
@@ -1962,7 +1962,7 @@
         0
       ],
       "status": "retired",
-      "retired_reason": "Concrete alternative brokers are now unnumbered external provider plug-ins beneath the Box 5 Broker Execution Port."
+      "retired_reason": "Concrete alternative brokers are now unnumbered external provider plug-ins beneath the Internal Execution Broker Execution Port."
     },
     {
       "vid": [
@@ -2163,7 +2163,7 @@
         1
       ],
       "status": "retired",
-      "retired_reason": "Superseded by broker-neutral Box 5 and the unnumbered external provider plug-in boundary."
+      "retired_reason": "Superseded by broker-neutral Internal Execution and the unnumbered external provider plug-in boundary."
     },
     {
       "vid": [
@@ -2190,7 +2190,7 @@
         1
       ],
       "status": "retired",
-      "retired_reason": "Superseded by broker-neutral Box 5 and the unnumbered external provider plug-in boundary."
+      "retired_reason": "Superseded by broker-neutral Internal Execution and the unnumbered external provider plug-in boundary."
     },
     {
       "vid": [
@@ -2217,7 +2217,7 @@
         2
       ],
       "status": "retired",
-      "retired_reason": "Superseded by broker-neutral Box 5 and the unnumbered external provider plug-in boundary."
+      "retired_reason": "Superseded by broker-neutral Internal Execution and the unnumbered external provider plug-in boundary."
     },
     {
       "vid": [
@@ -2244,7 +2244,7 @@
         1
       ],
       "status": "retired",
-      "retired_reason": "Superseded by broker-neutral Box 5 and the unnumbered external provider plug-in boundary."
+      "retired_reason": "Superseded by broker-neutral Internal Execution and the unnumbered external provider plug-in boundary."
     },
     {
       "vid": [
@@ -2271,7 +2271,7 @@
         1
       ],
       "status": "retired",
-      "retired_reason": "Superseded by broker-neutral Box 5 and the unnumbered external provider plug-in boundary."
+      "retired_reason": "Superseded by broker-neutral Internal Execution and the unnumbered external provider plug-in boundary."
     },
     {
       "vid": [
@@ -2298,7 +2298,7 @@
         1
       ],
       "status": "retired",
-      "retired_reason": "Superseded by broker-neutral Box 5 and the unnumbered external provider plug-in boundary."
+      "retired_reason": "Superseded by broker-neutral Internal Execution and the unnumbered external provider plug-in boundary."
     },
     {
       "vid": [
@@ -2400,7 +2400,7 @@
         1
       ],
       "status": "retired",
-      "retired_reason": "Superseded by broker-neutral Box 5 and the unnumbered external provider plug-in boundary."
+      "retired_reason": "Superseded by broker-neutral Internal Execution and the unnumbered external provider plug-in boundary."
     },
     {
       "vid": [
@@ -2427,7 +2427,7 @@
         1
       ],
       "status": "retired",
-      "retired_reason": "Superseded by broker-neutral Box 5 and the unnumbered external provider plug-in boundary."
+      "retired_reason": "Superseded by broker-neutral Internal Execution and the unnumbered external provider plug-in boundary."
     },
     {
       "vid": [
@@ -2454,7 +2454,7 @@
         1
       ],
       "status": "retired",
-      "retired_reason": "Superseded by broker-neutral Box 5 and the unnumbered external provider plug-in boundary."
+      "retired_reason": "Superseded by broker-neutral Internal Execution and the unnumbered external provider plug-in boundary."
     },
     {
       "vid": [
@@ -2481,7 +2481,7 @@
         1
       ],
       "status": "retired",
-      "retired_reason": "Superseded by broker-neutral Box 5 and the unnumbered external provider plug-in boundary."
+      "retired_reason": "Superseded by broker-neutral Internal Execution and the unnumbered external provider plug-in boundary."
     },
     {
       "vid": [
