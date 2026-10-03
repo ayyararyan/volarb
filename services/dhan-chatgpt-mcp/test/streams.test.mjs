@@ -45,7 +45,7 @@ test('broker port live market stream subscribes directly in batches and emits no
   const events=[];
   const handle=await runtime.port.openStream({
     operation:DhanBrokerOperation.STREAM_MARKET,
-    payload:{mode:'TICKER',instruments:[{exchangeSegment:'NSE_FNO',securityId:'49081'}]},
+    payload:{mode:'TICKER',instruments:[{providerInstrumentRef:{provider:'dhan',providerInstrumentId:'49081',exchangeSegment:'NSE_FNO'}}]},
     onEvent:e=>events.push(e)
   });
   const ws=FakeWebSocket.instances.at(-1);

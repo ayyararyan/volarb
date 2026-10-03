@@ -36,7 +36,7 @@ test('missing static IP blocks mutation before any transport call',async()=>{
   });
   await assert.rejects(runtime.port.call({
     kind:C,operation:DhanBrokerOperation.PLACE_ORDER,
-    payload:{order:{securityId:'1',orderType:'MARKET'}}
+    payload:{order:{correlationId:'static-ip-test',providerInstrumentRef:{provider:'dhan',providerInstrumentId:'1',exchangeSegment:'NSE_FNO'},side:'BUY',productType:'INTRADAY',orderType:'MARKET',validity:'DAY',quantity:65}}
   }),e=>{
     assert.equal(e.code,'PROVIDER.MUTATION_NOT_READY');
     assert.equal(e.provider.reason,'STATIC_IP_NOT_CONFIGURED');

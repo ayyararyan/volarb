@@ -53,7 +53,7 @@ export class DhanBrokerPort {
     if(![DhanBrokerOperation.STREAM_MARKET,DhanBrokerOperation.STREAM_ORDER_UPDATES].includes(operation)) throw invalidRequest(`Unsupported Dhan stream operation: ${operation}`,operation,ProviderOperationKind.STREAM);
     if(!this.streams) throw new ProviderError({category:ProviderErrorCategory.UNSUPPORTED,code:ProviderErrorCode.UNSUPPORTED,message:'Dhan stream transport is not configured',operation,kind:ProviderOperationKind.STREAM,outcome:ProviderCommandOutcome.NOT_APPLICABLE,provider:{key:'dhan',reason:'STREAM_TRANSPORT_UNAVAILABLE'}});
     const wrap=(data)=>onEvent?.({contractVersion:BROKER_FACT_CONTRACT_VERSION,provider:'dhan',kind:ProviderOperationKind.STREAM,operation,observedAt:new Date(this.now()).toISOString(),data});
-    if(operation===DhanBrokerOperation.STREAM_MARKET) return this.streams.openMarket({...payload,onEvent:wrap,onError,onState});
+    if(operation===DhanBrokerOperation.STREAM_MARKET){const instruments=this.translator.instruments(payload.instruments,'stream_market',ProviderOperationKind.STREAM);return this.streams.openMarket({...payload,instruments,onEvent:wrap,onError,onState});}
     return this.streams.openOrders({...payload,onEvent:wrap,onError,onState});
   }
   _spec(operation){
