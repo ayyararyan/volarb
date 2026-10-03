@@ -27,7 +27,7 @@ flowchart TD
     OE["[5,0,3,0,1] Optimal Execution"]
     C["[5,0,4,1,1] Temporal Execution Controller"]
     P["[5,0,4,6,1] Execution Algorithm Port"]
-    X["Plug-and-play execution algorithm"]
+    X["[5,0,5,5,1] Passive Chase\n(current default plug-in)"]
     O["[5,0,4,7,2] Temporal Execution Decision"]
 
     B["[5,0,3,6,1] Broker Execution Port"]
@@ -195,9 +195,28 @@ selected execution algorithm
 execution_decision_at_t
 ~~~
 
-Specific algorithms will be designed later and receive identities only when actually introduced.
+The current default implementation is `[5,0,5,5,1] Passive Chase`. Future algorithms can replace it behind the same port.
 
 Changing the selected algorithm must not require changes to Margin Optimization, Position Management, the Broker Execution Port, or the broker provider.
+
+## Current default: [5,0,5,5,1] Passive Chase
+
+Passive Chase is the current default algorithm behind the Execution Algorithm Port.
+
+Its deliberately simple policy is:
+
+1. BUY -> place a limit order at the current best bid.
+2. SELL -> place a limit order at the current best ask.
+3. Do not deliberately cross the spread during the passive phase.
+4. Wait parameter `T`.
+5. If quantity remains, refresh the LOB and reprice the remaining quantity to the current passive touch when that touch has changed.
+6. Repeat for up to `N` passive refresh cycles.
+7. After the passive phase is exhausted, cancel the working limit, confirm/reconcile that cancellation, and use a market order for the exact confirmed remainder.
+8. Partial fills always reduce the quantity worked by subsequent actions.
+
+`T` and `N` are parameters and remain TBD.
+
+Detailed plug-in specification: [../execution-algorithms/passive-chase.md](../execution-algorithms/passive-chase.md)
 
 ## [5,0,4,7,2] Temporal Execution Decision
 
