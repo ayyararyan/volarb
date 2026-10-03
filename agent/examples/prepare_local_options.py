@@ -29,7 +29,35 @@ SOURCES = {
     "feed_semantics": "https://www.shoonya.com/api-documentation/subscribe-market-feed",
     "depth_semantics": "https://github.com/Shoonya-Dev/ShoonyaApi-py",
     "historical_lot": "https://nsearchives.nseindia.com/content/circulars/FAOP70616.pdf",
+    "ipft": "https://archives.nseindia.com/content/circulars/FA56129.pdf",
+    "fee_breakdown_confirmation": "https://nsearchives.nseindia.com/content/circulars/FA73061.pdf",
 }
+
+
+def historical_fee_schedule() -> list[dict[str, Any]]:
+    """Jan–Feb 2026: NSE transaction3503 + IPFT50 per crore of premium.
+
+    The existing evaluator applies GST to its exchange-rate component, so bind
+    the combined NSE/IPFT rate here. Do not silently omit IPFT or count it twice.
+    Brokerage and per-fill rounding remain explicit research assumptions.
+    """
+    return [
+        {
+            "effective_from": "2026-01-01",
+            "effective_to": "2026-02-28",
+            "brokerage_per_fill": 20.0,
+            "exchange_rate": 0.0003553,
+            "regulatory_rate": 0.000001,
+            "gst_rate": 0.18,
+            "sell_tax_rate": 0.001,
+            "buy_stamp_rate": 0.00003,
+            "source": (
+                "Jan-Feb2026 NSE transaction3503 + IPFT50 per crore of premium; "
+                "SEBI10 per crore separately; brokerage20/fill modeled; "
+                "aggregate paise rounding approximation. FA56129 and FA73061."
+            ),
+        }
+    ]
 
 
 def write_json(path: Path, value: Any) -> None:
@@ -314,19 +342,12 @@ def prepare(
             "supported_exit_minutes": [*management, 30],
             "fine_execution_windows_seconds": 60,
             "limitations": limitations,
-            "fee_schedule": [
-                {
-                    "effective_from": "2026-01-01",
-                    "effective_to": "2026-02-28",
-                    "brokerage_per_fill": 20.0,
-                    "exchange_rate": 0.0003503,
-                    "regulatory_rate": 0.000001,
-                    "gst_rate": 0.18,
-                    "sell_tax_rate": 0.001,
-                    "buy_stamp_rate": 0.00003,
-                    "source": "Registered NSE Jan-Feb2026 option rates; brokerage20/fill modeled; aggregate paise rounding approximation.",
-                }
-            ],
+            "fee_schedule": historical_fee_schedule(),
+            "fee_components_per_crore_premium": {
+                "nse_transaction": 3503,
+                "nse_ipft": 50,
+                "sebi": 10,
+            },
             "contract_specs": [
                 {
                     "underlying": "NIFTY",

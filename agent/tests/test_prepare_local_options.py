@@ -9,12 +9,24 @@ import pandas as pd
 import pytest
 
 from butterfly_lab.data import DataQualificationError
+from butterfly_lab.accounting import fee_for_fill
 
 script = Path(__file__).parents[1] / "examples" / "prepare_local_options.py"
 spec = importlib.util.spec_from_file_location("prepare_local_options", script)
 assert spec is not None and spec.loader is not None
 builder = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(builder)
+
+
+def test_historical_charges_include_ipft_once_and_tax_its_aggregate():
+    schedule = builder.historical_fee_schedule()
+    # On one lakh premium: brokerage20 + NSE35.03 + IPFT0.50 + SEBI0.10,
+    # GST10.0134 plus buy stamp3 =>68.6434, rounded68.64.
+    assert fee_for_fill(schedule, "2026-01-02T10:00:00+05:30", 1000, 100) == 68.64
+    # Sell STT100 replaces buy stamp3 =>165.6434, rounded165.64.
+    assert fee_for_fill(schedule, "2026-02-27T10:00:00+05:30", -1000, 100) == 165.64
+    with pytest.raises(ValueError):
+        fee_for_fill(schedule, "2026-03-01T10:00:00+05:30", 1000, 100)
 
 
 def test_catalog_selection_uses_nearest_weekly_and_does_not_fallback_for_missing_wing(tmp_path):
