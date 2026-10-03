@@ -3,7 +3,7 @@
   "version": "0.3.0",
   "private": true,
   "type": "module",
-  "description": "DhanHQ MCP research server with authenticated, hedge-aware iron-butterfly limit executor",
+  "description": "Strategy-agnostic DhanHQ broker provider and MCP facade, with legacy butterfly execution compatibility",
   "engines": {
     "node": ">=26.5.0 <27",
     "npm": ">=11.17.0 <12"

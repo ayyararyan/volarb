@@ -124,18 +124,123 @@ function isLikelyOptionRow(row) {
   return t.includes('OPT') || t.includes('OPTION') || ['CE', 'PE'].includes(String(getField(row, ['OPTION_TYPE']) ?? '').toUpperCase());
 }
 
+function rowSecurityId(row) {
+  return String(getField(row, ['SECURITY_ID', 'SEM_SMST_SECURITY_ID']) ?? '');
+}
+
+function rowTradingSymbol(row) {
+  return String(getField(row, ['SEM_TRADING_SYMBOL', 'TRADING_SYMBOL', 'SYMBOL_NAME', 'SM_SYMBOL_NAME']) ?? '');
+}
+
+function rowExpiry(row) {
+  return String(getField(row, ['SM_EXPIRY_DATE', 'SEM_EXPIRY_DATE', 'EXPIRY_DATE']) ?? '').slice(0, 10);
+}
+
+function rowStrike(row) {
+  return numeric(getField(row, ['STRIKE_PRICE', 'SEM_STRIKE_PRICE']));
+}
+
+function rowOptionType(row) {
+  return String(getField(row, ['OPTION_TYPE', 'SEM_OPTION_TYPE']) ?? '').toUpperCase();
+}
+
+function rowExchangeId(row) {
+  return String(getField(row, ['EXCH_ID', 'SEM_EXM_EXCH_ID', 'EXCHANGE']) ?? '').toUpperCase();
+}
+
+function rowSegment(row) {
+  return String(getField(row, ['SEGMENT', 'SEM_SEGMENT']) ?? '').toUpperCase();
+}
+
+function inferExchangeSegment(row) {
+  const exchange = rowExchangeId(row);
+  const segment = rowSegment(row);
+  const instrument = rowInstrumentType(row);
+  if (!exchange) return null;
+  if (segment === 'D' || instrument.includes('OPT') || instrument.includes('FUT')) return `${exchange}_FNO`;
+  if (segment === 'E') return `${exchange}_EQ`;
+  if (segment === 'C') return `${exchange}_CURRENCY`;
+  return null;
+}
+
+function pushIndex(map, key, row) {
+  if (!key) return;
+  const rows = map.get(key);
+  if (rows) rows.push(row);
+  else map.set(key, [row]);
+}
+
+function optionKey(underlying, expiry, strike, optionType, exchange = '') {
+  const numericStrike = Number(strike);
+  if (!underlying || !expiry || !Number.isFinite(numericStrike) || !optionType) return null;
+  return [normalizeToken(underlying), String(expiry).slice(0, 10), String(numericStrike), String(optionType).toUpperCase(), String(exchange).toUpperCase()].join('|');
+}
+
+function buildIndexes(rows) {
+  const bySecurityId = new Map();
+  const byTradingSymbol = new Map();
+  const byOption = new Map();
+  for (const row of rows) {
+    pushIndex(bySecurityId, rowSecurityId(row), row);
+    pushIndex(byTradingSymbol, normalizeToken(rowTradingSymbol(row)), row);
+    if (isLikelyOptionRow(row)) {
+      pushIndex(byOption, optionKey(rowUnderlyingSymbol(row), rowExpiry(row), rowStrike(row), rowOptionType(row), rowExchangeId(row)), row);
+      pushIndex(byOption, optionKey(rowUnderlyingSymbol(row), rowExpiry(row), rowStrike(row), rowOptionType(row)), row);
+    }
+  }
+  return { bySecurityId, byTradingSymbol, byOption };
+}
+
+function normalizeInstrument(row) {
+  const rawTick = numeric(getField(row, ['TICK_SIZE', 'SEM_TICK_SIZE']));
+  return {
+    securityId: rowSecurityId(row),
+    exchangeSegment: inferExchangeSegment(row),
+    exchangeId: rowExchangeId(row),
+    segment: rowSegment(row),
+    instrumentType: rowInstrumentType(row),
+    tradingSymbol: rowTradingSymbol(row),
+    underlyingSymbol: rowUnderlyingSymbol(row) ?? null,
+    expiry: rowExpiry(row) || null,
+    strike: rowStrike(row),
+    optionType: rowOptionType(row) || null,
+    lotSize: rowLotSize(row),
+    // Dhan detailed master uses paise for TICK_SIZE in the current F&O feed.
+    tickSizeRupees: rawTick === null ? null : rawTick / 100,
+    freezeQuantity: numeric(getField(row, ['SM_FREEZE_QTY', 'FREEZE_QTY'])),
+    buySellIndicator: getField(row, ['BUY_SELL_INDICATOR']) ?? null
+  };
+}
+
+function matchesInstrumentQuery(row, query) {
+  if (query.securityId !== undefined && rowSecurityId(row) !== String(query.securityId)) return false;
+  if (query.tradingSymbol !== undefined && normalizeToken(rowTradingSymbol(row)) !== normalizeToken(query.tradingSymbol)) return false;
+  if (query.underlying !== undefined && normalizeToken(rowUnderlyingSymbol(row)) !== normalizeToken(query.underlying)) return false;
+  if (query.expiry !== undefined && rowExpiry(row) !== String(query.expiry).slice(0, 10)) return false;
+  if (query.strike !== undefined && rowStrike(row) !== Number(query.strike)) return false;
+  if (query.optionType !== undefined && rowOptionType(row) !== String(query.optionType).toUpperCase()) return false;
+  if (query.exchange !== undefined && rowExchangeId(row) !== String(query.exchange).toUpperCase()) return false;
+  if (query.segment !== undefined && rowSegment(row) !== String(query.segment).toUpperCase()) return false;
+  if (query.instrumentType !== undefined && rowInstrumentType(row) !== String(query.instrumentType).toUpperCase()) return false;
+  return true;
+}
+
 export class InstrumentMaster {
   constructor({ url = DEFAULT_MASTER_URL, ttlMs = DEFAULT_TTL_MS, fetchFn = fetch } = {}) {
     this.url = url;
     this.ttlMs = ttlMs;
     this.fetchFn = fetchFn;
     this.cache = null;
+    this.indexes = null;
     this.cachedAt = 0;
   }
 
   async getRows({ force = false } = {}) {
     const now = Date.now();
-    if (!force && this.cache && now - this.cachedAt < this.ttlMs) return this.cache;
+    if (!force && this.cache && now - this.cachedAt < this.ttlMs) {
+      if (!this.indexes) this.indexes = buildIndexes(this.cache);
+      return this.cache;
+    }
 
     const response = await this.fetchFn(this.url, {
       headers: { 'User-Agent': 'dhan-chatgpt-mcp/0.2.0' }
@@ -147,8 +252,35 @@ export class InstrumentMaster {
     const rows = parseCsv(csv);
     if (!rows.length) throw new Error('Dhan instrument master was empty');
     this.cache = rows;
+    this.indexes = buildIndexes(rows);
     this.cachedAt = now;
     return rows;
+  }
+
+  async resolveInstrument(query) {
+    if (!query || typeof query !== 'object' || Array.isArray(query) || !Object.keys(query).length) {
+      throw new Error('Instrument query is required');
+    }
+
+    const rows = await this.getRows();
+    const indexes = this.indexes ?? buildIndexes(rows);
+    let candidates = rows;
+
+    if (query.securityId !== undefined) {
+      candidates = indexes.bySecurityId.get(String(query.securityId)) ?? [];
+    } else if (query.tradingSymbol !== undefined) {
+      candidates = indexes.byTradingSymbol.get(normalizeToken(query.tradingSymbol)) ?? [];
+    } else if (query.underlying !== undefined && query.expiry !== undefined &&
+               query.strike !== undefined && query.optionType !== undefined) {
+      const exact = optionKey(query.underlying, query.expiry, query.strike, query.optionType, query.exchange ?? '');
+      candidates = indexes.byOption.get(exact) ?? [];
+    }
+
+    const matches = candidates.filter((row) => matchesInstrumentQuery(row, query));
+    if (matches.length !== 1) {
+      throw new Error(`Dhan instrument query resolved to ${matches.length} rows; exact unique identity required`);
+    }
+    return normalizeInstrument(matches[0]);
   }
 
   async resolveIndex(symbol) {

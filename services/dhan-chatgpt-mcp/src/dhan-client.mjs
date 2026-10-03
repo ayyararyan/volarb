@@ -12,7 +12,7 @@ export class DhanApiError extends Error {
 }
 
 export class DhanClient {
-  constructor({ clientId, accessToken, tokenProvider, onAuthRejected, baseUrl = DEFAULT_BASE_URL, timeoutMs = DEFAULT_TIMEOUT_MS }) {
+  constructor({ clientId, accessToken, tokenProvider, onAuthRejected, baseUrl = DEFAULT_BASE_URL, timeoutMs = DEFAULT_TIMEOUT_MS, fetchFn = fetch }) {
     if (!clientId) throw new Error('DHAN_CLIENT_ID is required');
     if (!accessToken && !tokenProvider) throw new Error('DHAN_ACCESS_TOKEN is required');
 
@@ -22,6 +22,9 @@ export class DhanClient {
     this.onAuthRejected = onAuthRejected;
     this.baseUrl = baseUrl.replace(/\/$/, '');
     this.timeoutMs = timeoutMs;
+    // Transport is injectable so production can use a tuned persistent HTTP client
+    // without coupling provider semantics to a particular runtime.
+    this.fetchFn = fetchFn;
   }
 
   async request(path, { method = 'GET', body } = {}) {
@@ -30,7 +33,7 @@ export class DhanClient {
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
 
     try {
-      const response = await fetch(`${this.baseUrl}${path}`, {
+      const response = await this.fetchFn(`${this.baseUrl}${path}`, {
         method,
         headers: {
           'Accept': 'application/json',
@@ -93,14 +96,37 @@ export class DhanClient {
     } });
   }
 
-  placeLimitOrder(order) {
-    return this.request('/orders', { method: 'POST', body: {
-      ...order, dhanClientId: this.clientId, orderType: 'LIMIT', productType: 'INTRADAY',
-      validity: 'DAY', disclosedQuantity: 0, triggerPrice: 0, afterMarketOrder: false
-    } });
+  // Canonical provider mutation: transmit the caller's explicit Dhan order fields
+  // without choosing order type, product, validity, price or execution policy.
+  placeOrder(order) {
+    return this.request('/orders', {
+      method: 'POST',
+      body: { ...order, dhanClientId: this.clientId }
+    });
+  }
+
+  modifyOrder(id, changes) {
+    return this.request(`/orders/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: { ...changes, dhanClientId: this.clientId, orderId: String(id) }
+    });
   }
 
   cancelOrder(id) { return this.request(`/orders/${encodeURIComponent(id)}`, { method: 'DELETE' }); }
+
+  // Legacy compatibility for ButterflyExecutor. New provider clients must use
+  // placeOrder() so the upstream caller remains the sole owner of execution policy.
+  placeLimitOrder(order) {
+    return this.placeOrder({
+      ...order,
+      orderType: 'LIMIT',
+      productType: 'INTRADAY',
+      validity: 'DAY',
+      disclosedQuantity: 0,
+      triggerPrice: 0,
+      afterMarketOrder: false
+    });
+  }
 
   getProfile() {
     return this.request('/profile');

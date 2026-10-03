@@ -1330,3 +1330,20 @@ Do not implement these now; resume after the Dhan broker layer is designed.
 **VID decision:** no new VID. Concrete Dhan provider internals remain outside the Volarb VID namespace.
 
 Canonical detail: `docs/providers/dhan-execution.md`.
+
+
+### 2026-10-03 — Dhan provider independence and speed
+
+**Raw intent:** Dhan is a reusable broker box, not an execution or strategy box. It should do only what is asked: execute an explicitly requested broker operation or return explicitly requested broker information. The caller may be Internal Execution, a strategy/research component, monitoring, or another future workflow; Dhan itself does not care.
+
+**Canonical Dhan jobs:** COMMAND, QUERY, and a non-decision-making STREAM transport for continuous facts. No strategy geometry, sequencing, slicing, repricing, hedging, timing, capital policy or decision logic belongs in the provider core.
+
+**Current Volarb mutation safety:** production Internal Execution mutations still pass through Command Commit Guard / Execution Ledger before Broker Execution Port. This is a caller/core invariant, not a reason to couple Dhan to Internal Execution.
+
+**Speed rule:** provider overhead must stay close to unavoidable broker/network latency. No LLM/MCP reasoning, policy loops, sleeps, strategy work or provider-owned fsync ledger in the hot path. Pre-resolve instruments, keep indexed metadata in memory, keep transport/process warm, prefer Dhan WebSocket market/order streams for live state, use REST for snapshots/reconciliation, parallelize independent reads when coherent, and benchmark p50/p95/p99 instead of inventing latency targets.
+
+**Implementation:** added strategy-agnostic `src/dhan-provider.mjs`; added generic exact `placeOrder` and `modifyOrder` while retaining legacy `placeLimitOrder`; added indexed exact `InstrumentMaster.resolveInstrument`. Existing butterfly executor remains compatibility code, not the canonical Dhan provider contract.
+
+**Errors:** deliberately deferred. Aryan's next Dhan design point is the error layer. Do not freeze a detailed error taxonomy before that discussion.
+
+**VID decision:** none. Dhan remains an external unnumbered provider.

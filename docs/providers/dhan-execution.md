@@ -1,12 +1,12 @@
 # Dhan Execution Provider Plug-in
 
-Status: **architectural boundary frozen; provider implementation refactor pending.**
+Status: **provider boundary active; strategy-agnostic core implemented; low-latency path under active refinement; error architecture intentionally pending.**
 
 Last provider-boundary audit: **2026-10-03**, against repository `main` at `942003ede3c3ddb4836824e8e1dab97c58445847` and the current official DhanHQ v2 API documentation.
 
 This document is intentionally **outside the numbered Volarb box hierarchy**.
 
-Dhan is a concrete provider implementation beneath `[5,0,3,6,1] Broker Execution Port`. It does not receive a Box number or Volarb VID.
+Dhan is an **external reusable broker capability provider**. `[5,0,3,6,1] Broker Execution Port` is one important Volarb client of it, but Dhan is not owned by Internal Execution and does not know which strategy, workflow or execution engine called it. It does not receive a Box number or Volarb VID.
 
 ## Fundamental boundary
 
@@ -14,20 +14,20 @@ The provider translates, transmits, observes and reports. It does not think.
 
 Conceptually:
 
-    VOLARB INTELLIGENCE
-            |
-            v
-    [5,0,3,6,1] Broker Execution Port
-            |
-            v
-    Dhan provider plug-in
-            |
-            v
-    Dhan APIs / account / exchange
+    any authorized Volarb client
+        |                 |
+        | query           | broker action
+        v                 v
+        +---------- Dhan Provider ----------+
+                       |
+                       v
+                 Dhan APIs / exchange
+
+Internal Execution normally reaches Dhan through `[5,0,3,6,1] Broker Execution Port`. Strategy, research or monitoring components may also consume Dhan information through appropriate provider-facing interfaces. Dhan itself does not branch on caller identity or strategy meaning.
+
+For **current production Volarb mutations**, the Command Commit Guard / Execution Ledger invariant remains upstream of the Broker Execution Port. Provider reusability must not be used as a shortcut around that safety path. The architectural point is that this rule belongs to the caller/core, not inside Dhan.
 
 The Dhan implementation must be replaceable by another provider without changing Margin Optimization, Execution Slicing, Optimal Execution, Interrupt Control, State Integrity or Execution Recovery.
-
-Every mutating operation reaching Dhan has already passed the broker-neutral Command Commit Guard and Execution Ledger. Dhan must therefore execute the requested broker operation mechanically and report the outcome; it must not reconstruct upstream intent.
 
 ## Provider responsibilities
 
@@ -59,6 +59,79 @@ The provider does **not** own:
 - State Integrity policy;
 - broker-neutral recovery policy;
 - capital reserve policy or an affordability PASS/FAIL decision.
+
+## Two canonical jobs
+
+The provider has only two fundamental synchronous jobs:
+
+1. **COMMAND** — perform the exact broker operation requested.
+2. **QUERY** — return the exact broker information requested.
+
+A third transport form, **STREAM**, continuously publishes broker/market facts but still makes no trading decision.
+
+Examples:
+
+```text
+PLACE LIMIT BUY 65 <instrument> @ 12.50
+        |
+        v
+Dhan translates -> transmits -> returns Dhan fact
+
+GET positions
+        |
+        v
+Dhan fetches -> normalizes -> returns positions
+```
+
+There is no butterfly method, hedge method, recenter method, execution-sequence method or strategy method in the canonical Dhan provider core.
+
+## Caller independence
+
+The Dhan provider is deliberately caller-agnostic.
+
+Possible clients include:
+
+- Broker Execution Port / Internal Execution;
+- strategy and research modules that need broker or market facts;
+- monitoring / reconciliation services;
+- operator tooling;
+- future workflows not yet designed.
+
+The provider should not need to be modified merely because a new strategy or execution engine becomes a client.
+
+## Speed is a first-class requirement
+
+The Dhan provider is part of the latency-sensitive trading path. Provider overhead should be kept close to the irreducible Dhan/network latency rather than adding policy, orchestration or storage work.
+
+### Hot-path rules
+
+- **No LLM/MCP reasoning in the execution hot path.** MCP can remain an operator/ChatGPT façade, but machine execution should call the provider library/service directly.
+- **No strategy computation inside Dhan.** Translation and transport only.
+- **No artificial waits, repricing timers or sequencing sleeps inside Dhan.**
+- **No provider-owned write-ahead execution ledger or fsync on each order.** Core durability happens before the provider call.
+- **Pre-resolve instruments.** Runtime order submission should normally already have a resolved Dhan Security ID/segment and cached lot/tick/freeze metadata.
+- **Keep the instrument master indexed in memory.** Exact Security-ID/trading-symbol/option identities use indexed lookup rather than repeated full-CSV scans.
+- **Keep the provider process warm and connections reusable.** The transport is injectable so a tuned persistent HTTP client can be used without changing provider semantics.
+- **Prefer streaming state for the live path.** Dhan live market WebSocket and live order updates should feed in-memory current state; REST remains available for bootstrap, snapshots and reconciliation.
+- **Do independent reads concurrently where coherence permits.**
+- **Respect broker rate limits mechanically without turning throttling into trading policy.**
+- **Measure provider latency separately from upstream decision latency.**
+
+Dhan currently documents Order API limits of 10 requests/second, 250/minute, 1000/hour and 7000/day, plus a 25-modification cap per order. Quote REST is limited to one request/second, which reinforces the WebSocket-first design for latency-sensitive market state.
+
+No arbitrary Volarb latency target is frozen yet. End-to-end and per-provider p50/p95/p99 targets will be benchmarked rather than invented.
+
+## Initial code implementation
+
+The canonical provider core now starts with:
+
+- `src/dhan-provider.mjs` — strategy-agnostic provider façade;
+- `DhanClient.placeOrder(...)` — exact generic placement;
+- `DhanClient.modifyOrder(...)` — exact generic modification;
+- `DhanClient.cancelOrder(...)` — generic cancellation;
+- `InstrumentMaster.resolveInstrument(...)` — exact deterministic resolution with in-memory indexes for Security ID, trading symbol and complete option identity.
+
+The existing `placeLimitOrder(...)` and `ButterflyExecutor` remain temporarily as compatibility clients. They are not the canonical provider contract and can be retired only after their callers migrate safely.
 
 ## Existing repository substrate: classification
 
@@ -94,7 +167,7 @@ These are provider-internal responsibilities, not new Volarb boxes and not VID a
 
 | Provider component | Mechanical responsibility |
 |---|---|
-| **DhanProvider façade** | Implements the Broker Execution Port and exposes normalized capabilities/facts |
+| **DhanProvider façade** | Strategy-agnostic command/query façade used by the Broker Execution Port and other authorized provider clients |
 | **DhanAuth / Readiness** | Access-token lifecycle, account identity, token expiry, current egress IP, Dhan whitelist observation, API/data connectivity |
 | **DhanInstrumentCatalog** | Detailed/segment instrument master, deterministic contract resolution, Security ID, segment, lot/tick/freeze/tradability metadata |
 | **DhanTransport** | HTTP/WebSocket transport, deadlines, safe read retries if later adopted, response parsing, rate-limit handling; never blind-retries an ambiguous mutation |
@@ -148,17 +221,11 @@ Dhan identities remain provider-owned:
 
 Dhan correlation IDs are limited by the broker contract. The new adapter must therefore project the core `correlation_id` deterministically into a Dhan-valid correlation value before transmission. It must not generate a fresh random butterfly correlation ID. The projection must be stable across restart and collision-checked so an ambiguous POST can be reconciled by correlation after process loss.
 
-## Mutation outcome contract
+## Error architecture — intentionally pending
 
-A successful HTTP response is not equivalent to an executed economic effect.
+The detailed Dhan error model is the **next design layer** and is intentionally not finalized in this pass.
 
-For every Dhan mutation the adapter must distinguish at least:
-
-- **ACKNOWLEDGED** — Dhan returned a valid acknowledgement/order identity; execution state still requires observation/reconciliation;
-- **REJECTED** — the broker/API definitively rejected the request;
-- **AMBIGUOUS** — the request may have reached Dhan but the adapter cannot prove the outcome, for example timeout/disconnect after transmission.
-
-An `AMBIGUOUS` mutation is never retried by the provider. The upstream Reconciliation Engine decides what happens next using correlation lookup, order/trade reads and positions.
+One existing safety invariant remains active while that design is pending: a mutation whose outcome is unknown must not be blindly repeated merely because a response was missing. The exact error classes, propagation contract, retryability semantics, transport-vs-broker distinctions and recovery metadata will be designed separately.
 
 ## Normalized fact metadata
 
@@ -253,10 +320,8 @@ The provider should report the relevant broker facts; upstream Volarb decides wh
 
 The current substrate is strong but incomplete for the Broker Execution Port. The important missing/refactor items are:
 
-- generic `placeOrder` rather than forced LIMIT/INTRADAY/DAY;
-- `modifyOrder` support;
-- explicit MARKET order support for upstream fallback and interrupts;
-- generic contract resolution rather than butterfly/index-only resolution;
+- wire the new generic `DhanProvider` into production callers while retiring legacy butterfly-only surfaces safely;
+- complete generic instrument normalization across all Dhan segments beyond the currently indexed exact option/security/trading-symbol paths;
 - normalized mutation outcome/error/ambiguity types;
 - deterministic core-to-Dhan correlation projection;
 - normalized order/trade/position/funds/quote fact envelopes with provenance/timestamps;
