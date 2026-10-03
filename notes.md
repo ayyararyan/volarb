@@ -1292,3 +1292,20 @@ The architecture audit identified three missing cross-cutting controls and one a
 **Canonical normal path:** Margin Optimization -> Execution Slicing -> Optimal Execution -> Execution Recovery / Command Commit Guard -> Broker Execution Port.
 
 **Cross-cutting:** State Integrity gates action permission; Interrupt Control can preempt normal flow; Execution Recovery applies to both normal and interrupt broker mutations.
+
+### Deferred Internal Execution implementation tasks
+
+Do not implement these now; resume after the Dhan broker layer is designed.
+
+- [ ] Internal Execution implementation stack: benchmark architecture/software choices with execution latency as a first-class constraint; explicitly compare C, C++, Rust, Python orchestration, FFI boundaries, process topology, IPC/shared-memory options, and where low-level native code is actually justified.
+- [ ] Internal Execution latency budget: define end-to-end latency targets and per-stage budgets for State Integrity, Margin Optimization, Execution Slicing, Optimal Execution, Command Commit Guard, broker transport, acknowledgement, and reconciliation.
+- [ ] Internal Execution concurrency model: decide event loop/threading/process model, lock/ownership rules, timer model, and deterministic ordering under concurrent market/order events.
+- [ ] Internal Execution production implementation: build the architecture from the canonical VIDs/contracts without leaking Dhan-specific logic into the core.
+- [ ] Internal Execution exhaustive tests: unit tests for every node/contract plus integration tests across ordering, unconstrained execution, slicing, Passive Chase, interrupts, supersession, recovery, and State Integrity.
+- [ ] Internal Execution property/invariant tests: prove/enforce no stale-intent execution, no quantity overfill, no ordering violation, no interrupt bypass, no duplicate broker mutation after ambiguity, and no new risk under invalid state.
+- [ ] Internal Execution fault-injection tests: simulate timeouts, disconnects, duplicate/out-of-order broker events, partial fills, cancel/modify races, restart recovery, stale quotes, stale account state, and broker unavailability.
+- [ ] Internal Execution large-scale simulator: simulate thousands to millions of execution scenarios over synthetic/replayed LOB paths, fills, slippage, queue behavior, partial fills, interrupts, supersessions, and recovery events.
+- [ ] Internal Execution performance benchmarking: measure throughput, p50/p95/p99 latency, jitter, CPU/memory usage, lock contention, serialization overhead, and recovery latency under stress.
+- [ ] Execution Slicing research: later design dynamic slice count/size/scheduling for large positions (e.g. 100-200 lots), while keeping default slice_count=1 and SEQUENTIAL until validated.
+- [ ] Optimal Execution algorithm research: keep Passive Chase as default baseline, then compare more sophisticated plug-ins without changing the Execution Algorithm Port or workflow.
+- [ ] Internal Execution paper-trading / shadow deployment: run against live market/broker state without live mutation first, compare intended versus hypothetical/actual fills, and validate reconciliation before enabling production execution.
