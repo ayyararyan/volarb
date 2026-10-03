@@ -16,7 +16,7 @@ Transform the existing Volarb research and market-outlook ecosystem into an auto
 
 ## Living graph
 
-The architecture is now split into one small master orchestrator and four detailed graphs. Every architectural entity uses the immutable Volarb Vector Identity System (VID):
+The architecture is now split into one small master orchestrator and five detailed graphs. Every architectural entity uses the immutable Volarb Vector Identity System (VID):
 
 - [VID specification](docs/workflows/vector-id-system.md)
 - [VID registry](docs/workflows/vector-id-registry.json)
@@ -25,6 +25,7 @@ The architecture is now split into one small master orchestrator and four detail
 - [Box 2 — Intraday Instrument Selection & Capital Allocation](docs/workflows/02-intraday-selection.md)
 - [Box 3 — Per-Underlying Trade Selection Graph X](docs/workflows/03-per-underlying-graph.md)
 - [Box 4 — Shared Execution & Risk Management](docs/workflows/04-execution-risk.md)
+- [Box 5 — Broker-Neutral Optimal Execution](docs/workflows/05-optimal-execution.md)
 
 The master graph should remain deliberately small. New decision detail should be added to the owning box rather than expanding the master unless a genuinely new top-level phase appears.
 
@@ -1069,3 +1070,53 @@ Example semantic identity:
 **Still unresolved:** exact quantity representation (lots versus units), price/limit fields, order type, repricing authority, sequencing rules, modification semantics and fill-driven progression. This decision fixes only the atomic execution unit.
 
 **VID decision:** No new Box 5 VID is created yet. This is a clarification of the existing boundary contract `[4,0,5,7,1]`, whose VID remains unchanged.
+
+
+### 2026-10-03 — Fundamental correction: Box 5 is broker-neutral optimal execution
+
+**Raw intent:** The execution layer should not be Dhan-specific. At a given moment it may receive several already-decided instrument instructions — for example the four legs that happen to constitute a butterfly — but it does not need to know that the collection is a butterfly, caterpillar, mouse, hedge, recenter, or any other strategy object. It maintains a registry of the instrument executions currently required and an optimal-execution algorithm works that registry.
+
+Dhan itself should be much thinner: it is the broker plug-in that actually translates and places/modifies/cancels orders and reports broker facts. If Dhan is replaced by Kotak, ICICI Securities, or another broker, Volarb should not need a new optimal-execution engine.
+
+**Architecture interpretation:** The previous provisional meaning of Box 5 as the "External Dhan Execution Layer" is superseded before any Box 5 internals were allocated.
+
+The corrected chain is:
+
+```text
+[4,0,0,0,0] Volarb Execution + Risk Management
+        |
+        | one or more atomic broker-neutral instrument execution intents
+        v
+[5,0,0,0,0] Broker-Neutral Optimal Execution Layer
+        |
+        | broker-neutral placement / modify / cancel / query operations
+        v
+Broker Execution Port
+        |
+        +--> Dhan provider plug-in
+        +--> Kotak provider plug-in
+        +--> ICICI Securities provider plug-in
+        +--> future broker provider
+```
+
+**Responsibility split:**
+- Box 4 decides **what economic instrument actions are desired** as part of strategy/risk management.
+- Box 5 decides **how to execute the currently registered instrument intentions optimally**.
+- The broker plug-in performs **broker-specific translation and transport** and returns authoritative broker facts.
+- The broker plug-in does not contain the reusable optimal-execution algorithm.
+
+**Execution registry:** Box 5 maintains a live registry containing the atomic instrument execution intentions currently awaiting, undergoing, or completing execution. If four butterfly legs are handed down together, they appear as four instrument-level entries. Their common strategy meaning is not required by the execution algorithm unless a future explicit execution constraint says otherwise.
+
+**Important supersession:** The earlier note that Box 4 would necessarily determine when every individual leg command is issued is superseded. Box 4 supplies the required instrument actions; Box 5 owns the broker-neutral optimal execution algorithm over the registry.
+
+**Provider identity rule:** Concrete broker plug-ins such as Dhan are now outside the numbered Volarb box/VID namespace. The Volarb-owned port through which they plug in receives a VID; the concrete provider implementation uses a provider key/name and implementation version instead of a Volarb architectural VID.
+
+**Preserved Dhan work:** Existing code in `services/dhan-chatgpt-mcp/` remains valuable as provider-specific substrate — authentication, Security-ID resolution, order transport, broker-state retrieval, recovery primitives, etc. Its current butterfly-specific optimal/execution-policy logic is not automatically retained in the Dhan plug-in; reusable optimization belongs in Box 5.
+
+**New Box 5 internal identities:**
+- `[5,0,1,9,1]` Active Instrument Execution Registry
+- `[5,0,2,1,1]` Broker-Neutral Optimal Execution Engine
+- `[5,0,3,6,1]` Broker Execution Port
+- `[5,0,4,7,1]` Normalized Broker Execution Facts
+
+The internals of the optimal-execution algorithm remain deliberately unresolved.

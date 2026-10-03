@@ -26,7 +26,7 @@
       "2": "intraday_selection_capital_allocation",
       "3": "per_underlying_trade_selection",
       "4": "shared_execution_risk_management",
-      "5": "external_dhan_execution_layer"
+      "5": "optimal_execution"
     },
     "box3_instance_codes": {
       "0": "template",
@@ -1920,7 +1920,9 @@
         0,
         0,
         0
-      ]
+      ],
+      "status": "retired",
+      "retired_reason": "Provider implementation moved outside the numbered Volarb architecture; Box 5 now owns broker-neutral optimal execution."
     },
     {
       "vid": [
@@ -1938,7 +1940,9 @@
         0,
         0,
         0
-      ]
+      ],
+      "status": "retired",
+      "retired_reason": "Dhan is now an unnumbered external provider plug-in beneath the Box 5 Broker Execution Port."
     },
     {
       "vid": [
@@ -1956,7 +1960,9 @@
         0,
         0,
         0
-      ]
+      ],
+      "status": "retired",
+      "retired_reason": "Concrete alternative brokers are now unnumbered external provider plug-ins beneath the Box 5 Broker Execution Port."
     },
     {
       "vid": [
@@ -1966,7 +1972,7 @@
         7,
         1
       ],
-      "name": "Atomic broker-neutral instrument execution command",
+      "name": "Atomic broker-neutral instrument execution intent",
       "kind": "data_contract",
       "parent_vid": [
         4,
@@ -1975,7 +1981,7 @@
         0,
         0
       ],
-      "note": "One tradable instrument instruction at a time. Strategy/multi-leg structure meaning remains in Box 4; provider-specific identifiers are resolved downstream."
+      "note": "One desired instrument-level economic action. Multiple instances may be handed to Box 5 concurrently. Strategy meaning remains in Box 4; broker-specific identifiers remain below the broker port."
     },
     {
       "vid": [
@@ -1985,7 +1991,7 @@
         6,
         1
       ],
-      "name": "ExecutionPort / thin Broker Executor",
+      "name": "OptimalExecutionPort",
       "kind": "interface",
       "parent_vid": [
         4,
@@ -1993,7 +1999,8 @@
         0,
         0,
         0
-      ]
+      ],
+      "note": "Box 4 handoff to broker-neutral Box 5. Supersedes the earlier interpretation as a thin broker executor."
     },
     {
       "vid": [
@@ -2154,7 +2161,9 @@
         6,
         8,
         1
-      ]
+      ],
+      "status": "retired",
+      "retired_reason": "Superseded by broker-neutral Box 5 and the unnumbered external provider plug-in boundary."
     },
     {
       "vid": [
@@ -2179,7 +2188,9 @@
         7,
         8,
         1
-      ]
+      ],
+      "status": "retired",
+      "retired_reason": "Superseded by broker-neutral Box 5 and the unnumbered external provider plug-in boundary."
     },
     {
       "vid": [
@@ -2204,7 +2215,9 @@
         7,
         8,
         2
-      ]
+      ],
+      "status": "retired",
+      "retired_reason": "Superseded by broker-neutral Box 5 and the unnumbered external provider plug-in boundary."
     },
     {
       "vid": [
@@ -2229,7 +2242,9 @@
         6,
         8,
         1
-      ]
+      ],
+      "status": "retired",
+      "retired_reason": "Superseded by broker-neutral Box 5 and the unnumbered external provider plug-in boundary."
     },
     {
       "vid": [
@@ -2254,7 +2269,9 @@
         6,
         8,
         1
-      ]
+      ],
+      "status": "retired",
+      "retired_reason": "Superseded by broker-neutral Box 5 and the unnumbered external provider plug-in boundary."
     },
     {
       "vid": [
@@ -2279,7 +2296,9 @@
         4,
         1,
         1
-      ]
+      ],
+      "status": "retired",
+      "retired_reason": "Superseded by broker-neutral Box 5 and the unnumbered external provider plug-in boundary."
     },
     {
       "vid": [
@@ -2379,7 +2398,9 @@
         6,
         8,
         1
-      ]
+      ],
+      "status": "retired",
+      "retired_reason": "Superseded by broker-neutral Box 5 and the unnumbered external provider plug-in boundary."
     },
     {
       "vid": [
@@ -2404,7 +2425,9 @@
         6,
         8,
         1
-      ]
+      ],
+      "status": "retired",
+      "retired_reason": "Superseded by broker-neutral Box 5 and the unnumbered external provider plug-in boundary."
     },
     {
       "vid": [
@@ -2429,7 +2452,9 @@
         6,
         8,
         1
-      ]
+      ],
+      "status": "retired",
+      "retired_reason": "Superseded by broker-neutral Box 5 and the unnumbered external provider plug-in boundary."
     },
     {
       "vid": [
@@ -2454,7 +2479,9 @@
         2,
         1,
         1
-      ]
+      ],
+      "status": "retired",
+      "retired_reason": "Superseded by broker-neutral Box 5 and the unnumbered external provider plug-in boundary."
     },
     {
       "vid": [
@@ -2539,10 +2566,262 @@
         0,
         0
       ],
-      "name": "External Dhan Execution Layer",
+      "name": "Broker-Neutral Optimal Execution Layer",
       "kind": "root",
       "status": "active_design",
-      "note": "Discovery pass complete: existing services/dhan-chatgpt-mcp substrate identified. Internal Box 5 graph intentionally remains unallocated until specific objects are decided."
+      "note": "Originally reserved provisionally for a Dhan-specific layer; corrected before Box 5 internals were allocated. Box 5 is broker-neutral optimal execution. Concrete broker providers are external plug-ins without Volarb VIDs."
+    },
+    {
+      "vid": [
+        4,
+        0,
+        5,
+        4,
+        3
+      ],
+      "name": "Normalized MarginFeasibility -> check",
+      "kind": "edge",
+      "source_vid": [
+        4,
+        0,
+        5,
+        6,
+        1
+      ],
+      "target_vid": [
+        4,
+        0,
+        4,
+        1,
+        1
+      ],
+      "note": "Provider implementation is external/unnumbered; this edge represents the normalized result returned by the Volarb port."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        9,
+        1
+      ],
+      "name": "Active Instrument Execution Registry",
+      "kind": "resource",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "Holds the current set of atomic instrument execution intentions awaiting, undergoing, or completing execution. Strategy structure meaning is not required."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        1,
+        1
+      ],
+      "name": "Broker-Neutral Optimal Execution Engine",
+      "kind": "node",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "Reusable optimal-execution algorithm over the active registry. Objective and algorithm intentionally TBD."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        3,
+        6,
+        1
+      ],
+      "name": "Broker Execution Port",
+      "kind": "interface",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "Broker-neutral interface implemented by unnumbered provider plug-ins such as Dhan, Kotak, or ICICI Securities."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        7,
+        1
+      ],
+      "name": "Normalized Broker Execution Facts",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "note": "Authoritative broker order/fill/status/account execution facts normalized before use by Box 5 or Box 4. Exact taxonomy TBD."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        4,
+        1
+      ],
+      "name": "Registry -> optimal execution engine",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        1,
+        9,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        2,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        4,
+        1
+      ],
+      "name": "Optimal execution engine -> Broker Execution Port",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        2,
+        1,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        3,
+        6,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        3,
+        4,
+        1
+      ],
+      "name": "Broker Execution Port -> normalized broker facts",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        3,
+        6,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        4,
+        7,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        4,
+        1
+      ],
+      "name": "Broker facts -> active execution registry",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        4,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        1,
+        9,
+        1
+      ]
+    },
+    {
+      "vid": [
+        0,
+        0,
+        5,
+        4,
+        1
+      ],
+      "name": "Box 4 instrument execution intents -> Box 5 registry",
+      "kind": "edge",
+      "source_vid": [
+        4,
+        0,
+        5,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        1,
+        9,
+        1
+      ]
+    },
+    {
+      "vid": [
+        0,
+        0,
+        4,
+        4,
+        1
+      ],
+      "name": "Box 5 execution facts -> Box 4 engine",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        4,
+        7,
+        1
+      ],
+      "target_vid": [
+        4,
+        0,
+        2,
+        1,
+        1
+      ]
     }
   ]
 }

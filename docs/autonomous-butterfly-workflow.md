@@ -19,12 +19,15 @@ flowchart TD
     F["[0,0,2,1,1] Fan out one Box 3 instance per selected X"]
     B3["[3,I,0,0,0] BOX 3 — Per-Underlying Graph X"]
     B4["[4,0,0,0,0] BOX 4 — Shared Execution + Risk Management"]
+    B5["[5,0,0,0,0] BOX 5 — Broker-Neutral Optimal Execution"]
 
     A -->|"[0,0,1,4,1]"| B1
     B1 -->|"[0,0,1,4,2] REGIME_FAVORABLE"| B2
     B2 -->|"[0,0,1,4,3] selected set S + W_X"| F
     F -->|"[0,0,2,4,1]"| B3
     B3 -->|"[0,0,2,4,2] TradeIntent"| B4
+    B4 -->|"[0,0,5,4,1] atomic instrument execution intents"| B5
+    B5 -->|"[0,0,4,4,1] normalized execution facts"| B4
 ```
 
 For Box 3 runtime instances:
@@ -92,9 +95,22 @@ Intraday Opportunity Recheck Scheduler
 Within-Hour Structure Recheck Scheduler
 ```
 
+### [5,0,0,0,0] Box 5 — Broker-Neutral Optimal Execution
+
+**Horizon:** live order execution.
+
+Question: Given the current registry of already-decided instrument execution intentions, how should they be executed optimally without depending on a particular broker?
+
+Box 5 owns the reusable execution algorithm and execution registry. It does not need to know the strategy structure that generated the orders.
+
+Concrete brokers such as Dhan, Kotak, or ICICI Securities sit beneath a broker execution port as external plug-ins with no Volarb VID.
+
+Detailed graph: [workflows/05-optimal-execution.md](workflows/05-optimal-execution.md)
+
 ## Global rules preserved
 
-- Dhan is infrastructure, not core strategy architecture.
+- Broker providers such as Dhan are infrastructure plug-ins, not numbered core architecture.
+- Box 5 is broker-neutral optimal execution and must remain reusable when the broker changes.
 - Research data, decision-time market data, broker margin/account facts, and execution transport cross provider-neutral interfaces.
 - The broker supplies authoritative facts; Volarb supplies trading intelligence.
 - A favorable regime does not force an underlying selection.
@@ -116,3 +132,4 @@ Within-Hour Structure Recheck Scheduler
 3. [Box 2 — Intraday Instrument Selection & Capital Allocation](workflows/02-intraday-selection.md)
 4. [Box 3 — Per-Underlying Trade Selection](workflows/03-per-underlying-graph.md)
 5. [Box 4 — Shared Execution & Risk Management](workflows/04-execution-risk.md)
+6. [Box 5 — Broker-Neutral Optimal Execution](workflows/05-optimal-execution.md)

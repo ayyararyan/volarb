@@ -12,7 +12,7 @@ where:
 
 | Coordinate | Meaning | Rule |
 |---|---|---|
-| `B` | Box / top-level scope | `0` master/global, `1` regime, `2` intraday selection, `3` per-underlying, `4` execution/risk, `5` external Dhan executor |
+| `B` | Box / top-level scope | `0` master/global, `1` regime, `2` intraday selection, `3` per-underlying, `4` execution/risk, `5` broker-neutral optimal execution |
 | `I` | Instance | `0` canonical/template/shared instance; Box 3 uses `1=NIFTY`, `2=BANKNIFTY`, `3=SENSEX` for instantiated graphs |
 | `L` | Logical layer/depth inside the box | `0` for the box root; positive integers for deeper architectural layers |
 | `T` | Entity type code | identifies whether the entity is a node, state, scheduler, edge, worker, port, contract, adapter, resource, etc. |
@@ -43,7 +43,7 @@ Box 1 — Regime Decision                          [1,0,0,0,0]
 Box 2 — Intraday Selection & Capital Allocation  [2,0,0,0,0]
 Box 3 — Per-Underlying Graph template            [3,0,0,0,0]
 Box 4 — Shared Execution & Risk Management       [4,0,0,0,0]
-External Dhan Execution Layer                    [5,0,0,0,0]
+Box 5 — Broker-Neutral Optimal Execution        [5,0,0,0,0]
 ```
 
 ## Box 3 instance convention
@@ -139,3 +139,29 @@ The machine-readable registry is maintained at:
 From this point forward, architectural changes should update both:
 - the relevant graph document; and
 - the central VID registry.
+
+
+## External provider plug-ins
+
+The VID namespace identifies **Volarb-owned architectural objects**.
+
+Concrete external provider implementations that plug into a numbered Volarb interface are not themselves numbered boxes and do not receive Volarb VIDs.
+
+Examples:
+- Dhan execution provider;
+- Kotak execution provider;
+- ICICI Securities execution provider.
+
+The Volarb-owned interface/port receives a VID. The concrete provider implementation is identified using provider metadata such as a provider key and implementation/version.
+
+This exception prevents broker replacement from changing the core vector architecture.
+
+If provider-independent logic is moved into Volarb itself, that logic must receive a VID.
+
+## Box 5 correction history
+
+`[5,0,0,0,0]` was initially reserved provisionally as an external Dhan execution layer before any internal Box 5 VIDs were allocated.
+
+It is now canonically **Broker-Neutral Optimal Execution Layer**.
+
+This is a correction of the provisional root meaning, not reuse of a retired internal VID.
