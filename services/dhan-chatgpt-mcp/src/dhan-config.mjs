@@ -38,6 +38,8 @@ export function loadDhanConfig(env = process.env, { hasTokenProvider = false } =
     staticIpConfigured: isIP(expectedEgressIp) !== 0,
     staticIpConfirmed,
     apiBaseUrl: text(env.DHAN_API_BASE_URL) || 'https://api.dhan.co/v2',
+    marketFeedWsUrl: text(env.DHAN_MARKET_FEED_WS_URL) || 'wss://api-feed.dhan.co',
+    orderUpdateWsUrl: text(env.DHAN_ORDER_UPDATE_WS_URL) || 'wss://api-order-update.dhan.co',
     apiTimeoutMs: positiveInt(env.DHAN_API_TIMEOUT_MS, 15000),
     readinessTtlMs: positiveInt(env.DHAN_PROVIDER_READINESS_TTL_MS, 30000),
     egressCheckTimeoutMs: positiveInt(env.DHAN_PROVIDER_EGRESS_CHECK_TIMEOUT_MS, 5000),

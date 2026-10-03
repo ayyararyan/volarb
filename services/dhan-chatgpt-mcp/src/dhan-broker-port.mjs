@@ -17,7 +17,8 @@ export const DhanBrokerOperation = Object.freeze({
   GET_TRADES:'GET_TRADES', GET_ORDER_TRADES:'GET_ORDER_TRADES',
   GET_HISTORICAL_TRADES:'GET_HISTORICAL_TRADES', GET_MARGIN:'GET_MARGIN',
   GET_BASKET_MARGIN:'GET_BASKET_MARGIN', GET_LTP:'GET_LTP', GET_QUOTE:'GET_QUOTE',
-  PLACE_ORDER:'PLACE_ORDER', MODIFY_ORDER:'MODIFY_ORDER', CANCEL_ORDER:'CANCEL_ORDER'
+  PLACE_ORDER:'PLACE_ORDER', MODIFY_ORDER:'MODIFY_ORDER', CANCEL_ORDER:'CANCEL_ORDER',
+  STREAM_MARKET:'STREAM_MARKET', STREAM_ORDER_UPDATES:'STREAM_ORDER_UPDATES'
 });
 const QUERY=ProviderOperationKind.QUERY, COMMAND=ProviderOperationKind.COMMAND;
 const invalidRequest=(message,operation,kind=QUERY)=>new ProviderError({
@@ -31,14 +32,14 @@ function capabilities(config){return{
   provider:'dhan', queryConfigured:config.queryConfigured, commandsEnabled:config.commandsEnabled,
   operations:{
     query:['GET_READINESS','RESOLVE_INSTRUMENT','GET_ACCOUNT_SNAPSHOT','GET_POSITIONS','GET_FUNDS','GET_ORDERS','GET_ORDER','GET_ORDER_BY_CORRELATION','GET_TRADES','GET_ORDER_TRADES','GET_HISTORICAL_TRADES','GET_MARGIN','GET_BASKET_MARGIN','GET_LTP','GET_QUOTE'],
-    command:['PLACE_ORDER','MODIFY_ORDER','CANCEL_ORDER'], stream:[]
+    command:['PLACE_ORDER','MODIFY_ORDER','CANCEL_ORDER'], stream:['STREAM_MARKET','STREAM_ORDER_UPDATES']
   },
-  streamStatus:'NOT_YET_WIRED_TO_BROKER_PORT',
+  streamStatus:'LIVE_MARKET_AND_ORDER_UPDATES',
   notes:['Execution Slicing is upstream; Dhan native order slicing is not used.','A strategy leg is transmitted as an ordinary broker order; Dhan has no strategy-leg semantics.']
 };}
 
 export class DhanBrokerPort {
-  constructor({provider,readiness,config,now=Date.now}){this.provider=provider;this.readiness=readiness;this.config=config;this.now=now;}
+  constructor({provider,readiness,config,streams=null,now=Date.now}){this.provider=provider;this.readiness=readiness;this.config=config;this.streams=streams;this.now=now;}
   async call({kind,operation,payload={}}){
     if(!Object.values(ProviderOperationKind).includes(kind)) throw invalidRequest('Broker port request has invalid kind',operation||'unknown');
     if(!Object.values(DhanBrokerOperation).includes(operation)) throw invalidRequest(`Unsupported Dhan broker operation: ${operation}`,operation||'unknown',kind);
@@ -46,6 +47,13 @@ export class DhanBrokerPort {
     if(spec.kind!==kind) throw invalidRequest(`Operation ${operation} requires kind ${spec.kind}, received ${kind}`,operation,kind);
     const started=process.hrtime.bigint(), raw=await spec.run(payload), data=spec.normalize(raw), ended=process.hrtime.bigint();
     return {contractVersion:BROKER_FACT_CONTRACT_VERSION,provider:'dhan',kind,operation,observedAt:new Date(this.now()).toISOString(),providerOverheadMicros:Number((ended-started)/1000n),data};
+  }
+  async openStream({operation,payload={},onEvent,onError,onState}){
+    if(![DhanBrokerOperation.STREAM_MARKET,DhanBrokerOperation.STREAM_ORDER_UPDATES].includes(operation)) throw invalidRequest(`Unsupported Dhan stream operation: ${operation}`,operation,ProviderOperationKind.STREAM);
+    if(!this.streams) throw new ProviderError({category:ProviderErrorCategory.UNSUPPORTED,code:ProviderErrorCode.UNSUPPORTED,message:'Dhan stream transport is not configured',operation,kind:ProviderOperationKind.STREAM,outcome:ProviderCommandOutcome.NOT_APPLICABLE,provider:{key:'dhan',reason:'STREAM_TRANSPORT_UNAVAILABLE'}});
+    const wrap=(data)=>onEvent?.({contractVersion:BROKER_FACT_CONTRACT_VERSION,provider:'dhan',kind:ProviderOperationKind.STREAM,operation,observedAt:new Date(this.now()).toISOString(),data});
+    if(operation===DhanBrokerOperation.STREAM_MARKET) return this.streams.openMarket({...payload,onEvent:wrap,onError,onState});
+    return this.streams.openOrders({...payload,onEvent:wrap,onError,onState});
   }
   _spec(operation){
     const p=this.provider;

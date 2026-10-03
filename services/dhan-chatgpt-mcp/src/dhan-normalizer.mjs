@@ -128,3 +128,51 @@ export function normalizeDhanLtp(raw) {
 }
 
 export function unwrapDhan(value) { return unwrap(value); }
+
+
+const STREAM_PRODUCT = Object.freeze({ C:'CNC', I:'INTRADAY', M:'MARGIN', F:'MTF', V:'CO', B:'BO' });
+const STREAM_SIDE = Object.freeze({ B:'BUY', S:'SELL' });
+const STREAM_ORDER_TYPE = Object.freeze({ LMT:'LIMIT', MKT:'MARKET', SL:'STOP_LOSS', SLM:'STOP_LOSS_MARKET' });
+
+function streamExchangeSegment(raw = {}) {
+  const exchange = String(raw.Exchange ?? '').toUpperCase();
+  const segment = String(raw.Segment ?? '').toUpperCase();
+  if (segment === 'D') return exchange + '_FNO';
+  if (segment === 'E') return exchange + '_EQ';
+  if (segment === 'C') return exchange + '_CURRENCY';
+  if (segment === 'I') return 'IDX_I';
+  return [exchange, segment].filter(Boolean).join('_') || null;
+}
+
+export function normalizeDhanOrderUpdate(raw = {}) {
+  const restLike = {
+    orderId: raw.OrderNo,
+    correlationId: raw.CorrelationId,
+    exchangeOrderId: raw.ExchOrderNo,
+    securityId: raw.SecurityId,
+    exchangeSegment: streamExchangeSegment(raw),
+    transactionType: STREAM_SIDE[String(raw.TxnType ?? '').trim().toUpperCase()] ?? raw.TxnType,
+    productType: STREAM_PRODUCT[String(raw.Product ?? '').trim().toUpperCase()] ?? raw.ProductName ?? raw.Product,
+    orderType: STREAM_ORDER_TYPE[String(raw.OrderType ?? '').trim().toUpperCase()] ?? raw.OrderType,
+    validity: raw.Validity,
+    orderStatus: String(raw.Status ?? '').trim().toUpperCase(),
+    quantity: raw.Quantity,
+    filledQty: raw.TradedQty,
+    remainingQuantity: raw.RemainingQuantity,
+    price: raw.Price,
+    triggerPrice: raw.TriggerPrice,
+    averageTradedPrice: raw.AvgTradedPrice,
+    createTime: raw.OrderDateTime,
+    exchangeTime: raw.ExchOrderTime,
+    updateTime: raw.LastUpdatedTime,
+    omsErrorDescription: String(raw.Status ?? '').trim().toUpperCase() === 'REJECTED' ? raw.ReasonDescription : null
+  };
+  return {
+    ...normalizeDhanOrder(restLike),
+    source: text(raw.Source),
+    reasonDescription: text(raw.ReasonDescription),
+    referenceLtp: number(raw.RefLtp ?? raw.refLtp),
+    lotSize: integer(raw.LotSize),
+    tickSize: number(raw.TickSize ?? raw.tickSize)
+  };
+}

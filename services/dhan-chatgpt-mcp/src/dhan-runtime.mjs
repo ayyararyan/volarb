@@ -4,6 +4,7 @@ import { DhanBrokerPort } from './dhan-broker-port.mjs';
 import { DhanReadiness } from './dhan-readiness.mjs';
 import { loadDhanConfig } from './dhan-config.mjs';
 import { InstrumentMaster } from './instrument-master.mjs';
+import { DhanStreamManager } from './dhan-streams.mjs';
 
 export function createDhanRuntime({
   env = process.env,
@@ -11,6 +12,7 @@ export function createDhanRuntime({
   onAuthRejected,
   fetchFn = fetch,
   egressIpResolver,
+  WebSocketImpl = globalThis.WebSocket,
   now = Date.now
 } = {}) {
   const config = loadDhanConfig(env, { hasTokenProvider: Boolean(tokenProvider) });
@@ -31,10 +33,14 @@ export function createDhanRuntime({
   });
   const readiness = new DhanReadiness({ client, config, fetchFn, egressIpResolver, now });
   const provider = new DhanProvider({ client, instrumentMaster, readiness });
-  const port = new DhanBrokerPort({ provider, readiness, config, now });
+  const resolveToken = tokenProvider
+    ? tokenProvider
+    : async () => String(env.DHAN_ACCESS_TOKEN || '').trim();
+  const streams = new DhanStreamManager({ config, readiness, resolveToken, WebSocketImpl });
+  const port = new DhanBrokerPort({ provider, readiness, config, streams, now });
 
   return {
-    config, client, instrumentMaster, readiness, provider, port,
+    config, client, instrumentMaster, readiness, provider, streams, port,
     async warmup({ instrumentMaster: warmMaster = true, readiness: warmReady = true } = {}) {
       const tasks = [];
       if (warmMaster && config.queryConfigured) tasks.push(instrumentMaster.getRows());
