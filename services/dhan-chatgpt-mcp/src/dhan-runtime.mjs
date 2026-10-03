@@ -5,6 +5,7 @@ import { DhanReadiness } from './dhan-readiness.mjs';
 import { loadDhanConfig } from './dhan-config.mjs';
 import { InstrumentMaster } from './instrument-master.mjs';
 import { DhanStreamManager } from './dhan-streams.mjs';
+import { DhanTranslator } from './dhan-translator.mjs';
 
 export function createDhanRuntime({
   env = process.env,
@@ -37,10 +38,11 @@ export function createDhanRuntime({
     ? tokenProvider
     : async () => String(env.DHAN_ACCESS_TOKEN || '').trim();
   const streams = new DhanStreamManager({ config, readiness, resolveToken, WebSocketImpl });
-  const port = new DhanBrokerPort({ provider, readiness, config, streams, now });
+  const translator = new DhanTranslator();
+  const port = new DhanBrokerPort({ provider, readiness, config, streams, translator, now });
 
   return {
-    config, client, instrumentMaster, readiness, provider, streams, port,
+    config, client, instrumentMaster, readiness, provider, streams, translator, port,
     async warmup({ instrumentMaster: warmMaster = true, readiness: warmReady = true } = {}) {
       const tasks = [];
       if (warmMaster && config.queryConfigured) tasks.push(instrumentMaster.getRows());

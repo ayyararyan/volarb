@@ -61,7 +61,7 @@ test('command readiness is checked once then cached off the hot path',async()=>{
   for(let i=0;i<2;i++){
     const out=await runtime.port.call({
       kind:C,operation:DhanBrokerOperation.PLACE_ORDER,
-      payload:{order:{correlationId:'x'+i,transactionType:'BUY',exchangeSegment:'NSE_FNO',productType:'INTRADAY',orderType:'MARKET',validity:'DAY',securityId:'1',quantity:65,disclosedQuantity:0,price:0,triggerPrice:0,afterMarketOrder:false}}
+      payload:{order:{correlationId:'core-correlation-'+i,providerInstrumentRef:{provider:'dhan',providerInstrumentId:'1',exchangeSegment:'NSE_FNO'},side:'BUY',productType:'INTRADAY',orderType:'MARKET',validity:'DAY',quantity:65,disclosedQuantity:0,price:0,triggerPrice:0,afterMarketOrder:false}}
     });
     assert.equal(out.data.status,'PENDING');
   }
@@ -84,7 +84,7 @@ test('account snapshot is concurrent and margin shortfall stays a fact, not a pr
   assert.equal(snapshot.data.funds.availableBalance,1000);
   const margin=await runtime.port.call({
     kind:Q,operation:DhanBrokerOperation.GET_MARGIN,
-    payload:{order:{exchangeSegment:'NSE_FNO',transactionType:'SELL',quantity:65,productType:'INTRADAY',securityId:'11',price:10,triggerPrice:0}}
+    payload:{order:{providerInstrumentRef:{provider:'dhan',providerInstrumentId:'11',exchangeSegment:'NSE_FNO'},side:'SELL',quantity:65,productType:'INTRADAY',price:10,triggerPrice:0}}
   });
   assert.equal(margin.data.totalMargin,2800);
   assert.equal(margin.data.insufficientBalance,1800);
@@ -111,4 +111,43 @@ test('operation-kind mismatch is rejected by the connector before broker work',a
     assert.equal(e.outcome,'KNOWN_NOT_APPLIED');
     return true;
   });
+});
+
+
+test('broker-neutral order request is translated to Dhan mechanics with deterministic 30-char correlation',async()=>{
+  let sent;
+  const runtime=createDhanRuntime({
+    env:env(),
+    egressIpResolver:async()=> '203.0.113.10',
+    fetchFn:async(url,options={})=>{
+      if(url.endsWith('/profile'))return jsonResponse({dhanClientId:'123'});
+      if(url.endsWith('/ip/getIP'))return jsonResponse({primaryIP:'203.0.113.10'});
+      if(url.endsWith('/orders')&&options.method==='POST'){sent=JSON.parse(options.body);return jsonResponse({orderId:'o1',orderStatus:'PENDING'});}
+      throw new Error('unexpected '+url);
+    }
+  });
+  const request={correlationId:'intent/very-long-core-correlation-id/that-does-not-fit-dhan',providerInstrumentRef:{provider:'dhan',providerInstrumentId:'42',exchangeSegment:'NSE_FNO'},side:'SELL',productType:'INTRADAY',orderType:'LIMIT',validity:'DAY',quantity:65,price:12.5};
+  const first=await runtime.port.call({kind:C,operation:DhanBrokerOperation.PLACE_ORDER,payload:{order:request}});
+  assert.equal(sent.securityId,'42');
+  assert.equal(sent.exchangeSegment,'NSE_FNO');
+  assert.equal(sent.transactionType,'SELL');
+  assert.equal(sent.correlationId.length,30);
+  assert.match(sent.correlationId,/^v[0-9a-f]{29}$/);
+  assert.equal(first.data.coreCorrelationId,request.correlationId);
+  assert.equal(first.data.providerCorrelationRef,sent.correlationId);
+  assert.equal(runtime.translator.correlationProjector.project(request.correlationId),sent.correlationId);
+});
+
+test('correlation lookup projects the same core identity used on placement',async()=>{
+  let path='';
+  const runtime=createDhanRuntime({
+    env:env({DHAN_PROVIDER_COMMANDS_ENABLED:'false'}),
+    fetchFn:async(url)=>{path=url;return jsonResponse({orderId:'o1',correlationId:path.split('/').at(-1),securityId:'42',exchangeSegment:'NSE_FNO',orderStatus:'PENDING'});}
+  });
+  const core='runtime-correlation-12345678901234567890';
+  const expected=runtime.translator.correlationProjector.project(core);
+  const out=await runtime.port.call({kind:Q,operation:DhanBrokerOperation.GET_ORDER_BY_CORRELATION,payload:{correlationId:core}});
+  assert.ok(path.endsWith('/orders/external/'+expected));
+  assert.equal(out.data.coreCorrelationId,core);
+  assert.equal(out.data.providerCorrelationRef,expected);
 });

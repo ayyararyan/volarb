@@ -8,6 +8,7 @@ import {
   normalizeDhanOrder, normalizeDhanPosition, normalizeDhanQuote,
   normalizeDhanTrade, unwrapDhan
 } from './dhan-normalizer.mjs';
+import { DhanTranslator } from './dhan-translator.mjs';
 
 export const DhanBrokerOperation = Object.freeze({
   GET_CAPABILITIES:'GET_CAPABILITIES', GET_READINESS:'GET_READINESS',
@@ -39,7 +40,7 @@ function capabilities(config){return{
 };}
 
 export class DhanBrokerPort {
-  constructor({provider,readiness,config,streams=null,now=Date.now}){this.provider=provider;this.readiness=readiness;this.config=config;this.streams=streams;this.now=now;}
+  constructor({provider,readiness,config,streams=null,translator=new DhanTranslator(),now=Date.now}){this.provider=provider;this.readiness=readiness;this.config=config;this.streams=streams;this.translator=translator;this.now=now;}
   async call({kind,operation,payload={}}){
     if(!Object.values(ProviderOperationKind).includes(kind)) throw invalidRequest('Broker port request has invalid kind',operation||'unknown');
     if(!Object.values(DhanBrokerOperation).includes(operation)) throw invalidRequest(`Unsupported Dhan broker operation: ${operation}`,operation||'unknown',kind);
@@ -66,16 +67,16 @@ export class DhanBrokerPort {
       case DhanBrokerOperation.GET_FUNDS:return{kind:QUERY,run:()=>p.getFunds(),normalize:x=>normalizeDhanFunds(unwrapDhan(x)||{})};
       case DhanBrokerOperation.GET_ORDERS:return{kind:QUERY,run:()=>p.getOrders(),normalize:x=>asArray(x).map(normalizeDhanOrder)};
       case DhanBrokerOperation.GET_ORDER:return{kind:QUERY,run:x=>p.getOrder(x.orderId),normalize:x=>normalizeDhanOrder(unwrapDhan(x)||{})};
-      case DhanBrokerOperation.GET_ORDER_BY_CORRELATION:return{kind:QUERY,run:x=>p.getOrderByCorrelation(x.correlationId),normalize:x=>normalizeDhanOrder(unwrapDhan(x)||{})};
+      case DhanBrokerOperation.GET_ORDER_BY_CORRELATION:return{kind:QUERY,run:async x=>{const c=this.translator.correlation(x.correlationId);return{raw:await p.getOrderByCorrelation(c.providerCorrelationRef),correlation:c};},normalize:x=>({...normalizeDhanOrder(unwrapDhan(x.raw)||{}),coreCorrelationId:x.correlation.coreCorrelationId,providerCorrelationRef:x.correlation.providerCorrelationRef})};
       case DhanBrokerOperation.GET_TRADES:return{kind:QUERY,run:()=>p.getTrades(),normalize:x=>asArray(x).map(normalizeDhanTrade)};
       case DhanBrokerOperation.GET_ORDER_TRADES:return{kind:QUERY,run:x=>p.getOrderTrades(x.orderId),normalize:x=>asArray(x).map(normalizeDhanTrade)};
       case DhanBrokerOperation.GET_HISTORICAL_TRADES:return{kind:QUERY,run:x=>p.getHistoricalTrades(x),normalize:x=>asArray(x).map(normalizeDhanTrade)};
-      case DhanBrokerOperation.GET_MARGIN:return{kind:QUERY,run:x=>p.getMargin(x.order),normalize:x=>normalizeDhanMargin(unwrapDhan(x)||{})};
-      case DhanBrokerOperation.GET_BASKET_MARGIN:return{kind:QUERY,run:x=>p.getBasketMargin(x.orders,x.options),normalize:x=>normalizeDhanMargin(unwrapDhan(x)||{})};
-      case DhanBrokerOperation.GET_LTP:return{kind:QUERY,run:x=>p.getLtp(x.instruments),normalize:normalizeDhanLtp};
-      case DhanBrokerOperation.GET_QUOTE:return{kind:QUERY,run:x=>p.getQuote(x.instruments),normalize:normalizeDhanQuote};
-      case DhanBrokerOperation.PLACE_ORDER:return{kind:COMMAND,run:x=>p.placeOrder(x.order),normalize:normalizeDhanMutationAck};
-      case DhanBrokerOperation.MODIFY_ORDER:return{kind:COMMAND,run:x=>p.modifyOrder(x.orderId,x.changes),normalize:normalizeDhanMutationAck};
+      case DhanBrokerOperation.GET_MARGIN:return{kind:QUERY,run:x=>p.getMargin(this.translator.marginOrder(x.order)),normalize:x=>normalizeDhanMargin(unwrapDhan(x)||{})};
+      case DhanBrokerOperation.GET_BASKET_MARGIN:return{kind:QUERY,run:x=>p.getBasketMargin(this.translator.basketMargin(x.orders),x.options),normalize:x=>normalizeDhanMargin(unwrapDhan(x)||{})};
+      case DhanBrokerOperation.GET_LTP:return{kind:QUERY,run:x=>p.getLtp(this.translator.instruments(x.instruments,'get_ltp')),normalize:normalizeDhanLtp};
+      case DhanBrokerOperation.GET_QUOTE:return{kind:QUERY,run:x=>p.getQuote(this.translator.instruments(x.instruments,'get_quote')),normalize:normalizeDhanQuote};
+      case DhanBrokerOperation.PLACE_ORDER:return{kind:COMMAND,run:async x=>{const translated=this.translator.order(x.order);return{raw:await p.placeOrder(translated.dhanOrder),translated};},normalize:x=>({...normalizeDhanMutationAck(x.raw),coreCorrelationId:x.translated.coreCorrelationId,providerCorrelationRef:x.translated.providerCorrelationRef})};
+      case DhanBrokerOperation.MODIFY_ORDER:return{kind:COMMAND,run:x=>p.modifyOrder(x.orderId,this.translator.modify(x.changes)),normalize:normalizeDhanMutationAck};
       case DhanBrokerOperation.CANCEL_ORDER:return{kind:COMMAND,run:x=>p.cancelOrder(x.orderId),normalize:normalizeDhanMutationAck};
       default:throw invalidRequest(`Unsupported Dhan broker operation: ${operation}`,operation);
     }
