@@ -9,19 +9,11 @@ import {
   normalizeDhanTrade, unwrapDhan
 } from './dhan-normalizer.mjs';
 import { DhanTranslator } from './dhan-translator.mjs';
+import { BrokerOperation, BrokerOperationKind } from '../../../execution-engine/ports/broker-port.mjs';
 
-export const DhanBrokerOperation = Object.freeze({
-  GET_CAPABILITIES:'GET_CAPABILITIES', GET_READINESS:'GET_READINESS',
-  RESOLVE_INSTRUMENT:'RESOLVE_INSTRUMENT', GET_ACCOUNT_SNAPSHOT:'GET_ACCOUNT_SNAPSHOT',
-  GET_POSITIONS:'GET_POSITIONS', GET_FUNDS:'GET_FUNDS', GET_ORDERS:'GET_ORDERS',
-  GET_ORDER:'GET_ORDER', GET_ORDER_BY_CORRELATION:'GET_ORDER_BY_CORRELATION',
-  GET_TRADES:'GET_TRADES', GET_ORDER_TRADES:'GET_ORDER_TRADES',
-  GET_HISTORICAL_TRADES:'GET_HISTORICAL_TRADES', GET_MARGIN:'GET_MARGIN',
-  GET_BASKET_MARGIN:'GET_BASKET_MARGIN', GET_LTP:'GET_LTP', GET_QUOTE:'GET_QUOTE',
-  PLACE_ORDER:'PLACE_ORDER', MODIFY_ORDER:'MODIFY_ORDER', CANCEL_ORDER:'CANCEL_ORDER',
-  STREAM_MARKET:'STREAM_MARKET', STREAM_ORDER_UPDATES:'STREAM_ORDER_UPDATES'
-});
-const QUERY=ProviderOperationKind.QUERY, COMMAND=ProviderOperationKind.COMMAND;
+// Compatibility export. New callers should import BrokerOperation from execution-engine/ports.
+export const DhanBrokerOperation = BrokerOperation;
+const QUERY=BrokerOperationKind.QUERY, COMMAND=BrokerOperationKind.COMMAND;
 const invalidRequest=(message,operation,kind=QUERY)=>new ProviderError({
   category:ProviderErrorCategory.INVALID_REQUEST, code:ProviderErrorCode.INVALID_REQUEST,
   message, operation, kind,
