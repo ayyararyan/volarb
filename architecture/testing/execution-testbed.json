@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "name": "Execution Testbed",
+  "kind": "external_test_infrastructure",
+  "canonical_vid": null,
+  "tests_component": "component.execution_engine",
+  "principle": "Run the same Execution Engine code with injected deterministic dependencies; never fork a test engine.",
+  "levels": [
+    {
+      "id": "box",
+      "mount": "one execution component",
+      "purpose": "unit/component behavior"
+    },
+    {
+      "id": "composition",
+      "mount": "selected connected components",
+      "purpose": "cross-box contracts"
+    },
+    {
+      "id": "engine",
+      "mount": "complete execution engine + simulator",
+      "purpose": "deterministic scenarios"
+    },
+    {
+      "id": "mass",
+      "mount": "complete engine + generated scenarios",
+      "purpose": "property/invariant campaigns"
+    },
+    {
+      "id": "replay_shadow",
+      "mount": "complete engine + recorded/live read-only inputs",
+      "purpose": "pre-production validation"
+    }
+  ],
+  "injected_ports": [
+    "broker",
+    "market",
+    "clock",
+    "ledger",
+    "randomness",
+    "strategy_input"
+  ],
+  "production_guard": "environments/execution/production.json must never mount execution-testkit dependencies",
+  "no_new_vid": true
+}
