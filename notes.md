@@ -305,6 +305,91 @@ These are separate loops and should not be conflated.
 - how portfolio capital/risk is reserved across simultaneously launched graphs,
 - and when a material intraday event should force an early re-evaluation of the broader regime.
 
+
+### 2026-10-03 — Per-underlying structure selection: what exactly do we trade?
+
+**Raw intent:** Once an underlying graph is launched, the system already knows that this underlying is approved for trading. The next question inside that graph is therefore: **what exact options structure should be traded on this underlying?**
+
+Using NIFTY as the running example, the answer should not be hard-coded to one symmetric iron butterfly. Candidate structures may include:
+- symmetric iron butterflies with different wing widths, such as ATM ±500 or ATM ±600,
+- asymmetric iron butterflies,
+- iron condors,
+- and potentially other bounded-risk short-volatility structures that are later admitted into the strategy universe.
+
+**Interpretation:** Each underlying graph requires a dedicated **Structure Selector**. Its job is to evaluate the currently allowed structure universe for that underlying and choose the structure or structures that best satisfy the current trading objective and constraints.
+
+Conceptually:
+
+```text
+NIFTY GRAPH
+    |
+    v
+we are trading NIFTY
+    |
+    v
++----------------------+
+|  STRUCTURE SELECTOR  |
+| what exactly to      |
+| trade in NIFTY?      |
++----------------------+
+    |
+    +--> symmetric iron butterfly
+    |      - ATM +/- 500
+    |      - ATM +/- 600
+    |      - other admitted widths
+    |
+    +--> asymmetric butterfly
+    |
+    +--> iron condor
+    |
+    +--> other approved
+         short-vol structures
+```
+
+**Key principle:** The underlying decision and the structure decision are separate. Selecting NIFTY means only that NIFTY is the market in which the system should search for a trade. It does not predetermine whether that trade is a butterfly, condor, symmetric structure, asymmetric structure, or a specific wing width.
+
+**Structure universe should be extensible:** The core graph should depend on a broker-neutral and strategy-neutral catalogue of approved structures rather than containing hard-coded NIFTY-specific combinations. New structures should be addable to the candidate universe without rewriting the graph itself.
+
+**Possible structure dimensions, to be designed later:**
+- structure family: iron butterfly, asymmetric butterfly, iron condor, etc.,
+- short-strike placement,
+- call-side wing distance,
+- put-side wing distance,
+- symmetry/asymmetry,
+- expiry,
+- lot count,
+- target net credit,
+- maximum loss,
+- Greeks or risk shape,
+- liquidity and spread constraints,
+- expected margin/capital use,
+- expected carry/theta,
+- short-gamma exposure,
+- and any research-supported state variables.
+
+**Architectural consequence:** The output of the Structure Selector should be a canonical trade-structure specification, not broker orders. Execution remains downstream.
+
+For example, conceptually:
+
+```text
+StructureSpec
+  underlying = NIFTY
+  family = IRON_BUTTERFLY
+  expiry = ...
+  short_strike = ...
+  put_wing = ...
+  call_wing = ...
+  lots = ...
+```
+
+The broker adapter later translates the final approved structure into actual instrument identifiers and orders.
+
+**Important nuance:** The Structure Selector may eventually decide that, although NIFTY was worth examining, **no currently admissible structure is attractive enough to trade**. That case should not be forced into an execution. Its return path and recheck timing will need to be defined later.
+
+**Research connection:** The allowed structure universe and any preference rules should eventually be informed by the research laboratory, but the live graph should not invent arbitrary structures outside approved/researched capabilities.
+
+**Future design task:** Define how the Structure Selector compares candidate structures, whether it selects exactly one structure or can propose several, what evidence/score governs the choice, how expiry is chosen, and what happens when no structure passes the threshold.
+
 ## Open questions / unresolved design choices
 
 - What decisions should be fully autonomous versus require human approval?
@@ -316,6 +401,9 @@ These are separate loops and should not be conflated.
 - How should the Regime Recheck Scheduler choose the next review: fixed trading-day cadence, state-change trigger, or hybrid?
 - How should the Intraday Opportunity Recheck Scheduler decide when to rescan NIFTY, BANKNIFTY, and SENSEX after an empty selection?
 - Should NIFTY, BANKNIFTY, and SENSEX use one parameterized underlying graph template or have genuinely different graph structures?
+- What candidate structure families and parameter ranges belong in each underlying's approved Structure Selector universe?
+- Should the Structure Selector choose one structure, rank several candidates, or return an empty set when nothing is attractive?
+- How should expiry selection interact with structure-family and wing-width selection?
 - How should shared capital and risk be reserved across multiple underlying graphs launched in parallel?
 - Should the regime gate output only eligible/ineligible/uncertain, or also a confidence score and risk-intensity recommendation?
 - How should the research laboratory feed evidence into the live trading system without creating look-ahead or uncontrolled adaptation?
