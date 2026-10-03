@@ -13,7 +13,7 @@ where:
 | Coordinate | Meaning | Rule |
 |---|---|---|
 | `B` | Top-level module code | `0` master/global, `1` regime, `2` intraday selection, `3` per-underlying, `4` execution/risk, `5` broker-neutral optimal execution |
-| `I` | Instance | `0` canonical/template/shared instance; Box 3 uses `1=NIFTY`, `2=BANKNIFTY`, `3=SENSEX` for instantiated graphs |
+| `I` | Instance | `0` canonical/template/shared instance; Trade Selection uses `1=NIFTY`, `2=BANKNIFTY`, `3=SENSEX` for instantiated graphs |
 | `L` | Logical layer/depth inside the box | `0` for the box root; positive integers for deeper architectural layers |
 | `T` | Entity type code | identifies whether the entity is a node, state, scheduler, edge, worker, port, contract, adapter, resource, etc. |
 | `N` | Ordinal | stable unique ordinal within the same `[B,I,L,T]` namespace |
@@ -37,7 +37,7 @@ Type codes are reserved globally. New entity classes should receive a new code r
 
 ## Canonical module names
 
-The numeric first coordinate remains immutable, but modules are referred to by semantic names rather than labels such as "Box 1" or "Box 5".
+The numeric first coordinate remains immutable, but modules are referred to by semantic names rather than numeric module labels.
 
 ## Root IDs
 
