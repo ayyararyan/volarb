@@ -1,4 +1,4 @@
-# Autonomous Butterfly Trading Workflow — Preliminary Graph v0.2
+# Autonomous Butterfly Trading Workflow — Preliminary Graph v0.3
 
 This is the living master decision graph for the autonomous Volarb butterfly trading system.
 
@@ -28,8 +28,9 @@ flowchart TD
     I --> JX[Launch Graph X]
 
     subgraph GX["Per-Underlying Graph X"]
-        JX --> KX[Capital budget W_X received]
-        KX --> LX[Build admissible structure universe C_X]
+        JX --> KX[Underlying X committed for today]
+        KX --> KXR[Reserve capital budget W_X]
+        KXR --> LX[Build admissible structure universe C_X]
 
         LX --> MX["Candidate examples:
         symmetric iron butterfly
@@ -45,6 +46,7 @@ flowchart TD
         OX --> PX[Within-Hour Structure Recheck Scheduler]
         PX --> WX[Wait until next structure scan]
         WX --> LX
+        WX -. W_X remains reserved .-> KXR
 
         NX -->|Candidate selected| QX[Selected StructureSpec]
         QX --> RX[Next stage: trade construction / execution / management TBD]
@@ -95,6 +97,7 @@ MASTER GRAPH
 |             +-- selected set S
 |                  |
 |                  +-- Portfolio Capital Allocator
+- Daily underlying commitment revocation / expiry rules
 |                       |
 |                       +-- Graph NIFTY      if selected
 |                       +-- Graph BANKNIFTY  if selected
@@ -102,7 +105,8 @@ MASTER GRAPH
 |
 +-- PER-UNDERLYING GRAPH X
      |
-     +-- receive W_X
+     +-- commit underlying X for the day
+     +-- reserve W_X
      +-- build candidate set C_X
      +-- constrained optimizer
           |
@@ -120,12 +124,14 @@ MASTER GRAPH
 - The regime gate is multi-day, not intraday.
 - Underlying selection is distinct from structure selection.
 - Capital is allocated to an underlying graph before its structure optimizer runs.
+- Once an underlying is selected for the day, its capital W_X remains reserved until an explicit higher-level revocation or end-of-day expiry.
 - NIFTY, BANKNIFTY, and SENSEX graphs may run concurrently.
 - Shared account capital cannot be double-counted by parallel graphs.
 - A favorable regime does not force a trade.
 - A selected underlying does not force a structure.
 - An optimizer may return **NO FEASIBLE CANDIDATE**.
 - A no-candidate result does not revoke the underlying decision; Graph X remains active and rechecks within the hour.
+- Waiting for a structure does not release W_X to another graph.
 - Broker execution remains downstream of the broker-neutral decision graph.
 
 ## Scheduling hierarchy
