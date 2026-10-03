@@ -365,34 +365,22 @@ The following current `ButterflyExecutor`/preflight behavior is explicitly not p
 
 The provider should report the relevant broker facts; upstream Volarb decides what those facts mean.
 
-## Existing code gaps relative to the target provider
+## Remaining provider work
 
-The current substrate is strong but incomplete for the Broker Execution Port. The important missing/refactor items are:
+The production Broker Execution Port substrate is now implemented. Remaining work is narrower and should not change the frozen provider boundary:
 
-- wire the new generic `DhanProvider` into production callers while retiring legacy butterfly-only surfaces safely;
-- complete generic instrument normalization across all Dhan segments beyond the currently indexed exact option/security/trading-symbol paths;
-- deterministic core-to-Dhan correlation projection;
-- normalized order/trade/position/funds/quote fact envelopes with provenance/timestamps;
-- historical trade retrieval for restart/backfill recovery;
-- live market feed integration;
-- live order-update integration;
-- dimensional readiness/capability reporting;
-- provider rate-limit accounting;
-- separation of provider-local runtime state from the core Execution Ledger;
-- separation of the Broker Execution Port implementation from research/MCP butterfly façades.
+- wire the Broker Port into the future production Internal Execution implementation once that component's runtime stack is chosen;
+- complete generic instrument normalization for any Dhan segment/instrument types not yet exercised by the indexed resolver;
+- add provider-local rate-limit telemetry/accounting without turning it into execution policy;
+- optionally add Dhan 20/200-level Full Market Depth as a separately advertised segment-specific capability;
+- harden WebSocket reconnection/backoff and stream-health telemetry for production deployment;
+- retire the legacy butterfly-specific executor only after all production callers have migrated and equivalent upstream tests exist.
 
-## Implementation migration principle
+Already implemented in the canonical provider path: generic place/modify/cancel; broker-neutral request translation; deterministic correlation projection; normalized facts/errors; historical trade backfill; dimensional configuration/readiness; standard live market feed; live order updates; provider-local runtime separation; and direct non-MCP Broker Port access.
 
-Do not rewrite the working Dhan substrate wholesale.
+## Migration principle
 
-Refactor by extraction:
-
-1. preserve and test Dhan authentication, transport, master-data, API calls and validation logic;
-2. extract generic Dhan order/state primitives from the butterfly executor;
-3. move broker-neutral policy callers above the Broker Execution Port;
-4. add the missing Dhan primitives;
-5. retain the current butterfly executor only as a legacy/test harness until the broker-neutral path supersedes it;
-6. delete or retire duplicated policy only after equivalent upstream tests exist.
+Do not rewrite the working Dhan substrate wholesale. The canonical path is now extraction-based: the generic provider/runtime/connector owns Dhan mechanics, while the old butterfly executor remains compatibility code until its callers are deliberately migrated.
 
 ## Official Dhan capabilities verified for this audit
 

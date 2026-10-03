@@ -8,6 +8,20 @@
 
 # Dhan ChatGPT MCP v0.3
 
+## Production broker provider library
+
+The canonical broker implementation is now **strategy-agnostic** and independent of MCP.
+
+Programmatic callers should use:
+
+- `createDhanRuntime(...)` from `./runtime`;
+- `runtime.port.call(...)` for QUERY / COMMAND operations;
+- `runtime.port.openStream(...)` for live market and account-wide order-update streams.
+
+The Broker Port accepts broker-neutral requests and `src/dhan-translator.mjs` alone constructs Dhan-native payloads. Provider configuration/readiness, deterministic Dhan correlation projection, static-IP checks, global error normalization, normalized facts, historical trade backfill, live market feed and live order updates all sit inside the Dhan provider.
+
+The authenticated butterfly executor described later in this README is retained for backwards compatibility. It is **not** the canonical Broker Execution Port and does not define the provider boundary.
+
 MCP server with a read-only research endpoint connecting ChatGPT to DhanHQ API v2, with index-symbol resolution and option-surface analytics for NIFTY, BANKNIFTY and SENSEX.
 
 ## What changed in v0.2
