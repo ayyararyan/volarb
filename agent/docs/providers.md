@@ -93,6 +93,8 @@ Configuration is loaded once per process. Restart the command after editing it.
 | `BUTTERFLY_LLM_MAX_CONCURRENT_CALLS` / `BUTTERFLY_LLM_MAX_CALLS_PER_CAMPAIGN` | `2` / `40`; campaign ceilings may be tighter |
 | `BUTTERFLY_LLM_MAX_OUTPUT_TOKENS` / `BUTTERFLY_LLM_MAX_INPUT_BYTES` | `4096` / `65536`; output semantics below |
 | `BUTTERFLY_NUMERICAL_WORKERS` / `BUTTERFLY_PENDING_JOB_LIMIT` | `2` / `20`; cannot enlarge registered campaign limits |
+| `BUTTERFLY_RUN_CPU_SECONDS` / `BUTTERFLY_RUN_WALL_SECONDS` | `30` / `60`; finite positive values ≤3,600 / ≤7,200, frozen before critic review |
+| `BUTTERFLY_RUN_MEMORY_MB` / `BUTTERFLY_RUN_STORAGE_BYTES` | `1024` / `10000000`; bounds 128–65,536 MB / 1–1,000,000,000 bytes; campaign ceilings still apply |
 | `BUTTERFLY_LOG_LEVEL` | `INFO`; no credentials or raw provider transcript logging |
 | `BUTTERFLY_REPLAY_PATH` | Exact recorded-response evidence file, required only for replay |
 | `OPENAI_API_KEY`, `BUTTERFLY_OPENAI_MODEL` | Blank; required only when explicitly selecting `openai` |

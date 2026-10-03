@@ -22,11 +22,13 @@ from .schemas import (
     ExperimentSpec,
     HypothesisSpec,
     InferencePlan,
+    RunResources,
     ValidationReport,
     EvidenceGrade,
     CheckResult,
     digest,
 )
+from .settings import get_settings
 
 
 def merge_refs(left: dict, right: dict) -> dict:
@@ -279,6 +281,7 @@ class Laboratory:
                 }
                 self.registry.put("lineage", "dedup-" + h.id, lineage)
             self.registry.put("hypotheses", h.id, h)
+            settings = get_settings()
             draft = ExperimentSpec(
                 id="exp-" + h.id,
                 campaign_id=campaign.id,
@@ -295,6 +298,14 @@ class Laboratory:
                 fidelity=data["fidelity"],
                 inference=InferencePlan(practical_effect=h.practical_effect),
                 seed=campaign.seed,
+                # Freeze operational limits before specification/critic review.
+                # Resume/revision uses this draft, never newly loaded limits.
+                resources=RunResources(
+                    cpu_seconds=settings.run_cpu_seconds,
+                    wall_seconds=settings.run_wall_seconds,
+                    memory_mb=settings.run_memory_mb,
+                    storage_bytes=settings.run_storage_bytes,
+                ),
                 environment_hash=environment_hash(),
                 implementation_hash=evaluator_hash(),
             )

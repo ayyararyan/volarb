@@ -48,6 +48,27 @@ def test_safe_defaults_and_empty_fields(tmp_path):
     assert value.openai_max_cost_usd == 0
     assert value.numerical_workers == 2
     assert value.llm_max_calls_per_campaign == 40
+    assert value.run_cpu_seconds == 30
+    assert value.run_wall_seconds == 60
+    assert value.run_memory_mb == 1024
+    assert value.run_storage_bytes == 10_000_000
+
+
+def test_per_run_resources_load_from_file_with_shell_precedence(tmp_path):
+    value = load_settings(
+        config(
+            tmp_path,
+            "BUTTERFLY_RUN_CPU_SECONDS=90\n"
+            "BUTTERFLY_RUN_WALL_SECONDS=240\n"
+            "BUTTERFLY_RUN_MEMORY_MB=2048\n"
+            "BUTTERFLY_RUN_STORAGE_BYTES=50000000\n",
+        ),
+        environ={"BUTTERFLY_RUN_CPU_SECONDS": "120"},
+    )
+    assert value.run_cpu_seconds == 120
+    assert value.run_wall_seconds == 240
+    assert value.run_memory_mb == 2048
+    assert value.run_storage_bytes == 50_000_000
 
 
 def test_all_template_fields_load_without_a_key():
@@ -118,6 +139,18 @@ def test_missing_explicit_file_fails_without_path_disclosure(tmp_path):
         ("BUTTERFLY_LLM_PROVIDER=replay\n", "BUTTERFLY_REPLAY_PATH"),
         ("BUTTERFLY_LLM_PROVIDER=openai\n", "OPENAI_API_KEY"),
         ("BUTTERFLY_NUMERICAL_WORKERS=20\n", "numerical_workers"),
+        ("BUTTERFLY_RUN_CPU_SECONDS=0\n", "run_cpu_seconds"),
+        ("BUTTERFLY_RUN_CPU_SECONDS=3601\n", "run_cpu_seconds"),
+        ("BUTTERFLY_RUN_CPU_SECONDS=nan\n", "run_cpu_seconds"),
+        ("BUTTERFLY_RUN_CPU_SECONDS=inf\n", "run_cpu_seconds"),
+        ("BUTTERFLY_RUN_WALL_SECONDS=0\n", "run_wall_seconds"),
+        ("BUTTERFLY_RUN_WALL_SECONDS=7201\n", "run_wall_seconds"),
+        ("BUTTERFLY_RUN_WALL_SECONDS=nan\n", "run_wall_seconds"),
+        ("BUTTERFLY_RUN_WALL_SECONDS=inf\n", "run_wall_seconds"),
+        ("BUTTERFLY_RUN_MEMORY_MB=127\n", "run_memory_mb"),
+        ("BUTTERFLY_RUN_MEMORY_MB=65537\n", "run_memory_mb"),
+        ("BUTTERFLY_RUN_STORAGE_BYTES=0\n", "run_storage_bytes"),
+        ("BUTTERFLY_RUN_STORAGE_BYTES=1000000001\n", "run_storage_bytes"),
         ("BUTTERFLY_OPENAI_BASE_URL=https://synthetic:secret@example.invalid\n", "openai_base_url"),
         ("BUTTERFLY_UNKNOWN=hidden\n", "Unsupported"),
         ("OPENAI_API_KEY=first\nOPENAI_API_KEY=second\n", "Duplicate"),

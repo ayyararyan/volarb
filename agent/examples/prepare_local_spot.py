@@ -15,17 +15,27 @@ from butterfly_lab.data import qualify_dataset, sha256_file
 from butterfly_lab.local_archive import read_spot_archive
 from butterfly_lab.registry import Registry
 from butterfly_lab.schemas import DatasetManifest
+from local_session_calendar import archive_sessions
 
 
-def prepare(raw_root: Path, output: Path, runtime: Path, dataset_id: str) -> dict:
+def prepare(
+    raw_root: Path,
+    output: Path,
+    runtime: Path,
+    dataset_id: str,
+    calendar: Path | None = None,
+) -> dict:
+    days, coverage = archive_sessions(raw_root, calendar)
     output.mkdir(parents=True, exist_ok=False, mode=0o700)
-    days = sorted(p for p in raw_root.glob("*/*") if p.is_dir() and p.name[:4].isdigit())
-    frames, reports, sources, missing = [], [], [], []
-    sessions = [p.name.replace("_", "-") for p in days]
-    for day in days:
+    frames, reports, sources, missing, ledger = [], [], [], [], []
+    sessions = [session for session, _ in days]
+    for session, day in days:
         source = day / f"NIFTY50_{day.name}.parquet"
+        record = {"session": session, "source_path": str(source.resolve())}
         if not source.exists():
-            missing.append({"session": day.name.replace("_", "-"), "reason": "source_file_absent"})
+            reason = "source_file_absent" if day.is_dir() else "source_directory_absent"
+            missing.append({"session": session, "reason": reason})
+            ledger.append({**record, "status": "MISSING_DATA", "reason": reason})
             continue
         bars, report = read_spot_archive(
             source,
@@ -33,11 +43,13 @@ def prepare(raw_root: Path, output: Path, runtime: Path, dataset_id: str) -> dic
             expected_token="26000",
             expected_exchange="NSE",
             expected_symbol="Nifty 50",
-            expected_session=day.name.replace("_", "-"),
+            expected_session=session,
         )
         frames.append(bars)
         reports.append(report)
         sources.append({"source_path": str(source.resolve()), "sha256": report["source_sha256"]})
+        ledger.append({**record, "status": "QUALIFIED_SOURCE", "sha256": report["source_sha256"]})
+    (output / "expected-session-ledger.json").write_text(json.dumps(ledger, indent=2) + "\n")
     if not frames:
         raise ValueError("No readable qualified index-update files")
     bars = pd.concat(frames, ignore_index=True).sort_values("event_at")
@@ -50,6 +62,7 @@ def prepare(raw_root: Path, output: Path, runtime: Path, dataset_id: str) -> dic
         "derived_sha256": fingerprint,
         "reports": reports,
         "missing_source_sessions": missing,
+        "session_calendar": coverage,
         "originals_modified": False,
     }
     (output / "transformation.json").write_text(json.dumps(transformation, indent=2) + "\n")
@@ -75,10 +88,12 @@ def prepare(raw_root: Path, output: Path, runtime: Path, dataset_id: str) -> dic
             "capture_clock_evidence": "Explicit IST localization; all original feed/capture delays checked before transformation",
             "partition_plan": "January development/training; February exploratory later assessment. No pristine confirmation.",
             "missing_source_sessions": missing,
+            "session_calendar": coverage,
             "limitations": [
                 "Prior research exposure unknown in detail; conservatively exposed.",
                 "No options or executable-fill capability.",
-                "No independently certified full exchange calendar.",
+                coverage["coverage_basis"],
+                "Calendar provenance is caller supplied; this builder does not fetch or certify exchange notices.",
             ],
         },
         transformations=[
@@ -87,6 +102,7 @@ def prepare(raw_root: Path, output: Path, runtime: Path, dataset_id: str) -> dic
                 "source_hashes": [s["sha256"] for s in sources],
                 "output_sha256": fingerprint,
                 "description": "Actual lp updates only; no price forward/back fill; all source row references retained privately.",
+                "session_calendar": coverage,
             }
         ],
         exposure_history=[
@@ -119,5 +135,13 @@ if __name__ == "__main__":
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--runtime", type=Path, required=True)
     parser.add_argument("--dataset-id", required=True)
+    parser.add_argument(
+        "--calendar", type=Path, help="Explicit Jan-Feb2026 session JSON; never inferred"
+    )
     args = parser.parse_args()
-    print(json.dumps(prepare(args.raw_root, args.output, args.runtime, args.dataset_id), indent=2))
+    print(
+        json.dumps(
+            prepare(args.raw_root, args.output, args.runtime, args.dataset_id, args.calendar),
+            indent=2,
+        )
+    )

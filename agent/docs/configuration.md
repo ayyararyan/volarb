@@ -14,6 +14,16 @@ authentication. No API key or copied OAuth token is needed. See the concise
 migration from provider JSON, and troubleshooting. Runtime limits are ceilings;
 they cannot enlarge immutable scientific approvals.
 
+New campaign-prepared experiments copy `BUTTERFLY_RUN_CPU_SECONDS` (default 30),
+`BUTTERFLY_RUN_WALL_SECONDS` (60), `BUTTERFLY_RUN_MEMORY_MB` (1024), and
+`BUTTERFLY_RUN_STORAGE_BYTES` (10,000,000) into their immutable `RunResources`
+before specification and critic review. CPU/wall settings must be finite and
+positive, at most 3,600/7,200 seconds; memory is 128–65,536 MB and storage is
+1–1,000,000,000 bytes. Existing campaign aggregate CPU/storage and per-run memory
+ceilings remain authoritative. Settings changes do not modify prepared,
+checkpointed or running experiments; methodological revision cannot change their
+frozen resources. Configure larger limits before preparing a new experiment.
+
 ## Immutable scientific configuration
 
 All public scientific contracts are strict, immutable Pydantic schemas with extra

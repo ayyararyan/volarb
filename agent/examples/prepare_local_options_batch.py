@@ -18,24 +18,12 @@ import pandas as pd
 
 from butterfly_lab.data import qualify_dataset, sha256_file
 from butterfly_lab.schemas import DatasetManifest
+from local_session_calendar import CAPTURED_ONLY, archive_sessions
 from prepare_local_options import prepare, write_json
 
 
-def discover_sessions(archive_root: Path) -> list[tuple[str, Path]]:
-    found: list[tuple[str, Path]] = []
-    for month in ("january_2026", "february_2026"):
-        root = archive_root / month
-        if not root.is_dir():
-            raise FileNotFoundError(f"missing expected raw month: {month}")
-        for path in sorted(root.iterdir()):
-            if path.is_dir() and path.name.startswith("2026_"):
-                stamp = pd.Timestamp(path.name.replace("_", "-"))
-                if not "2026-01-01" <= stamp.strftime("%Y-%m-%d") <= "2026-02-28":
-                    raise ValueError("session outside registered Jan-Feb2026 source scope")
-                found.append((stamp.strftime("%Y-%m-%d"), path))
-    if len(found) != len({session for session, _ in found}):
-        raise ValueError("duplicate raw session directories")
-    return sorted(found)
+def discover_sessions(archive_root: Path, calendar: Path | None = None) -> list[tuple[str, Path]]:
+    return archive_sessions(archive_root, calendar, require_months=True)[0]
 
 
 def build_one(task: tuple[str, str, str, int, list[int]]) -> dict[str, Any]:
@@ -43,6 +31,14 @@ def build_one(task: tuple[str, str, str, int, list[int]]) -> dict[str, Any]:
     output = Path(destination)
     started = monotonic()
     record: dict[str, Any] = {"session": session, "width": width, "subset_path": destination}
+    if not Path(source).is_dir():
+        record.update(
+            status="MISSING_DATA",
+            error_type="FileNotFoundError",
+            reason="source_directory_absent",
+            wall_seconds=monotonic() - started,
+        )
+        return record
     try:
         result = prepare(
             Path(source),
@@ -65,6 +61,8 @@ def build_one(task: tuple[str, str, str, int, list[int]]) -> dict[str, Any]:
 def public_failure_reason(record: dict[str, Any]) -> str:
     """Keep raw source errors private; role-visible manifests need capability reasons."""
     reason = str(record.get("reason", "source qualification failed"))
+    if reason == "source_directory_absent":
+        return reason
     if record.get("error_type") == "DataQualificationError" and not any(
         root in reason for root in ("/Users/", "/Volumes/", "\\")
     ):
@@ -81,10 +79,14 @@ def aggregate(
     records: list[dict[str, Any]],
     expected: list[str],
     management: list[int],
+    coverage: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    coverage = coverage or {"coverage_basis": CAPTURED_ONLY}
     output = root / f"width-{width}"
     output.mkdir(exist_ok=False)
     ledger = sorted([r for r in records if r["width"] == width], key=lambda r: r["session"])
+    if [record["session"] for record in ledger] != expected:
+        raise ValueError("source ledger must retain every expected session exactly once")
     write_json(output / "expected-session-ledger.json", ledger)
     qualified = [r for r in ledger if r["status"] == "QUALIFIED_SUBSET"]
     failures = [r for r in ledger if r["status"] != "QUALIFIED_SUBSET"]
@@ -94,6 +96,7 @@ def aggregate(
             "status": "DATA_LIMITED",
             "expected_sessions": len(expected),
             "qualified_sessions": 0,
+            "session_calendar": coverage,
         }
         write_json(output / "qualification.json", result)
         return result
@@ -132,6 +135,7 @@ def aggregate(
     private_lineage = {
         "version": "local-option-session-batch-v1",
         "expected_sessions": expected,
+        "session_calendar": coverage,
         "subsets": transformations,
         "failed_session_records": failures,
         "original_source_hashes": source_hashes,
@@ -158,6 +162,7 @@ def aggregate(
                 "input_subset_hashes": [m["source_sha256"] for m in manifests],
                 "source_hashes": source_hashes,
                 "transform_manifest_sha256": sha256_file(output / "transformation-manifest.json"),
+                "session_calendar": coverage,
             }
         ],
     )
@@ -169,6 +174,7 @@ def aggregate(
         per_session_construction=constructions,
         source_hashes=source_hashes,
         expected_session_count=len(expected),
+        session_calendar=coverage,
         observed_session_count=len(qualified),
         missing_sessions=[
             {"session": r["session"], "reason": public_failure_reason(r)} for r in failures
@@ -184,7 +190,9 @@ def aggregate(
         ]
         + [
             "Qualified observations do not certify complete eligible opportunity coverage; missing sessions and grids remain explicit.",
-            "All39 source-session denominator is retained; numerical outcome ceiling must reflect data-limited opportunities.",
+            f"All {len(expected)} expected sessions are retained; numerical outcome ceiling must reflect data-limited opportunities.",
+            coverage["coverage_basis"],
+            "Calendar provenance is caller supplied; this builder does not fetch or certify exchange notices.",
             "Only entry10:00, listed management times and exit10:30 have dense execution windows.",
         ],
     )
@@ -199,6 +207,7 @@ def aggregate(
         "width": width,
         "status": qualification["status"],
         "expected_sessions": len(expected),
+        "session_calendar": coverage,
         "qualified_subset_sessions": len(qualified),
         "missing_sessions": [r["session"] for r in failures],
         "rows": len(combined),
@@ -218,8 +227,11 @@ def main() -> None:
     parser.add_argument("--widths", nargs="+", type=int, default=[200, 500])
     parser.add_argument("--management-minutes", nargs="+", type=int, default=[10, 15, 20])
     parser.add_argument("--workers", type=int, choices=[1, 2], default=2)
+    parser.add_argument(
+        "--calendar", type=Path, help="Explicit Jan-Feb2026 session JSON; never inferred"
+    )
     args = parser.parse_args()
-    sessions = discover_sessions(args.archive_root)
+    sessions, coverage = archive_sessions(args.archive_root, args.calendar, require_months=True)
     args.output.mkdir(parents=True, exist_ok=False)
     widths = sorted(set(args.widths))
     management = sorted(set(args.management_minutes))
@@ -231,6 +243,7 @@ def main() -> None:
             "management_minutes": management,
             "workers": args.workers,
             "expected_sessions": [session for session, _ in sessions],
+            "session_calendar": coverage,
             "tasks": len(sessions) * len(widths),
             "batch_builder_sha256": sha256_file(Path(__file__)),
             "session_builder_sha256": sha256_file(
@@ -277,7 +290,9 @@ def main() -> None:
         sorted(records, key=lambda r: (r["width"], r["session"])),
     )
     reports = [
-        aggregate(args.output, width, records, [session for session, _ in sessions], management)
+        aggregate(
+            args.output, width, records, [session for session, _ in sessions], management, coverage
+        )
         for width in widths
     ]
     write_json(
