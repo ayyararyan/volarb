@@ -137,3 +137,23 @@ The current interrupt levels are:
 Position Management supplies the economic scope and intent. Internal Execution's Interrupt Control owns preemption, cancellation/reconciliation, and broker-neutral emergency order transport.
 
 Interrupt Control does not rely on Passive Chase or any other plug-in execution algorithm for emergency flattening.
+
+## Runtime intent versioning
+
+Every instrument-level execution requirement handed to Internal Execution must carry a runtime identity separate from architectural VIDs.
+
+Conceptually:
+
+~~~text
+intent_id
+intent_version
+supersedes_version
+created_at
+status
+~~~
+
+If Position Management changes an outstanding economic requirement, it emits a new version rather than mutating history invisibly.
+
+The new version supersedes older uncompleted work.
+
+Internal Execution must reject stale broker mutations generated under a superseded intent version after reconciling authoritative fills and positions.
