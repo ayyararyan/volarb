@@ -1,6 +1,6 @@
 # Dhan Execution Provider Plug-in
 
-Status: **provider boundary active; strategy-agnostic core and global error normalization implemented; low-latency path under active refinement.**
+Status: **provider boundary active; executable Broker Execution Port connector, provider configuration/readiness, normalized facts and global error normalization implemented; live stream path pending.**
 
 Last provider-boundary audit: **2026-10-03**, against repository `main` at `942003ede3c3ddb4836824e8e1dab97c58445847` and the current official DhanHQ v2 API documentation.
 
@@ -440,3 +440,36 @@ The original provider-boundary audit required no new VID. The later broker-neutr
 - `src/dhan-client.mjs` — preserves Dhan transport context (HTTP/path/method/timeout/network/protocol) for the mapper.
 
 Canonical global contract: `docs/providers/provider-error-contract.md`.
+
+
+## Production Broker Execution Port program
+
+The actual strategy-agnostic broker program is now implemented independently of MCP and the legacy butterfly executor:
+
+- `src/dhan-runtime.mjs` builds one configured, warm provider runtime.
+- `src/dhan-config.mjs` owns Dhan configuration and configuration errors.
+- `src/dhan-readiness.mjs` verifies and caches command readiness, static IP, Dhan whitelist and account identity.
+- `src/dhan-broker-port.mjs` is the direct connector implementing the broker-neutral COMMAND/QUERY surface.
+- `src/dhan-normalizer.mjs` converts Dhan payloads into broker-neutral fact shapes.
+- `src/dhan-provider.mjs` remains the thin mechanical Dhan facade.
+- `src/dhan-client.mjs` remains the low-level HTTP transport/API client.
+
+Canonical call map: `docs/providers/dhan-internal-execution-call-map.md`.
+
+The production connector does not require MCP or an LLM. Internal Execution can import the runtime/broker-port library directly.
+
+### Configuration behavior
+
+Missing broker identity/credential source is `PROVIDER.NOT_CONFIGURED`. Mutations additionally require provider commands enabled plus configured/confirmed/observed/whitelisted static egress IP and matching Dhan account identity; otherwise they fail before order transmission as `PROVIDER.MUTATION_NOT_READY`.
+
+Read-only queries do not require static-IP readiness because Dhan documents static-IP whitelisting as required for order placement/modification/cancellation, while order/trade retrieval is available without that mutation whitelist requirement.
+
+### Implemented Internal Execution operations
+
+`GET_READINESS`, `GET_CAPABILITIES`, `RESOLVE_INSTRUMENT`, `GET_ACCOUNT_SNAPSHOT`, `GET_POSITIONS`, `GET_FUNDS`, `GET_ORDERS`, `GET_ORDER`, `GET_ORDER_BY_CORRELATION`, `GET_TRADES`, `GET_ORDER_TRADES`, `GET_HISTORICAL_TRADES`, `GET_MARGIN`, `GET_BASKET_MARGIN`, `GET_LTP`, `GET_QUOTE`, `PLACE_ORDER`, `MODIFY_ORDER`, `CANCEL_ORDER`.
+
+Historical trade backfill uses Dhan's documented `/trades/{from-date}/{to-date}/{page}` endpoint.
+
+Dhan margin APIs return facts only; the provider does not convert an indicative shortfall into an affordability decision.
+
+Live market data and live order updates are the remaining transport optimization. Dhan documents both facilities; the current Broker Port reserves STREAM but does not advertise them as wired yet.
