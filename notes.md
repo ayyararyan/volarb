@@ -1383,3 +1383,24 @@ Canonical detail: `docs/providers/dhan-execution.md`.
 **Runtime propagation:** Runtime Intent Identity, Execution Action Envelope and Execution Ledger now explicitly carry composition/mount/canonical execution context so simultaneous mounts cannot collide.
 
 **Files:** canonical component manifests/registries and composition registries live under `architecture/`; `docs/workflows/vector-id-registry.json` is retained as an assembled compatibility view. `architecture/validate.mjs` and the architecture CI workflow enforce mirror, mount, binding and namespace invariants.
+
+
+### 2026-10-03 — Dhan production Broker Execution Port implementation
+
+**Call-site derivation:** Internal Execution needs Dhan for State Integrity facts, Margin Optimization facts, Optimal Execution market/order actions, Execution Recovery reconciliation, and Interrupt Control cancel/flatten actions. Execution Slicing has no Dhan dependency.
+
+**Implemented connector:** `DhanBrokerPort.call({kind, operation, payload})` with a small broker-neutral operation vocabulary. Strategy legs are ordinary order requests; no butterfly/body/wing semantics exist in Dhan.
+
+**Configuration:** added provider-owned configuration and readiness. Missing client/credential configuration emits global `PROVIDER.NOT_CONFIGURED`. Commands additionally require provider commands enabled, configured+confirmed static egress IP, live egress match, Dhan whitelist match and Dhan account identity match; failures emit `PROVIDER.MUTATION_NOT_READY` before transmission.
+
+**Speed:** warm runtime, indexed instrument master, cached command readiness, concurrent account snapshot, no MCP/LLM/policy/ledger/sleep in the broker hot path, provider elapsed-microsecond instrumentation.
+
+**Facts:** added broker-neutral normalizers for orders, trades, positions, funds, margin, instruments, quotes/LTP and mutation acknowledgements. Dhan-specific identifiers survive only inside provider reference/provenance fields.
+
+**Recovery:** added historical trade backfill endpoint support.
+
+**Margin boundary:** an indicative margin shortfall is returned as data, not raised as an error. Only an actual broker/RMS rejection becomes a Provider Error. This preserves Margin Optimization ownership.
+
+**Streams:** STREAM remains reserved in the contract but live market/order WebSockets are not yet advertised as implemented. They are the next latency transport enhancement.
+
+**VID:** no new provider VID. Existing global `[0,0,1,7,1] Provider Error Envelope` remains the error contract.

@@ -3,7 +3,7 @@
   "component_id": "provider.dhan",
   "name": "Dhan Provider",
   "kind": "broker_provider",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "ownership": "strategy_agnostic",
   "canonical_identity": {
     "identity_kind": "component_string",
@@ -12,7 +12,12 @@
   },
   "implementation": {
     "path": "services/dhan-chatgpt-mcp/",
-    "facade": "services/dhan-chatgpt-mcp/src/dhan-provider.mjs"
+    "facade": "services/dhan-chatgpt-mcp/src/dhan-provider.mjs",
+    "runtime": "services/dhan-chatgpt-mcp/src/dhan-runtime.mjs",
+    "broker_port": "services/dhan-chatgpt-mcp/src/dhan-broker-port.mjs",
+    "config": "services/dhan-chatgpt-mcp/src/dhan-config.mjs",
+    "readiness": "services/dhan-chatgpt-mcp/src/dhan-readiness.mjs",
+    "normalizer": "services/dhan-chatgpt-mcp/src/dhan-normalizer.mjs"
   },
   "interfaces": [
     {
@@ -20,10 +25,36 @@
       "capabilities": [
         "COMMAND",
         "QUERY",
-        "STREAM"
+        "STREAM_CONTRACT_RESERVED"
       ],
       "implements": "port.internal_execution.broker",
-      "semantics": "Translate, transmit, observe, normalize and report; never own strategy or execution policy."
+      "semantics": "Translate, transmit, observe, normalize and report; never own strategy or execution policy.",
+      "operations": {
+        "query": [
+          "GET_READINESS",
+          "GET_CAPABILITIES",
+          "RESOLVE_INSTRUMENT",
+          "GET_ACCOUNT_SNAPSHOT",
+          "GET_POSITIONS",
+          "GET_FUNDS",
+          "GET_ORDERS",
+          "GET_ORDER",
+          "GET_ORDER_BY_CORRELATION",
+          "GET_TRADES",
+          "GET_ORDER_TRADES",
+          "GET_HISTORICAL_TRADES",
+          "GET_MARGIN",
+          "GET_BASKET_MARGIN",
+          "GET_LTP",
+          "GET_QUOTE"
+        ],
+        "command": [
+          "PLACE_ORDER",
+          "MODIFY_ORDER",
+          "CANCEL_ORDER"
+        ],
+        "stream": []
+      }
     }
   ],
   "error_contract": {
@@ -40,6 +71,21 @@
     "No strategy VID is assigned to Dhan.",
     "A composition mount may give Dhan a mount identity and binding identities; those are not canonical Dhan VIDs.",
     "The provider does not branch on strategy identity.",
-    "The provider does not own execution sequencing, slicing, repricing, recovery policy, or risk policy."
-  ]
+    "The provider does not own execution sequencing, slicing, repricing, recovery policy, or risk policy.",
+    "Missing provider configuration emits the global PROVIDER.NOT_CONFIGURED error.",
+    "Mutations are rejected before transmission when Dhan static-IP/account readiness is not verified.",
+    "Margin calculators return broker facts only; affordability remains caller-owned."
+  ],
+  "configuration": {
+    "query_required": [
+      "DHAN_CLIENT_ID",
+      "DHAN_ACCESS_TOKEN_OR_TOKEN_PROVIDER"
+    ],
+    "mutation_required": [
+      "DHAN_PROVIDER_COMMANDS_ENABLED",
+      "DHAN_PROVIDER_EGRESS_IP",
+      "DHAN_PROVIDER_STATIC_IP_CONFIRMED"
+    ],
+    "readiness_cache": "DHAN_PROVIDER_READINESS_TTL_MS"
+  }
 }
