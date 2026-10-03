@@ -12,7 +12,7 @@ where:
 
 | Coordinate | Meaning | Rule |
 |---|---|---|
-| `B` | Box / top-level scope | `0` master/global, `1` regime, `2` intraday selection, `3` per-underlying, `4` execution/risk, `5` broker-neutral optimal execution |
+| `B` | Top-level module code | `0` master/global, `1` regime, `2` intraday selection, `3` per-underlying, `4` execution/risk, `5` broker-neutral optimal execution |
 | `I` | Instance | `0` canonical/template/shared instance; Box 3 uses `1=NIFTY`, `2=BANKNIFTY`, `3=SENSEX` for instantiated graphs |
 | `L` | Logical layer/depth inside the box | `0` for the box root; positive integers for deeper architectural layers |
 | `T` | Entity type code | identifies whether the entity is a node, state, scheduler, edge, worker, port, contract, adapter, resource, etc. |
@@ -35,20 +35,24 @@ where:
 
 Type codes are reserved globally. New entity classes should receive a new code rather than overloading an existing one.
 
+## Canonical module names
+
+The numeric first coordinate remains immutable, but modules are referred to by semantic names rather than labels such as "Box 1" or "Box 5".
+
 ## Root IDs
 
 ```text
 Master / global architecture                     [0,0,0,0,0]
-Box 1 — Regime Decision                          [1,0,0,0,0]
-Box 2 — Intraday Selection & Capital Allocation  [2,0,0,0,0]
-Box 3 — Per-Underlying Graph template            [3,0,0,0,0]
-Box 4 — Shared Execution & Risk Management       [4,0,0,0,0]
-Box 5 — Broker-Neutral Optimal Execution        [5,0,0,0,0]
+Regime Gate                          [1,0,0,0,0]
+Underlying Allocation  [2,0,0,0,0]
+Trade Selection            [3,0,0,0,0]
+Position Management       [4,0,0,0,0]
+Internal Execution        [5,0,0,0,0]
 ```
 
-## Box 3 instance convention
+## Trade Selection instance convention
 
-Box 3 is a reusable graph template. Its local architecture is defined with `I=0`.
+Trade Selection is a reusable graph template. Its local architecture is defined with `I=0`.
 
 When instantiated:
 
@@ -72,19 +76,19 @@ The local coordinates remain identical; only the instance coordinate changes.
 ## Examples
 
 ```text
-Box 1 root                         [1,0,0,0,0]
-Box 1 regime gate                 [1,0,3,1,1]
-Box 1 regime recheck scheduler    [1,0,5,3,1]
-Box 1 favorable transition        [1,0,3,4,1]
+Regime Gate root                         [1,0,0,0,0]
+Regime Gate decision                 [1,0,3,1,1]
+Regime Gate recheck scheduler    [1,0,5,3,1]
+Regime Gate favorable transition        [1,0,3,4,1]
 
-Box 2 portfolio capital allocator [2,0,7,1,1]
-Box 2 W_X reservation             [2,0,10,9,1]
+Underlying Allocation capital allocator [2,0,7,1,1]
+Underlying Allocation W_X reservation             [2,0,10,9,1]
 
-Box 3 optimizer template          [3,0,5,1,1]
-Box 3 within-hour scheduler       [3,0,7,3,1]
+Trade Selection optimizer template          [3,0,5,1,1]
+Trade Selection within-hour scheduler       [3,0,7,3,1]
 
-Box 4 margin feasibility port     [4,0,5,6,1]
-Box 4 broker provider plug-in     [4,0,6,8,1]
+Position Management margin feasibility port     [4,0,5,6,1]
+Position Management broker provider plug-in     [4,0,6,8,1]
 ```
 
 ## Edge convention
@@ -158,9 +162,9 @@ This exception prevents broker replacement from changing the core vector archite
 
 If provider-independent logic is moved into Volarb itself, that logic must receive a VID.
 
-## Box 5 correction history
+## Internal Execution correction history
 
-`[5,0,0,0,0]` was initially reserved provisionally as an external Dhan execution layer before any internal Box 5 VIDs were allocated.
+`[5,0,0,0,0]` was initially reserved provisionally as an external Dhan execution layer before its internal architecture was clarified. It is now canonically **Internal Execution**, with layered **Margin Optimization** and **Optimal Execution** sub-boxes.
 
 It is now canonically **Broker-Neutral Optimal Execution Layer**.
 
