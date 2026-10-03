@@ -390,6 +390,103 @@ The broker adapter later translates the final approved structure into actual ins
 
 **Future design task:** Define how the Structure Selector compares candidate structures, whether it selects exactly one structure or can propose several, what evidence/score governs the choice, how expiry is chosen, and what happens when no structure passes the threshold.
 
+
+### 2026-10-03 — Capital allocation to each graph, then constrained structure optimization
+
+**Raw intent:** The candidate butterflies for an underlying form a feasible candidate set. For example, NIFTY may have many possible structures: ATM ±500, ATM ±600, asymmetric butterflies, iron condors, and so on. Once NIFTY has been selected for trading, a separate allocator first assigns a specific amount of capital to the NIFTY graph. The NIFTY graph then uses an optimizer to choose the best candidate structure that can actually be afforded within that assigned capital.
+
+**Interpretation:** There are two separate decisions here and they should not be merged:
+
+1. **Capital allocation across underlying graphs**
+   - A higher-level allocator decides how much capital is assigned to each selected underlying graph.
+   - If the selected set is `S = {NIFTY, BANKNIFTY}`, then the portfolio layer may assign budgets such as `W_NIFTY` and `W_BANKNIFTY`.
+   - These allocations are hard resource constraints for the downstream graphs.
+
+2. **Constrained optimization inside each underlying graph**
+   - The graph receives its capital allocation `W_X`.
+   - It evaluates the admissible candidate structures for underlying `X`.
+   - It chooses the best candidate among only those structures that satisfy the graph's capital/margin constraint and all other admissibility rules.
+
+Conceptually:
+
+```text
+SELECTED UNDERLYINGS
+        |
+        v
++----------------------+
+| PORTFOLIO / CAPITAL  |
+| ALLOCATOR            |
++----------------------+
+   |               |
+ W_NIFTY         W_BANK
+   |               |
+   v               v
+NIFTY GRAPH     BANK GRAPH
+   |               |
+   v               v
+candidate set    candidate set
+   |               |
+   v               v
+CONSTRAINED      CONSTRAINED
+OPTIMIZER        OPTIMIZER
+   |               |
+   v               v
+best affordable  best affordable
+structure        structure
+```
+
+**Key principle:** The optimizer does not optimize over the entire theoretical structure universe. It optimizes over the subset that is:
+- approved for that underlying,
+- currently admissible,
+- operationally executable,
+- and affordable within the capital allocation `W_X`.
+
+**Budget constraint:** If the NIFTY graph receives only INR 100,000, then any candidate requiring more deployable capital or margin than that amount is infeasible and should be excluded before final selection.
+
+**Important separation:** The portfolio allocator answers:
+
+> How much capital should graph X receive?
+
+The per-underlying optimizer answers:
+
+> Given `W_X`, which admissible structure should graph X trade?
+
+The optimizer should not silently borrow unused capital from another graph unless the portfolio allocator explicitly reallocates it.
+
+**Objective deliberately left open:** The architecture requires an optimizer, but the quantity being optimized is not yet fixed. It could later involve expected edge, expected return on deployed capital, risk-adjusted return, theta capture, short-gamma efficiency, expected utility, drawdown, execution quality, robustness, or a multi-objective score. That choice should be decided later from research evidence rather than assumed now.
+
+**Canonical formulation:**
+
+```text
+For underlying X:
+
+Candidate universe: C_X
+Capital allocation: W_X
+
+Choose c* in C_X
+
+subject to:
+    required_capital(c*) <= W_X
+    c* passes all admissibility constraints
+
+and maximizing:
+    Objective_X(c)
+```
+
+The exact definition of `Objective_X(c)` remains open.
+
+**No-feasible-candidate case:** It is possible that an underlying has been selected and receives capital, but no candidate structure fits the budget or passes the remaining constraints. The optimizer must be allowed to return **NO FEASIBLE CANDIDATE** rather than force a trade. The return/recheck path for that state remains to be specified.
+
+**Architectural consequence:** Capital allocation belongs above the per-underlying optimizer. Structure optimization must be capital-aware by construction, not corrected after a structure has already been chosen.
+
+**Future design task:** Define:
+- how total account capital is allocated across selected underlying graphs,
+- whether allocations are static, proportional, risk-budgeted, or optimization-based,
+- what exact objective the structure optimizer maximizes,
+- which constraints besides capital/margin are hard constraints,
+- whether one or multiple structures can be selected per underlying,
+- and how unused capital is returned or reallocated.
+
 ## Open questions / unresolved design choices
 
 - What decisions should be fully autonomous versus require human approval?
@@ -405,6 +502,9 @@ The broker adapter later translates the final approved structure into actual ins
 - Should the Structure Selector choose one structure, rank several candidates, or return an empty set when nothing is attractive?
 - How should expiry selection interact with structure-family and wing-width selection?
 - How should shared capital and risk be reserved across multiple underlying graphs launched in parallel?
+- How should total deployable capital be allocated into per-underlying budgets W_X before graph-level optimization?
+- What objective should each per-underlying optimizer maximize under its W_X constraint?
+- What happens to unused capital when a graph finds no feasible or attractive candidate?
 - Should the regime gate output only eligible/ineligible/uncertain, or also a confidence score and risk-intensity recommendation?
 - How should the research laboratory feed evidence into the live trading system without creating look-ahead or uncontrolled adaptation?
 - What are the hard portfolio, loss, margin, liquidity, and execution-risk limits?
