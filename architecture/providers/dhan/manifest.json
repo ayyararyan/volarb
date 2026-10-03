@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "component_id": "provider.dhan",
+  "name": "Dhan Provider",
+  "kind": "broker_provider",
+  "version": "1.0.0",
+  "ownership": "strategy_agnostic",
+  "canonical_identity": {
+    "identity_kind": "component_string",
+    "vector_id": null,
+    "rule": "Dhan has a stable component identity but no Volarb canonical VID."
+  },
+  "implementation": {
+    "path": "services/dhan-chatgpt-mcp/",
+    "facade": "services/dhan-chatgpt-mcp/src/dhan-provider.mjs"
+  },
+  "interfaces": [
+    {
+      "interface_id": "port.dhan.broker",
+      "capabilities": [
+        "COMMAND",
+        "QUERY",
+        "STREAM"
+      ],
+      "implements": "port.internal_execution.broker",
+      "semantics": "Translate, transmit, observe, normalize and report; never own strategy or execution policy."
+    }
+  ],
+  "error_contract": {
+    "global_provider_error_vid": [
+      0,
+      0,
+      1,
+      7,
+      1
+    ],
+    "rule": "Provider-native errors are normalized before crossing into a Volarb component."
+  },
+  "invariants": [
+    "No strategy VID is assigned to Dhan.",
+    "A composition mount may give Dhan a mount identity and binding identities; those are not canonical Dhan VIDs.",
+    "The provider does not branch on strategy identity.",
+    "The provider does not own execution sequencing, slicing, repricing, recovery policy, or risk policy."
+  ]
+}
