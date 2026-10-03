@@ -116,6 +116,68 @@ A richer implementation could later add regime labels, confidence, reasons, expi
 
 **Future design task:** Define how the regime box is built, calibrated, validated, refreshed intraday, and how quickly it can change state. This remains open and should be designed separately rather than prematurely embedded in another module.
 
+
+### 2026-10-03 — Capital-aware underlying selection after regime approval
+
+**Raw intent:** Once the regime gate says short-gamma butterflies are favorable, the next question is not yet strike selection or execution. The system must first decide **what underlying(s) to trade** from the allowed universe: NIFTY, BANKNIFTY, and SENSEX.
+
+**Interpretation:** This is a separate instrument-allocation box that sits immediately after the regime gate. It decides which index options are eligible for deployment given both market attractiveness and the capital/margin actually available in the account.
+
+The decision is therefore joint:
+
+1. Is the underlying itself favorable for a short-gamma butterfly right now?
+2. Can the account actually afford the required butterfly position and associated risk/margin buffer?
+3. If several underlyings are both favorable and affordable, how many of them should be deployed simultaneously?
+
+Conceptually:
+
+```text
+        REGIME GATE
+       short gamma OK?
+             |
+            YES
+             |
+             v
+   +----------------------+
+   | UNDERLYING ALLOCATOR |
+   | NIFTY / BANKNIFTY /  |
+   | SENSEX               |
+   +----------------------+
+       |       |       |
+     NIFTY   BANK    SENSEX
+       |       |       |
+       +-------+-------+
+               |
+      capital / margin
+      feasibility check
+               |
+               v
+   selected tradable subset
+```
+
+**Key principle:** Available capital is not merely a position-sizing input after instrument selection; it can determine the feasible instrument universe itself. If the account can support only one NIFTY butterfly, BANKNIFTY or SENSEX may be excluded before downstream trade construction. Conversely, if sufficient capital exists and all three markets are favorable, the allocator may permit exposure to all three.
+
+**Important distinction:** This layer should not automatically force a single winner. The output may be a subset:
+- NIFTY only,
+- BANKNIFTY only,
+- SENSEX only,
+- any pair,
+- all three,
+- or none.
+
+**Capital-awareness:** The allocator should consume live broker-neutral account state such as available funds, margin requirement, existing deployed capital, reserved risk buffer, and current portfolio exposure. The exact margin source may initially come from Dhan, but the allocator should consume normalized Volarb account/margin data rather than Dhan-specific fields.
+
+**Architectural consequence:** Instrument choice should be separated from:
+- regime eligibility,
+- specific butterfly construction,
+- strike/wing selection,
+- sizing,
+- execution.
+
+The downstream trade-construction engine should receive only the underlying(s) approved by this allocator.
+
+**Future design task:** Define how attractiveness is compared across NIFTY, BANKNIFTY and SENSEX, how margin is estimated conservatively before execution, how capital is reserved across simultaneous trades, and whether the allocator should optimize diversification, expected edge, risk-adjusted capital efficiency, or some other objective.
+
 ## Open questions / unresolved design choices
 
 - What decisions should be fully autonomous versus require human approval?
