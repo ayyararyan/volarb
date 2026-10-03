@@ -240,3 +240,84 @@ The sequence is dynamically recomputed after fills, partial fills, rejections, c
 Structural hedge relationships are broker-neutral. Actual rupee margin impact is not. The Broker Execution Port must therefore expose authoritative current account capacity and, where supported, hypothetical margin impact for candidate intermediate states.
 
 This fixes one component of the eventual execution objective: **capital- and margin-efficient sequencing subject to hedge-preservation constraints**. Price improvement, urgency, fill probability, adverse selection and market impact remain separate unresolved objectives.
+
+
+## Box 5 mission: registry-to-broker convergence
+
+The fundamental job of Box 5 is to take outstanding instrument execution intentions from the active registry and drive the broker account toward the required position state.
+
+Conceptually:
+
+```text
+Active Instrument Execution Registry
+        |
+        | outstanding desired position changes
+        v
+Broker-Neutral Optimal Execution Engine
+        |
+        | place / modify / cancel / wait / re-evaluate
+        v
+Broker provider
+        |
+        v
+Authoritative broker orders / fills / positions
+        |
+        +------------------------------+
+                                       |
+                                compare against
+                                registry intent
+                                       |
+                          +------------+------------+
+                          |                         |
+                     not satisfied              satisfied
+                          |                         |
+                          v                         v
+                      continue                 retire/complete
+                    optimizing                 registry item
+```
+
+The "drain" is therefore not an order endpoint. It is the **authoritative broker position effect** produced by successful execution.
+
+### Completion invariant
+
+An execution-registry item is complete only when authoritative broker facts show that its required economic position change has been realized.
+
+Examples:
+
+- a BUY intent is not complete merely because the broker accepted the order; the required filled quantity must be reflected in authoritative fill/position state;
+- a SELL/short intent is not complete merely because an order ID exists; the required executed quantity must be reflected in the resulting position state;
+- an exit/reduction intent is complete when the broker position has been reduced to the required target, which may mean partial reduction or zero position.
+
+This means Box 5 optimizes toward **position-state convergence**, not toward API acknowledgement.
+
+### Registry semantics
+
+The active registry should therefore represent **outstanding required position deltas**, not merely a list of order tickets.
+
+Orders are implementation attempts used by Box 5 to satisfy registry requirements. They may be placed, modified, cancelled, partially filled or replaced without changing the underlying economic requirement unless Box 4 changes that requirement.
+
+The registry item remains active until:
+- its required position delta is satisfied;
+- Box 4 explicitly changes/revokes it; or
+- execution enters a fail-safe/error state that requires escalation.
+
+### Practical consequence
+
+Box 5 may create several broker orders over time for one registry item, but those broker orders are subordinate to the registry intent.
+
+The invariant is:
+
+```text
+registry requirement
+    != broker order
+
+broker orders
+    = transient execution actions used to realize
+      the registry requirement
+
+completion
+    = authoritative broker position state matches
+      the required economic effect
+```
+
+No new VID is allocated by this clarification. It defines the mission and completion semantics of the existing registry, optimal-execution engine and live broker account state.

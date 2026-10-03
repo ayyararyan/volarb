@@ -1133,3 +1133,18 @@ The internals of the optimal-execution algorithm remain deliberately unresolved.
 **Dynamic rule:** Recompute after authoritative execution/account changes. Do not treat an expected fill, premium credit or margin release as available before the broker confirms it.
 
 **Broker-neutrality:** Box 5 infers structural hedge relationships. The active broker supplies authoritative current and hypothetical margin/account facts. The optimizer therefore remains reusable across brokers.
+
+
+### 2026-10-03 — Box 5 mission clarified as registry-to-position convergence
+
+**Raw intent:** Box 5 takes whatever exists in the execution registry and must optimally push it through execution until it actually appears in the broker account/positions. The registry is the source; the broker position state is the drain.
+
+**Architecture interpretation:** Box 5 is a convergence engine. It does not optimize toward "order submitted" or "order accepted." It optimizes until authoritative broker fills/positions demonstrate that the required economic position change has actually occurred.
+
+**Important semantic distinction:** Registry items are outstanding required position deltas, not broker order tickets. One registry item may require multiple place/modify/cancel/replace attempts over time. Those broker orders are transient mechanisms for satisfying the persistent economic execution requirement.
+
+**Completion invariant:** A registry item remains active until its required position delta is satisfied by authoritative broker state, Box 4 changes/revokes the requirement, or execution enters a fail-safe/error state requiring escalation.
+
+**Exit nuance:** "Shown in positions" means the intended final position effect. For an entry this may mean creating/increasing a position; for an exit it may mean reducing or eliminating an existing position.
+
+**VID decision:** No new VID is required. This clarifies the purpose and terminal condition of the existing Box 5 registry/engine/account-state objects.
