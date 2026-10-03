@@ -3117,7 +3117,9 @@
         4,
         7,
         2
-      ]
+      ],
+      "status": "retired",
+      "retired_reason": "Superseded by an explicit plug-in implementation between the Execution Algorithm Port and Temporal Execution Decision."
     },
     {
       "vid": [
@@ -3336,6 +3338,133 @@
         2,
         1,
         3
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        5,
+        5,
+        1
+      ],
+      "name": "Passive Chase",
+      "kind": "worker",
+      "parent_vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ],
+      "status": "default",
+      "note": "Current default Optimal Execution plug-in. Posts passively at the same-side best quote, waits T, refreshes/reprices for up to N passive cycles, then cancels/reconciles and markets the confirmed remainder."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        5,
+        7,
+        1
+      ],
+      "name": "Passive Chase Parameters",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        5,
+        5,
+        1
+      ],
+      "note": "T = passive waiting interval between evaluations; N = maximum passive refresh cycles after initial placement. Values intentionally TBD."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        5,
+        2,
+        1
+      ],
+      "name": "Passive Chase State",
+      "kind": "state",
+      "parent_vid": [
+        5,
+        0,
+        5,
+        5,
+        1
+      ],
+      "note": "Working order reference, confirmed remaining quantity, passive-cycle count, last passive price and last evaluation time."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        5,
+        3,
+        1
+      ],
+      "name": "Passive Reprice Timer",
+      "kind": "scheduler",
+      "parent_vid": [
+        5,
+        0,
+        5,
+        5,
+        1
+      ],
+      "note": "Waits parameter T between passive execution evaluations. Exact T is configuration, not architecture."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        4,
+        5
+      ],
+      "name": "Execution Algorithm Port -> Passive Chase",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        4,
+        6,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        5,
+        5,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        5,
+        4,
+        1
+      ],
+      "name": "Passive Chase -> Temporal Execution Decision",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        5,
+        5,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        4,
+        7,
+        2
       ]
     }
   ]
