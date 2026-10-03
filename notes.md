@@ -222,6 +222,89 @@ The downstream trade-construction engine should receive only the underlying(s) a
 
 **Future design task:** Define how attractiveness is compared across NIFTY, BANKNIFTY and SENSEX, how margin is estimated conservatively before execution, how capital is reserved across simultaneous trades, and whether the allocator should optimize diversification, expected edge, risk-adjusted capital efficiency, or some other objective.
 
+
+### 2026-10-03 — Fan-out into per-underlying graphs and intraday opportunity recheck
+
+**Raw intent:** After the regime is favorable and the underlying allocator selects a tradable set, each selected underlying should receive its own graph. If NIFTY is selected, open the NIFTY graph. If NIFTY and SENSEX are selected, open both graphs. If all three are selected, all three graphs run. If none is selected despite the favorable broader regime, the system should not fall back into the multi-day unfavorable-regime loop; instead it should decide when to look again intraday for a tradable underlying.
+
+**Interpretation:** The architecture now separates three different time scales and decisions:
+
+1. **Multi-day regime state:** Is this generally a period in which short-gamma butterflies should be considered?
+2. **Intraday underlying opportunity selection:** Given a favorable regime, which of NIFTY, BANKNIFTY, and SENSEX are worth trading now?
+3. **Per-underlying trade graph:** Once an underlying is selected, run an independent graph for that market's actual butterfly decision and lifecycle.
+
+Conceptually:
+
+```text
+                        REGIME GATE
+                       favorable?
+                      /          \
+                    NO            YES
+                    |              |
+          multi-day regime         v
+          recheck scheduler   UNDERLYING ALLOCATOR
+                                   |
+                    +--------------+--------------+
+                    |              |              |
+                  NIFTY        BANKNIFTY        SENSEX
+                 selected?      selected?       selected?
+                    |              |              |
+                   YES            YES            YES
+                    |              |              |
+                    v              v              v
+              NIFTY GRAPH     BANKNIFTY GRAPH  SENSEX GRAPH
+                    \              |              /
+                     \             |             /
+                      +---- portfolio coordination ----+
+```
+
+The fan-out is set-valued rather than single-choice. The allocator can launch one, two, or three underlying graphs depending on current opportunity and capital feasibility.
+
+**No-selection branch under a favorable regime:** A favorable multi-day regime does not imply that there must be a trade at every moment. If the allocator returns an empty set because none of the three indices currently offers an acceptable butterfly opportunity, the bot should enter a separate **INTRADAY OPPORTUNITY WAIT** state.
+
+That state feeds a second scheduler:
+
+```text
+REGIME = FAVORABLE
+        |
+        v
+UNDERLYING ALLOCATOR
+        |
+   selected set
+   /          \
+non-empty      empty
+   |             |
+   v             v
+spawn graphs   INTRADAY OPPORTUNITY
+               RECHECK SCHEDULER
+                      |
+             when should we scan
+             NIFTY/BANK/SENSEX again?
+                      |
+                      v
+             UNDERLYING ALLOCATOR
+```
+
+**Important distinction between the two schedulers:**
+- **Regime Recheck Scheduler:** used when the broader multi-day environment is unfavorable; cadence is measured in persistent market-state change across days.
+- **Intraday Opportunity Recheck Scheduler:** used when the broader regime is favorable but no specific underlying is currently worth trading; cadence is intraday and concerns opportunity availability, not regime classification.
+
+These are separate loops and should not be conflated.
+
+**Per-underlying graph principle:** Once selected, each underlying becomes its own stateful graph with its own trade construction, monitoring, decisions, and eventual terminal/re-entry behavior. NIFTY, BANKNIFTY, and SENSEX should therefore be able to progress independently after fan-out.
+
+**Portfolio coordination consequence:** Although the underlying graphs are logically independent, they share account capital and risk. Capital/margin committed to one selected graph must be reserved before or during graph launch so two parallel graphs cannot both assume the same free capital is available. The exact portfolio-coordination mechanism remains to be designed later.
+
+**Return behavior:** If no underlying is selected, the loop returns to the underlying-selection decision at the next intraday recheck. The broader regime need not be recomputed on every opportunity scan unless its own validity/recheck condition has been reached or a separate event invalidates it.
+
+**Future design task:** Define:
+- what starts and terminates each underlying graph,
+- whether the graphs are identical parameterized templates or separate implementations,
+- what criteria cause an underlying to become temporarily unattractive,
+- how the intraday recheck time is chosen,
+- how portfolio capital/risk is reserved across simultaneously launched graphs,
+- and when a material intraday event should force an early re-evaluation of the broader regime.
+
 ## Open questions / unresolved design choices
 
 - What decisions should be fully autonomous versus require human approval?
@@ -231,6 +314,9 @@ The downstream trade-construction engine should receive only the underlying(s) a
 - Should regime state be market-wide, underlying-specific, expiry-specific, or a hierarchy of all three?
 - How frequently should the multi-day regime state be recomputed, and what evidence is required before switching states?
 - How should the Regime Recheck Scheduler choose the next review: fixed trading-day cadence, state-change trigger, or hybrid?
+- How should the Intraday Opportunity Recheck Scheduler decide when to rescan NIFTY, BANKNIFTY, and SENSEX after an empty selection?
+- Should NIFTY, BANKNIFTY, and SENSEX use one parameterized underlying graph template or have genuinely different graph structures?
+- How should shared capital and risk be reserved across multiple underlying graphs launched in parallel?
 - Should the regime gate output only eligible/ineligible/uncertain, or also a confidence score and risk-intensity recommendation?
 - How should the research laboratory feed evidence into the live trading system without creating look-ahead or uncontrolled adaptation?
 - What are the hard portfolio, loss, margin, liquidity, and execution-risk limits?
