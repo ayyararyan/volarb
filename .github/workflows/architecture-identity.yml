@@ -1,0 +1,29 @@
+name: Architecture identity checks
+
+on:
+  pull_request:
+    paths:
+      - 'architecture/**'
+      - 'docs/workflows/vector-id-registry.json'
+      - 'docs/architecture/compositional-identity.md'
+      - '.github/workflows/architecture-identity.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'architecture/**'
+      - 'docs/workflows/vector-id-registry.json'
+      - 'docs/architecture/compositional-identity.md'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26'
+      - run: node --test architecture/lib/identity.test.mjs
+      - run: node architecture/validate.mjs
