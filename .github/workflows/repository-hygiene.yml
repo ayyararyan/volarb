@@ -11,6 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Keep HEAD's parent: a shallow root makes git show check old records too.
+          fetch-depth: 2
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12.13'
