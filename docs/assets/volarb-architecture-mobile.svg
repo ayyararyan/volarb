@@ -1,47 +1,67 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="440" height="764" viewBox="0 0 440 764" role="img" aria-labelledby="title description">
-<title id="title">Volarb: one engine, injected dependencies</title>
-<desc id="description">Architecture design target. Strategy enters through an optional strategy execution adapter. Execution Engine contracts exist; its complete pipeline is in development. The Broker Execution Port connects simulated and Dhan providers. The deterministic testbed injects runtime dependencies.</desc>
-<!-- Editable source artwork. Fixed high-contrast palette works on light and dark GitHub pages. -->
-<style>
-  text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }
-  .label { fill: #f0f5fb; font-size: 25px; font-weight: 600; }
-  .body { fill: #becbdb; font-size: 18px; }
-  .eyebrow { fill: #a9bed3; font-size: 16px; font-weight: 600; letter-spacing: 1.5px; }
-  .edge { fill: none; stroke: #809bb7; stroke-width: 2; marker-end: url(#arrow); }
-  .inject { fill: none; stroke: #67dcc6; stroke-width: 2; marker-end: url(#teal-arrow); }
-</style>
-<defs>
-  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#809bb7"/></marker>
-  <marker id="teal-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#67dcc6"/></marker>
-</defs>
-<rect width="440" height="764" rx="16" fill="#0c1829"/>
-<text x="24" y="34" class="eyebrow" text-anchor="start" style="font-size: 15px">ARCHITECTURE / DESIGN TARGET</text>
-<path class="edge" d="M220 122 V146"/>
-<path class="edge" d="M220 218 V246"/>
-<path class="edge" d="M220 346 V382"/>
-<path class="edge" d="M220 448 V474 H116 V494"/>
-<path class="edge" d="M220 448 V474 H324 V494"/>
-<path class="inject" d="M28 670 H12 V296 H28"/>
-<rect x="28" y="58" width="384" height="64" rx="12" fill="#15263b" stroke="#3a526c" stroke-width="1.5"/>
-<text x="220" y="99" class="label" text-anchor="middle">Strategy</text>
-<rect x="28" y="146" width="384" height="72" rx="12" fill="#15263b" stroke="#3a526c" stroke-width="1.5"/>
-<text x="220" y="177" class="label" text-anchor="middle" style="font-size: 23px">Strategy Execution Adapter</text>
-<text x="220" y="203" class="body" text-anchor="middle" style="font-size: 20px">optional</text>
-<rect x="28" y="246" width="384" height="100" rx="12" fill="#183450" stroke="#75b6ee" stroke-width="1.5" stroke-dasharray="7 5"/>
-<text x="220" y="280" class="label" text-anchor="middle">Execution Engine</text>
-<text x="220" y="307" class="body" text-anchor="middle" style="font-size: 20px">Contracts implemented</text>
-<text x="220" y="333" class="body" text-anchor="middle" style="font-size: 20px">Pipeline in development</text>
-<rect x="28" y="382" width="384" height="66" rx="12" fill="#15263b" stroke="#3a526c" stroke-width="1.5"/>
-<text x="220" y="423" class="label" text-anchor="middle" style="font-size: 25px">Broker Execution Port</text>
-<rect x="28" y="494" width="176" height="84" rx="12" fill="#15263b" stroke="#3a526c" stroke-width="1.5"/>
-<text x="116" y="529" class="label" text-anchor="middle" style="font-size: 24px">Simulated</text>
-<text x="116" y="557" class="label" text-anchor="middle" style="font-size: 24px">broker</text>
-<rect x="236" y="494" width="176" height="84" rx="12" fill="#15263b" stroke="#3a526c" stroke-width="1.5"/>
-<text x="324" y="529" class="label" text-anchor="middle" style="font-size: 24px">Dhan</text>
-<text x="324" y="557" class="label" text-anchor="middle" style="font-size: 24px">Provider</text>
-<text x="220" y="609" class="body" text-anchor="middle" style="font-size: 19px">Future providers extend the same port</text>
-<rect x="28" y="632" width="384" height="108" rx="12" fill="#102c31" stroke="#378d83" stroke-width="1.5"/>
-<text x="220" y="664" class="label" text-anchor="middle" style="font-size: 25px">Execution Testbed</text>
-<text x="220" y="692" class="body" text-anchor="middle" style="font-size: 20px">Virtual time · seeded scenarios</text>
-<text x="220" y="718" class="body" text-anchor="middle" style="font-size: 20px">Fault injection · invariant checks</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="945" viewBox="0 0 440 945" role="img" aria-labelledby="title description">
+  <title id="title">VolArb architecture: one engine, clear boundaries</title>
+  <desc id="description">Mobile architecture diagram. VolArb or another strategy connects through an optional Strategy Execution Adapter to the reusable Execution Engine. The Execution Testbed injects deterministic runtime dependencies into the same core. The Broker Execution Port is implemented by the Dhan Provider and simulated broker and can support future providers. Contracts, Dhan and test infrastructure are implemented; the complete generic engine pipeline is in development.</desc>
+  <!-- Independently composed mobile layout; all main labels remain at least 24 px. -->
+  <defs>
+    <marker id="flow-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1 7 4 1 7" fill="none" stroke="#66748b" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="test-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1 7 4 1 7" fill="none" stroke="#087f8c" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  </defs>
+  <style>
+    text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }
+    .ink { fill: #172544; }
+    .muted { fill: #536278; }
+    .label { font-size: 24px; font-weight: 650; }
+    .detail { font-size: 18px; }
+    .flow { fill: none; stroke: #66748b; stroke-width: 1.7; marker-end: url(#flow-arrow); }
+    .test-flow { fill: none; stroke: #087f8c; stroke-width: 1.8; marker-end: url(#test-arrow); }
+  </style>
+  <rect x=".5" y=".5" width="439" height="944" rx="12" fill="#fbfcfe" stroke="#dce3ec"/>
+  <text x="24" y="37" class="muted" font-size="13" font-weight="650" letter-spacing="1.5">VOLARB / EXECUTION ARCHITECTURE</text>
+  <text x="24" y="82" class="ink" font-size="34" font-weight="650" letter-spacing="-.6">One engine.</text>
+  <text x="24" y="122" class="ink" font-size="34" font-weight="650" letter-spacing="-.6">Clear boundaries.</text>
+  <path d="M24 148 H416" fill="none" stroke="#dce3ec"/>
+
+  <!-- Two local input lanes avoid a perimeter return path on small screens. -->
+  <path class="flow" d="M116 265 V291"/>
+  <path class="flow" d="M116 406 V455"/>
+  <path class="test-flow" d="M332 406 V455"/>
+  <path class="flow" d="M220 573 V614"/>
+  <path d="M220 674 V704 H114 M220 704 H328" fill="none" stroke="#66748b" stroke-width="1.7"/>
+  <path class="flow" d="M114 704 V733"/>
+  <path class="flow" d="M328 704 V733"/>
+
+  <text x="24" y="195" class="label ink">VolArb Strategy</text>
+  <text x="24" y="224" class="detail muted">or another strategy</text>
+  <text x="24" y="319" class="label ink">Strategy</text>
+  <text x="24" y="350" class="label ink">Execution Adapter</text>
+  <text x="24" y="383" class="detail muted">optional</text>
+
+  <rect x="250" y="173" width="166" height="233" rx="6" fill="#e8f4f3"/>
+  <path d="M250 197 V382" fill="none" stroke="#087f8c" stroke-width="3"/>
+  <text x="274" y="220" fill="#11646e" font-size="24" font-weight="650">Execution</text>
+  <text x="274" y="251" fill="#11646e" font-size="24" font-weight="650">Testbed</text>
+  <text x="274" y="287" fill="#2b6470" font-size="18">Virtual time</text>
+  <text x="274" y="317" fill="#2b6470" font-size="18">Seeded runs</text>
+  <text x="274" y="347" fill="#2b6470" font-size="18">Fault injection</text>
+  <text x="274" y="377" fill="#2b6470" font-size="18">Invariants</text>
+  <rect x="69" y="420" width="94" height="21" fill="#fbfcfe"/>
+  <text x="116" y="436" class="detail muted" text-anchor="middle">Intent</text>
+  <rect x="269" y="420" width="126" height="21" fill="#fbfcfe"/>
+  <text x="332" y="436" fill="#11646e" font-size="18" text-anchor="middle">Runtime ports</text>
+
+  <rect x="24" y="455" width="392" height="118" rx="6" fill="#172544"/>
+  <text x="48" y="504" fill="#ffffff" font-size="29" font-weight="650" letter-spacing="-.3">Execution Engine</text>
+  <text x="48" y="541" fill="#d0dced" font-size="21">Strategy-agnostic core</text>
+  <rect x="24" y="614" width="392" height="60" fill="#e9eef6"/>
+  <text x="220" y="653" class="ink" font-size="25" font-weight="600" text-anchor="middle">Broker Execution Port</text>
+
+  <text x="114" y="765" class="label ink" text-anchor="middle">Dhan</text>
+  <text x="114" y="795" class="label ink" text-anchor="middle">Provider</text>
+  <text x="328" y="765" class="label ink" text-anchor="middle">Simulated</text>
+  <text x="328" y="795" class="label ink" text-anchor="middle">broker</text>
+  <text x="220" y="832" class="detail muted" text-anchor="middle">Future providers extend the same port</text>
+
+  <path d="M24 856 H416" fill="none" stroke="#dce3ec"/>
+  <text x="24" y="885" class="muted" font-size="17">Contracts, Dhan + test infrastructure implemented.</text>
+  <text x="24" y="913" class="muted" font-size="17">Complete engine pipeline in development.</text>
 </svg>

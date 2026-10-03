@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="180" viewBox="0 0 720 180" role="img" aria-labelledby="title desc">
+  <title id="title">VolArb</title>
+  <desc id="desc">VolArb wordmark with an original cobalt and teal VA monogram. Two parallel diagonals connect the visual rhythm of volatility and arbitrage.</desc>
+  <!-- Original editable vector geometry. No embedded bitmap, remote font, or external dependency. -->
+  <g transform="translate(10 25) scale(.8)"><path d="M0 0 H42 L88 113 L134 0 H176 L109 156 H67 Z" fill="#4059d7"/><path d="M126 156 L193 0 H235 L302 156 H260 L246 122 H182 L168 156 Z M196 88 H232 L214 44 Z" fill="#008f88" fill-rule="evenodd"/></g>
+  <text x="284" y="126" fill="#172544" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="112" font-weight="650" letter-spacing="-5">VolArb</text>
+</svg>

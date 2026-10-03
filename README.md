@@ -1,8 +1,11 @@
-# Volarb
+<h1 id="volarb">
+  <a href="docs/assets/volarb-logo-light.svg#gh-light-mode-only"><img src="docs/assets/volarb-logo-light.svg" width="360" alt="VolArb"></a>
+  <a href="docs/assets/volarb-logo-dark.svg#gh-dark-mode-only"><img src="docs/assets/volarb-logo-dark.svg" width="360" alt="VolArb"></a>
+</h1>
 
 **Quantitative research. Broker-neutral execution. Deterministic testing.**
 
-Volarb brings Indian index-option research and strategy workflows together with reusable execution infrastructure. It separates the decision to trade from execution policy and broker mechanics, so research, simulation and provider integration can evolve independently.
+VolArb brings Indian index-option research and strategy workflows together with reusable execution infrastructure. It separates the decision to trade from execution policy and broker mechanics, so research, simulation and provider integration can evolve independently.
 
 [![Architecture validation](https://github.com/ayyararyan/volarb/actions/workflows/architecture-identity.yml/badge.svg?branch=main)](https://github.com/ayyararyan/volarb/actions/workflows/architecture-identity.yml)
 [![Execution Testbed](https://github.com/ayyararyan/volarb/actions/workflows/execution-testbed.yml/badge.svg?branch=main)](https://github.com/ayyararyan/volarb/actions/workflows/execution-testbed.yml)
@@ -12,7 +15,7 @@ Volarb brings Indian index-option research and strategy workflows together with 
 
 <picture>
   <source media="(max-width: 768px)" srcset="docs/assets/volarb-architecture-mobile.svg">
-  <img src="docs/assets/volarb-architecture.svg" width="960" alt="Volarb architecture: strategy through an optional adapter into the Execution Engine, then the Broker Execution Port with simulated and Dhan providers. The deterministic testbed injects runtime dependencies. Contracts are implemented; the complete engine pipeline is in development.">
+  <img src="docs/assets/volarb-architecture.svg" width="1000" alt="VolArb architecture: strategy through an optional adapter into the Execution Engine, then the Broker Execution Port with simulated and Dhan providers. The deterministic testbed injects runtime dependencies. Contracts are implemented; the complete engine pipeline is in development.">
 </picture>
 
 **Current scope:** broker contracts, the Dhan Provider, deterministic test infrastructure and research tooling are implemented. The complete generic Execution Engine is **under development**, not a deployed autonomous trading system.
@@ -31,7 +34,7 @@ The [SHADOW day-workflow prototype](services/day-workflow/README.md) and optiona
 
 The canonical boundary is **Strategy → optional Strategy Execution Adapter → Execution Engine → Broker Execution Port → Broker Provider**.
 
-The Execution Engine is reusable and strategy-agnostic: **`component.execution_engine`**, with immutable VID namespace **`[5,0,...]`**. Volarb's position/strategy layer owns instrument intent, butterfly semantics and risk decisions. Dhan translates, transmits and normalizes broker facts; it does not choose execution policy.
+The Execution Engine is reusable and strategy-agnostic: **`component.execution_engine`**, with immutable VID namespace **`[5,0,...]`**. VolArb's position/strategy layer owns instrument intent, butterfly semantics and risk decisions. Dhan translates, transmits and normalizes broker facts; it does not choose execution policy.
 
 The **designed** execution path is:
 
@@ -68,7 +71,7 @@ Choose a path by the work you want to do. The [full repository map](docs/REPOSIT
 | Generic execution | [execution-engine/](execution-engine/README.md) — implemented contracts and the runtime boundary |
 | Execution testing | [execution-testkit/](execution-testkit/README.md) and [environments/execution/](environments/execution/README.md) |
 | Broker integration | [services/dhan-chatgpt-mcp/](services/dhan-chatgpt-mcp/README.md) — Dhan Provider and service interfaces |
-| Volarb strategy | [Strategy composition/design](docs/autonomous-butterfly-workflow.md); [current operating algorithm](docs/DAILY_OPERATING_ALGORITHM.md) |
+| VolArb strategy | [Strategy composition/design](docs/autonomous-butterfly-workflow.md); [current operating algorithm](docs/DAILY_OPERATING_ALGORITHM.md) |
 | Research and decision modules | [skill/](skill/README.md) — butterfly outlook, realized volatility and market news |
 | Offline experiments | [agent/](agent/README.md) — Butterfly Research Laboratory |
 | Source/workspace packaging | [agent-kit/](agent-kit/README.md) — distinct from the research laboratory |
