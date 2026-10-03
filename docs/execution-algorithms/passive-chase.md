@@ -4,7 +4,17 @@
 
 Passive Chase is a deliberately simple broker-neutral execution plug-in behind `[5,0,4,6,1] Execution Algorithm Port`.
 
-It consumes only the state exposed by Optimal Execution. It does not reason about strategy structure, hedge relationships, margin sequencing, or why an instrument is being traded. Passive Chase does not reorder work released by Margin Optimization; it executes the currently released slice.
+It consumes only the state exposed by Optimal Execution. It does not reason about strategy structure, hedge relationships, margin sequencing, or why an instrument is being traded. Passive Chase receives only the current sequence step released by Sequence Enforcer. It cannot reorder, skip, or select a different step.
+
+## Sequence constraint
+
+Passive Chase is subordinate to the mandatory Execution Sequence Plan produced by Margin Optimization.
+
+It can operate only on the current sequence step released by Sequence Enforcer.
+
+No valid sequence step means no Passive Chase action.
+
+This rule is algorithm-independent: any future Optimal Execution plug-in must obey the same sequence constraint.
 
 ## Inputs
 
