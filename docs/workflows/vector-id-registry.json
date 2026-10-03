@@ -2540,8 +2540,8 @@
       ],
       "name": "External Dhan Execution Layer",
       "kind": "root",
-      "status": "placeholder",
-      "note": "Reserved for next bottom-up design session; internals intentionally undefined."
+      "status": "active_design",
+      "note": "Discovery pass complete: existing services/dhan-chatgpt-mcp substrate identified. Internal Box 5 graph intentionally remains unallocated until specific objects are decided."
     }
   ]
 }

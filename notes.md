@@ -982,3 +982,53 @@ The internal graph for [5,0,0,0,0] is intentionally undefined at this point and 
 - Should research data and decision-time historical data share one canonical market-data schema while retaining separate provider capabilities?
 - Which broker-neutral identifiers should Volarb own for underlyings, expiries, strikes, option types and contracts, and where should broker token mapping live?
 - How should the system express provider capability differences without contaminating strategy logic?
+
+
+### 2026-10-03 — Box 5 discovery baseline: existing Dhan execution substrate
+
+**Raw intent:** Begin the bottom-up design of `[5,0,0,0,0] External Dhan Execution Layer` without inventing its final internal graph. Inspect the live `main` branch and Dhan's actual broker capabilities first. Preserve any useful existing implementation rather than rebuilding it.
+
+**Architecture interpretation:** Box 5 remains a thin Dhan-specific provider/execution boundary. Box 4 owns strategy and risk intelligence. This discovery pass records facts about the current implementation and broker surface; it does **not** yet assign internal Box 5 nodes or settle unresolved design choices.
+
+**Existing implementation discovered:** `services/dhan-chatgpt-mcp/` is already a substantial Dhan integration and should be treated as reusable substrate.
+
+Current capabilities include:
+- Dhan API v2 client with profile, funds, positions, holdings, orders, trades, order-by-ID, order-by-correlation-ID, order trades, quotes, LTP, option expiries, option chain, single-order margin, multi-order margin, order placement, cancellation and static-IP lookup.
+- Detailed Dhan instrument-master ingestion with index alias resolution, Security ID lookup, lot-size/freeze/tick metadata and a six-hour cache.
+- Read-only MCP tools for account state, market/option data, surface analytics and sequence-aware butterfly margin preflight.
+- A separate authenticated execution MCP endpoint, disabled by default.
+- Static-egress readiness checking against Dhan's whitelist plus Dhan account-identity verification.
+- OAuth/PKCE protection for the execution endpoint plus a private owner token and process lock.
+- A durable, fsynced execution state store with write-ahead placement intent.
+- Correlation IDs for recovery lookup and explicit protection against blind re-POST after an ambiguous placement.
+- Fill verification against Dhan trades and positions; order acceptance alone is never treated as a fill.
+- Partial-fill, rejection, cancellation-race and restart/recovery handling.
+- Quote-age, spread, displayed-depth, price-band, tick-size, lot-size and freeze-quantity validation.
+- Per-leg and sequence-bound margin checks.
+- An existing four-leg butterfly ENTRY/EXIT executor using LIMIT / INTRADAY / DAY orders.
+
+**Important limitation of the current executor:** `ButterflyExecutor` is not yet the final Box 5 abstraction. It embeds butterfly-specific sequencing, entry/exit semantics, timing rules, price-repricing policy, hedge-coverage rules and other execution-policy intelligence. Under the new architecture, we must decide which of those controls belong in Box 4 versus which are purely mechanical broker safeguards that legitimately remain in Box 5.
+
+**Observed gaps relative to the eventual external Dhan layer:**
+- no generic broker-neutral Box-4 <-> Box-5 command/event contract;
+- no general-purpose Dhan executor for arbitrary canonical broker commands;
+- no order-modification wrapper in the current `DhanClient`, although Dhan supports modification;
+- no live Dhan order-update WebSocket or postback consumer in the current service; execution currently reconciles primarily through REST polling;
+- no explicit general rate-limit governor/backoff subsystem;
+- no normalized provider-wide error taxonomy yet;
+- current authentication/browser recovery contains office-Mac-specific behavior and may stop for human OTP/CAPTCHA/manual verification;
+- restart reconciliation intentionally fails closed when an order remains live or ambiguous rather than improvising a recovery trade;
+- Dhan's multi-order margin calculator is present, but no atomic arbitrary four-leg butterfly order-placement facility has been identified in the official API documentation.
+
+**Dhan capability facts verified from current official documentation:**
+- order placement, modification and cancellation require static-IP whitelisting;
+- individual access tokens are 24-hour credentials; API key/secret can be long-lived while access tokens are generated for sessions;
+- order API limits are 10 requests/second, 250/minute, 1,000/hour and 7,000/day, with order modifications capped per order;
+- Dhan exposes order-book/trade-book REST endpoints, order lookup by correlation ID, live order-update WebSocket and access-token-level postbacks/webhooks;
+- Dhan exposes positions, funds, single-order margin and multi-order/basket margin calculation;
+- Dhan exposes order slicing for quantities above freeze limits;
+- Dhan exposes broker-side Super Orders, account Kill Switch, P&L-based exit and Exit All, but these are only broker capabilities at this stage and are **not** adopted as Box 5 policy.
+
+**Preservation rule:** Reuse the mature safety/recovery primitives already present where they fit the new boundary. Do not preserve butterfly-specific policy in Box 5 merely because it already exists.
+
+**VID decision:** No new internal Box 5 VIDs are allocated by this discovery pass. `[5,0,0,0,0]` remains the only Box 5 VID until the first internal architectural object is actually decided.

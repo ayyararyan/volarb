@@ -1,4 +1,4 @@
-# [5,0,0,0,0] External Dhan Execution Layer — Next-Chat Handoff
+# [5,0,0,0,0] External Dhan Execution Layer — Active Design Notebook
 
 ## Purpose
 
@@ -120,3 +120,65 @@ Then inspect the current repository for any existing Dhan connector, API wrapper
 Work bottom-up. First understand exactly what Dhan exposes and what already exists in `volarb`. Then define the external Dhan box and its contract to Box 4. Do not redesign unrelated upstream boxes.
 
 The design should evolve in GitHub as the discussion proceeds, just like the current architecture.
+
+
+## Discovery baseline — 2026-10-03
+
+The repository already contains a reusable Dhan integration at `services/dhan-chatgpt-mcp/`. Box 5 therefore starts from an implemented substrate rather than a blank adapter.
+
+### Existing reusable pieces
+
+- `src/dhan-client.mjs`: Dhan API v2 client for account facts, orders/trades, funds, positions, margin, quotes, option-chain calls, static-IP lookup, LIMIT order placement and cancellation.
+- `src/instrument-master.mjs`: live detailed instrument-master download, caching and NIFTY/BANKNIFTY/SENSEX resolution to Dhan Security IDs and contract metadata.
+- `src/margin-preflight.mjs`: fail-closed, sequence-bound multi-order margin feasibility using current funds/positions/orders and fresh executable quotes.
+- `src/butterfly-executor.mjs`: durable four-leg ENTRY/EXIT executor with exact-plan confirmation, limit pricing, partial-fill handling, position/trade reconciliation, write-ahead intent, correlation-ID recovery, restart fail-closed behavior and duplicate-execution protection.
+- `src/execution-mcp.mjs` and `src/execution-oauth.mjs`: separate authenticated execution surface, static-IP/account readiness checks, OAuth/PKCE and single-process execution lock.
+- `src/web-token*.mjs`: local token lifecycle/recovery machinery with explicit human-stop behavior for OTP/CAPTCHA/manual verification.
+
+### Current implementation is not the final architecture
+
+The current `ButterflyExecutor` contains logic that is too strategy/execution-policy-specific to automatically classify as Box 5. Examples include butterfly leg ordering, ENTRY versus EXIT semantics, the 14:55/15:00 timing policy, repricing rules and hedge-coverage sequencing.
+
+During the Box 5 design we will classify each such behavior into one of two buckets:
+
+1. **Box 4 intelligence/policy** — what Volarb decides should happen.
+2. **Box 5 mechanical safety/provider behavior** — what any Dhan command must satisfy to be transmitted and authoritatively reconciled.
+
+Nothing is moved or deleted yet.
+
+### Dhan broker capabilities verified
+
+Current DhanHQ v2 documentation confirms:
+
+- place / modify / cancel pending orders;
+- order status, order book, trade book and trade lookup;
+- order lookup by caller-supplied correlation ID;
+- order slicing above freeze quantities;
+- live order-update WebSocket plus access-token-level postback/webhook;
+- positions and funds/account state;
+- single-order and multi-order margin calculators;
+- static-IP requirement for order mutations;
+- 24-hour access tokens for individual traders;
+- published order-API rate limits;
+- instrument master with Security IDs and derivative metadata.
+
+Dhan also exposes Super Orders, Kill Switch, P&L-based exit and Exit All. These are **capabilities only**. They are not adopted as Box 5 responsibilities because doing so prematurely could leak risk/strategy decisions into the broker layer.
+
+No official atomic arbitrary multi-leg iron-butterfly placement endpoint has been identified. The multi-order endpoint currently used by Volarb is a **margin calculator**, not a basket execution primitive.
+
+### Known implementation gaps for later design
+
+- generic Box-4 <-> broker-provider contracts;
+- generalized command translation beyond the current butterfly plan;
+- order modification support in the local Dhan client;
+- push-based order/fill ingestion;
+- explicit rate-limit governance and retry/backoff policy;
+- normalized Dhan error taxonomy;
+- authoritative freshness/staleness model for broker state;
+- restart/reconciliation state machine at the generic provider layer;
+- classification of current executor safeguards between Box 4 and Box 5;
+- audit/event contract returned upstream.
+
+### VID status
+
+No internal Box 5 VIDs are created by this inspection. `[5,0,0,0,0]` remains the only allocated Box 5 identity until an internal object is actually decided.
