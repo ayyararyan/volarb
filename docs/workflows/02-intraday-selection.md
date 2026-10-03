@@ -1,72 +1,72 @@
-# Box 2 — Intraday Instrument Selection & Capital Allocation Graph
+# [2,0,0,0,0] Box 2 — Intraday Instrument Selection & Capital Allocation
 
-This graph owns the **intraday portfolio-selection horizon** after Box 1 has already declared the broader regime favorable.
-
-Its job is to decide which underlyings should be committed for the day from:
-
-- NIFTY
-- BANKNIFTY
-- SENSEX
-
-and to allocate a capital budget `W_X` to each selected underlying.
+This graph owns the **intraday** portfolio-selection horizon after Box 1 has emitted a favorable regime.
 
 ## Graph
 
 ```mermaid
 flowchart TD
-    A[Receive REGIME_FAVORABLE] --> B[Read normalized market data and account/capital state]
-    B --> C[Evaluate NIFTY / BANKNIFTY / SENSEX opportunities]
-    C --> D[Apply capital and margin feasibility constraints]
-    D --> E{Selected set S empty?}
+    A["[2,0,1,7,1] REGIME_FAVORABLE input"]
+    B["[2,0,2,1,1] Read normalized market data + account/capital state"]
+    C["[2,0,3,1,1] Evaluate NIFTY / BANKNIFTY / SENSEX"]
+    D["[2,0,4,1,1] Apply capital + margin feasibility constraints"]
+    E{"[2,0,5,1,1] Selected set S empty?"}
+    F["[2,0,6,2,1] INTRADAY OPPORTUNITY WAIT"]
+    G["[2,0,7,3,1] Intraday Opportunity Recheck Scheduler"]
+    H["[2,0,8,2,1] Wait until next intraday scan"]
+    I["[2,0,6,7,1] Selected set S"]
+    J["[2,0,7,1,1] Portfolio Capital Allocator"]
+    K["[2,0,8,9,1] Assign W_X to every X in S"]
+    L["[2,0,9,7,1] Create DailyUnderlyingCommitment"]
+    M["[2,0,10,9,1] Reserve each W_X"]
+    N{"[2,0,11,1,1] For each X in S"}
+    O["[2,0,12,1,1] Launch Box 3 Graph X"]
 
-    E -->|Yes| F[INTRADAY OPPORTUNITY WAIT]
-    F --> G[Intraday Opportunity Recheck Scheduler]
-    G --> H[Wait until next intraday scan]
-    H --> B
-
-    E -->|No| I[Selected set S]
-    I --> J[Portfolio Capital Allocator]
-    J --> K[Assign W_X to every X in S]
-    K --> L[Create daily underlying commitments]
-    L --> M[Reserve each W_X]
-    M --> N{For each X in S}
-    N --> O[Launch Box 3: Graph X]
+    A -->|"[2,0,1,4,1]"| B
+    B -->|"[2,0,2,4,1]"| C
+    C -->|"[2,0,3,4,1]"| D
+    D -->|"[2,0,4,4,1]"| E
+    E -->|"[2,0,5,4,1] YES"| F
+    F -->|"[2,0,6,4,1]"| G
+    G -->|"[2,0,7,4,1]"| H
+    H -->|"[2,0,8,4,1]"| B
+    E -->|"[2,0,5,4,2] NO"| I
+    I -->|"[2,0,6,4,2]"| J
+    J -->|"[2,0,7,4,2]"| K
+    K -->|"[2,0,8,4,2]"| L
+    L -->|"[2,0,9,4,1]"| M
+    M -->|"[2,0,10,4,1]"| N
+    N -->|"[2,0,11,4,1]"| O
 ```
 
 ## Established decisions
 
-- Box 2 is reached only when the multi-day regime is favorable.
+- Box 2 is reached only when Box 1 is favorable.
 - The selector may output any subset of `{NIFTY, BANKNIFTY, SENSEX}`, including all three or none.
 - Capital can shrink the feasible instrument universe.
-- If the selected set is empty, the system stays intraday and asks **when to scan the three underlyings again**. It does not return to the multi-day regime loop unless Box 1 itself becomes due/invalidated.
-- Once X is selected for the day, that selection becomes a durable **daily commitment**.
-- Once X is selected, `W_X` is reserved for Graph X.
-- Reserved `W_X` is not opportunistically consumed by another graph merely because X has not yet found a structure.
-- NIFTY, BANKNIFTY, and SENSEX graphs may run concurrently.
-- Shared account capital must not be double-counted.
+- An empty set stays in Box 2 and uses `[2,0,7,3,1]`; it does not automatically return to Box 1.
+- Once X is selected, it becomes a durable daily commitment.
+- `W_X` is reserved for Graph X and cannot be opportunistically consumed by another graph while X waits.
+- Multiple selected underlyings may run concurrently.
+- Shared capital may not be double-counted.
 
 ## Outputs
 
-For a non-empty selection:
-
 ```text
-DailySelection
+[2,0,6,7,1] DailySelection
   selected_set S = {X1, X2, ...}
 
-For each X in S:
-  DailyUnderlyingCommitment
-    underlying = X
-    capital_budget = W_X
-    state = SELECTED_AND_RESERVED
+[2,0,9,7,1] DailyUnderlyingCommitment
+  underlying = X
+  capital_budget = W_X
+  state = SELECTED_AND_RESERVED
 ```
-
-Each `DailyUnderlyingCommitment` launches one independent Box 3 graph.
 
 ## Still TBD
 
-- how attractiveness is compared across the three underlyings;
-- the objective/rule used to allocate total deployable capital into `W_X`;
+- cross-index attractiveness logic;
+- objective/rule for allocating total deployable capital into W_X;
 - exact intraday recheck cadence;
-- what explicitly revokes a daily underlying commitment before market close;
-- whether commitments automatically expire at end of session;
-- how a favorable regime is force-invalidated by an exceptional event.
+- revocation conditions for a daily underlying commitment;
+- end-of-session expiry behavior;
+- exceptional-event force invalidation.
