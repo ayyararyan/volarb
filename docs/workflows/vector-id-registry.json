@@ -26,7 +26,7 @@
       "2": "underlying_allocation",
       "3": "trade_selection",
       "4": "position_management",
-      "5": "internal_execution_canonical_component_namespace"
+      "5": "execution_engine_canonical_component_namespace"
     },
     "box3_instance_codes": {
       "0": "template",
@@ -41,7 +41,7 @@
     "edge_layer_rule": "edge layer equals source node logical layer",
     "cross_box_edges_use_box_0": true,
     "graph_topology_authority": "explicit source/target relationships, not numeric adjacency",
-    "canonical_component_ownership": "Entities whose VID begins [5,...] are canonically owned by component.internal_execution, not strategy.volarb.",
+    "canonical_component_ownership": "Entities whose VID begins [5,0,...] are canonically owned by component.execution_engine, not strategy.volarb.",
     "mount_identity": "A mounted occurrence is addressed by composition_id + mount_id + canonical VID; mounting never renumbers canonical VIDs.",
     "binding_identity": "Cross-component connections are composition-owned first-class bindings with immutable binding_id values.",
     "runtime_identity_separation": "Runtime intent/action/order identities are not architectural VIDs."
@@ -1985,7 +1985,7 @@
         0,
         0
       ],
-      "note": "One desired instrument-level economic action. Multiple instances may be handed to Internal Execution concurrently. Strategy meaning remains in Position Management; broker identifiers remain below the broker port."
+      "note": "One desired instrument-level economic action. Multiple instances may be handed to Execution Engine concurrently. Strategy meaning remains in Position Management; broker identifiers remain below the broker port."
     },
     {
       "vid": [
@@ -1995,7 +1995,7 @@
         6,
         1
       ],
-      "name": "InternalExecutionPort",
+      "name": "OptimalExecutionPort",
       "kind": "interface",
       "parent_vid": [
         4,
@@ -2004,7 +2004,10 @@
         0,
         0
       ],
-      "note": "Position Management handoff to broker-neutral Internal Execution."
+      "note": "Position Management handoff to broker-neutral Execution Engine.",
+      "legacy_names": [
+        "InternalExecutionPort"
+      ]
     },
     {
       "vid": [
@@ -2573,10 +2576,9 @@
       "name": "Execution Engine",
       "kind": "root",
       "status": "active_design",
-      "note": "Broker-neutral reusable Execution Engine component. Canonical namespace [5,0,...] is strategy-agnostic and provider-agnostic; strategy placement is represented by a composition mount. Normal flow remains Margin Optimization -> Execution Slicing -> Optimal Execution with cross-cutting State Integrity, Execution Recovery/Ledger and Interrupt Control.",
-      "canonical_component_id": "component.execution_engine",
+      "note": "Broker-neutral Execution Engine: Margin Optimization -> Execution Slicing -> Optimal Execution, with cross-cutting State Integrity, Execution Recovery/Ledger and Interrupt Control.",
       "identity_scope": "canonical",
-      "canonical_registry": "architecture/components/internal-execution/vector-id-registry.json"
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -2621,7 +2623,9 @@
         0,
         0
       ],
-      "note": "Holds outstanding instrument-level economic requirements with Runtime Intent Identity/version. Registry entries are persistent requirements, not broker order tickets."
+      "note": "Holds outstanding instrument-level economic requirements with Runtime Intent Identity/version. Registry entries are persistent requirements, not broker order tickets.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -2642,7 +2646,9 @@
       ],
       "note": "Reusable optimal-execution algorithm over the active registry. Objective and algorithm intentionally TBD.",
       "status": "retired",
-      "retired_reason": "Superseded by explicit layered sub-boxes: Margin Optimization followed by Optimal Execution."
+      "retired_reason": "Superseded by explicit layered sub-boxes: Margin Optimization followed by Optimal Execution.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -2661,7 +2667,9 @@
         0,
         0
       ],
-      "note": "Broker-neutral interface implemented by unnumbered provider plug-ins such as Dhan, Kotak, or ICICI Securities."
+      "note": "Broker-neutral interface implemented by unnumbered provider plug-ins such as Dhan, Kotak, or ICICI Securities.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -2680,7 +2688,9 @@
         0,
         0
       ],
-      "note": "Authoritative broker order/fill/status/account execution facts normalized before use by Execution Engine or Position Management. Exact taxonomy TBD."
+      "note": "Authoritative broker order/fill/status/account facts normalized through the Broker Execution Port for execution components and upstream strategies. Provider response envelopes are implemented; component-specific execution-state aggregation remains active design.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -2707,7 +2717,9 @@
         1
       ],
       "status": "retired",
-      "retired_reason": "Superseded by direct inputs into the Margin Optimization sub-box."
+      "retired_reason": "Superseded by direct inputs into the Margin Optimization sub-box.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -2734,7 +2746,9 @@
         1
       ],
       "status": "retired",
-      "retired_reason": "Superseded by the Time-Space Execution Sub-Box; margin-aware sequencing now releases eligible work rather than sending broker actions."
+      "retired_reason": "Superseded by the Time-Space Execution Sub-Box; margin-aware sequencing now releases eligible work rather than sending broker actions.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -2759,7 +2773,9 @@
         4,
         7,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -2784,7 +2800,9 @@
         1,
         9,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -2794,7 +2812,7 @@
         4,
         1
       ],
-      "name": "Position Management intents -> Internal Execution registry",
+      "name": "Position Management intents -> Execution Engine registry",
       "kind": "edge",
       "source_vid": [
         4,
@@ -2824,7 +2842,7 @@
         4,
         1
       ],
-      "name": "Internal Execution facts -> Position Management",
+      "name": "Execution Engine facts -> Position Management",
       "kind": "edge",
       "source_vid": [
         5,
@@ -2863,7 +2881,9 @@
         0,
         0
       ],
-      "note": "Continuously refreshed normalized quotes, executable depth/order book, spread, freshness and tradability used by optimal execution."
+      "note": "Continuously refreshed normalized quotes, executable depth/order book, spread, freshness and tradability used by optimal execution.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -2882,7 +2902,9 @@
         0,
         0
       ],
-      "note": "Authoritative dynamic account-capacity state including cash/collateral/margin, current positions and pending orders relevant to execution feasibility."
+      "note": "Authoritative dynamic account-capacity state including cash/collateral/margin, current positions and pending orders relevant to execution feasibility.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -2901,7 +2923,9 @@
         0,
         1
       ],
-      "note": "Infers structural risk-offset and coverage relationships from instruments, current positions and desired actions without strategy labels."
+      "note": "Infers structural risk-offset and coverage relationships from instruments, current positions and desired actions without strategy labels.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -2920,7 +2944,9 @@
         0,
         1
       ],
-      "note": "Quantity-aware precedence constraints derived from inferred hedge relationships."
+      "note": "Quantity-aware precedence constraints derived from inferred hedge relationships.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -2939,7 +2965,9 @@
         0,
         1
       ],
-      "note": "Produces the Execution Ordering Plan. It decides whether precedence constraints exist. If required, emits ORDERED with sequence/quantity constraints; if genuinely unnecessary, emits UNCONSTRAINED."
+      "note": "Produces the Execution Ordering Plan. It decides whether precedence constraints exist. If required, emits ORDERED with sequence/quantity constraints; if genuinely unnecessary, emits UNCONSTRAINED.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -2958,7 +2986,9 @@
         0,
         0
       ],
-      "note": "Second Execution Engine sub-box. Enforces the sequence from Margin Optimization, then converts only the current allowed step plus live LOB/order state into time-indexed order-management actions."
+      "note": "Third normal-flow Execution Engine sub-box, after Margin Optimization and Execution Slicing. Enforces inherited ordering and slice-release constraints, then converts only released slice work plus live LOB/order state into time-indexed order-management actions.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -2977,7 +3007,9 @@
         0,
         1
       ],
-      "note": "Current execution slice(s) released after ordering and slicing constraints. Contains intent identity/version, slice identity, instrument, side and permitted quantity. Optimal Execution acts only within this set."
+      "note": "Current execution slice(s) released after ordering and slicing constraints. Contains intent identity/version, slice identity, instrument, side and permitted quantity. Optimal Execution acts only within this set.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -2996,7 +3028,9 @@
         0,
         1
       ],
-      "note": "Runs the time-indexed micro-execution loop, invokes the selected algorithm, validates its action, sends broker-neutral actions and consumes broker feedback."
+      "note": "Runs the time-indexed micro-execution loop, invokes the selected algorithm, validates its action, sends broker-neutral actions and consumes broker feedback.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3015,7 +3049,9 @@
         0,
         1
       ],
-      "note": "Plug-and-play broker-neutral micro-execution interface. Algorithms receive only the work set released under the upstream ordering decision."
+      "note": "Plug-and-play broker-neutral micro-execution interface. Algorithms receive only the work set released under the upstream ordering decision.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3034,7 +3070,9 @@
         0,
         1
       ],
-      "note": "Time-t action: WAIT, PLACE_LIMIT, REPRICE_LIMIT, CANCEL_LIMIT, or PLACE_MARKET, with applicable quantity, price and order-reference fields."
+      "note": "Time-t action: WAIT, PLACE_LIMIT, REPRICE_LIMIT, CANCEL_LIMIT, or PLACE_MARKET, with applicable quantity, price and order-reference fields.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3061,7 +3099,9 @@
         1
       ],
       "status": "retired",
-      "retired_reason": "Superseded by explicit Execution Sequence Plan and Sequence Enforcer."
+      "retired_reason": "Superseded by explicit Execution Sequence Plan and Sequence Enforcer.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3086,7 +3126,9 @@
         4,
         1,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3111,7 +3153,9 @@
         4,
         6,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3138,7 +3182,9 @@
         2
       ],
       "status": "retired",
-      "retired_reason": "Superseded by an explicit plug-in implementation between the Execution Algorithm Port and Temporal Execution Decision."
+      "retired_reason": "Superseded by an explicit plug-in implementation between the Execution Algorithm Port and Temporal Execution Decision.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3165,7 +3211,9 @@
         1
       ],
       "status": "retired",
-      "retired_reason": "Superseded by Command Commit Guard and durable Execution Ledger before Broker Execution Port."
+      "retired_reason": "Superseded by Command Commit Guard and durable Execution Ledger before Broker Execution Port.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3184,7 +3232,9 @@
         0,
         0
       ],
-      "note": "First Execution Engine sub-box. Determines hedge/margin dependencies and releases only currently eligible instrument quantity to Optimal Execution."
+      "note": "First Execution Engine sub-box. Determines hedge/margin dependencies and releases only currently eligible instrument quantity to Optimal Execution.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3209,7 +3259,9 @@
         2,
         0,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3234,7 +3286,9 @@
         2,
         0,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3259,7 +3313,9 @@
         2,
         0,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3284,7 +3340,9 @@
         3,
         0,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3309,7 +3367,9 @@
         2,
         1,
         2
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3334,7 +3394,9 @@
         2,
         7,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3359,7 +3421,9 @@
         2,
         1,
         3
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3379,7 +3443,9 @@
         1
       ],
       "status": "default",
-      "note": "Current default Optimal Execution plug-in. Posts passively at the same-side best quote, waits T, refreshes/reprices for up to N passive cycles, then cancels/reconciles and markets the confirmed remainder."
+      "note": "Current default Optimal Execution plug-in. Posts passively at the same-side best quote, waits T, uses up to N passive waiting/evaluation intervals (at most N-1 refresh opportunities), then cancels/reconciles and markets the confirmed remainder.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3398,7 +3464,9 @@
         5,
         1
       ],
-      "note": "T = passive waiting interval between evaluations; N = maximum passive refresh cycles after initial placement. Values intentionally TBD."
+      "note": "T = passive waiting interval between evaluations; N = maximum passive waiting/evaluation intervals including the final fallback evaluation (at most N-1 refresh opportunities). Values intentionally TBD.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3417,7 +3485,9 @@
         5,
         1
       ],
-      "note": "Working order reference, confirmed remaining quantity, passive-cycle count, last passive price and last evaluation time."
+      "note": "Working order reference, confirmed remaining quantity, passive-cycle count, last passive price and last evaluation time.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3436,7 +3506,9 @@
         5,
         1
       ],
-      "note": "Waits parameter T between passive execution evaluations. Exact T is configuration, not architecture."
+      "note": "Waits parameter T between passive execution evaluations. Exact T is configuration, not architecture.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3461,7 +3533,9 @@
         5,
         5,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3486,7 +3560,9 @@
         4,
         7,
         2
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3505,7 +3581,9 @@
         0,
         1
       ],
-      "note": "Mandatory Margin Optimization output declaring ORDERED or UNCONSTRAINED execution. ORDERED supplies explicit precedence/sequence constraints; UNCONSTRAINED explicitly declares that no ordering constraint exists."
+      "note": "Mandatory Margin Optimization output declaring ORDERED or UNCONSTRAINED execution. ORDERED supplies explicit precedence/sequence constraints; UNCONSTRAINED explicitly declares that no ordering constraint exists.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3524,7 +3602,9 @@
         0,
         1
       ],
-      "note": "Interprets the Execution Ordering Plan. In ORDERED mode it releases only currently permitted step(s); in UNCONSTRAINED mode it releases all otherwise eligible work without imposing sequence. Missing/invalid ordering decision means no execution."
+      "note": "Interprets the Execution Ordering Plan. In ORDERED mode it releases only currently permitted step(s); in UNCONSTRAINED mode it releases all otherwise eligible work without imposing sequence. Missing/invalid ordering decision means no execution.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3549,7 +3629,9 @@
         2,
         7,
         2
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3576,7 +3658,9 @@
         1
       ],
       "status": "retired",
-      "retired_reason": "Superseded by Execution Slicing between Margin Optimization and Optimal Execution."
+      "retired_reason": "Superseded by Execution Slicing between Margin Optimization and Optimal Execution.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3601,7 +3685,9 @@
         3,
         7,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3620,7 +3706,9 @@
         0,
         0
       ],
-      "note": "NVIC-inspired supervisory sub-box. Orthogonal to the normal Margin Optimization -> Optimal Execution chain and authorized to preempt both according to interrupt priority."
+      "note": "NVIC-inspired supervisory sub-box. Orthogonal to the normal Margin Optimization -> Execution Slicing -> Optimal Execution chain and authorized to preempt all three according to interrupt priority.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3639,7 +3727,9 @@
         0,
         1
       ],
-      "note": "Broker-neutral interrupt input carrying interrupt_id, level, scope, reason/source, issue time and target position/order scope. Levels currently: L1 CANCEL_WORK, L2 FLATTEN_SCOPE, L3 FLATTEN_ALL."
+      "note": "Broker-neutral interrupt input carrying interrupt_id, level, scope, reason/source, issue time and target position/order scope. Levels currently: L1 CANCEL_WORK, L2 FLATTEN_SCOPE, L3 FLATTEN_ALL.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3658,7 +3748,9 @@
         0,
         1
       ],
-      "note": "Prioritizes and vectors interrupts. Higher levels preempt lower levels; normal execution is lower priority than every interrupt."
+      "note": "Prioritizes and vectors interrupts. Higher levels preempt lower levels; normal execution is lower priority than every interrupt.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3677,7 +3769,9 @@
         0,
         1
       ],
-      "note": "Persists active/pending interrupt priority, scope and completion state. Prevents normal convergence from recreating cancelled work until the interrupt is explicitly cleared."
+      "note": "Persists active/pending interrupt priority, scope and completion state. Prevents normal convergence from recreating cancelled work until the interrupt is explicitly cleared.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3696,7 +3790,9 @@
         0,
         1
       ],
-      "note": "Deterministic emergency handler output: cancel working orders, flatten explicit scope, or flatten all controlled positions. Emergency flatten uses market actions for confirmed net positions after cancellation/reconciliation."
+      "note": "Deterministic emergency handler output: cancel working orders, flatten explicit scope, or flatten all controlled positions. Emergency flatten uses market actions for confirmed net positions after cancellation/reconciliation.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3721,7 +3817,9 @@
         6,
         1,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3746,7 +3844,9 @@
         6,
         2,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3771,7 +3871,9 @@
         6,
         7,
         2
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3798,7 +3900,9 @@
         1
       ],
       "status": "retired",
-      "retired_reason": "Emergency mutations also pass through durable Command Commit Guard before Broker Execution Port."
+      "retired_reason": "Emergency mutations also pass through durable Command Commit Guard before Broker Execution Port.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3823,7 +3927,9 @@
         2,
         0,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3848,7 +3954,9 @@
         3,
         0,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3875,7 +3983,9 @@
         1
       ],
       "status": "retired",
-      "retired_reason": "VID layer violated edge-layer rule; replaced by [5,0,4,4,10] because source is Normalized Broker Execution Facts at layer 4."
+      "retired_reason": "VID layer violated edge-layer rule; replaced by [5,0,4,4,10] because source is Normalized Broker Execution Facts at layer 4.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3924,7 +4034,9 @@
         0,
         0
       ],
-      "note": "Runtime identity carried by each live execution requirement: composition_id, execution mount_id, canonical component/VID context, intent_id, intent_version, supersedes_version/status and timestamps. The composition/mount context disambiguates concurrent uses of the same canonical execution component. Runtime identity remains distinct from immutable architectural CVIDs/BVIDs."
+      "note": "Runtime identity carried by each live execution requirement: composition_id, execution mount_id, canonical component/VID context, intent_id, intent_version, supersedes_version/status and timestamps. The composition/mount context disambiguates concurrent uses of the same canonical execution component. Runtime identity remains distinct from immutable architectural CVIDs/BVIDs.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3943,7 +4055,9 @@
         0,
         0
       ],
-      "note": "Normal-flow sub-box between Margin Optimization and Optimal Execution. Converts ordered/unconstrained eligible quantity into one or more execution slices. Default slice_count=1."
+      "note": "Normal-flow sub-box between Margin Optimization and Optimal Execution. Converts ordered/unconstrained eligible quantity into one or more execution slices. Default slice_count=1.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3962,7 +4076,9 @@
         0,
         1
       ],
-      "note": "Chooses number, quantity and scheduling of execution slices while preserving upstream ordering constraints. Current default: one slice; if multiple slices exist, execute sequentially."
+      "note": "Chooses number, quantity and scheduling of execution slices while preserving upstream ordering constraints. Current default: one slice; if multiple slices exist, execute sequentially.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -3981,7 +4097,9 @@
         0,
         1
       ],
-      "note": "Per-intent slice plan carrying intent identity/version, ordering metadata, slice_count, slice_id/index, quantity and scheduling policy."
+      "note": "Per-intent slice plan carrying intent identity/version, ordering metadata, slice_count, slice_id/index, quantity and scheduling policy.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4000,7 +4118,9 @@
         0,
         1
       ],
-      "note": "Tracks current/complete/pending slices and authoritative filled quantity. Default sequential policy releases the next slice only after the current slice completes/reconciles."
+      "note": "Tracks current/complete/pending slices and authoritative filled quantity. Default sequential policy releases the next slice only after the current slice completes/reconciles.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4019,7 +4139,9 @@
         0,
         1
       ],
-      "note": "Slicing configuration. Current default: slice_count=1 and scheduling_mode=SEQUENTIAL. Future policies may dynamically size/schedule slices."
+      "note": "Slicing configuration. Current default: slice_count=1 and scheduling_mode=SEQUENTIAL. Future policies may dynamically size/schedule slices.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4044,7 +4166,9 @@
         7,
         0,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4069,7 +4193,9 @@
         7,
         1,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4094,7 +4220,9 @@
         7,
         7,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4119,7 +4247,9 @@
         3,
         1,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4146,7 +4276,9 @@
         1
       ],
       "status": "retired",
-      "retired_reason": "VID layer violated edge-layer rule; replaced by [5,0,4,4,9] because source is Normalized Broker Execution Facts at layer 4."
+      "retired_reason": "VID layer violated edge-layer rule; replaced by [5,0,4,4,9] because source is Normalized Broker Execution Facts at layer 4.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4171,7 +4303,9 @@
         7,
         1,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4190,7 +4324,9 @@
         0,
         0
       ],
-      "note": "Cross-cutting durable execution/reconciliation sub-box. Owns write-ahead action recording, runtime identity/version validation, correlation and restart/ambiguity recovery."
+      "note": "Cross-cutting durable execution/reconciliation sub-box. Owns write-ahead action recording, runtime identity/version validation, correlation and restart/ambiguity recovery.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4209,7 +4345,9 @@
         0,
         1
       ],
-      "note": "Durable append/update record linking composition/mount/canonical execution context -> runtime intent/version -> slice -> execution action -> correlation/order IDs -> authoritative fills/status/positions. Canonical VIDs are never repurposed as runtime IDs."
+      "note": "Durable append/update record linking composition/mount/canonical execution context -> runtime intent/version -> slice -> execution action -> correlation/order IDs -> authoritative fills/status/positions. Canonical VIDs are never repurposed as runtime IDs.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4228,7 +4366,9 @@
         0,
         1
       ],
-      "note": "Reconstructs broker truth after timeout, ambiguity or restart using authoritative orders, trades, fills and positions. No blind mutation retry while outcome is unknown."
+      "note": "Reconstructs broker truth after timeout, ambiguity or restart using authoritative orders, trades, fills and positions. No blind mutation retry while outcome is unknown.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4247,7 +4387,9 @@
         0,
         1
       ],
-      "note": "Final pre-broker mutation gate. Rejects stale intent versions, requires durable write-ahead record/correlation identity, checks interrupt latch and action-class integrity permission, then releases the command."
+      "note": "Final pre-broker mutation gate. Rejects stale intent versions, requires durable write-ahead record/correlation identity, checks interrupt latch and action-class integrity permission, then releases the command.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4266,7 +4408,9 @@
         0,
         1
       ],
-      "note": "Tracks CLEAN, RECONCILING, AMBIGUOUS and RECOVERY_REQUIRED execution states. Normal new mutations are blocked while unresolved ambiguity exists in relevant scope."
+      "note": "Tracks CLEAN, RECONCILING, AMBIGUOUS and RECOVERY_REQUIRED execution states. Normal new mutations are blocked while unresolved ambiguity exists in relevant scope.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4285,7 +4429,9 @@
         0,
         1
       ],
-      "note": "Broker-neutral mutation envelope carrying composition_id, execution mount_id, canonical execution context, action_id, origin/intent or interrupt identity, intent_version, slice_id, action_class, correlation_id and requested broker operation."
+      "note": "Broker-neutral mutation envelope carrying composition_id, execution mount_id, canonical execution context, action_id, origin/intent or interrupt identity, intent_version, slice_id, action_class, correlation_id and requested broker operation.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4304,7 +4450,9 @@
         0,
         1
       ],
-      "note": "Authoritative reconciliation result mapping attempted actions to broker orders/trades/fills/positions and exact confirmed remaining requirement."
+      "note": "Authoritative reconciliation result mapping attempted actions to broker orders/trades/fills/positions and exact confirmed remaining requirement.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4329,7 +4477,9 @@
         8,
         1,
         2
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4354,7 +4504,9 @@
         8,
         1,
         2
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4379,7 +4531,9 @@
         8,
         1,
         2
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4404,7 +4558,9 @@
         8,
         9,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4429,7 +4585,9 @@
         3,
         6,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4454,7 +4612,9 @@
         8,
         1,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4479,7 +4639,9 @@
         8,
         1,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4504,7 +4666,9 @@
         8,
         2,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4529,7 +4693,9 @@
         8,
         9,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4554,7 +4720,9 @@
         2,
         0,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4579,7 +4747,9 @@
         3,
         0,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4598,7 +4768,9 @@
         0,
         0
       ],
-      "note": "Cross-cutting broker-neutral readiness guard that classifies freshness/completeness/consistency of market, account, order/fill and recovery state before actions are allowed."
+      "note": "Cross-cutting broker-neutral readiness guard that classifies freshness/completeness/consistency of market, account, order/fill and recovery state before actions are allowed.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4617,7 +4789,9 @@
         0,
         1
       ],
-      "note": "Computes action-class-aware execution permission. Normal risk-adding work requires sufficiently fresh/complete state; emergency cancel/flatten uses separate minimum-integrity requirements and never silently falls back."
+      "note": "Computes action-class-aware execution permission. Normal risk-adding work requires sufficiently fresh/complete state; emergency cancel/flatten uses separate minimum-integrity requirements and never silently falls back.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4636,7 +4810,9 @@
         0,
         1
       ],
-      "note": "Assessment with status VALID/STALE/INCOMPLETE/INCONSISTENT/UNKNOWN plus per-action permissions and reasons."
+      "note": "Assessment with status VALID/STALE/INCOMPLETE/INCONSISTENT/UNKNOWN plus per-action permissions and reasons.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4655,7 +4831,9 @@
         0,
         1
       ],
-      "note": "Current freshness/completeness/consistency state of required broker-neutral inputs."
+      "note": "Current freshness/completeness/consistency state of required broker-neutral inputs.",
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4680,7 +4858,9 @@
         9,
         1,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4705,7 +4885,9 @@
         9,
         1,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4730,7 +4912,9 @@
         9,
         1,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4755,7 +4939,9 @@
         9,
         1,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4780,7 +4966,9 @@
         9,
         7,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4805,7 +4993,9 @@
         2,
         0,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4830,7 +5020,9 @@
         3,
         0,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4855,7 +5047,9 @@
         8,
         1,
         2
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4880,7 +5074,9 @@
         7,
         2,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4905,7 +5101,9 @@
         7,
         0,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4930,7 +5128,9 @@
         6,
         1,
         1
-      ]
+      ],
+      "identity_scope": "canonical",
+      "canonical_component_id": "component.execution_engine"
     },
     {
       "vid": [
@@ -4959,10 +5159,13 @@
     "bound_identity": "Compositions derive placement identities from composition_id + mount_id + canonical identity.",
     "runtime_identity": "Live intent/slice/action/correlation/provider identities remain ephemeral and reference bound/canonical context.",
     "canonical_component_registries": {
-      "component.internal_execution": "architecture/components/internal-execution/vector-id-registry.json"
+      "component.execution_engine": "architecture/components/execution-engine/vector-id-registry.json"
     },
     "composition_registry": "architecture/registries/composition-registry.json",
     "current_composition": "architecture/strategies/volarb/composition.json",
-    "compatibility_rule": "This file remains an assembled compatibility view; it is not the ownership authority for reusable component namespaces."
+    "compatibility_rule": "This file remains an assembled compatibility view; it is not the ownership authority for reusable component namespaces.",
+    "legacy_component_aliases": {
+      "component.internal_execution": "component.execution_engine"
+    }
   }
 }

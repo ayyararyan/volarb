@@ -14,8 +14,12 @@ export function noOverfill(events){
   }
 }
 export function ledgerBeforeMutation(events){
-  const ledgerSeqByAction=new Map(events.filter(x=>x.type==='ledger.append'&&x.payload?.actionId).map(x=>[x.payload.actionId,x.seq]));
-  for(const e of events.filter(x=>x.type==='broker.command.applied'&&x.payload?.actionId)){
+  const ledgerSeqByAction=new Map();
+  for(const e of events.filter(x=>x.type==='ledger.append'&&x.payload?.actionId)){
+    if(!ledgerSeqByAction.has(e.payload.actionId)) ledgerSeqByAction.set(e.payload.actionId,e.seq);
+  }
+  for(const e of events.filter(x=>x.type==='broker.command.applied')){
+    if(!e.payload?.actionId) throw new InvariantViolation('LEDGER_BEFORE_MUTATION','broker mutation has no action identity',e);
     const seq=ledgerSeqByAction.get(e.payload.actionId);
     if(!seq||seq>=e.seq) throw new InvariantViolation('LEDGER_BEFORE_MUTATION',`action ${e.payload.actionId} reached broker before durable intent`,e);
   }

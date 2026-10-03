@@ -23,3 +23,18 @@ test('all non-production environments fail closed for real broker mutations',()=
     assert.equal(env.live_broker_mutations,false,name);
   }
 });
+
+test('production engine and provider source dependencies never import execution-testkit',()=>{
+  function sourceFiles(directory){
+    return fs.readdirSync(directory,{withFileTypes:true}).flatMap(entry=>{
+      const target=path.join(directory,entry.name);
+      return entry.isDirectory()?sourceFiles(target):/\.(?:mjs|cjs|js|ts)$/.test(entry.name)?[target]:[];
+    });
+  }
+  const importsTestkit=/(?:\bfrom\s*|\bimport\s*(?:\(\s*)?|\brequire\s*\(\s*)['"][^'"]*execution-testkit(?:\/|['"])/;
+  for(const directory of ['execution-engine','services/dhan-chatgpt-mcp/src']){
+    for(const file of sourceFiles(path.join(root,directory))){
+      assert.doesNotMatch(fs.readFileSync(file,'utf8'),importsTestkit,path.relative(root,file));
+    }
+  }
+});

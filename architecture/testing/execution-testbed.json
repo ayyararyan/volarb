@@ -40,6 +40,7 @@
     "randomness",
     "strategy_input"
   ],
-  "production_guard": "environments/execution/production.json must never mount execution-testkit dependencies",
-  "no_new_vid": true
+  "production_guard": "The production manifest forbids testkit dependencies; offline source-dependency checks enforce that execution-engine and provider code do not import execution-testkit. No production environment loader exists yet.",
+  "no_new_vid": true,
+  "implementation_status": "Deterministic primitives, component/composition harnesses and caller-supplied scenario/mass drivers are implemented. Complete engine and replay/shadow runners are not yet implemented."
 }

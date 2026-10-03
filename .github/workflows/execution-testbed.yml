@@ -6,9 +6,9 @@ on:
       - 'execution-engine/**'
       - 'execution-testkit/**'
       - 'environments/execution/**'
-      - 'architecture/testing/**'
-      - 'services/dhan-chatgpt-mcp/src/dhan-broker-port.mjs'
-      - 'services/dhan-chatgpt-mcp/src/provider-error.mjs'
+      - 'services/dhan-chatgpt-mcp/src/**'
+      - 'architecture/**'
+      - 'docs/workflows/vector-id-registry.json'
       - '.github/workflows/execution-testbed.yml'
   push:
     branches: [main]
@@ -16,9 +16,9 @@ on:
       - 'execution-engine/**'
       - 'execution-testkit/**'
       - 'environments/execution/**'
-      - 'architecture/testing/**'
-      - 'services/dhan-chatgpt-mcp/src/dhan-broker-port.mjs'
-      - 'services/dhan-chatgpt-mcp/src/provider-error.mjs'
+      - 'services/dhan-chatgpt-mcp/src/**'
+      - 'architecture/**'
+      - 'docs/workflows/vector-id-registry.json'
       - '.github/workflows/execution-testbed.yml'
 
 permissions:
@@ -33,5 +33,5 @@ jobs:
         with:
           node-version: '26'
       - run: node --test execution-testkit/test/*.test.mjs
-      - run: node --test architecture/lib/identity.test.mjs
+      - run: node --test architecture/lib/*.test.mjs architecture/*.test.mjs
       - run: node architecture/validate.mjs

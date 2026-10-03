@@ -1,4 +1,4 @@
-import { BrokerOperation, BrokerOperationKind, assertBrokerRequest } from '../../execution-engine/ports/broker-port.mjs';
+import { BrokerOperation, BrokerOperationKind, assertBrokerRequest, brokerOperationKind } from '../../execution-engine/ports/broker-port.mjs';
 import {
   ProviderCommandOutcome, ProviderError, ProviderErrorCategory, ProviderErrorCode
 } from '../../execution-engine/contracts/provider-error.mjs';
@@ -8,9 +8,9 @@ const clone=x=>x===undefined?undefined:structuredClone(x);
 const array=x=>Array.isArray(x)?x:[];
 const working=new Set(['PENDING','PARTIALLY_FILLED']);
 
-function simError({operation,kind,category=ProviderErrorCategory.UNKNOWN,code=ProviderErrorCode.UNKNOWN,message='Simulated broker failure',outcome,reason}){
+function simError({operation,kind,category=ProviderErrorCategory.UNKNOWN,code=ProviderErrorCode.UNKNOWN,message='Simulated broker failure',outcome,reason,observedAt}){
   return new ProviderError({
-    category,code,message,operation,kind,
+    category,code,message,operation,kind,observedAt,
     outcome:outcome??(kind===BrokerOperationKind.COMMAND?ProviderCommandOutcome.UNKNOWN:ProviderCommandOutcome.NOT_APPLICABLE),
     provider:{key:'simulated',reason:reason??'INJECTED'}
   });
@@ -38,16 +38,21 @@ export class SimulatedBroker {
   }
 
   _script(correlationId){return this.scripts?.byCorrelation?.[correlationId]??this.scripts?.default??{};}
+  _error(details){return simError({...details,observedAt:new Date(this.clock.now()).toISOString()});}
   _fault(operation,phase,context={}){
     const rule=this.faults?.match({operation,phase,context});
     if(!rule) return;
-    throw simError({
-      operation,kind:rule.kind??(operation.startsWith('GET_')?BrokerOperationKind.QUERY:BrokerOperationKind.COMMAND),
+    const error=this._error({
+      operation,kind:rule.kind??brokerOperationKind(operation),
       category:rule.category??ProviderErrorCategory.NETWORK,
       code:rule.code??ProviderErrorCode.NETWORK_FAILURE,
       message:rule.message??`Injected ${phase} fault for ${operation}`,
       outcome:rule.outcome,reason:rule.reason??'FAULT_INJECTOR'
     });
+    if(phase==='after_apply'&&error.kind===BrokerOperationKind.COMMAND&&error.outcome===ProviderCommandOutcome.UNKNOWN){
+      this.trace?.record('broker.command.ambiguous',{operation,...context});
+    }
+    throw error;
   }
   _emitOrder(order){
     const data=clone(order);
@@ -65,15 +70,17 @@ export class SimulatedBroker {
     const remaining=order.requestedQuantity-order.filledQuantity;
     const qty=Math.min(remaining,Math.max(0,Number(fill.quantity??remaining)));
     if(!qty) return;
+    const previousFilled=order.filledQuantity;
+    const fillPrice=Number(fill.price??order.limitPrice??this.market?.snapshot([order.instrument])?.[0]?.lastPrice??0);
     order.filledQuantity+=qty;
     order.remainingQuantity=order.requestedQuantity-order.filledQuantity;
-    order.averageFillPrice=Number(fill.price??order.limitPrice??this.market?.snapshot([order.instrument])?.[0]?.lastPrice??0);
+    order.averageFillPrice=((order.averageFillPrice??0)*previousFilled+fillPrice*qty)/order.filledQuantity;
     order.status=order.remainingQuantity===0?'FILLED':'PARTIALLY_FILLED';
     const trade={
       exchangeTradeRef:`sim-trade-${++this.tradeSeq}`,
       brokerOrderRef:order.brokerOrderRef,
       brokerCorrelationRef:order.brokerCorrelationRef,
-      instrument:clone(order.instrument),side:order.side,quantity:qty,price:order.averageFillPrice,
+      instrument:clone(order.instrument),side:order.side,quantity:qty,price:fillPrice,
       providerTimestamps:{exchange:new Date(this.clock.now()).toISOString()}
     };
     this.trades.push(trade);
@@ -94,7 +101,7 @@ export class SimulatedBroker {
     const script=this._script(correlationId);
     this._fault(BrokerOperation.PLACE_ORDER,'before_apply',{correlationId});
     if(script.reject){
-      throw simError({
+      throw this._error({
         operation:BrokerOperation.PLACE_ORDER,kind:BrokerOperationKind.COMMAND,
         category:ProviderErrorCategory.ORDER_REJECTED,code:ProviderErrorCode.ORDER_REJECTED,
         message:script.reject.message??'Simulated order rejection',
@@ -120,14 +127,14 @@ export class SimulatedBroker {
     if(Number(script.ackDelayMs)>0) await this.clock.advance(Number(script.ackDelayMs));
     if(script.ackLost){
       this.trace?.record('broker.command.ambiguous',{operation:BrokerOperation.PLACE_ORDER,orderRef:row.brokerOrderRef,correlationId,actionId:row.actionId});
-      throw simError({operation:BrokerOperation.PLACE_ORDER,kind:BrokerOperationKind.COMMAND,category:ProviderErrorCategory.NETWORK,code:ProviderErrorCode.NETWORK_FAILURE,message:'Simulated acknowledgement loss after apply',outcome:ProviderCommandOutcome.UNKNOWN,reason:'ACK_LOST_AFTER_APPLY'});
+      throw this._error({operation:BrokerOperation.PLACE_ORDER,kind:BrokerOperationKind.COMMAND,category:ProviderErrorCategory.NETWORK,code:ProviderErrorCode.NETWORK_FAILURE,message:'Simulated acknowledgement loss after apply',outcome:ProviderCommandOutcome.UNKNOWN,reason:'ACK_LOST_AFTER_APPLY'});
     }
-    this._fault(BrokerOperation.PLACE_ORDER,'after_apply',{correlationId,orderRef:row.brokerOrderRef});
+    this._fault(BrokerOperation.PLACE_ORDER,'after_apply',{correlationId,orderRef:row.brokerOrderRef,actionId:row.actionId});
     return clone(row);
   }
   async _cancel(payload){
     const order=this.orders.find(x=>x.brokerOrderRef===payload?.orderId);
-    if(!order) throw simError({operation:BrokerOperation.CANCEL_ORDER,kind:BrokerOperationKind.COMMAND,category:ProviderErrorCategory.RESOURCE_NOT_FOUND,code:ProviderErrorCode.RESOURCE_NOT_FOUND,message:'Simulated order not found',outcome:ProviderCommandOutcome.KNOWN_NOT_APPLIED,reason:'ORDER_NOT_FOUND'});
+    if(!order) throw this._error({operation:BrokerOperation.CANCEL_ORDER,kind:BrokerOperationKind.COMMAND,category:ProviderErrorCategory.RESOURCE_NOT_FOUND,code:ProviderErrorCode.RESOURCE_NOT_FOUND,message:'Simulated order not found',outcome:ProviderCommandOutcome.KNOWN_NOT_APPLIED,reason:'ORDER_NOT_FOUND'});
     const script=this._script(order.brokerCorrelationRef)?.cancel??{};
     this._fault(BrokerOperation.CANCEL_ORDER,'before_apply',{correlationId:order.brokerCorrelationRef,orderRef:order.brokerOrderRef});
     for(const fill of array(script.fillsBeforeConfirm)) this.clock.schedule(Number(fill.afterMs??0),()=>this._applyFill(order,fill),{label:`cancel-race-fill:${order.brokerOrderRef}`});
@@ -137,14 +144,28 @@ export class SimulatedBroker {
     this._emitOrder(order);
     if(script.ackLost){
       this.trace?.record('broker.command.ambiguous',{operation:BrokerOperation.CANCEL_ORDER,orderRef:order.brokerOrderRef,correlationId:order.brokerCorrelationRef,actionId:payload?.actionId??null});
-      throw simError({operation:BrokerOperation.CANCEL_ORDER,kind:BrokerOperationKind.COMMAND,category:ProviderErrorCategory.NETWORK,code:ProviderErrorCode.NETWORK_FAILURE,message:'Simulated cancel acknowledgement loss',outcome:ProviderCommandOutcome.UNKNOWN,reason:'CANCEL_ACK_LOST'});
+      throw this._error({operation:BrokerOperation.CANCEL_ORDER,kind:BrokerOperationKind.COMMAND,category:ProviderErrorCategory.NETWORK,code:ProviderErrorCode.NETWORK_FAILURE,message:'Simulated cancel acknowledgement loss',outcome:ProviderCommandOutcome.UNKNOWN,reason:'CANCEL_ACK_LOST'});
     }
     return clone(order);
   }
   async _modify(payload){
     const order=this.orders.find(x=>x.brokerOrderRef===payload?.orderId);
-    if(!order) throw simError({operation:BrokerOperation.MODIFY_ORDER,kind:BrokerOperationKind.COMMAND,category:ProviderErrorCategory.RESOURCE_NOT_FOUND,code:ProviderErrorCode.RESOURCE_NOT_FOUND,message:'Simulated order not found',outcome:ProviderCommandOutcome.KNOWN_NOT_APPLIED,reason:'ORDER_NOT_FOUND'});
-    Object.assign(order,clone(payload?.changes??{}));
+    if(!order) throw this._error({operation:BrokerOperation.MODIFY_ORDER,kind:BrokerOperationKind.COMMAND,category:ProviderErrorCategory.RESOURCE_NOT_FOUND,code:ProviderErrorCode.RESOURCE_NOT_FOUND,message:'Simulated order not found',outcome:ProviderCommandOutcome.KNOWN_NOT_APPLIED,reason:'ORDER_NOT_FOUND'});
+    const invalid=message=>this._error({operation:BrokerOperation.MODIFY_ORDER,kind:BrokerOperationKind.COMMAND,category:ProviderErrorCategory.INVALID_REQUEST,code:ProviderErrorCode.INVALID_REQUEST,message,outcome:ProviderCommandOutcome.KNOWN_NOT_APPLIED,reason:'INVALID_MODIFICATION'});
+    if(!working.has(order.status)) throw invalid('Simulated modification requires a working order');
+    const changes=payload?.changes??{},patch={};
+    const fields={quantity:'requestedQuantity',price:'limitPrice',triggerPrice:'triggerPrice',disclosedQuantity:'disclosedQuantity',orderType:'orderType',validity:'validity'};
+    for(const [requestField,factField] of Object.entries(fields)){
+      if(changes[requestField]===undefined) continue;
+      const value=['orderType','validity'].includes(requestField)?String(changes[requestField]).toUpperCase():Number(changes[requestField]);
+      if(typeof value==='number'&&(!Number.isFinite(value)||value<0)) throw invalid(`Invalid modified ${requestField}`);
+      patch[factField]=value;
+    }
+    if(!Object.keys(patch).length) throw invalid('No supported modification fields supplied');
+    if(patch.requestedQuantity!==undefined&&(!Number.isInteger(patch.requestedQuantity)||patch.requestedQuantity<=0||patch.requestedQuantity<order.filledQuantity)) throw invalid('Modified quantity must be a positive integer no smaller than filled quantity');
+    Object.assign(order,patch);
+    order.remainingQuantity=order.requestedQuantity-order.filledQuantity;
+    order.status=order.remainingQuantity===0?'FILLED':order.filledQuantity>0?'PARTIALLY_FILLED':'PENDING';
     this.trace?.record('broker.command.applied',{operation:BrokerOperation.MODIFY_ORDER,orderRef:order.brokerOrderRef,correlationId:order.brokerCorrelationRef,actionId:payload?.actionId??null});
     this._emitOrder(order);return clone(order);
   }

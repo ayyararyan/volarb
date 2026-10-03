@@ -147,7 +147,7 @@
         0,
         0
       ],
-      "note": "Authoritative broker order/fill/status/account execution facts normalized before use by Execution Engine or Position Management. Exact taxonomy TBD.",
+      "note": "Authoritative broker order/fill/status/account facts normalized through the Broker Execution Port for execution components and upstream strategies. Provider response envelopes are implemented; component-specific execution-state aggregation remains active design.",
       "identity_scope": "canonical",
       "canonical_component_id": "component.execution_engine"
     },
@@ -385,7 +385,7 @@
         0,
         0
       ],
-      "note": "Second Execution Engine sub-box. Enforces the sequence from Margin Optimization, then converts only the current allowed step plus live LOB/order state into time-indexed order-management actions.",
+      "note": "Third normal-flow Execution Engine sub-box, after Margin Optimization and Execution Slicing. Enforces inherited ordering and slice-release constraints, then converts only released slice work plus live LOB/order state into time-indexed order-management actions.",
       "identity_scope": "canonical",
       "canonical_component_id": "component.execution_engine"
     },
@@ -842,7 +842,7 @@
         1
       ],
       "status": "default",
-      "note": "Current default Optimal Execution plug-in. Posts passively at the same-side best quote, waits T, refreshes/reprices for up to N passive cycles, then cancels/reconciles and markets the confirmed remainder.",
+      "note": "Current default Optimal Execution plug-in. Posts passively at the same-side best quote, waits T, uses up to N passive waiting/evaluation intervals (at most N-1 refresh opportunities), then cancels/reconciles and markets the confirmed remainder.",
       "identity_scope": "canonical",
       "canonical_component_id": "component.execution_engine"
     },
@@ -863,7 +863,7 @@
         5,
         1
       ],
-      "note": "T = passive waiting interval between evaluations; N = maximum passive refresh cycles after initial placement. Values intentionally TBD.",
+      "note": "T = passive waiting interval between evaluations; N = maximum passive waiting/evaluation intervals including the final fallback evaluation (at most N-1 refresh opportunities). Values intentionally TBD.",
       "identity_scope": "canonical",
       "canonical_component_id": "component.execution_engine"
     },
@@ -1105,7 +1105,7 @@
         0,
         0
       ],
-      "note": "NVIC-inspired supervisory sub-box. Orthogonal to the normal Margin Optimization -> Optimal Execution chain and authorized to preempt both according to interrupt priority.",
+      "note": "NVIC-inspired supervisory sub-box. Orthogonal to the normal Margin Optimization -> Execution Slicing -> Optimal Execution chain and authorized to preempt all three according to interrupt priority.",
       "identity_scope": "canonical",
       "canonical_component_id": "component.execution_engine"
     },

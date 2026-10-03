@@ -1,11 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { BrokerOperation, BrokerOperationKind } from '../../execution-engine/ports/broker-port.mjs';
 import { VirtualClock } from '../src/virtual-clock.mjs';
 import { ComponentHarness, CompositionHarness, createExecutionTestbed, runMassScenarios, runScenario } from '../src/harness.mjs';
 import { checkInvariants, noBlindRetryAfterAmbiguity } from '../src/invariants.mjs';
 
 const instrument={provider:'simulated',providerInstrumentId:'NIFTY-X',exchangeSegment:'SIM'};
+const readScenario = name => JSON.parse(fs.readFileSync(new URL(`../scenarios/${name}.json`, import.meta.url), 'utf8'));
 
 test('virtual clock executes deterministic time then insertion order without wall-clock sleeps',async()=>{
   const clock=new VirtualClock(1000),seen=[];
@@ -32,13 +34,7 @@ test('component harness mounts one box with deterministic injected dependencies'
 });
 
 test('simulated broker reproduces partial-fill/cancel race without overfill',async()=>{
-  const scenario={
-    name:'partial-fill-cancel-race',
-    broker:{scripts:{byCorrelation:{'corr-race':{
-      fills:[{afterMs:10,quantity:30,price:100},{afterMs:40,quantity:50,price:100}],
-      cancel:{ackDelayMs:10,fillsBeforeConfirm:[{afterMs:5,quantity:10,price:100}]}
-    }}}}
-  };
+  const scenario=readScenario('partial-fill-cancel-race');
   const out=await runScenario({scenario,driver:async t=>{
     t.ledger.append({actionId:'place-1',kind:'PLACE'});
     const placed=await t.broker.call({kind:BrokerOperationKind.COMMAND,operation:BrokerOperation.PLACE_ORDER,payload:{order:{
@@ -56,7 +52,7 @@ test('simulated broker reproduces partial-fill/cancel race without overfill',asy
 });
 
 test('acknowledgement loss is reproducible and reconciliation clears blind-retry invariant',async()=>{
-  const scenario={name:'ack-loss',broker:{scripts:{byCorrelation:{'corr-amb':{ackLost:true}}}}};
+  const scenario=readScenario('ack-loss-reconcile');
   const out=await runScenario({scenario,driver:async t=>{
     t.ledger.append({actionId:'place-amb',kind:'PLACE'});
     await assert.rejects(t.broker.call({kind:BrokerOperationKind.COMMAND,operation:BrokerOperation.PLACE_ORDER,payload:{order:{

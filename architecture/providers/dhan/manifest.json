@@ -70,7 +70,7 @@
       7,
       1
     ],
-    "rule": "Provider-native errors are normalized before crossing into a Volarb component."
+    "rule": "Provider-native errors are normalized into the global Provider Error Envelope before crossing the Broker Execution Port into reusable execution or strategy code."
   },
   "invariants": [
     "No strategy VID is assigned to Dhan.",

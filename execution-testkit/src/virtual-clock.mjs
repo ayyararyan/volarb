@@ -24,7 +24,9 @@ export class VirtualClock {
       this.time=next.at;
       await next.fn();
     }
-    this.time=target;
+    // A callback may advance the shared clock while awaiting a broker delay.
+    // Returning to the outer advance must never rewind that elapsed time.
+    this.time=Math.max(this.time,target);
     return this.time;
   }
   async runUntilIdle({maxEvents=100000}={}){

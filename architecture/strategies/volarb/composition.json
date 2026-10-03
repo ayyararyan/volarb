@@ -39,7 +39,7 @@
       "mount_id": "mount.volarb.execution.main.broker.primary",
       "mount_path": "execution.main/broker.primary",
       "component_id": "provider.dhan",
-      "component_version": "1.0.0",
+      "component_version": "1.4.0",
       "parent_mount_id": "mount.volarb.execution.main",
       "role": "primary_broker_provider"
     }

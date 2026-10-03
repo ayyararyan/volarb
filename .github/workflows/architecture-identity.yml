@@ -4,15 +4,20 @@ on:
   pull_request:
     paths:
       - 'architecture/**'
-      - 'docs/workflows/vector-id-registry.json'
-      - 'docs/architecture/compositional-identity.md'
+      - 'docs/workflows/**'
+      - 'execution-engine/**'
+      - 'environments/execution/**'
+      - 'docs/architecture/**'
       - '.github/workflows/architecture-identity.yml'
   push:
     branches: [main]
     paths:
       - 'architecture/**'
-      - 'docs/workflows/vector-id-registry.json'
-      - 'docs/architecture/compositional-identity.md'
+      - 'docs/workflows/**'
+      - 'execution-engine/**'
+      - 'environments/execution/**'
+      - 'docs/architecture/**'
+      - '.github/workflows/architecture-identity.yml'
 
 permissions:
   contents: read
@@ -25,5 +30,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '26'
-      - run: node --test architecture/lib/identity.test.mjs
+      - run: node --test architecture/lib/*.test.mjs architecture/*.test.mjs
       - run: node architecture/validate.mjs
