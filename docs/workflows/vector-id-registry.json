@@ -2922,7 +2922,7 @@
         0,
         1
       ],
-      "note": "Final node of Margin Optimization. Chooses which instrument and maximum quantity are currently eligible to be worked. It does not choose order price, order type, or timing."
+      "note": "Produces the ordered Execution Sequence Plan, specifying which instrument actions occur first, next, and later, with quantity constraints that preserve hedge and account-resource requirements."
     },
     {
       "vid": [
@@ -2941,7 +2941,7 @@
         0,
         0
       ],
-      "note": "Second Internal Execution sub-box. Converts eligible work plus live LOB/order state into time-indexed order-management actions through a plug-and-play algorithm."
+      "note": "Second Internal Execution sub-box. Enforces the sequence from Margin Optimization, then converts only the current allowed step plus live LOB/order state into time-indexed order-management actions."
     },
     {
       "vid": [
@@ -2960,7 +2960,7 @@
         0,
         1
       ],
-      "note": "Instrument, side, remaining quantity and maximum quantity currently released by hedge/dependency/margin logic. Contains no price/order-type/timing decision."
+      "note": "Current sequence step released by Sequence Enforcer: instrument, side, remaining quantity and maximum quantity currently permitted. Optimal Execution algorithms may work only this slice."
     },
     {
       "vid": [
@@ -2998,7 +2998,7 @@
         0,
         1
       ],
-      "note": "Plug-and-play broker-neutral interface for micro-execution algorithms. Concrete algorithms are identified when introduced."
+      "note": "Plug-and-play broker-neutral micro-execution interface. Every algorithm is sequence-constrained and receives only the currently released sequence step."
     },
     {
       "vid": [
@@ -3042,7 +3042,9 @@
         3,
         7,
         1
-      ]
+      ],
+      "status": "retired",
+      "retired_reason": "Superseded by explicit Execution Sequence Plan and Sequence Enforcer."
     },
     {
       "vid": [
@@ -3465,6 +3467,119 @@
         4,
         7,
         2
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        7,
+        2
+      ],
+      "name": "Execution Sequence Plan",
+      "kind": "data_contract",
+      "parent_vid": [
+        5,
+        0,
+        2,
+        0,
+        1
+      ],
+      "note": "Ordered instrument-level execution plan emitted by Margin Optimization. Every executable item has an explicit sequence position and quantity constraint. Optimal Execution may not reorder or skip it."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        3,
+        1,
+        1
+      ],
+      "name": "Sequence Enforcer",
+      "kind": "node",
+      "parent_vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ],
+      "note": "Hard constraint gate inside Optimal Execution. Requires a valid Execution Sequence Plan and releases only the currently permitted sequence step. No plan means no execution."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        4,
+        6
+      ],
+      "name": "Margin Sequence Optimizer -> Execution Sequence Plan",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        2,
+        1,
+        3
+      ],
+      "target_vid": [
+        5,
+        0,
+        2,
+        7,
+        2
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        4,
+        7
+      ],
+      "name": "Execution Sequence Plan -> Sequence Enforcer",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        2,
+        7,
+        2
+      ],
+      "target_vid": [
+        5,
+        0,
+        3,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        3,
+        4,
+        3
+      ],
+      "name": "Sequence Enforcer -> eligible execution work",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        3,
+        1,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        3,
+        7,
+        1
       ]
     }
   ]
