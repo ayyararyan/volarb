@@ -925,6 +925,26 @@ Examples:
 
 **Operational rule going forward:** Every architecture edit must update both the owning graph document and the central machine-readable VID registry.
 
+
+## Next workstream
+
+### [5,0,0,0,0] External Dhan Execution Layer — bottom-up design
+
+The next dedicated design session should focus only on the **Dhan-specific execution layer**, not on the intelligent Volarb strategy execution/risk engine in Box 4.
+
+Scope for the next chat:
+- treat the Dhan execution layer as an external plug-in / provider box;
+- define the exact interface between Box 4 and Dhan;
+- map canonical Volarb execution commands into Dhan API operations;
+- map Dhan responses, fills, rejects, positions, order states, and margin/account facts back into normalized Volarb events;
+- cover Dhan-specific authentication, IP whitelisting, instrument/token mapping, connectivity, retries, idempotency, failure handling, and reconciliation;
+- keep Dhan intentionally low-intelligence: it executes instructions and reports authoritative facts;
+- preserve replaceability so Kotak, ICICI Securities, or another broker can later implement the same external contract.
+
+Do **not** redesign Box 4 strategy intelligence in that session unless an interface requirement from Dhan forces a contract change.
+
+The internal graph for [5,0,0,0,0] is intentionally undefined at this point and should be designed in the next chat from the bottom up.
+
 ## Open questions / unresolved design choices
 
 - What decisions should be fully autonomous versus require human approval?
