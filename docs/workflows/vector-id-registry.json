@@ -25,7 +25,8 @@
       "1": "regime_decision",
       "2": "intraday_selection_capital_allocation",
       "3": "per_underlying_trade_selection",
-      "4": "shared_execution_risk_management"
+      "4": "shared_execution_risk_management",
+      "5": "external_dhan_execution_layer"
     },
     "box3_instance_codes": {
       "0": "template",
@@ -2528,6 +2529,19 @@
         1,
         1
       ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "name": "External Dhan Execution Layer",
+      "kind": "root",
+      "status": "placeholder",
+      "note": "Reserved for next bottom-up design session; internals intentionally undefined."
     }
   ]
 }
