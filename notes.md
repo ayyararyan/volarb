@@ -114,8 +114,52 @@ A richer implementation could later add regime labels, confidence, reasons, expi
 - Regime gate: *Should this type of risk be deployed now?*
 - Trade-selection layer: *If yes, which specific butterfly, expiry, strikes, width, size and timing are best?*
 
-**Future design task:** Define how the regime box is built, calibrated, validated, refreshed intraday, and how quickly it can change state. This remains open and should be designed separately rather than prematurely embedded in another module.
+**Future design task:** Define how the regime box is built, calibrated, validated, and updated over a multi-day horizon. This regime is explicitly not an intraday state classifier; it is intended to characterize persistent market conditions across continuous days or weeks. The exact cadence and evidence required for a regime transition remain open.
 
+
+### 2026-10-03 — Unfavorable regime path and adaptive recheck timing
+
+**Raw intent:** If the regime gate says the environment is not favorable for short-gamma butterflies, the system should not simply stop indefinitely or check again arbitrarily. It needs a separate mechanism that decides **when the regime should next be reassessed**.
+
+**Critical clarification:** The regime being discussed is not an intraday regime. It is a persistent multi-day market state — potentially spanning several days or one or two weeks — describing whether the broader environment has recently been suitable for short-gamma butterfly deployment.
+
+**Interpretation:** The negative branch of the regime gate requires its own box: a **Regime Recheck Scheduler**. Its job is not to decide whether the market is favorable; the regime detector already does that. Its job is to decide **when enough new information may plausibly have accumulated to justify asking the regime question again**.
+
+Conceptually:
+
+```text
+                REGIME GATE
+              favorable now?
+               /          \
+             YES           NO
+              |             |
+              v             v
+      underlying       REGIME RECHECK
+      allocator          SCHEDULER
+                             |
+                    when should we
+                    test again?
+                             |
+                             v
+                     next regime check
+                             |
+                             +-------> REGIME GATE
+```
+
+**Design principle:** An unfavorable regime should create a durable waiting state with an explicit next-review condition. The system should not continuously poll the regime merely because it is capable of doing so.
+
+**Possible future recheck logic, not yet decided:** The next check could eventually depend on elapsed trading days, meaningful changes in realized volatility, implied-versus-realized relationships, trend/range behavior, event-risk conditions, volatility-of-volatility, drawdown in recent short-gamma proxies, or another state-change signal. The architecture should allow either:
+- a time-based recheck,
+- an event/state-change-triggered recheck,
+- or a hybrid of the two.
+
+**Output of this box:** At minimum, the scheduler should produce a next permitted or required regime-review time/condition. It may later also record the reason for that timing.
+
+**Important separation:**
+- Regime detector: *Is the multi-day environment favorable now?*
+- Recheck scheduler: *If not, when should we ask that question again?*
+
+**Behavioral consequence:** When the regime is unfavorable, the autonomous bot should remain in a deliberate **NO-NEW-SHORT-GAMMA / WAITING-FOR-REASSESSMENT** state rather than drifting into repeated trade searches.
 
 ### 2026-10-03 — Capital-aware underlying selection after regime approval
 
@@ -185,7 +229,8 @@ The downstream trade-construction engine should receive only the underlying(s) a
 - What market-regime conditions should permit or forbid short-gamma deployment?
 - How should the regime detector be built, calibrated and validated?
 - Should regime state be market-wide, underlying-specific, expiry-specific, or a hierarchy of all three?
-- How frequently should regime state be recomputed, and what evidence is required before switching states?
+- How frequently should the multi-day regime state be recomputed, and what evidence is required before switching states?
+- How should the Regime Recheck Scheduler choose the next review: fixed trading-day cadence, state-change trigger, or hybrid?
 - Should the regime gate output only eligible/ineligible/uncertain, or also a confidence score and risk-intensity recommendation?
 - How should the research laboratory feed evidence into the live trading system without creating look-ahead or uncontrolled adaptation?
 - What are the hard portfolio, loss, margin, liquidity, and execution-risk limits?
