@@ -13,7 +13,7 @@ Session realized loss so far today: ₹<amount>. Daily loss budget: ₹1,000.
 
 Read fresh Dhan positions and orders and dhan_get_butterfly_state. Pull the current chain and executable-side close quotes for all four legs, compute bankable loss at executable close, and add it to the session loss.
 Run the local five-minute HF sampler, build the RV input with asof and the news packet, run the RV/drift forecast, then run the controller with daily_loss_budget_rupees 1000 and session_loss_rupees.
-Publish the journal entry to ayyararyan/volarb main before replying.
+Save the entry to the configured private journal outside the source checkout and verify persistence before replying; never publish financial records to GitHub.
 Reply with the Mode A table only: HOLD or SQUARE OFF, one concrete reason, next review time in IST. State session loss vs budget inside the Why cell.
 ```
 

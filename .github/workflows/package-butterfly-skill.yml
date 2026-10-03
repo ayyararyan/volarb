@@ -1,9 +1,8 @@
 name: Package Butterfly Skills
 on:
   push:
-    paths: ['VERSION', 'requirements*.lock', 'skill/**', '.github/skill-tools/**', '.github/workflows/package-butterfly-skill.yml']
+    paths: ['VERSION', 'LICENSE', 'tests/test_skill_packaging.py', 'requirements*.lock', 'skill/**', '.github/skill-tools/**', '.github/workflows/package-butterfly-skill.yml']
   pull_request:
-    paths: ['VERSION', 'requirements*.lock', 'skill/**', '.github/skill-tools/**', '.github/workflows/package-butterfly-skill.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -20,6 +19,8 @@ jobs:
       - name: Install validation dependencies
         run: |
           python -m pip install --disable-pip-version-check --require-hashes --only-binary=:all: -r requirements-dev.lock
+      - name: Skill licensing and fail-closed packaging regressions
+        run: python -B -m unittest discover -s tests -p 'test_skill_packaging.py' -v
       - name: Controller, overnight and regime regressions
         run: python -m pytest -q skill/butterfly-market-outlook/tests
       - name: RV fixture checks

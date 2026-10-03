@@ -1,50 +1,90 @@
 #!/usr/bin/env python3
-"""Package a validated skill folder into skill.zip."""
-import sys
-import zipfile
+"""Export a validated VolArb skill with its governing proprietary license.
+
+Implementation replaced for the 2026-10-04 publication audit. The public
+``package_skill(path, output_dir=None) -> Path | None`` interface is retained.
+Copyright © 2026 Shunya. All Rights Reserved. See the repository LICENSE.
+"""
+
+import argparse
+import os
 from pathlib import Path
+import tempfile
+import zipfile
+
 from quick_validate import validate_skill
 
 MAX_SKILL_ZIP_BYTES = 25 * 1024 * 1024
+ROOT_LICENSE = Path(__file__).resolve().parents[2] / "LICENSE"
+_IGNORED_DIRECTORIES = frozenset({"__pycache__", ".pytest_cache"})
+
+
+def _export_files(directory):
+    """Build a stable inventory without following links outside the skill."""
+    inventory = []
+    for path in sorted(directory.rglob("*")):
+        relative = path.relative_to(directory)
+        if _IGNORED_DIRECTORIES.intersection(relative.parts) or path.suffix in {".pyc", ".pyo"}:
+            continue
+        if path.is_symlink():
+            raise ValueError(f"Skill exports do not accept symbolic links: {relative}")
+        if path.is_file():
+            inventory.append((path, relative))
+    return inventory
+
 
 def package_skill(skill_path, output_dir=None):
-    skill_path = Path(skill_path).resolve()
-    if not skill_path.exists() or not skill_path.is_dir():
-        print(f"Skill folder not found: {skill_path}")
+    """Publish skill.zip only after validation, licensing and size checks pass."""
+    temporary = None
+    try:
+        requested = Path(skill_path).expanduser()
+        if requested.is_symlink():
+            raise ValueError("The skill root cannot be a symbolic link")
+        directory = requested.resolve()
+        accepted, explanation = validate_skill(directory)
+        if not accepted:
+            raise ValueError(explanation)
+        license_text = ROOT_LICENSE.read_bytes()
+        if not license_text.strip():
+            raise ValueError("The repository LICENSE is empty")
+        inventory = _export_files(directory)
+        for source, relative in inventory:
+            if relative == Path("LICENSE") and source.read_bytes() != license_text:
+                raise ValueError("The skill LICENSE conflicts with the repository LICENSE")
+        destination = Path(output_dir or Path.cwd()).expanduser().resolve()
+        if destination == directory or directory in destination.parents:
+            raise ValueError("Choose an output directory outside the skill source")
+        destination.mkdir(parents=True, exist_ok=True)
+        archive_path = destination / "skill.zip"
+        with tempfile.NamedTemporaryFile(prefix=".skill-export-", suffix=".zip", dir=destination,
+                                         delete=False) as handle:
+            temporary = Path(handle.name)
+        with zipfile.ZipFile(temporary, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            for source, relative in inventory:
+                if relative != Path("LICENSE"):
+                    archive.write(source, (Path(directory.name) / relative).as_posix())
+            archive.writestr(f"{directory.name}/LICENSE", license_text)
+        size = temporary.stat().st_size
+        if size > MAX_SKILL_ZIP_BYTES:
+            raise ValueError(f"The compressed export exceeds the {MAX_SKILL_ZIP_BYTES}-byte limit")
+        os.replace(temporary, archive_path)
+        print(f"Exported {directory.name}: {archive_path} ({size} bytes; LICENSE included)")
+        return archive_path
+    except (OSError, UnicodeError, ValueError, zipfile.BadZipFile) as error:
+        print(f"Skill export refused: {error}")
         return None
-    if not (skill_path / "SKILL.md").exists():
-        print(f"SKILL.md not found in {skill_path}")
-        return None
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
 
-    print("Validating skill...")
-    valid, message = validate_skill(skill_path)
-    if not valid:
-        print(f"Validation failed: {message}")
-        return None
-    print(message)
 
-    output_path = Path(output_dir).resolve() if output_dir else Path.cwd()
-    output_path.mkdir(parents=True, exist_ok=True)
-    skill_filename = output_path / "skill.zip"
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("skill_path", type=Path)
+    parser.add_argument("output_dir", type=Path, nargs="?")
+    arguments = parser.parse_args()
+    return 0 if package_skill(arguments.skill_path, arguments.output_dir) is not None else 1
 
-    with zipfile.ZipFile(skill_filename, "w", zipfile.ZIP_DEFLATED) as zipf:
-        for file_path in skill_path.rglob("*"):
-            if file_path.is_file() and not any(part in {"__pycache__", ".pytest_cache"} for part in file_path.parts) and file_path.suffix not in {".pyc", ".pyo"}:
-                arcname = file_path.relative_to(skill_path.parent)
-                zipf.write(file_path, arcname)
-                print(f"Added: {arcname}")
-
-    archive_size = skill_filename.stat().st_size
-    print(f"Archive size: {archive_size:,} bytes")
-    if archive_size > MAX_SKILL_ZIP_BYTES:
-        print("skill.zip exceeds the 25 MB upload limit")
-        return None
-    print(f"Successfully packaged: {skill_filename}")
-    return skill_filename
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: package_skill.py <skill-folder> [output-directory]")
-        raise SystemExit(1)
-    result = package_skill(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else None)
-    raise SystemExit(0 if result else 1)
+    raise SystemExit(main())

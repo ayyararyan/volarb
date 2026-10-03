@@ -9,8 +9,10 @@ locally edited skills or personal instructions.
 
 Research is read-only. Aryan executes. No orders, scheduler activation, automatic
 ledger initialization, or implied monitoring. A fresh install is not verified flat.
-Never load real account records as synthetic fixtures. `trade-log/` in the source
-repository is historical evidence, not the live accounting store.
+Never load real account records as synthetic fixtures. `trade-log/` and
+`market-outlook/` in the source repository are navigation notices only. Keep
+financial history and market reviews in the configured private journal outside
+source; never publish them to GitHub or substitute them for live accounting.
 
 Use the manifest's data directory `Trading/ledger/` as the sole live financial
 store. Existing ledger source and shared writers are under `services/day-workflow`.

@@ -2,6 +2,13 @@
 
 Repository source releases are versioned independently of component packages and schemas. See the [release policy](docs/RELEASING.md); dated development detail remains in [development history](docs/DEVELOPMENT_HISTORY.md).
 
+## Unreleased — proprietary publication preparation
+
+- Establish Shunya ownership and a proprietary inspection-only LICENSE, with explicit GitHub-platform and third-party exceptions. Preserve Plotly/dependency and embedded-font notices; do not relicense dependencies.
+- Remove private financial payloads from the proposed source tree, retain their originals privately, and route future account journals outside the checkout. Replace observed/undocumented fixture inputs with synthetic scenarios and independently replace packaging helpers with uncertain historical attribution.
+- Add publication-guard and packaging regressions, legal-file export coverage, unconditional PR validation and a proposed main ruleset. Canonical architecture, trading limits and production behavior are unchanged.
+- **Not a public release:** remote history and PR-cache remediation remain pending; private-repository protection requires an available GitHub plan. The owner chose to remain private. No release/version change, history force-push, deployment or trading activation. [Audit and remaining gates](docs/audits/2026-10-04-public-preparation.md).
+
 ## [0.1.0] - 2026-10-04
 
 **Execution Infrastructure Foundation** — first repository release; no earlier repository version or tag. [Full release notes](docs/releases/v0.1.0.md).

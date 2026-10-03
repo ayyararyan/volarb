@@ -17,6 +17,6 @@
   "accounting": "one canonical external data directory; same cycle through adjustments; no invented fills",
   "output": "repository output-template.md Mode A/B/C for market decisions",
   "news": "invoke market-news-signal-filter once per horizon",
-  "journals": "publish sanitized completed market reviews to ayyararyan/volarb main; no raw evidence or secrets",
+  "journals": "record completed market reviews in the configured private journal outside source; never publish financial records to GitHub; report missing destination or persistence failure",
   "automation": "inactive; installation never activates trading or monitoring"
 }

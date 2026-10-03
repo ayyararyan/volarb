@@ -16,7 +16,9 @@ npm ci --ignore-scripts --prefix services/dhan-chatgpt-mcp
 
 ```sh
 python3 -B tools/check_repository.py
+python3 -B tools/check_public_source.py
 python3 -B -m unittest discover -s tests -p 'test_repository_hygiene.py' -v
+python3 -B -m unittest discover -s tests -p 'test_public_source.py' -v
 node --test architecture/lib/*.test.mjs architecture/*.test.mjs
 node architecture/validate.mjs
 node --test execution-testkit/test/*.test.mjs
@@ -25,6 +27,8 @@ npm test --prefix services/dhan-chatgpt-mcp
 
 The source-hygiene checker validates local Markdown paths and heading anchors, JSON syntax, relative JS imports and per-directory archive indexes. It does not check remote websites or execute code examples. Architecture checks cover canonical identities, legacy mirrors and composition/manifests; the testbed uses injected simulated dependencies. These tests do not establish a completed execution pipeline.
 
+The public-source guard rejects known private financial payloads, authentication/runtime artifacts, identifying paths and missing fixture provenance. It is a narrow prevention check, not a secret/history scanner or public-release clearance. See the [publication preparation audit](audits/2026-10-04-public-preparation.md) for the separate history and GitHub-exposure gates.
+
 ## Portable kit, SHADOW workflow and research skills
 
 ```sh
@@ -32,6 +36,7 @@ The source-hygiene checker validates local Markdown paths and heading anchors, J
 /tmp/volarb-checks/bin/python -B -m unittest discover -s services/day-workflow -p 'test_*.py' -v
 /tmp/volarb-checks/bin/python -m pytest -q skill/butterfly-market-outlook/tests
 /tmp/volarb-checks/bin/python .github/skill-tools/check_rv_fixtures.py
+/tmp/volarb-checks/bin/python skill/intraday-realized-volatility-forecast/scripts/generate_synthetic_fixtures.py --check
 for skill in butterfly-market-outlook intraday-realized-volatility-forecast market-news-signal-filter; do
   /tmp/volarb-checks/bin/python .github/skill-tools/package_skill.py "skill/$skill" "/tmp/volarb-skill-check/$skill"
 done
@@ -65,6 +70,6 @@ The context is the **repository root** so the Dhan provider's generic Execution 
 
 ## CI interpretation
 
-- Architecture, Execution Testbed, Dhan/provider, portable kit, SHADOW workflow, dashboard, research lab, skill packaging and repository hygiene are separate workflows.
-- Path filters include shared runtime dependencies; a contract change must exercise its consumers.
+- Architecture, Execution Testbed, Dhan/provider, portable kit, SHADOW workflow, dashboard, research lab, skill packaging, repository hygiene and public-source safety are separate workflows.
+- All ten validation jobs run on every pull request so they can be required without path-filter deadlocks. Push filters include shared runtime dependencies; a contract change must exercise its consumers.
 - Record local and hosted CI results separately. A passing source suite is not a live trading-readiness receipt.

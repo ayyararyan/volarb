@@ -15,7 +15,7 @@ Check on the office Mac:
 3. eSSVI/HAR dashboard on port 8770: /api/state reachable, timestamp fresh, NIFTY covered.
 4. HF sampler: node src/workflow-data-cli.mjs --scope hf runs as a local process (do not use a remote node exec); report the block age and quality.
 5. Controller and RV skill: decision_controller.py and forecast_intraday_rv.py import cleanly under the locked Python.
-Reply with one table: component, status, blocker or expiry. Do not publish a journal entry unless a check touched market data.
+Reply with one table: component, status, blocker or expiry. Record a private journal entry only if a check touched market data; never publish financial or authentication evidence to GitHub.
 ```
 
 ## Expected reply

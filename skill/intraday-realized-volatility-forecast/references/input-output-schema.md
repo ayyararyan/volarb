@@ -107,3 +107,7 @@ The script returns, among other diagnostics:
   "confidence":"low|medium|high"
 }
 ```
+
+## Bundled fixture provenance
+
+The four `scripts/test_*.json` regression cases are generated solely from invented constants, sine waves, a trend ramp and a transient step by `scripts/generate_synthetic_fixtures.py`. They contain no observed quotes or broker data. Run that generator with `--check` to verify reproducibility. Example timestamps are arbitrary test clocks, not exchange observations.

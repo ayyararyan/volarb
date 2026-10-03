@@ -1,6 +1,6 @@
 # Canonical repository map
 
-Updated 2026-10-03. This map describes source ownership and implementation status, not a running deployment. Start at the [root README](../README.md); [validation commands](VALIDATION.md) cover the source tree.
+Updated 2026-10-04. This map describes source ownership and implementation status, not a running deployment. Start at the [root README](../README.md); [validation commands](VALIDATION.md) cover the source tree.
 
 ## Architecture and execution
 
@@ -32,12 +32,12 @@ The boundary is **Strategy → optional Strategy Execution Adapter → Execution
 | [`skill/`](../skill/README.md) | Current-observation research modules: Butterfly Market Outlook v2.6, HF realized-volatility forecast and news filter. |
 | [`docs/DAILY_OPERATING_ALGORITHM.md`](DAILY_OPERATING_ALGORITHM.md) | Current manual daily sequence; [standing workflow](WORKFLOW.md) and [covenant](PERSONAL_BUTTERFLY_TRADING_GOVERNANCE.md) supply operating constraints. |
 | [`prompts/`](../prompts/README.md) | Bounded user-invoked workflow prompts, not schedules or order authority. |
-| [`market-outlook/`](../market-outlook/README.md) | Dated research/decision journals, preserved unchanged by cleanup. |
-| [`trade-log/`](../trade-log/README.md) | Historical executions, provenance and legacy review evidence. Not a fresh account snapshot or an alternate live ledger. |
+| [`market-outlook/`](../market-outlook/README.md) | Public navigation notice only. Dated market/position reviews belong in a configured private journal outside source. |
+| [`trade-log/`](../trade-log/README.md) | Public navigation notice and private schema reference. Personal executions, account snapshots and calibration episodes are intentionally excluded. |
 
 ## Maintenance and history
 
 - [Validation guide](VALIDATION.md), `.github/workflows/` and `tests/` explain practical offline checks.
 - [Current notes](../notes.md) route decisions to canonical documents; [tasks](../tasks.md) distinguish outstanding implementation from completed design.
-- [Development history](DEVELOPMENT_HISTORY.md) records changes; [file classification](audits/2026-10-03-file-classification.tsv) accounts for every baseline tracked file.
+- [Development history](DEVELOPMENT_HISTORY.md) records changes; [file classification](audits/2026-10-03-file-classification.tsv) accounts for every cleanup-baseline tracked file; its historical financial-record dispositions were superseded by the public-release privacy boundary.
 - [Archive](../archive/README.md) separates superseded architecture, research reports and retired deployment policy. Archived content is historical evidence, never a runtime dependency or current instruction.

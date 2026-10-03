@@ -5,6 +5,7 @@ prove that stale HF data, a missing news packet, a missing IV anchor and a
 missing decision clock can never produce FAVOURABLE.
 """
 import copy
+from datetime import datetime, timedelta
 import json
 from pathlib import Path
 import subprocess
@@ -13,6 +14,7 @@ import tempfile
 
 root = Path(__file__).resolve().parents[2]
 scripts = root / 'skill/intraday-realized-volatility-forecast/scripts'
+subprocess.run([sys.executable, str(scripts / 'generate_synthetic_fixtures.py'), '--check'], check=True)
 expected = {
     'stable': ('FAVOURABLE', 'LOW', False),
     'trend': ('UNFAVOURABLE', 'HIGH', True),
@@ -44,7 +46,7 @@ for name, states in expected.items():
 stable = json.loads((scripts / 'test_stable.json').read_text())
 
 stale = copy.deepcopy(stable)
-stale['asof'] = '2026-09-30T13:50:05+05:30'
+stale['asof'] = (datetime.fromisoformat(stable['asof']) + timedelta(days=1)).isoformat()
 result = run(stale)
 assert result['short_gamma_state'] == 'INSUFFICIENT_DATA' and result['confidence'] == 'low', result
 assert result['diagnostics']['freshness']['reason'] == 'HF_BLOCK_STALE', result['diagnostics']['freshness']
@@ -69,7 +71,7 @@ assert result['status'] == 'INSUFFICIENT_DATA' and result['confidence'] == 'low'
 print('missing IV anchor is low-confidence insufficient data: PASS')
 
 future = copy.deepcopy(stable)
-future['asof'] = '2026-09-29T13:40:00+05:30'
+future['asof'] = (datetime.fromisoformat(stable['asof']) - timedelta(minutes=10)).isoformat()
 result = run(future)
 assert result['short_gamma_state'] == 'INSUFFICIENT_DATA', result
 assert result['diagnostics']['freshness']['reason'] == 'HF_TIMESTAMPS_AHEAD_OF_ASOF', result['diagnostics']['freshness']

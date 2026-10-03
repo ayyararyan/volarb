@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "evaluate_session_vrp.py"
-FIXTURE = Path(__file__).resolve().parent / "fixtures_session_vrp_state_20260930.json"
+FIXTURE = Path(__file__).resolve().parent / "fixtures_session_vrp_synthetic.json"
 spec = importlib.util.spec_from_file_location("evaluate_session_vrp", SCRIPT)
 mod = importlib.util.module_from_spec(spec)
 assert spec and spec.loader
@@ -17,7 +17,7 @@ def state():
     return json.loads(FIXTURE.read_text(encoding="utf-8"))
 
 
-def test_real_30_september_dashboard_had_no_premium():
+def test_synthetic_surface_with_no_premium_is_unfavourable():
     out = evaluate(state())
     assert out["session_vrp_state"] == "UNFAVOURABLE"
     assert out["iv_minus_rv_vol_points"] < 0

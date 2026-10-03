@@ -3,7 +3,6 @@ on:
   push:
     paths: ['VERSION', 'requirements*.lock', 'services/day-workflow/**', 'skill/butterfly-market-outlook/**', 'skill/intraday-realized-volatility-forecast/**', '.github/workflows/test-day-workflow.yml']
   pull_request:
-    paths: ['VERSION', 'requirements*.lock', 'services/day-workflow/**', 'skill/butterfly-market-outlook/**', 'skill/intraday-realized-volatility-forecast/**', '.github/workflows/test-day-workflow.yml']
   workflow_dispatch:
 permissions:
   contents: read

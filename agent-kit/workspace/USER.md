@@ -15,6 +15,7 @@ These are the adopted trading directives, not a copy of personal memory.
 - Always use the repository Mode A/B/C table for market decisions unless asked to explain.
 - Always retain one external canonical accounting store and shared writers; same
   cycle through adjustments, new cycle for re-entry, never invented fills or P&L.
-- Always publish sanitized completed market checks to ayyararyan/volarb main;
-  preserve existing journal entries and disclose publication failure.
-- Never publish private credentials, personal memory or raw broker evidence.
+- Always record completed market checks in the configured private journal outside
+  the source checkout; preserve existing entries and disclose recordkeeping failure.
+- Never publish journals, fills, P&L, account records, credentials, personal memory
+  or raw broker evidence to the source repository, issues, pull requests or releases.

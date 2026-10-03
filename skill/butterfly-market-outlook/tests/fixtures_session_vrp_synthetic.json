@@ -1,0 +1,34 @@
+{
+  "provenance": {
+    "kind": "synthetic",
+    "description": "Hand-authored boundary-test inputs, not a dashboard export or observed market state."
+  },
+  "now": "2020-01-02T10:00:00+05:30",
+  "verdict": {
+    "status": "live",
+    "surface_is_stale": false
+  },
+  "health": {
+    "status": "live"
+  },
+  "fit_ok": true,
+  "fit_age_seconds": 5,
+  "arbitrage": {
+    "checked": true,
+    "passed": true
+  },
+  "atm": {
+    "front": {
+      "status": "fitted",
+      "implied_volatility": 0.1,
+      "expiry": "2020-01-09",
+      "maturity_days": 7
+    }
+  },
+  "forecast": {
+    "status": "ok",
+    "annualized_volatility": 0.12,
+    "age_calendar_days": 1,
+    "asof_session": "2020-01-01"
+  }
+}

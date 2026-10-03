@@ -11,7 +11,7 @@ Status check within the current authorized review window or objective emergency 
 Reason/window: <scheduled review time or material-risk trigger>.
 
 Read fresh Dhan positions and orders. Report: open butterfly (or flat), pending orders, today's realized P&L from Dhan, bankable P&L at executable close if a position is open, session loss vs the ₹1,000 budget, the current session VRP state from the dashboard, and the time remaining to the 15:00 IST flat deadline.
-Publish the check to the daily journal on ayyararyan/volarb main before replying.
+Save the check to the configured private daily journal outside source and verify persistence before replying; never publish it to GitHub.
 Reply with one table only. Do not recommend HOLD, SQUARE OFF or candidates.
 ```
 

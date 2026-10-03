@@ -24,3 +24,17 @@ desktop.ini
 # Portable kit environments and local installation state
 .venv/
 .volarb/
+
+# Public source must never receive personal journals, broker state or raw datasets.
+/market-outlook/*
+!/market-outlook/README.md
+/trade-log/*
+!/trade-log/README.md
+*.sqlite
+*.sqlite3
+*.db
+*.db-wal
+*.db-shm
+*.parquet
+*.arrow
+*.feather

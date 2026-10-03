@@ -77,8 +77,8 @@ fill/cycle commits; evaluating decisions alone never writes the financial ledger
 unless `VOLARB_OBSERVE_ENABLED=true`. No credentials are included.
 
 `volarb_paths.py` binds source to the checkout and all private data to
-`VOLARB_DATA_DIR` (default `~/.local/share/volarb`). Do not substitute historical
-repository trade logs for the authoritative `Trading/ledger` store. Existing
+`VOLARB_DATA_DIR` (default `~/.local/share/volarb`). The public repository excludes personal trade history; do not substitute
+journal projections for the authoritative `Trading/ledger` store. Existing
 financial state must be restored separately; setup does not initialize it.
 
 Pure wide-selection/tail-stress helpers and shadow forecast/audit helpers are also
@@ -87,7 +87,7 @@ controller. The [agent kit guide](../../docs/AGENT_KIT.md) explains setup and us
 
 **Still not implemented/activated by this kit:** agent-driven end-to-end current
 news/candidate acquisition, automatic scheduler/delivery and deadline recovery,
-live order dispatch authorization, automated journal publication, encrypted
+live order dispatch authorization, automated private-journal persistence, encrypted
 state restoration and a real second-device migration rehearsal. The executor
 source remains disabled and the execution policy draft remains inactive.
 

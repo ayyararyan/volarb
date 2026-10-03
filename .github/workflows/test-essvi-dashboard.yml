@@ -3,12 +3,11 @@ on:
   push:
     paths: ['VERSION', 'services/essvi-dashboard/**', '.github/workflows/test-essvi-dashboard.yml']
   pull_request:
-    paths: ['VERSION', 'services/essvi-dashboard/**', '.github/workflows/test-essvi-dashboard.yml']
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  test:
+  har-tests:
     runs-on: ubuntu-latest
     defaults:
       run:
