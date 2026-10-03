@@ -1,0 +1,2533 @@
+{
+  "version": "1.0",
+  "schema": {
+    "vector": [
+      "box",
+      "instance",
+      "layer",
+      "type",
+      "ordinal"
+    ],
+    "type_codes": {
+      "0": "graph_box_container_root",
+      "1": "process_action_decision_gate_node",
+      "2": "state",
+      "3": "scheduler_timer",
+      "4": "edge_transition",
+      "5": "worker_agent",
+      "6": "interface_port",
+      "7": "data_contract_event_message",
+      "8": "adapter_external_provider_connector",
+      "9": "resource_allocation_reservation"
+    },
+    "box_codes": {
+      "0": "master_global",
+      "1": "regime_decision",
+      "2": "intraday_selection_capital_allocation",
+      "3": "per_underlying_trade_selection",
+      "4": "shared_execution_risk_management"
+    },
+    "box3_instance_codes": {
+      "0": "template",
+      "1": "NIFTY",
+      "2": "BANKNIFTY",
+      "3": "SENSEX"
+    }
+  },
+  "rules": {
+    "immutable": true,
+    "reuse_retired_ids": false,
+    "edge_layer_rule": "edge layer equals source node logical layer",
+    "cross_box_edges_use_box_0": true,
+    "graph_topology_authority": "explicit source/target relationships, not numeric adjacency"
+  },
+  "entities": [
+    {
+      "vid": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "name": "Master Architecture",
+      "kind": "root"
+    },
+    {
+      "vid": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "name": "Box 1 — Regime Decision Graph",
+      "kind": "root"
+    },
+    {
+      "vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ],
+      "name": "Box 2 — Intraday Instrument Selection & Capital Allocation",
+      "kind": "root"
+    },
+    {
+      "vid": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ],
+      "name": "Box 3 — Per-Underlying Trade Selection Template",
+      "kind": "root"
+    },
+    {
+      "vid": [
+        4,
+        0,
+        0,
+        0,
+        0
+      ],
+      "name": "Box 4 — Shared Execution & Risk Management",
+      "kind": "root"
+    },
+    {
+      "vid": [
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "name": "Start / Wake",
+      "kind": "node",
+      "parent_vid": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        0,
+        0,
+        2,
+        1,
+        1
+      ],
+      "name": "Fan out one Box 3 instance per selected X",
+      "kind": "node",
+      "parent_vid": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        0,
+        0,
+        1,
+        4,
+        1
+      ],
+      "name": "Start -> Box 1",
+      "kind": "edge",
+      "source_vid": [
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "target_vid": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        0,
+        0,
+        1,
+        4,
+        2
+      ],
+      "name": "Box 1 favorable -> Box 2",
+      "kind": "edge",
+      "source_vid": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "target_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        0,
+        0,
+        1,
+        4,
+        3
+      ],
+      "name": "Box 2 selected set -> fan out",
+      "kind": "edge",
+      "source_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ],
+      "target_vid": [
+        0,
+        0,
+        2,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        0,
+        0,
+        2,
+        4,
+        1
+      ],
+      "name": "Fan out -> Box 3 instance",
+      "kind": "edge",
+      "source_vid": [
+        0,
+        0,
+        2,
+        1,
+        1
+      ],
+      "target_vid": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        0,
+        0,
+        2,
+        4,
+        2
+      ],
+      "name": "Box 3 TradeIntent -> Box 4",
+      "kind": "edge",
+      "source_vid": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ],
+      "target_vid": [
+        4,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        1,
+        0,
+        1,
+        1,
+        1
+      ],
+      "name": "Start / scheduled regime review",
+      "kind": "node",
+      "parent_vid": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        1,
+        0,
+        2,
+        1,
+        1
+      ],
+      "name": "Collect regime-relevant market context",
+      "kind": "node",
+      "parent_vid": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        1,
+        0,
+        3,
+        1,
+        1
+      ],
+      "name": "Multi-day Regime Gate",
+      "kind": "node",
+      "parent_vid": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        1,
+        0,
+        4,
+        7,
+        1
+      ],
+      "name": "REGIME_FAVORABLE",
+      "kind": "data_contract",
+      "parent_vid": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        1,
+        0,
+        5,
+        1,
+        1
+      ],
+      "name": "Hand off to Box 2",
+      "kind": "node",
+      "parent_vid": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        1,
+        0,
+        4,
+        2,
+        1
+      ],
+      "name": "NO-NEW-SHORT-GAMMA",
+      "kind": "state",
+      "parent_vid": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        1,
+        0,
+        5,
+        3,
+        1
+      ],
+      "name": "Regime Recheck Scheduler",
+      "kind": "scheduler",
+      "parent_vid": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        1,
+        0,
+        6,
+        2,
+        1
+      ],
+      "name": "Wait until next multi-day review condition",
+      "kind": "state",
+      "parent_vid": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        1,
+        0,
+        4,
+        2,
+        2
+      ],
+      "name": "Fail-safe: do not deploy new short gamma",
+      "kind": "state",
+      "parent_vid": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        1,
+        0,
+        1,
+        4,
+        1
+      ],
+      "name": "Start -> collect context",
+      "kind": "edge",
+      "source_vid": [
+        1,
+        0,
+        1,
+        1,
+        1
+      ],
+      "target_vid": [
+        1,
+        0,
+        2,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        1,
+        0,
+        2,
+        4,
+        1
+      ],
+      "name": "Collect context -> regime gate",
+      "kind": "edge",
+      "source_vid": [
+        1,
+        0,
+        2,
+        1,
+        1
+      ],
+      "target_vid": [
+        1,
+        0,
+        3,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        1,
+        0,
+        3,
+        4,
+        1
+      ],
+      "name": "Favorable",
+      "kind": "edge",
+      "source_vid": [
+        1,
+        0,
+        3,
+        1,
+        1
+      ],
+      "target_vid": [
+        1,
+        0,
+        4,
+        7,
+        1
+      ]
+    },
+    {
+      "vid": [
+        1,
+        0,
+        4,
+        4,
+        1
+      ],
+      "name": "Emit favorable -> handoff",
+      "kind": "edge",
+      "source_vid": [
+        1,
+        0,
+        4,
+        7,
+        1
+      ],
+      "target_vid": [
+        1,
+        0,
+        5,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        1,
+        0,
+        3,
+        4,
+        2
+      ],
+      "name": "Unfavorable",
+      "kind": "edge",
+      "source_vid": [
+        1,
+        0,
+        3,
+        1,
+        1
+      ],
+      "target_vid": [
+        1,
+        0,
+        4,
+        2,
+        1
+      ]
+    },
+    {
+      "vid": [
+        1,
+        0,
+        4,
+        4,
+        2
+      ],
+      "name": "No-new-short-gamma -> scheduler",
+      "kind": "edge",
+      "source_vid": [
+        1,
+        0,
+        4,
+        2,
+        1
+      ],
+      "target_vid": [
+        1,
+        0,
+        5,
+        3,
+        1
+      ]
+    },
+    {
+      "vid": [
+        1,
+        0,
+        5,
+        4,
+        1
+      ],
+      "name": "Scheduler -> wait",
+      "kind": "edge",
+      "source_vid": [
+        1,
+        0,
+        5,
+        3,
+        1
+      ],
+      "target_vid": [
+        1,
+        0,
+        6,
+        2,
+        1
+      ]
+    },
+    {
+      "vid": [
+        1,
+        0,
+        6,
+        4,
+        1
+      ],
+      "name": "Wait -> collect context",
+      "kind": "edge",
+      "source_vid": [
+        1,
+        0,
+        6,
+        2,
+        1
+      ],
+      "target_vid": [
+        1,
+        0,
+        2,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        1,
+        0,
+        3,
+        4,
+        3
+      ],
+      "name": "Uncertain / insufficient data",
+      "kind": "edge",
+      "source_vid": [
+        1,
+        0,
+        3,
+        1,
+        1
+      ],
+      "target_vid": [
+        1,
+        0,
+        4,
+        2,
+        2
+      ]
+    },
+    {
+      "vid": [
+        1,
+        0,
+        4,
+        4,
+        3
+      ],
+      "name": "Fail-safe -> scheduler",
+      "kind": "edge",
+      "source_vid": [
+        1,
+        0,
+        4,
+        2,
+        2
+      ],
+      "target_vid": [
+        1,
+        0,
+        5,
+        3,
+        1
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        1,
+        7,
+        1
+      ],
+      "name": "REGIME_FAVORABLE input",
+      "kind": "data_contract",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        2,
+        1,
+        1
+      ],
+      "name": "Read normalized market data and account/capital state",
+      "kind": "node",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        3,
+        1,
+        1
+      ],
+      "name": "Evaluate NIFTY / BANKNIFTY / SENSEX opportunities",
+      "kind": "node",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        4,
+        1,
+        1
+      ],
+      "name": "Apply capital and margin feasibility constraints",
+      "kind": "node",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        5,
+        1,
+        1
+      ],
+      "name": "Selected set S empty?",
+      "kind": "node",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        6,
+        2,
+        1
+      ],
+      "name": "INTRADAY OPPORTUNITY WAIT",
+      "kind": "state",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        7,
+        3,
+        1
+      ],
+      "name": "Intraday Opportunity Recheck Scheduler",
+      "kind": "scheduler",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        8,
+        2,
+        1
+      ],
+      "name": "Wait until next intraday scan",
+      "kind": "state",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        6,
+        7,
+        1
+      ],
+      "name": "Selected set S",
+      "kind": "data_contract",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        7,
+        1,
+        1
+      ],
+      "name": "Portfolio Capital Allocator",
+      "kind": "node",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        8,
+        9,
+        1
+      ],
+      "name": "Assign W_X to every X in S",
+      "kind": "resource",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        9,
+        7,
+        1
+      ],
+      "name": "DailyUnderlyingCommitment",
+      "kind": "data_contract",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        10,
+        9,
+        1
+      ],
+      "name": "Reserve each W_X",
+      "kind": "resource",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        11,
+        1,
+        1
+      ],
+      "name": "For each X in S",
+      "kind": "node",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        12,
+        1,
+        1
+      ],
+      "name": "Launch Box 3 Graph X",
+      "kind": "node",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        1,
+        4,
+        1
+      ],
+      "name": "Regime favorable input -> read state",
+      "kind": "edge",
+      "source_vid": [
+        2,
+        0,
+        1,
+        7,
+        1
+      ],
+      "target_vid": [
+        2,
+        0,
+        2,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        2,
+        4,
+        1
+      ],
+      "name": "Read state -> evaluate opportunities",
+      "kind": "edge",
+      "source_vid": [
+        2,
+        0,
+        2,
+        1,
+        1
+      ],
+      "target_vid": [
+        2,
+        0,
+        3,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        3,
+        4,
+        1
+      ],
+      "name": "Evaluate -> apply constraints",
+      "kind": "edge",
+      "source_vid": [
+        2,
+        0,
+        3,
+        1,
+        1
+      ],
+      "target_vid": [
+        2,
+        0,
+        4,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        4,
+        4,
+        1
+      ],
+      "name": "Apply constraints -> empty-set decision",
+      "kind": "edge",
+      "source_vid": [
+        2,
+        0,
+        4,
+        1,
+        1
+      ],
+      "target_vid": [
+        2,
+        0,
+        5,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        5,
+        4,
+        1
+      ],
+      "name": "Empty set YES",
+      "kind": "edge",
+      "source_vid": [
+        2,
+        0,
+        5,
+        1,
+        1
+      ],
+      "target_vid": [
+        2,
+        0,
+        6,
+        2,
+        1
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        6,
+        4,
+        1
+      ],
+      "name": "Opportunity wait -> scheduler",
+      "kind": "edge",
+      "source_vid": [
+        2,
+        0,
+        6,
+        2,
+        1
+      ],
+      "target_vid": [
+        2,
+        0,
+        7,
+        3,
+        1
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        7,
+        4,
+        1
+      ],
+      "name": "Scheduler -> intraday wait",
+      "kind": "edge",
+      "source_vid": [
+        2,
+        0,
+        7,
+        3,
+        1
+      ],
+      "target_vid": [
+        2,
+        0,
+        8,
+        2,
+        1
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        8,
+        4,
+        1
+      ],
+      "name": "Intraday wait -> read state",
+      "kind": "edge",
+      "source_vid": [
+        2,
+        0,
+        8,
+        2,
+        1
+      ],
+      "target_vid": [
+        2,
+        0,
+        2,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        5,
+        4,
+        2
+      ],
+      "name": "Empty set NO",
+      "kind": "edge",
+      "source_vid": [
+        2,
+        0,
+        5,
+        1,
+        1
+      ],
+      "target_vid": [
+        2,
+        0,
+        6,
+        7,
+        1
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        6,
+        4,
+        2
+      ],
+      "name": "Selected set -> capital allocator",
+      "kind": "edge",
+      "source_vid": [
+        2,
+        0,
+        6,
+        7,
+        1
+      ],
+      "target_vid": [
+        2,
+        0,
+        7,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        7,
+        4,
+        2
+      ],
+      "name": "Capital allocator -> assign W_X",
+      "kind": "edge",
+      "source_vid": [
+        2,
+        0,
+        7,
+        1,
+        1
+      ],
+      "target_vid": [
+        2,
+        0,
+        8,
+        9,
+        1
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        8,
+        4,
+        2
+      ],
+      "name": "Assign W_X -> create commitments",
+      "kind": "edge",
+      "source_vid": [
+        2,
+        0,
+        8,
+        9,
+        1
+      ],
+      "target_vid": [
+        2,
+        0,
+        9,
+        7,
+        1
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        9,
+        4,
+        1
+      ],
+      "name": "Commitments -> reserve W_X",
+      "kind": "edge",
+      "source_vid": [
+        2,
+        0,
+        9,
+        7,
+        1
+      ],
+      "target_vid": [
+        2,
+        0,
+        10,
+        9,
+        1
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        10,
+        4,
+        1
+      ],
+      "name": "Reserve W_X -> fan out",
+      "kind": "edge",
+      "source_vid": [
+        2,
+        0,
+        10,
+        9,
+        1
+      ],
+      "target_vid": [
+        2,
+        0,
+        11,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        11,
+        4,
+        1
+      ],
+      "name": "Fan out -> launch Graph X",
+      "kind": "edge",
+      "source_vid": [
+        2,
+        0,
+        11,
+        1,
+        1
+      ],
+      "target_vid": [
+        2,
+        0,
+        12,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        1,
+        7,
+        1
+      ],
+      "name": "DailyUnderlyingCommitment + W_X input",
+      "kind": "data_contract",
+      "parent_vid": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        2,
+        2,
+        1
+      ],
+      "name": "Graph X ACTIVE / COMMITTED",
+      "kind": "state",
+      "parent_vid": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        3,
+        1,
+        1
+      ],
+      "name": "Build or refresh admissible structure universe C_X",
+      "kind": "node",
+      "parent_vid": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        4,
+        7,
+        1
+      ],
+      "name": "Candidate structure universe C_X",
+      "kind": "data_contract",
+      "parent_vid": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        5,
+        1,
+        1
+      ],
+      "name": "Constrained Structure Optimizer",
+      "kind": "node",
+      "parent_vid": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        6,
+        2,
+        1
+      ],
+      "name": "WAITING_FOR_STRUCTURE",
+      "kind": "state",
+      "parent_vid": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        7,
+        3,
+        1
+      ],
+      "name": "Within-Hour Structure Recheck Scheduler",
+      "kind": "scheduler",
+      "parent_vid": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        8,
+        2,
+        1
+      ],
+      "name": "Wait minutes / within the hour",
+      "kind": "state",
+      "parent_vid": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        6,
+        7,
+        1
+      ],
+      "name": "Selected StructureSpec",
+      "kind": "data_contract",
+      "parent_vid": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        7,
+        2,
+        1
+      ],
+      "name": "Decision complete",
+      "kind": "state",
+      "parent_vid": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        8,
+        7,
+        1
+      ],
+      "name": "TradeIntent",
+      "kind": "data_contract",
+      "parent_vid": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        1,
+        4,
+        1
+      ],
+      "name": "Commitment -> active",
+      "kind": "edge",
+      "source_vid": [
+        3,
+        0,
+        1,
+        7,
+        1
+      ],
+      "target_vid": [
+        3,
+        0,
+        2,
+        2,
+        1
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        2,
+        4,
+        1
+      ],
+      "name": "Active -> build C_X",
+      "kind": "edge",
+      "source_vid": [
+        3,
+        0,
+        2,
+        2,
+        1
+      ],
+      "target_vid": [
+        3,
+        0,
+        3,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        3,
+        4,
+        1
+      ],
+      "name": "Build C_X -> candidate universe",
+      "kind": "edge",
+      "source_vid": [
+        3,
+        0,
+        3,
+        1,
+        1
+      ],
+      "target_vid": [
+        3,
+        0,
+        4,
+        7,
+        1
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        4,
+        4,
+        1
+      ],
+      "name": "Candidate universe -> optimizer",
+      "kind": "edge",
+      "source_vid": [
+        3,
+        0,
+        4,
+        7,
+        1
+      ],
+      "target_vid": [
+        3,
+        0,
+        5,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        5,
+        4,
+        1
+      ],
+      "name": "No feasible / attractive candidate",
+      "kind": "edge",
+      "source_vid": [
+        3,
+        0,
+        5,
+        1,
+        1
+      ],
+      "target_vid": [
+        3,
+        0,
+        6,
+        2,
+        1
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        6,
+        4,
+        1
+      ],
+      "name": "Waiting -> scheduler",
+      "kind": "edge",
+      "source_vid": [
+        3,
+        0,
+        6,
+        2,
+        1
+      ],
+      "target_vid": [
+        3,
+        0,
+        7,
+        3,
+        1
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        7,
+        4,
+        1
+      ],
+      "name": "Scheduler -> wait",
+      "kind": "edge",
+      "source_vid": [
+        3,
+        0,
+        7,
+        3,
+        1
+      ],
+      "target_vid": [
+        3,
+        0,
+        8,
+        2,
+        1
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        8,
+        4,
+        1
+      ],
+      "name": "Wait -> refresh C_X",
+      "kind": "edge",
+      "source_vid": [
+        3,
+        0,
+        8,
+        2,
+        1
+      ],
+      "target_vid": [
+        3,
+        0,
+        3,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        6,
+        4,
+        2
+      ],
+      "name": "W_X stays reserved",
+      "kind": "edge",
+      "source_vid": [
+        3,
+        0,
+        6,
+        2,
+        1
+      ],
+      "target_vid": [
+        3,
+        0,
+        1,
+        7,
+        1
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        5,
+        4,
+        2
+      ],
+      "name": "Candidate selected",
+      "kind": "edge",
+      "source_vid": [
+        3,
+        0,
+        5,
+        1,
+        1
+      ],
+      "target_vid": [
+        3,
+        0,
+        6,
+        7,
+        1
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        6,
+        4,
+        3
+      ],
+      "name": "StructureSpec -> decision complete",
+      "kind": "edge",
+      "source_vid": [
+        3,
+        0,
+        6,
+        7,
+        1
+      ],
+      "target_vid": [
+        3,
+        0,
+        7,
+        2,
+        1
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        7,
+        4,
+        2
+      ],
+      "name": "Decision complete -> TradeIntent",
+      "kind": "edge",
+      "source_vid": [
+        3,
+        0,
+        7,
+        2,
+        1
+      ],
+      "target_vid": [
+        3,
+        0,
+        8,
+        7,
+        1
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        1,
+        7,
+        1
+      ],
+      "name": "TradeIntent input",
+      "kind": "data_contract",
+      "parent_vid": [
+        4,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        2,
+        1,
+        1
+      ],
+      "name": "Volarb Execution + Risk Management Engine",
+      "kind": "node",
+      "parent_vid": [
+        4,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        3,
+        1,
+        1
+      ],
+      "name": "Build intended execution plan",
+      "kind": "node",
+      "parent_vid": [
+        4,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        4,
+        1,
+        1
+      ],
+      "name": "Pre-trade Margin Feasibility Check",
+      "kind": "node",
+      "parent_vid": [
+        4,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        5,
+        6,
+        1
+      ],
+      "name": "BrokerMarginFeasibilityPort",
+      "kind": "interface",
+      "parent_vid": [
+        4,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        6,
+        8,
+        1
+      ],
+      "name": "Active Broker Provider Plug-in",
+      "kind": "adapter",
+      "parent_vid": [
+        4,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        7,
+        8,
+        1
+      ],
+      "name": "Dhan API / Broker",
+      "kind": "adapter",
+      "parent_vid": [
+        4,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        7,
+        8,
+        2
+      ],
+      "name": "Kotak / ICICI / other broker",
+      "kind": "adapter",
+      "parent_vid": [
+        4,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        5,
+        7,
+        1
+      ],
+      "name": "Canonical broker-neutral execution command",
+      "kind": "data_contract",
+      "parent_vid": [
+        4,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        6,
+        6,
+        1
+      ],
+      "name": "ExecutionPort / thin Broker Executor",
+      "kind": "interface",
+      "parent_vid": [
+        4,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        3,
+        1,
+        2
+      ],
+      "name": "Live execution / risk / monitoring policy",
+      "kind": "node",
+      "parent_vid": [
+        4,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        4,
+        1,
+        2
+      ],
+      "name": "Hold / adjust / recenter / hedge / reduce / exit",
+      "kind": "node",
+      "parent_vid": [
+        4,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        1,
+        4,
+        1
+      ],
+      "name": "TradeIntent -> Volarb engine",
+      "kind": "edge",
+      "source_vid": [
+        4,
+        0,
+        1,
+        7,
+        1
+      ],
+      "target_vid": [
+        4,
+        0,
+        2,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        2,
+        4,
+        1
+      ],
+      "name": "Engine -> build execution plan",
+      "kind": "edge",
+      "source_vid": [
+        4,
+        0,
+        2,
+        1,
+        1
+      ],
+      "target_vid": [
+        4,
+        0,
+        3,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        3,
+        4,
+        1
+      ],
+      "name": "Execution plan -> margin check",
+      "kind": "edge",
+      "source_vid": [
+        4,
+        0,
+        3,
+        1,
+        1
+      ],
+      "target_vid": [
+        4,
+        0,
+        4,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        4,
+        4,
+        1
+      ],
+      "name": "Margin check -> margin port",
+      "kind": "edge",
+      "source_vid": [
+        4,
+        0,
+        4,
+        1,
+        1
+      ],
+      "target_vid": [
+        4,
+        0,
+        5,
+        6,
+        1
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        5,
+        4,
+        1
+      ],
+      "name": "Margin port -> provider",
+      "kind": "edge",
+      "source_vid": [
+        4,
+        0,
+        5,
+        6,
+        1
+      ],
+      "target_vid": [
+        4,
+        0,
+        6,
+        8,
+        1
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        6,
+        4,
+        1
+      ],
+      "name": "Provider -> Dhan",
+      "kind": "edge",
+      "source_vid": [
+        4,
+        0,
+        6,
+        8,
+        1
+      ],
+      "target_vid": [
+        4,
+        0,
+        7,
+        8,
+        1
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        6,
+        4,
+        2
+      ],
+      "name": "Provider -> alternative broker",
+      "kind": "edge",
+      "source_vid": [
+        4,
+        0,
+        6,
+        8,
+        1
+      ],
+      "target_vid": [
+        4,
+        0,
+        7,
+        8,
+        2
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        7,
+        4,
+        1
+      ],
+      "name": "Dhan margin facts -> provider",
+      "kind": "edge",
+      "source_vid": [
+        4,
+        0,
+        7,
+        8,
+        1
+      ],
+      "target_vid": [
+        4,
+        0,
+        6,
+        8,
+        1
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        7,
+        4,
+        2
+      ],
+      "name": "Alternative broker margin facts -> provider",
+      "kind": "edge",
+      "source_vid": [
+        4,
+        0,
+        7,
+        8,
+        2
+      ],
+      "target_vid": [
+        4,
+        0,
+        6,
+        8,
+        1
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        6,
+        4,
+        3
+      ],
+      "name": "Normalized MarginFeasibility -> check",
+      "kind": "edge",
+      "source_vid": [
+        4,
+        0,
+        6,
+        8,
+        1
+      ],
+      "target_vid": [
+        4,
+        0,
+        4,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        4,
+        4,
+        2
+      ],
+      "name": "Margin infeasible -> engine",
+      "kind": "edge",
+      "source_vid": [
+        4,
+        0,
+        4,
+        1,
+        1
+      ],
+      "target_vid": [
+        4,
+        0,
+        2,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        4,
+        4,
+        3
+      ],
+      "name": "Margin feasible -> execution command",
+      "kind": "edge",
+      "source_vid": [
+        4,
+        0,
+        4,
+        1,
+        1
+      ],
+      "target_vid": [
+        4,
+        0,
+        5,
+        7,
+        1
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        5,
+        4,
+        2
+      ],
+      "name": "Execution command -> ExecutionPort",
+      "kind": "edge",
+      "source_vid": [
+        4,
+        0,
+        5,
+        7,
+        1
+      ],
+      "target_vid": [
+        4,
+        0,
+        6,
+        6,
+        1
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        6,
+        4,
+        4
+      ],
+      "name": "ExecutionPort -> provider",
+      "kind": "edge",
+      "source_vid": [
+        4,
+        0,
+        6,
+        6,
+        1
+      ],
+      "target_vid": [
+        4,
+        0,
+        6,
+        8,
+        1
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        7,
+        4,
+        3
+      ],
+      "name": "Dhan execution facts -> provider",
+      "kind": "edge",
+      "source_vid": [
+        4,
+        0,
+        7,
+        8,
+        1
+      ],
+      "target_vid": [
+        4,
+        0,
+        6,
+        8,
+        1
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        7,
+        4,
+        4
+      ],
+      "name": "Alternative broker execution facts -> provider",
+      "kind": "edge",
+      "source_vid": [
+        4,
+        0,
+        7,
+        8,
+        2
+      ],
+      "target_vid": [
+        4,
+        0,
+        6,
+        8,
+        1
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        6,
+        4,
+        5
+      ],
+      "name": "Normalized execution facts -> engine",
+      "kind": "edge",
+      "source_vid": [
+        4,
+        0,
+        6,
+        8,
+        1
+      ],
+      "target_vid": [
+        4,
+        0,
+        2,
+        1,
+        1
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        2,
+        4,
+        2
+      ],
+      "name": "Engine -> live execution/risk policy",
+      "kind": "edge",
+      "source_vid": [
+        4,
+        0,
+        2,
+        1,
+        1
+      ],
+      "target_vid": [
+        4,
+        0,
+        3,
+        1,
+        2
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        3,
+        4,
+        2
+      ],
+      "name": "Live policy -> hold/adjust/etc.",
+      "kind": "edge",
+      "source_vid": [
+        4,
+        0,
+        3,
+        1,
+        2
+      ],
+      "target_vid": [
+        4,
+        0,
+        4,
+        1,
+        2
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        4,
+        4,
+        4
+      ],
+      "name": "Risk action -> engine",
+      "kind": "edge",
+      "source_vid": [
+        4,
+        0,
+        4,
+        1,
+        2
+      ],
+      "target_vid": [
+        4,
+        0,
+        2,
+        1,
+        1
+      ]
+    }
+  ]
+}
