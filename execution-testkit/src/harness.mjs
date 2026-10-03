@@ -36,6 +36,29 @@ export class ComponentHarness {
   }
 }
 
+export class CompositionHarness {
+  constructor({componentFactories,testbed=createExecutionTestbed(),overrides={}}){
+    if(!componentFactories||typeof componentFactories!=='object') throw new TypeError('componentFactories must be an object');
+    this.testbed=testbed;
+    this.components={};
+    this.dependencies={broker:testbed.broker,market:testbed.market,clock:testbed.clock,ledger:testbed.ledger,rng:testbed.rng,trace:testbed.trace,components:this.components,...overrides};
+    for(const [name,factory] of Object.entries(componentFactories)){
+      if(typeof factory!=='function') throw new TypeError(`component factory ${name} must be a function`);
+      this.components[name]=factory(this.dependencies);
+    }
+  }
+  component(name){return this.components[name];}
+  async invoke(componentName,method,input){
+    const component=this.components[componentName];
+    if(!component) throw new TypeError(`unknown component ${componentName}`);
+    if(typeof component[method]!=='function') throw new TypeError(`${componentName} does not implement ${method}()`);
+    this.testbed.trace.record('composition.invoke',{component:componentName,method,input});
+    const output=await component[method](input);
+    this.testbed.trace.record('composition.result',{component:componentName,method,output});
+    return output;
+  }
+}
+
 export async function runScenario({scenario,driver,invariants=DEFAULT_INVARIANTS,drain=true}){
   if(!scenario||typeof scenario!=='object') throw new TypeError('scenario is required');
   if(typeof driver!=='function') throw new TypeError('scenario driver must be a function');
@@ -60,12 +83,12 @@ export async function runMassScenarios({count,startSeed=1,scenarioFactory,driver
   for(let i=0;i<count;i++){
     const seed=startSeed+i;
     try{
-      const scenario=await scenarioFactory(seed);
+      const scenario=await scenarioFactory(seed,new SeededRng(seed));
       const out=await runScenario({scenario:{...scenario,seed},driver,invariants});
       summaries.push({seed,ok:true,eventCount:out.trace.length});
     }catch(error){
       error.reproductionSeed=seed;
-      error.reproductionScenario=await scenarioFactory(seed);
+      error.reproductionScenario=await scenarioFactory(seed,new SeededRng(seed));
       throw error;
     }
   }

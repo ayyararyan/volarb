@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { BrokerOperation, BrokerOperationKind } from '../../execution-engine/ports/broker-port.mjs';
 import { VirtualClock } from '../src/virtual-clock.mjs';
-import { ComponentHarness, createExecutionTestbed, runMassScenarios, runScenario } from '../src/harness.mjs';
+import { ComponentHarness, CompositionHarness, createExecutionTestbed, runMassScenarios, runScenario } from '../src/harness.mjs';
 import { checkInvariants, noBlindRetryAfterAmbiguity } from '../src/invariants.mjs';
 
 const instrument={provider:'simulated',providerInstrumentId:'NIFTY-X',exchangeSegment:'SIM'};
@@ -92,4 +92,34 @@ test('mass scenarios are seed-addressable and reproducible',async()=>{
   assert.equal(summaries.length,25);
   assert.deepEqual(summaries.map(x=>x.seed),Array.from({length:25},(_,i)=>100+i));
   assert.ok(summaries.every(x=>x.ok));
+});
+
+
+test('composition harness mounts selected boxes jointly on the same deterministic dependencies',async()=>{
+  const harness=new CompositionHarness({
+    componentFactories:{
+      slicer:()=>({slice:x=>({...x,slices:[{sliceId:'s1',quantity:x.quantity}]})}),
+      executor:({components,ledger})=>({
+        execute(x){
+          const sliced=components.slicer.slice(x);
+          ledger.append({actionId:'joint-1',sliceId:sliced.slices[0].sliceId});
+          return {worked:sliced.slices[0].quantity};
+        }
+      })
+    }
+  });
+  const out=await harness.invoke('executor','execute',{quantity:65});
+  assert.deepEqual(out,{worked:65});
+  assert.equal(harness.testbed.ledger.entries()[0].sliceId,'s1');
+});
+
+test('mass harness runs one thousand seed-addressable scenarios without wall-clock waits',async()=>{
+  const summaries=await runMassScenarios({
+    count:1000,startSeed:1,
+    scenarioFactory:async(seed,rng)=>({name:`mass-${seed}`,generatedValue:rng.int(1,1000)}),
+    driver:async(t,scenario)=>{t.trace.record('generated.value',{value:scenario.generatedValue});}
+  });
+  assert.equal(summaries.length,1000);
+  assert.equal(summaries[0].seed,1);
+  assert.equal(summaries.at(-1).seed,1000);
 });
