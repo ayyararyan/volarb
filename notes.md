@@ -768,6 +768,91 @@ The exact command schemas remain TBD.
 
 The internal structure of the intelligent Volarb execution/risk engine remains to be designed separately.
 
+
+### 2026-10-03 — Broker-dependent margin feasibility as an explicit execution input
+
+**Raw intent:** There is one important place where the intelligent Volarb Execution + Risk Management Engine necessarily depends on the selected broker: actual margin feasibility. The margin required to establish a proposed position can depend on the broker/account environment. Therefore, before Volarb sends an execution plan, it must ask the active broker whether that exact plan is feasible given current margin/account state.
+
+**Interpretation:** Broker-independence does not mean broker-blindness. Volarb remains independent of Dhan-specific APIs and semantics, but it must consume certain authoritative broker facts before acting.
+
+This should be represented through a broker-neutral interface such as:
+
+`BrokerMarginFeasibilityPort`
+
+with provider-specific implementations such as:
+
+- `DhanMarginFeasibilityAdapter`
+- `KotakMarginFeasibilityAdapter`
+- `ICICIMarginFeasibilityAdapter`
+
+Conceptually:
+
+```text
+Selected StructureSpec
+        |
+        v
+Volarb Execution + Risk Management Engine
+        |
+        v
+Build intended execution plan
+        |
+        v
+PRE-TRADE MARGIN FEASIBILITY CHECK
+        |
+        v
+BrokerMarginFeasibilityPort
+        |
+        +--> Dhan margin/account API
+        +--> Kotak margin/account API
+        +--> ICICI margin/account API
+        |
+        v
+Normalized MarginFeasibility result
+        |
+   +----+----+
+   |         |
+ feasible  infeasible
+   |         |
+   v         v
+execute    return to Volarb engine
+           for strategy decision TBD
+```
+
+**Key principle:** The broker supplies facts; Volarb supplies intelligence.
+
+The broker-specific adapter may determine or retrieve:
+- current available margin/account capacity,
+- broker-recognized margin requirement for the intended order basket or position,
+- current margin already consumed,
+- any broker-specific feasibility response needed to know whether the trade can actually be placed.
+
+But the adapter should not decide what alternative trade to take if the proposed execution is infeasible.
+
+**Normalized result:** The broker adapter should translate its native API response into a canonical result, conceptually something like:
+
+```text
+MarginFeasibility
+  feasible: true / false
+  required_margin: ...
+  available_margin: ...
+  margin_shortfall: ...
+  broker: ...
+  checked_at: ...
+  raw_reference: ...
+```
+
+The exact schema is TBD.
+
+**Execution rule:** No live order plan should be sent to the broker executor until the Volarb execution layer has passed the broker-derived margin feasibility check.
+
+**Infeasible case:** If the chosen structure or intended execution plan is not feasible under the active broker's margin state, control returns to the Volarb Execution + Risk Management Engine. What Volarb does next — resize, choose another execution sequence, return to optimization, wait, or abandon the structure — remains deliberately unresolved for now.
+
+**Architectural consequence:** The intelligent execution layer therefore has one legitimate broker dependency: a dependency on normalized, authoritative broker margin/account state. It should not depend directly on Dhan classes, payloads, endpoints, or calculations.
+
+**Relationship to the thin broker executor:** The margin interface may be implemented by the same provider plug-in package as order execution, but it is conceptually a separate capability:
+- **MarginFeasibilityPort** = broker facts needed before a decision is executable.
+- **ExecutionPort** = enact already-approved broker-neutral commands.
+
 ## Open questions / unresolved design choices
 
 - What decisions should be fully autonomous versus require human approval?
@@ -799,6 +884,8 @@ The internal structure of the intelligent Volarb execution/risk engine remains t
 - What canonical TradeIntent/StructureSpec contract should cross the decision-to-execution boundary?
 - How should the Volarb Execution + Risk Management subgraph be structured internally?
 - What canonical broker-neutral execution command and execution-event schemas should connect Volarb to broker executor plug-ins?
+- What exact schema should `BrokerMarginFeasibilityPort` return to the Volarb execution engine?
+- If a selected StructureSpec fails the broker margin feasibility check, which Volarb node should receive control next?
 - Which broker/API failures should be handled entirely inside the adapter versus escalated to the Volarb engine?
 - Should research data and decision-time historical data share one canonical market-data schema while retaining separate provider capabilities?
 - Which broker-neutral identifiers should Volarb own for underlyings, expiries, strikes, option types and contracts, and where should broker token mapping live?
