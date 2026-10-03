@@ -122,3 +122,18 @@ Replacing Dhan should not require rebuilding Internal Execution.
 - interaction between execution progress and Position Management risk decisions;
 - behavior after margin infeasibility;
 - portfolio coordination across multiple live positions.
+
+
+## Execution interrupts
+
+Position Management may raise an emergency interrupt into Internal Execution when strategy/risk logic determines that normal execution should be preempted.
+
+The current interrupt levels are:
+
+- **L1 CANCEL_WORK** — cancel unfinished orders in the specified scope and suppress further normal execution there.
+- **L2 FLATTEN_SCOPE** — immediately flatten a specified affected economic scope using emergency market actions.
+- **L3 FLATTEN_ALL** — highest-priority emergency request to flatten all controlled positions immediately.
+
+Position Management supplies the economic scope and intent. Internal Execution's Interrupt Control owns preemption, cancellation/reconciliation, and broker-neutral emergency order transport.
+
+Interrupt Control does not rely on Passive Chase or any other plug-in execution algorithm for emergency flattening.
