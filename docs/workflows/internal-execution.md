@@ -7,7 +7,7 @@ It has exactly two ordered sub-boxes:
 1. **[5,0,2,0,1] Margin Optimization**
 2. **[5,0,3,0,1] Optimal Execution**
 
-The second sub-box cannot work anything that the first has not explicitly sequenced and released.
+Margin Optimization decides both **whether ordering constraints exist** and, if they do, what those constraints are. Optimal Execution must obey that decision.
 
 ## Architecture
 
@@ -21,11 +21,11 @@ flowchart TD
     H["[5,0,2,1,2] Hedge / Offset Relationship Analyzer"]
     D["[5,0,2,7,1] Execution Dependency Graph"]
     S["[5,0,2,1,3] Margin Sequence Optimizer"]
-    Q["[5,0,2,7,2] Execution Sequence Plan"]
+    Q["[5,0,2,7,2] Execution Ordering Plan"]
 
     OE["[5,0,3,0,1] Optimal Execution"]
-    G["[5,0,3,1,1] Sequence Enforcer"]
-    W["[5,0,3,7,1] Eligible Execution Work Slice"]
+    G["[5,0,3,1,1] Ordering Constraint Enforcer"]
+    W["[5,0,3,7,1] Eligible Execution Work Set"]
     C["[5,0,4,1,1] Temporal Execution Controller"]
     P["[5,0,4,6,1] Execution Algorithm Port"]
     X["[5,0,5,5,1] Passive Chase\n(current default plug-in)"]
@@ -88,7 +88,7 @@ These inputs are dynamically refreshed.
 
 Margin Optimization is the first sub-box.
 
-Its job is to decide the valid **execution ordering** and the quantity constraints required to preserve hedge dependencies and use account resources efficiently.
+Its job is to determine whether execution ordering matters and to impose ordering only when needed to preserve hedge dependencies or account-resource feasibility.
 
 It does not choose order price, order type, or order timing.
 
@@ -104,35 +104,52 @@ A protective order counts only when the relevant quantity is actually filled; su
 
 ## [5,0,2,7,1] Execution Dependency Graph
 
-Hedge relationships become quantity-aware precedence constraints.
+Hedge relationships become quantity-aware precedence constraints only where such constraints genuinely exist.
 
 For risk-adding actions, protection required to avoid an unnecessary naked or high-margin intermediate state must be established before the dependent exposure may execute.
 
 For reductions or exits, the dependency reverses when removing protection first would leave avoidable unhedged exposure.
 
+If the dependency analysis finds that several instruments are independent from a margin/hedge perspective, no artificial ordering is created among them.
+
 ## [5,0,2,1,3] Margin Sequence Optimizer
 
-Among dependency-valid actions, this node constructs the required execution order across the outstanding work.
+This node converts the dependency graph and live account state into an execution-ordering decision.
 
-Its current objective component is:
+Its output has two valid modes:
+
+~~~text
+ORDERED
+UNCONSTRAINED
+~~~
+
+**ORDERED** means one or more precedence constraints genuinely matter.
+
+**UNCONSTRAINED** means Margin Optimization has explicitly determined that no sequencing constraint is needed among the eligible items.
+
+Its objective component remains:
 
 1. preserve required protection;
 2. avoid unnecessary high-margin intermediate states;
 3. reduce peak cash / collateral / margin required;
-4. use only broker-confirmed cash or margin effects from completed execution.
+4. use only broker-confirmed cash or margin effects from completed execution;
+5. avoid inventing sequence constraints when none are necessary.
 
 Structural hedge logic is broker-neutral. Actual rupee margin impact is broker-authoritative and may be queried through the Broker Execution Port.
 
-## [5,0,2,7,2] Execution Sequence Plan
+## [5,0,2,7,2] Execution Ordering Plan
 
 This is the mandatory output of Margin Optimization.
 
-It is an explicit ordered plan describing the sequence in which instrument-level work is allowed to progress.
+It records the **ordering decision**, not necessarily a sequence.
+
+### ORDERED mode
 
 Conceptually:
 
 ~~~text
-sequence_version = ...
+ordering_mode = ORDERED
+ordering_version = ...
 
 steps:
   1. instrument A / side / quantity constraint
@@ -141,57 +158,99 @@ steps:
   ...
 ~~~
 
-The plan is required even when only one item is present.
+Optimal Execution must obey the supplied precedence.
 
-**There is no unsequenced execution path.**
+### UNCONSTRAINED mode
 
-If Margin Optimization cannot produce a valid sequence, Optimal Execution receives no executable work and must fail closed rather than choose an item itself.
+Conceptually:
 
-Only Margin Optimization may create or revise the ordering.
+~~~text
+ordering_mode = UNCONSTRAINED
+ordering_version = ...
+
+eligible_items:
+  - instrument A / side / quantity constraint
+  - instrument B / side / quantity constraint
+  - instrument C / side / quantity constraint
+  - instrument D / side / quantity constraint
+~~~
+
+This explicitly means there is **no sequencing constraint among those items**.
+
+Optimal Execution may then work them in any order, or concurrently, according to the active execution algorithm and other execution constraints.
+
+For example, four independent long option purchases may legitimately receive an UNCONSTRAINED plan if none depends on another for margin or hedge feasibility.
+
+A valid ordering decision is always required. The decision may be ORDERED or UNCONSTRAINED.
+
+**Missing / invalid ordering decision -> no execution.**
+
+Only Margin Optimization may decide or revise the ordering mode and constraints.
 
 # [5,0,3,0,1] Optimal Execution
 
 Optimal Execution is the second sub-box.
 
-Its first responsibility is to obey the Execution Sequence Plan.
+Its first responsibility is to obey the Execution Ordering Plan.
 
-Its second responsibility is to optimize the currently permitted sequence step through time and the LOB.
+Its second responsibility is to optimize the permitted work through time and the LOB.
 
-It does not decide which sequence step should come next.
+When the plan is ORDERED, the ordering constraint is binding.
 
-## [5,0,3,1,1] Sequence Enforcer
+When the plan is UNCONSTRAINED, Optimal Execution receives no sequencing constraint from Margin Optimization.
 
-Sequence Enforcer is a hard constraint inside Optimal Execution and is independent of whichever execution algorithm plug-in is active.
+## [5,0,3,1,1] Ordering Constraint Enforcer
+
+This is an algorithm-independent gate inside Optimal Execution.
+
+It interprets the ordering mode.
+
+### ORDERED
 
 It:
 
-- requires a valid Execution Sequence Plan;
-- identifies the currently active sequence step;
-- prevents later steps from being selected early;
-- prevents a plug-in from skipping or reordering steps;
-- releases only the instrument and quantity currently permitted by the plan;
-- advances only when authoritative broker state satisfies the completion condition for the current step;
-- stops execution if the sequence is missing, invalid, stale, or cannot be reconciled with authoritative broker state.
+- identifies the currently permitted sequence step or steps;
+- blocks later dependent work from being selected early;
+- prevents plug-ins from violating supplied precedence;
+- advances only when authoritative broker state satisfies the relevant completion condition.
 
-A different execution algorithm may change **how** the current step is worked, but never **which step** is current.
+### UNCONSTRAINED
 
-## [5,0,3,7,1] Eligible Execution Work Slice
+It:
 
-This is the current sequence step released by Sequence Enforcer to the micro-execution layer.
+- imposes no artificial sequence;
+- releases all otherwise eligible items;
+- allows the active execution algorithm to choose order or concurrency among them.
 
-Conceptually it contains:
+### Invalid state
+
+It stops execution if the ordering decision is missing, invalid, stale, or cannot be reconciled with authoritative broker state.
+
+A different execution algorithm may change **how** released work is executed, but it cannot override an ORDERED plan or manufacture ordering constraints upstream did not impose.
+
+## [5,0,3,7,1] Eligible Execution Work Set
+
+This is the work released by Ordering Constraint Enforcer to the micro-execution layer.
+
+In ORDERED mode it contains only the currently permitted step or steps.
+
+In UNCONSTRAINED mode it may contain all otherwise eligible items.
+
+Conceptually:
 
 ~~~text
-sequence_version
-sequence_step
-instrument
-side
-remaining step quantity
-maximum quantity currently eligible to work
-execution constraints inherited from upstream
+ordering_mode
+ordering_version
+eligible_items:
+  - instrument
+    side
+    remaining quantity
+    maximum quantity currently eligible to work
+    ordering metadata if applicable
+    execution constraints inherited from upstream
 ~~~
 
-It says **what may be worked now**. It does not say how to price or time the order.
+The execution algorithm may act only within this set.
 
 ## Time-indexed state
 
@@ -199,11 +258,12 @@ At decision time t:
 
 ~~~text
 state_t
-  = current eligible sequence step
+  = eligible execution work set
+  + ordering mode / constraints
   + LOB / quote state
   + own live orders
   + fills / partial fills
-  + remaining eligible quantity
+  + remaining eligible quantities
   + inherited execution constraints
 ~~~
 
@@ -221,10 +281,11 @@ The controller:
 
 - assembles the current time-t execution state;
 - invokes the active execution algorithm;
-- validates the returned action against both the active sequence step and the eligible work slice;
-- sends the broker-neutral action to the Broker Execution Port;
+- validates returned actions against the Eligible Execution Work Set;
+- enforces ORDERED precedence when present;
+- sends broker-neutral actions to the Broker Execution Port;
 - consumes authoritative order/fill feedback;
-- updates remaining quantity;
+- updates remaining quantities;
 - invokes the algorithm again when required.
 
 The controller is orchestration. Execution policy is plug-and-play.
@@ -234,26 +295,31 @@ The controller is orchestration. Execution policy is plug-and-play.
 Interchangeable execution algorithms implement this interface:
 
 ~~~text
-current sequence-constrained execution state
+ordering-aware eligible execution state
         |
         v
 selected execution algorithm
         |
         v
-execution decision at time t
+execution decision(s) at time t
 ~~~
 
 The current default implementation is [5,0,5,5,1] Passive Chase.
 
-Changing the selected algorithm must not require changes to Margin Optimization, Sequence Enforcer, Position Management, the Broker Execution Port, or the broker provider.
+Changing the selected algorithm must not require changes to Margin Optimization, Ordering Constraint Enforcer, Position Management, the Broker Execution Port, or the broker provider.
 
-**Every algorithm is constrained by the same active sequence.**
+Every algorithm must obey ORDERED constraints.
+
+In UNCONSTRAINED mode, an algorithm may choose execution order or concurrency among the released items.
 
 ## Current default: [5,0,5,5,1] Passive Chase
 
-Passive Chase works only the current sequence step handed to it by Sequence Enforcer.
+Passive Chase applies its simple passive-limit policy to the work released by Ordering Constraint Enforcer.
 
-Its deliberately simple policy is:
+- In ORDERED mode, it works only the currently permitted ordered step or steps.
+- In UNCONSTRAINED mode, it may work all released items independently; the default behavior is to place passive limits for each released item at its own same-side best quote.
+
+For each active item:
 
 1. BUY -> place a limit order at the current best bid.
 2. SELL -> place a limit order at the current best ask.
@@ -263,6 +329,8 @@ Its deliberately simple policy is:
 6. Repeat for up to N passive refresh cycles.
 7. After the passive phase is exhausted, cancel the working limit, confirm/reconcile that cancellation, and use a market order for the exact confirmed remainder.
 8. Partial fills always reduce the quantity worked by subsequent actions.
+
+In UNCONSTRAINED mode, each released item maintains its own Passive Chase state and timer.
 
 T and N remain configuration parameters.
 
@@ -274,63 +342,59 @@ Current broker-neutral action vocabulary:
 
 ~~~text
 WAIT
-
 PLACE_LIMIT
-  quantity
-  limit_price
-
 REPRICE_LIMIT
-  existing_order_reference
-  new_limit_price
-  optional new_quantity
-
 CANCEL_LIMIT
-  existing_order_reference
-
 PLACE_MARKET
-  quantity
 ~~~
+
+A decision applies to one or more items within the released work set, subject to the active ordering mode.
 
 The execution algorithm may choose timing, order type, price, and quantity up to the released amount.
 
 It may not:
 
-- choose a different sequence step;
-- reorder or skip the Execution Sequence Plan;
+- violate an ORDERED precedence constraint;
+- act outside the Eligible Execution Work Set;
 - make an ineligible instrument eligible;
-- exceed the quantity released by Sequence Enforcer;
+- exceed released quantity;
 - reinterpret hedge relationships;
 - bypass margin constraints;
 - change the economic instrument;
 - change strategy intent.
 
-# Sequence invariant
+# Ordering invariant
 
 For every Optimal Execution algorithm:
 
 ~~~text
-Margin Optimization decides ORDER
-Optimal Execution algorithm decides HOW TO EXECUTE THE CURRENT STEP
+Margin Optimization decides WHETHER ORDER MATTERS.
+
+If ORDERED:
+    Margin Optimization decides the precedence.
+    Optimal Execution decides how to execute the permitted step(s).
+
+If UNCONSTRAINED:
+    Margin Optimization explicitly declares no sequencing constraint.
+    Optimal Execution may choose order or concurrency among released items.
 ~~~
 
 Therefore:
 
 ~~~text
-Execution Sequence Plan
+Execution Ordering Plan
         |
         v
-Sequence Enforcer
+Ordering Constraint Enforcer
         |
         v
-Current Eligible Execution Work Slice
+Eligible Execution Work Set
         |
         v
 Execution Algorithm
 ~~~
 
-The execution algorithm never receives permission to select freely among future sequence steps.
-
-**No valid sequence -> no execution.**
+**No valid ordering decision -> no execution.**
 
 # Broker boundary
 
