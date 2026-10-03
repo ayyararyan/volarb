@@ -641,6 +641,59 @@ Until such a revocation occurs, the graph should not silently fall back to askin
 - whether unused W_X may be reallocated only after explicit revocation,
 - and how the next trading day rebuilds the selected set and allocations from scratch.
 
+
+### 2026-10-03 — Decision-to-execution handoff and separate execution/risk layer
+
+**Raw intent:** Once Graph X has selected a concrete candidate structure through its constrained optimizer, the decision is complete: that exact structure X is to be traded now. At that point the workflow should leave the selection/optimization logic and hand the approved trade into a separate execution layer.
+
+Execution and risk management should be treated as their own downstream layer and designed independently later.
+
+**Interpretation:** The architecture needs an explicit boundary between **decision formation** and **trade realization**.
+
+Upstream logic decides:
+- the regime is favorable,
+- underlying X is selected,
+- W_X is reserved,
+- candidate structures are evaluated,
+- and the optimizer selects a specific broker-neutral `StructureSpec`.
+
+Once a `StructureSpec` has been selected and approved, the upstream graph should not continue reconsidering what to trade. It should emit a trade intent into the downstream **Execution + Risk Management layer**.
+
+Conceptually:
+
+```text
+Graph X
+  |
+  v
+Constrained optimizer
+  |
+  v
+Selected StructureSpec
+  |
+  v
+DECISION COMPLETE
+  |
+  v
++------------------------------+
+| EXECUTION + RISK MANAGEMENT  |
+| LAYER                        |
++------------------------------+
+  |
+  +--> order realization       TBD
+  +--> fill handling           TBD
+  +--> live position risk      TBD
+  +--> monitoring              TBD
+  +--> adjustments/exits       TBD
+```
+
+**Key rule:** The execution layer should receive a clear, canonical trade intent. Broker-specific translation remains downstream through the execution provider interface.
+
+**Boundary principle:** The decision graph should answer **what should be traded**. The execution/risk layer should answer **how to establish, supervise, modify, and eventually close that position safely in the real market**.
+
+**Separation from Dhan:** The execution/risk layer may initially use Dhan for broker operations, but the layer itself must remain broker-neutral. Dhan-specific API calls, order identifiers, authentication, IP whitelisting, and execution errors belong behind the execution adapter.
+
+**Current stopping point:** The internal design of the Execution + Risk Management layer is intentionally left unresolved for now and will be developed as a separate subgraph.
+
 ## Open questions / unresolved design choices
 
 - What decisions should be fully autonomous versus require human approval?
@@ -669,6 +722,8 @@ Until such a revocation occurs, the graph should not silently fall back to askin
 - What are the hard portfolio, loss, margin, liquidity, and execution-risk limits?
 - What should trigger hold, recenter, hedge, scale, or square-off actions?
 - What broker/execution infrastructure should the bot eventually control?
+- What canonical TradeIntent/StructureSpec contract should cross the decision-to-execution boundary?
+- How should the Execution + Risk Management subgraph be structured internally?
 - Should research data and decision-time historical data share one canonical market-data schema while retaining separate provider capabilities?
 - Which broker-neutral identifiers should Volarb own for underlyings, expiries, strikes, option types and contracts, and where should broker token mapping live?
 - How should the system express provider capability differences without contaminating strategy logic?
