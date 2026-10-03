@@ -3856,7 +3856,9 @@
         6,
         1,
         1
-      ]
+      ],
+      "status": "retired",
+      "retired_reason": "VID layer violated edge-layer rule; replaced by [5,0,4,4,10] because source is Normalized Broker Execution Facts at layer 4."
     },
     {
       "vid": [
@@ -4880,6 +4882,31 @@
         0,
         7,
         0,
+        1
+      ]
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        4,
+        10
+      ],
+      "name": "Broker facts -> Interrupt Control",
+      "kind": "edge",
+      "source_vid": [
+        5,
+        0,
+        4,
+        7,
+        1
+      ],
+      "target_vid": [
+        5,
+        0,
+        6,
+        1,
         1
       ]
     }
