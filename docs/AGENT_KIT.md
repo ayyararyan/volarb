@@ -120,8 +120,8 @@ setup is `npm run auth:setup` with the correct data environment. Linux/WSL needs
 privately provisioned Web token; OTP/captcha cannot be bypassed by this kit.
 
 Build the [Dhan Dockerfile](../services/dhan-chatgpt-mcp/Dockerfile) from the
-repository root (`docker build -f services/dhan-chatgpt-mcp/Dockerfile .`) so its
-shared Execution Engine contracts are present. It serves MCP, uses `npm ci` and
+repository root (`docker build -f services/dhan-chatgpt-mcp/Dockerfile .`) so the
+Node provider's transitional JavaScript execution-contract compatibility files are present. It serves MCP, uses `npm ci` and
 non-root external `/data`; it does not bundle a desktop browser, enable execution, or migrate state.
 The optional shell/ngrok launcher requires separate private tunnel configuration.
 No launcher or background service is invoked by setup.
@@ -133,10 +133,12 @@ python3.12 tools/volarb.py package --output dist/volarb-agent-kit-0.1.0.zip
 ```
 
 The explicit manifest roots include code, templates, tests, locks, canonical
-architecture, Execution Engine contracts, execution environment definitions and
-documentation. `execution-testkit` is included as a separate source-only test area,
-never as a production dependency. Dhan's exported provider library imports the
-shared `execution-engine` contracts, so those paths must travel together. Archive
+architecture, the canonical Python Execution Engine, the transitional JavaScript
+execution-contract compatibility files required by the current Node Dhan provider,
+execution environment definitions and documentation. `execution-testkit` is
+included as a separate source-only test area, never as a production dependency.
+The Python engine and JavaScript provider compatibility paths therefore travel
+together until the provider itself is migrated. Archive
 documents are included as clearly marked non-operational history; no archive is
 imported by setup or production code. The separate `agent/` research lab, prompts, workflow definitions and repository
 navigation are included as source-only context. The lab retains its own dependency
