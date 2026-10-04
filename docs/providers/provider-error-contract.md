@@ -5,9 +5,10 @@ Status: **active**.
 VID: **[0,0,1,7,1] Provider Error Envelope**
 
 Canonical executable definitions live in
-[`execution-engine/contracts/provider-error.mjs`](../../execution-engine/contracts/provider-error.mjs).
+[`execution-engine/volarb_execution/contracts/provider_error.py`](../../execution-engine/volarb_execution/contracts/provider_error.py).
 The Dhan [`src/provider-error.mjs`](../../services/dhan-chatgpt-mcp/src/provider-error.mjs)
-path is a compatibility re-export, not a second contract. Provider-specific mapping
+path re-exports the transitional JavaScript compatibility contract used by the
+Node provider; it is not a second Execution Engine contract. Provider-specific mapping
 remains in [`dhan-error-mapper.mjs`](../../services/dhan-chatgpt-mcp/src/dhan-error-mapper.mjs).
 
 This is a Volarb-global data contract. It is intentionally broker-neutral and may be consumed by any box that calls an external provider.
