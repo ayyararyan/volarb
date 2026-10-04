@@ -1,1 +1,1 @@
-export * from '../../../execution-engine/contracts/provider-error.mjs';
+export * from '../../../compat/javascript/execution-contracts/provider-error.mjs';
