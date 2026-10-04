@@ -24,7 +24,9 @@ A Strategy Execution Adapter may understand strategy semantics such as butterfly
 
 - `ports/broker-port.mjs` — canonical provider-neutral QUERY / COMMAND / STREAM operation vocabulary.
 - `ports/runtime-ports.mjs` — structural contracts for injected broker, clock, ledger and market dependencies.
-- `contracts/provider-error.mjs` — canonical global Provider Error Envelope implementation, shared by real providers and test doubles.\n- `recovery/execution-action-envelope.mjs` — broker-neutral mutating action envelope and broker request identity injection.\n- `recovery/command-commit-guard.mjs` — production `[5,0,8,1,2]` write-ahead mutation choke point.
+- `contracts/provider-error.mjs` — canonical global Provider Error Envelope implementation, shared by real providers and test doubles.
+- `recovery/execution-action-envelope.mjs` — broker-neutral mutating action envelope and broker request identity injection.
+- `recovery/command-commit-guard.mjs` — production `[5,0,8,1,2]` write-ahead mutation choke point.
 
 Dhan implements the broker port. [execution-testkit/](../execution-testkit/README.md) implements deterministic test doubles for the same boundary. Test doubles approximate broker mechanics; they do not establish exchange fidelity or implement production execution policy.
 
