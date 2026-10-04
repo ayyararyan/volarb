@@ -91,15 +91,17 @@ def normalize_execution_action(
         raise TypeError("non-interrupt execution actions require intent_id and intent_version")
 
     intent_id = _required_text(str(raw_intent_id), "intent_id") if has_intent_id else None
-    intent_version = int(raw_intent_version) if has_intent_version else None
-    if intent_version is not None and (intent_version < 1 or isinstance(raw_intent_version, bool)):
-        raise TypeError("intent_version must be a positive integer")
+    intent_version = None
     if has_intent_version:
+        if isinstance(raw_intent_version, bool):
+            raise TypeError("intent_version must be a positive integer")
         try:
-            if float(raw_intent_version) != intent_version:
-                raise TypeError("intent_version must be a positive integer")
-        except (TypeError, ValueError) as exc:
+            numeric_version = float(raw_intent_version)
+            intent_version = int(numeric_version)
+        except (TypeError, ValueError, OverflowError) as exc:
             raise TypeError("intent_version must be a positive integer") from exc
+        if not numeric_version.is_integer() or intent_version < 1:
+            raise TypeError("intent_version must be a positive integer")
 
     raw_slice_id = _get(action, "slice_id", "sliceId")
     slice_id = None if raw_slice_id is None else _required_text(str(raw_slice_id), "slice_id")
