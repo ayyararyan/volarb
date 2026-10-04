@@ -79,6 +79,7 @@ export class CommandCommitGuard {
     this.integrityAuthority = requireMethod(integrityAuthority, 'integrityAuthority', 'allows');
     this.interruptAuthority = requireMethod(interruptAuthority, 'interruptAuthority', 'allows');
     this.correlationIdFactory = correlationIdFactory;
+    this.commitTail = Promise.resolve();
   }
 
   async _ledgerEntries() {
@@ -173,7 +174,13 @@ export class CommandCommitGuard {
     }
   }
 
-  async commit(input) {
+  commit(input) {
+    const run = this.commitTail.then(() => this._commitOnce(input));
+    this.commitTail = run.catch(() => undefined);
+    return run;
+  }
+
+  async _commitOnce(input) {
     const action = normalizeExecutionAction(input, {
       nowMs: this.clock.now(),
       correlationIdFactory: this.correlationIdFactory
