@@ -9,7 +9,7 @@ import {
   normalizeDhanTrade, unwrapDhan
 } from './dhan-normalizer.mjs';
 import { DhanTranslator } from './dhan-translator.mjs';
-import { BrokerOperation, BrokerOperationKind } from '../../../execution-engine/ports/broker-port.mjs';
+import { BrokerOperation, BrokerOperationKind } from '../../../compat/javascript/execution-contracts/broker-port.mjs';
 
 // Compatibility export. New callers should import BrokerOperation from execution-engine/ports.
 export const DhanBrokerOperation = BrokerOperation;
