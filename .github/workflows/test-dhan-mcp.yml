@@ -8,7 +8,7 @@ permissions:
   contents: read
 jobs:
   dhan-provider:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, aryan-mac-linux]
     defaults:
       run:
         working-directory: services/dhan-chatgpt-mcp

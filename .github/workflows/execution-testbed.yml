@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   deterministic-testbed:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, aryan-mac-linux]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
