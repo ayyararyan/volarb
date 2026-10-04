@@ -200,3 +200,20 @@ test('interrupt-originated actions may omit runtime intent identity but still us
   assert.equal(rows[0].eventType, 'MUTATION_INTENDED');
   assert.equal(rows[1].status, 'KNOWN_NOT_APPLIED');
 });
+
+
+test('concurrent duplicate admission cannot release the same action twice', async () => {
+  const harness = new ComponentHarness({ componentFactory: factory });
+  const action = placeAction({ actionId: 'action-concurrent' });
+
+  const settled = await Promise.allSettled([
+    harness.invoke('commit', action),
+    harness.invoke('commit', action)
+  ]);
+
+  assert.equal(settled.filter(x => x.status === 'fulfilled').length, 1);
+  const rejected = settled.find(x => x.status === 'rejected');
+  assert.equal(rejected.reason.code, CommandCommitGuardErrorCode.DUPLICATE_ACTION);
+  assert.equal(harness.testbed.trace.count('broker.command.applied'), 1);
+  assert.doesNotThrow(() => checkInvariants(harness.testbed.trace.all()));
+});
