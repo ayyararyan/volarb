@@ -81,7 +81,7 @@ Start with **offline source validation**. No broker credentials or running servi
 # Architecture and deterministic Execution Testbed: no npm install required.
 node architecture/validate.mjs
 node --test architecture/lib/*.test.mjs architecture/*.test.mjs \
-  execution-engine/test/*.test.mjs execution-testkit/test/*.test.mjs
+  execution-testkit/test/*.test.mjs
 
 # Locked provider dependencies and synthetic tests.
 npm ci --ignore-scripts --prefix services/dhan-chatgpt-mcp
