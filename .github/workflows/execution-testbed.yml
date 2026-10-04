@@ -7,6 +7,7 @@ on:
     paths:
       - 'VERSION'
       - 'execution-engine/**'
+      - 'compat/javascript/execution-contracts/**'
       - 'execution-testkit/**'
       - 'environments/execution/**'
       - 'services/dhan-chatgpt-mcp/src/**'
@@ -25,6 +26,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '26'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -B -m unittest discover -s execution-engine/tests -p 'test_*.py' -v
       - run: node --test execution-testkit/test/*.test.mjs
       - run: node --test architecture/lib/*.test.mjs architecture/*.test.mjs
       - run: node architecture/validate.mjs
