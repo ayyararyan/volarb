@@ -1,4 +1,7 @@
-// Transitional JavaScript compatibility contract for legacy Dhan/testkit consumers.\n// Canonical Execution Engine implementation lives in execution-engine/volarb_execution/.\n\nexport const BrokerOperationKind = Object.freeze({
+// Transitional JavaScript compatibility contract for legacy Dhan/testkit consumers.
+// Canonical Execution Engine implementation lives in execution-engine/volarb_execution/.
+
+export const BrokerOperationKind = Object.freeze({
   QUERY:'QUERY',
   COMMAND:'COMMAND',
   STREAM:'STREAM'
