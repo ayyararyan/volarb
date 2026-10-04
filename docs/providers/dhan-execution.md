@@ -193,7 +193,7 @@ These are provider-internal responsibilities, not new Volarb boxes and not VID a
 
 The shared [operation vocabulary](../../execution-engine/volarb_execution/ports/broker_port.py) and
 [runtime dependency contracts](../../execution-engine/volarb_execution/ports/runtime_ports.py) are
-implemented in Node ESM. Dhan supplies these broker-neutral mechanical capabilities:
+implemented canonically in Python 3.12+. The current Dhan provider remains a Node ESM consumer through the transitional `compat/javascript/execution-contracts/` wire-contract layer. Dhan supplies these broker-neutral mechanical capabilities:
 
 1. Resolve a complete economic instrument identity to an opaque provider instrument reference plus normalized metadata.
 2. Place an explicitly requested order without silently changing side, quantity, order type, product profile, validity or price.
@@ -380,7 +380,7 @@ modules and are not removed by the repository cleanup.
 
 The production Broker Execution Port substrate is now implemented. Remaining work is narrower and should not change the frozen provider boundary:
 
-- implement and validate the full generic Execution Engine pipeline and its production wiring against the existing shared Node ESM ports; ports/contracts and test doubles exist, but they are not a completed execution pipeline;
+- implement and validate the full generic Execution Engine pipeline and its production wiring against the canonical Python ports/contracts; the current Node Dhan provider consumes wire-compatible transitional JavaScript contracts until its provider runtime is migrated; ports/contracts and test doubles exist, but they are not a completed execution pipeline;
 - complete generic instrument normalization for any Dhan segment/instrument types not yet exercised by the indexed resolver;
 - add provider-local rate-limit telemetry/accounting without turning it into execution policy;
 - optionally add Dhan 20/200-level Full Market Depth as a separately advertised segment-specific capability;
