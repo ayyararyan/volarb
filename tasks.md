@@ -29,6 +29,7 @@ Status reviewed 2026-10-03 against source. Historical deployment receipts above 
 
 ## Open — Execution Engine and strategy architecture
 
+- [ ] **NEXT PRIORITY — Classify every Execution Engine box and sub-box as `PURE_AGENTIC`, `PURE_ALGORITHMIC`, or `HYBRID`.** Decide the classification deliberately for each canonical VID/component before further box implementation, beginning with `[5,0,8,1,2]` Command Commit Guard. For hybrid boxes, specify the exact boundary between LLM/LangGraph judgment and deterministic code, including which side has final mutation authority. Record the decisions in the canonical execution architecture/docs so later implementations inherit the classification rather than re-deciding it ad hoc.
 - [ ] Implement the generic convergence pipeline beyond current runtime ports/contracts; keep strategy semantics upstream and broker mechanics downstream.
 - [ ] Supply production clock, persistence/Execution Ledger, scheduler and full engine driver, then validate composed engine behavior with the existing testkit.
 - [ ] Measure latency budgets and select concurrency/persistence topology from evidence; no current benchmark establishes production targets.
