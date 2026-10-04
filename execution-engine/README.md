@@ -38,4 +38,4 @@ Dhan implements the broker port. [execution-testkit/](../execution-testkit/READM
 - [Environment contracts](../environments/execution/README.md)
 - [Execution Testbed architecture](../docs/testing/execution-testbed.md)
 
-From the repository root, run `node architecture/validate.mjs` and `node --test architecture/lib/*.test.mjs architecture/*.test.mjs execution-engine/test/*.test.mjs execution-testkit/test/*.test.mjs`. These checks are offline; production must never import `execution-testkit`.
+From the repository root, run `node architecture/validate.mjs` and `node --test architecture/lib/*.test.mjs architecture/*.test.mjs execution-testkit/test/*.test.mjs`. The Command Commit Guard standalone box tests live in `execution-testkit/test/command-commit-guard.test.mjs` so production source never imports testkit code. These checks are offline; production must never import `execution-testkit`.
