@@ -257,10 +257,22 @@ class CommandCommitGuard:
             raise
         except Exception as error:
             if is_provider_error(error):
-                provider_error = error
-                assert isinstance(provider_error, ProviderError)
-                provider_outcome = provider_error.outcome
-                provider_error_payload: Mapping[str, Any] = provider_error.to_dict()
+                provider_outcome = ProviderCommandOutcome(getattr(error, "outcome"))
+                if isinstance(error, ProviderError):
+                    provider_error_payload: Mapping[str, Any] = error.to_dict()
+                else:
+                    provider_error_payload = {
+                        "name": type(error).__name__,
+                        "contractVersion": getattr(error, "contract_version", None),
+                        "category": str(getattr(error, "category", "")),
+                        "code": str(getattr(error, "code", "")),
+                        "message": str(error),
+                        "operation": getattr(error, "operation", None),
+                        "kind": str(getattr(error, "kind", "")),
+                        "outcome": provider_outcome.value,
+                        "provider": deepcopy(getattr(error, "provider", {})),
+                        "observedAt": getattr(error, "observed_at", None),
+                    }
             else:
                 provider_outcome = ProviderCommandOutcome.UNKNOWN
                 provider_error_payload = {
