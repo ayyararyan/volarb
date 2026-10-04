@@ -1,7 +1,7 @@
 name: Validate Portable Agent Kit
 on:
   push:
-    paths: ['VERSION', 'LICENSE', 'THIRD_PARTY_NOTICES.md', 'agent-kit/**', 'agent/**', 'prompts/**', 'notes.md', 'tasks.md', '.github/**', 'architecture/**', 'execution-engine/**', 'execution-testkit/**', 'environments/**', 'docs/**', 'archive/**', 'README.md', '.gitignore', 'tools/**', 'tests/**', 'services/**', 'skill/**', 'requirements*', '.python-version', '.node-version', '.github/workflows/test-agent-kit.yml']
+    paths: ['VERSION', 'LICENSE', 'THIRD_PARTY_NOTICES.md', 'agent-kit/**', 'agent/**', 'prompts/**', 'notes.md', 'tasks.md', '.github/**', 'architecture/**', 'execution-engine/**', 'compat/javascript/execution-contracts/**', 'execution-testkit/**', 'environments/**', 'docs/**', 'archive/**', 'README.md', '.gitignore', 'tools/**', 'tests/**', 'services/**', 'skill/**', 'requirements*', '.python-version', '.node-version', '.github/workflows/test-agent-kit.yml']
   pull_request:
   workflow_dispatch:
 permissions:
