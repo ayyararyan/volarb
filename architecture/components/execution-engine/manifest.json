@@ -98,5 +98,8 @@
   ],
   "legacy_aliases": [
     "component.internal_execution"
-  ]
+  ],
+  "implementation": {
+    "python_package": "execution-engine/volarb_execution"
+  }
 }
