@@ -1,7 +1,7 @@
 name: Test Dhan MCP
 on:
   push:
-    paths: ['VERSION', 'services/dhan-chatgpt-mcp/**', 'execution-engine/**', '.github/workflows/test-dhan-mcp.yml']
+    paths: ['VERSION', 'services/dhan-chatgpt-mcp/**', 'execution-engine/**', 'compat/javascript/execution-contracts/**', '.github/workflows/test-dhan-mcp.yml']
   pull_request:
   workflow_dispatch:
 permissions:
