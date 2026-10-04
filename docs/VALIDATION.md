@@ -19,13 +19,14 @@ python3 -B tools/check_repository.py
 python3 -B tools/check_public_source.py
 python3 -B -m unittest discover -s tests -p 'test_repository_hygiene.py' -v
 python3 -B -m unittest discover -s tests -p 'test_public_source.py' -v
+python3.12 -B -m unittest discover -s execution-engine/tests -p 'test_*.py' -v
 node --test architecture/lib/*.test.mjs architecture/*.test.mjs
 node architecture/validate.mjs
 node --test execution-testkit/test/*.test.mjs
 npm test --prefix services/dhan-chatgpt-mcp
 ```
 
-The source-hygiene checker validates local Markdown paths and heading anchors, JSON syntax, relative JS imports and per-directory archive indexes. It does not check remote websites or execute code examples. Architecture checks cover canonical identities, legacy mirrors and composition/manifests; the testbed uses injected simulated dependencies. These tests do not establish a completed execution pipeline.
+The source-hygiene checker validates local Markdown paths and heading anchors, JSON syntax, relative JS imports and per-directory archive indexes. It does not check remote websites or execute code examples. The canonical Python Execution Engine box suite validates the real production Command Commit Guard with deterministic injected fakes. Architecture checks cover canonical identities, legacy mirrors and composition/manifests; the legacy JavaScript testbed still validates provider/test infrastructure while its consumers are migrated. These tests do not establish a completed execution pipeline.
 
 The public-source guard rejects known private financial payloads, authentication/runtime artifacts, identifying paths and missing fixture provenance. It is a narrow prevention check, not a secret/history scanner or public-release clearance. See the [publication preparation audit](audits/2026-10-04-public-preparation.md) for the separate history and GitHub-exposure gates.
 
@@ -66,7 +67,7 @@ On macOS, invoke an isolated interpreter through its canonical resolved path (`/
 docker build -f services/dhan-chatgpt-mcp/Dockerfile -t volarb-dhan-check .
 ```
 
-The context is the **repository root** so the Dhan provider's generic Execution Engine imports exist. The Dockerfile-specific allowlist excludes private state and testkit code. Build/import checks are not container deployment or broker authentication.
+The context is the **repository root** so the Dhan provider's transitional JavaScript execution-contract compatibility imports exist. The canonical Execution Engine itself is Python and is not copied into the Node provider image. The Dockerfile-specific allowlist excludes private state and testkit code. Build/import checks are not container deployment or broker authentication.
 
 ## CI interpretation
 
