@@ -21,7 +21,7 @@ Strategy → optional Strategy Execution Adapter → Execution Engine
 | Broker Execution Port | [`src/dhan-broker-port.mjs`](src/dhan-broker-port.mjs), export `dhan-chatgpt-mcp/broker-port` | Broker-neutral QUERY / COMMAND / STREAM interface |
 | Translation and facts | [`src/dhan-translator.mjs`](src/dhan-translator.mjs), [`src/dhan-normalizer.mjs`](src/dhan-normalizer.mjs) | Dhan payloads, deterministic correlation projection and normalized facts |
 | Error mapping | [`src/dhan-error-mapper.mjs`](src/dhan-error-mapper.mjs) | Dhan failures → global Provider Error Envelope |
-| Shared contracts | [`execution-engine/ports`](../../execution-engine/ports/broker-port.mjs), [`contracts/provider-error.mjs`](../../execution-engine/contracts/provider-error.mjs) | Canonical broker operation vocabulary and global error contract; local provider-error module is a compatibility re-export |
+| Shared contracts | [canonical Python contracts](../../execution-engine/volarb_execution/), [JavaScript compatibility](../../compat/javascript/execution-contracts/README.md) | Python owns the Execution Engine contracts; the Node provider consumes a transitional JS-compatible wire vocabulary |
 | Research MCP | [`src/server.mjs`](src/server.mjs), `npm start` | `/mcp`: read-only account, market, option-surface and margin tools |
 | Research capture | [`src/workflow-data-cli.mjs`](src/workflow-data-cli.mjs) | Explicit read-only evidence for [`day-workflow`](../day-workflow/README.md) |
 | Compatibility execution | [`src/butterfly-executor.mjs`](src/butterfly-executor.mjs), [`src/execution-mcp.mjs`](src/execution-mcp.mjs) | Opt-in authenticated `/execution/mcp`; strategy-specific legacy behavior, not the generic engine |
@@ -81,14 +81,14 @@ keep the intended access boundary explicit.
 ### Container
 
 Build from the **repository root**, not this service directory, because exported
-provider modules import the shared Execution Engine contracts:
+provider modules import the transitional JavaScript execution-contract compatibility layer:
 
 ```sh
 docker build -f services/dhan-chatgpt-mcp/Dockerfile -t volarb-dhan-mcp .
 ```
 
 The Dockerfile-specific context whitelist includes only service source/package
-locks and Execution Engine source. It excludes credentials and `execution-testkit`.
+locks and the JavaScript compatibility contracts required by the Node provider. It excludes credentials and `execution-testkit`.
 The image uses a non-root user, external `/data`, no browser, and disabled mutation
 flags. Building it starts no service and performs no broker calls.
 
