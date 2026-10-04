@@ -1,4 +1,7 @@
-// Transitional JavaScript compatibility contract for legacy Dhan/testkit consumers.\n// Canonical Execution Engine implementation lives in execution-engine/volarb_execution/.\n\nexport const PROVIDER_ERROR_CONTRACT_VERSION = '1.0';
+// Transitional JavaScript compatibility contract for legacy Dhan/testkit consumers.
+// Canonical Execution Engine implementation lives in execution-engine/volarb_execution/.
+
+export const PROVIDER_ERROR_CONTRACT_VERSION = '1.0';
 
 export const ProviderOperationKind = Object.freeze({
   COMMAND: 'COMMAND',
