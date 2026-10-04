@@ -1,6 +1,6 @@
 # [5,0,8,0,1] Execution Recovery
 
-Status: **active reusable execution design**. The complete pipeline is not yet implemented; see [current contracts/ports](../../execution-engine/README.md). These rules specify required behavior, not a live trading service.
+Status: **active reusable execution design with `[5,0,8,1,2]` Command Commit Guard implemented**. Reconciliation, recovery-state orchestration and the complete pipeline are not yet implemented; see [current engine implementation](../../execution-engine/README.md). These rules specify the remaining required behavior and do not constitute a live trading service.
 
 Execution Recovery is the broker-neutral durability and reconciliation layer for Execution Engine.
 
