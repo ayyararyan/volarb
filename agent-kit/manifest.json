@@ -82,6 +82,7 @@
     ".github",
     "architecture",
     "execution-engine",
+    "compat/javascript/execution-contracts",
     "execution-testkit",
     "environments/execution",
     "docs",
