@@ -3,7 +3,7 @@
 Status: **provider connector contract active; not a complete engine pipeline**.
 
 The canonical operation vocabulary is
-[`execution-engine/ports/broker-port.mjs`](../../execution-engine/ports/broker-port.mjs).
+[`execution-engine/volarb_execution/ports/broker_port.py`](../../execution-engine/volarb_execution/ports/broker_port.py).
 [`createDhanRuntime`](../../services/dhan-chatgpt-mcp/src/dhan-runtime.mjs) supplies
 the real-provider port; [environment definitions](../../environments/execution/production.json)
 describe injected dependencies, not an implemented production factory or live
