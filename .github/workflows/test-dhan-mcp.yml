@@ -24,4 +24,16 @@ jobs:
       - run: npm test
       - name: Verify repository-root Docker build and shared contract imports
         working-directory: .
-        run: docker build -f services/dhan-chatgpt-mcp/Dockerfile -t volarb-dhan-ci .
+        run: |
+          test -n "$BUILDKIT_HOST"
+          test ! -e /var/run/docker.sock
+          buildctl --addr "$BUILDKIT_HOST" build \
+            --frontend dockerfile.v0 \
+            --local context=. \
+            --local dockerfile=services/dhan-chatgpt-mcp \
+            --opt filename=Dockerfile \
+            --opt platform=linux/amd64 \
+            --opt "build-arg:http_proxy=$http_proxy" \
+            --opt "build-arg:https_proxy=$https_proxy" \
+            --output "type=oci,dest=$RUNNER_TEMP/volarb-dhan-ci.tar"
+          test -s "$RUNNER_TEMP/volarb-dhan-ci.tar"
