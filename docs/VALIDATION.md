@@ -21,7 +21,7 @@ python3 -B -m unittest discover -s tests -p 'test_repository_hygiene.py' -v
 python3 -B -m unittest discover -s tests -p 'test_public_source.py' -v
 node --test architecture/lib/*.test.mjs architecture/*.test.mjs
 node architecture/validate.mjs
-node --test execution-engine/test/*.test.mjs execution-testkit/test/*.test.mjs
+node --test execution-testkit/test/*.test.mjs
 npm test --prefix services/dhan-chatgpt-mcp
 ```
 
