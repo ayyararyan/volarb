@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   research-tests:
-    runs-on: [self-hosted, Linux, X64, aryan-mac-linux]
+    runs-on: [self-hosted, Linux, ARM64, aryan-mac-linux-arm64]
     timeout-minutes: 15
     defaults:
       run:
