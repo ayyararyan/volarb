@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { BrokerOperation, BrokerOperationKind } from '../../execution-engine/ports/broker-port.mjs';
+import { BrokerOperation, BrokerOperationKind } from '../../compat/javascript/execution-contracts/broker-port.mjs';
 import { VirtualClock } from '../src/virtual-clock.mjs';
 import { ComponentHarness, CompositionHarness, createExecutionTestbed, runMassScenarios, runScenario } from '../src/harness.mjs';
 import { checkInvariants, noBlindRetryAfterAmbiguity } from '../src/invariants.mjs';

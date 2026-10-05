@@ -6,8 +6,10 @@
 !services/dhan-chatgpt-mcp/package-lock.json
 !services/dhan-chatgpt-mcp/src/
 !services/dhan-chatgpt-mcp/src/**
-!execution-engine/
-!execution-engine/**
+!compat/
+!compat/javascript/
+!compat/javascript/execution-contracts/
+!compat/javascript/execution-contracts/**
 **/.env
 **/.private/**
 **/node_modules/**

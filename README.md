@@ -17,7 +17,8 @@ VolArb brings Indian index-option research and strategy workflows together with 
 
 ## Capabilities and status
 
-- **Execution contracts — implemented.** Provider-neutral ports, the global Provider Error Envelope, immutable component identities and validated composition bindings. The policy/convergence pipeline and production environment loader remain in development.
+- **Execution contracts — implemented in Python.** Provider-neutral ports, the global Provider Error Envelope, immutable component identities and validated composition bindings are canonical under `execution-engine/volarb_execution/`. The policy/convergence pipeline and production environment loader remain in development.
+- **Durable admission and recovery — implemented in Python.** Atomic ledger admission, account fencing and conservative broker-evidence reconciliation; [supported topology and limitations](docs/architecture/durable-execution-recovery.md). The full engine remains under development.
 - **Dhan Provider — implemented.** REST/WebSocket integration; normalized commands, queries and streams; instrument translation and readiness gates. Broker mechanics, not trading policy.
 - **Execution Testbed — implemented.** Virtual time, seeded scenarios, simulated broker/market, faults, traces and composition harnesses. Complete-engine coverage awaits the engine.
 - **Research skills — implemented decision support.** Option-surface analytics, physical realized-volatility forecasting, event/news filtering and butterfly workflows. No order authority.
@@ -78,7 +79,10 @@ Choose a path by the work you want to do. The [full repository map](docs/REPOSIT
 Start with **offline source validation**. No broker credentials or running services are required. Use the repository pins: **Node 26.5.0**, **npm 11.17.0** and **Python 3.12.13**. Run from the repository root:
 
 ```sh
-# Architecture and deterministic Execution Testbed: no npm install required.
+# Canonical Python Execution Engine box tests.
+python3.12 -B -m unittest discover -s execution-engine/tests -p 'test_*.py' -v
+
+# Architecture and legacy JavaScript Execution Testbed: no npm install required.
 node architecture/validate.mjs
 node --test architecture/lib/*.test.mjs architecture/*.test.mjs \
   execution-testkit/test/*.test.mjs

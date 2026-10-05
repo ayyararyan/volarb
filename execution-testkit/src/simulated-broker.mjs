@@ -1,7 +1,7 @@
-import { BrokerOperation, BrokerOperationKind, assertBrokerRequest, brokerOperationKind } from '../../execution-engine/ports/broker-port.mjs';
+import { BrokerOperation, BrokerOperationKind, assertBrokerRequest, brokerOperationKind } from '../../compat/javascript/execution-contracts/broker-port.mjs';
 import {
   ProviderCommandOutcome, ProviderError, ProviderErrorCategory, ProviderErrorCode
-} from '../../execution-engine/contracts/provider-error.mjs';
+} from '../../compat/javascript/execution-contracts/provider-error.mjs';
 import { instrumentKey } from './simulated-market.mjs';
 
 const clone=x=>x===undefined?undefined:structuredClone(x);

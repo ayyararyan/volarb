@@ -1,0 +1,1013 @@
+{
+  "schema_version": "1.0",
+  "decision_date": "2026-10-05",
+  "decision_status": "adopted_for_implementation_design",
+  "reviewed_revision": "61471deaa3cc35da2d88b1bef251680829daaef8",
+  "rationale_document": "docs/architecture/decision-modes.md",
+  "classification_semantics": {
+    "PURE_AGENTIC": "The substantive decision is delegated to open-ended LLM reasoning. Generic tool transport, schema checks and logging alone do not make a node hybrid. No current registered operational entity is assigned this mode.",
+    "PURE_ALGORITHMIC": "Substantive decisions and state changes follow specified numerical methods, predicates, solvers or state machines without runtime LLM judgment. External observations can be uncertain; this does not make the decision agentic.",
+    "HYBRID": "LLM interpretation affects a proposal or assessment, while substantive numerical policy and deterministic admission jointly determine the accepted result. Aggregate containers inherit this mode from their children."
+  },
+  "coverage_rule": "Exactly one entry for every active non-edge entity in scope. Retired VIDs remain tombstones. Edges are deterministic routing/transition rules, not independent decision makers.",
+  "implementation_boundary": "These are architecture decisions, not claims of completed implementation or grants of live trading authority.",
+  "broker_mutation_authority": "Only the deterministic Command Commit Guard may admit a mutation, using valid upstream authority and injected ledger/broker dependencies. No LLM receives a direct broker mutation path.",
+  "change_policy": "Changing decision mode, LLM authority or a supporting contract requires an explicit architecture revision and renewed validation; a different orchestrator or model choice does not silently change mode.",
+  "entries": [
+    {
+      "vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "name": "Execution Engine",
+      "kind": "root",
+      "role": "AGGREGATE",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Converge exact, approved economic intent to authoritative broker state through explicit numerical policies and state machines. The selected baseline has no unresolved semantic task for an LLM.",
+      "authority_policy": "VALIDATED_AGGREGATION",
+      "registry_context": "Broker-neutral Execution Engine: Margin Optimization -> Execution Slicing -> Optimal Execution, with cross-cutting State Integrity, Execution Recovery/Ledger and Interrupt Control."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        9,
+        1
+      ],
+      "name": "Active Instrument Execution Registry",
+      "kind": "resource",
+      "role": "SUPPORTING_RUNTIME",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Maintain versioned economic requirements, confirmed effects and remaining work with scoped concurrency control. Supersession and cancellation cannot depend on language-model interpretation.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "registry_context": "Holds outstanding instrument-level economic requirements with Runtime Intent Identity/version. Registry entries are persistent requirements, not broker order tickets."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        3,
+        6,
+        1
+      ],
+      "name": "Broker Execution Port",
+      "kind": "interface",
+      "role": "SUPPORTING_RUNTIME",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Validate and transport provider-neutral commands, queries and streams; normalize outcomes while leaving execution policy in the engine.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "registry_context": "Broker-neutral interface implemented by unnumbered provider plug-ins such as Dhan, Kotak, or ICICI Securities."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        7,
+        1
+      ],
+      "name": "Normalized Broker Execution Facts",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "registry_context": "Authoritative broker order/fill/status/account facts normalized through the Broker Execution Port for execution components and upstream strategies. Provider response envelopes are implemented; component-specific execution-state aggregation remains active design."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        7,
+        1
+      ],
+      "name": "Live Market Execution State",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "registry_context": "Continuously refreshed normalized quotes, executable depth/order book, spread, freshness and tradability used by optimal execution."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        7,
+        2
+      ],
+      "name": "Live Broker Account State",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "registry_context": "Authoritative dynamic account-capacity state including cash/collateral/margin, current positions and pending orders relevant to execution feasibility."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        1,
+        2
+      ],
+      "name": "Hedge / Offset Relationship Analyzer",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Derive coverage and offsets from typed instrument/payoff relationships, current positions and authoritative margin facts. Unsupported instruments remain unsupported; an LLM cannot certify a hedge.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        5,
+        0,
+        2,
+        0,
+        1
+      ],
+      "registry_context": "Infers structural risk-offset and coverage relationships from instruments, current positions and desired actions without strategy labels."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        7,
+        1
+      ],
+      "name": "Execution Dependency Graph",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        5,
+        0,
+        2,
+        0,
+        1
+      ],
+      "registry_context": "Quantity-aware precedence constraints derived from inferred hedge relationships."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        1,
+        3
+      ],
+      "name": "Margin Sequence Optimizer",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Search feasible intermediate execution states under explicit margin, coverage and quantity constraints. Emit ORDERED or UNCONSTRAINED only with a verifiable feasibility basis.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        5,
+        0,
+        2,
+        0,
+        1
+      ],
+      "registry_context": "Produces the Execution Ordering Plan. It decides whether precedence constraints exist. If required, emits ORDERED with sequence/quantity constraints; if genuinely unnecessary, emits UNCONSTRAINED."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ],
+      "name": "Optimal Execution",
+      "kind": "root",
+      "role": "AGGREGATE",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Run the specified algorithm on released slices under deterministic ordering, quantity, integrity and interrupt constraints.",
+      "authority_policy": "VALIDATED_AGGREGATION",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "registry_context": "Third normal-flow Execution Engine sub-box, after Margin Optimization and Execution Slicing. Enforces inherited ordering and slice-release constraints, then converts only released slice work plus live LOB/order state into time-indexed order-management actions."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        3,
+        7,
+        1
+      ],
+      "name": "Eligible Execution Work Set",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ],
+      "registry_context": "Current execution slice(s) released after ordering and slicing constraints. Contains intent identity/version, slice identity, instrument, side and permitted quantity. Optimal Execution acts only within this set."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        1,
+        1
+      ],
+      "name": "Temporal Execution Controller",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Drive timers and broker events, invoke the selected execution algorithm, validate its output and submit only through the guard; stale or delayed work is rejected.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ],
+      "registry_context": "Runs the time-indexed micro-execution loop, invokes the selected algorithm, validates its action, sends broker-neutral actions and consumes broker feedback."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        6,
+        1
+      ],
+      "name": "Execution Algorithm Port",
+      "kind": "interface",
+      "role": "SUPPORTING_RUNTIME",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "A typed plugin boundary exposes only eligible work and permitted actions. A future agentic plugin would require a new decision review; the current binding is Passive Chase.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ],
+      "registry_context": "Plug-and-play broker-neutral micro-execution interface. Algorithms receive only the work set released under the upstream ordering decision."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        4,
+        7,
+        2
+      ],
+      "name": "Temporal Execution Decision",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ],
+      "registry_context": "Time-t action: WAIT, PLACE_LIMIT, REPRICE_LIMIT, CANCEL_LIMIT, or PLACE_MARKET, with applicable quantity, price and order-reference fields."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        0,
+        1
+      ],
+      "name": "Margin Optimization",
+      "kind": "root",
+      "role": "AGGREGATE",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Solve numerical path feasibility and ordering using typed instruments and broker-backed account capacity. Difficulty or combinatorial complexity does not imply a need for an LLM.",
+      "authority_policy": "VALIDATED_AGGREGATION",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "registry_context": "First Execution Engine sub-box. Determines hedge/margin dependencies and releases only currently eligible instrument quantity to Optimal Execution."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        5,
+        5,
+        1
+      ],
+      "name": "Passive Chase",
+      "kind": "worker",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "The documented BUY-bid/SELL-ask, wait T, evaluate at most N intervals, cancel/reconcile and market-remainder policy is a complete state-machine specification.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ],
+      "registry_context": "Current default Optimal Execution plug-in. Posts passively at the same-side best quote, waits T, uses up to N passive waiting/evaluation intervals (at most N-1 refresh opportunities), then cancels/reconciles and markets the confirmed remainder."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        5,
+        7,
+        1
+      ],
+      "name": "Passive Chase Parameters",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        5,
+        0,
+        5,
+        5,
+        1
+      ],
+      "registry_context": "T = passive waiting interval between evaluations; N = maximum passive waiting/evaluation intervals including the final fallback evaluation (at most N-1 refresh opportunities). Values intentionally TBD."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        5,
+        2,
+        1
+      ],
+      "name": "Passive Chase State",
+      "kind": "state",
+      "role": "STATE",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Persist and reduce typed events through explicit transitions. Only validated owning-component events may update this state; free-form LLM output cannot write authoritative state directly.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        5,
+        0,
+        5,
+        5,
+        1
+      ],
+      "registry_context": "Working order reference, confirmed remaining quantity, passive-cycle count, last passive price and last evaluation time."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        5,
+        3,
+        1
+      ],
+      "name": "Passive Reprice Timer",
+      "kind": "scheduler",
+      "role": "SUPPORTING_RUNTIME",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Use the injected clock to schedule T, enforce cycle counters and cancel stale callbacks. LLM latency must not control repricing.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        5,
+        0,
+        5,
+        5,
+        1
+      ],
+      "registry_context": "Waits parameter T between passive execution evaluations. Exact T is configuration, not architecture."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        2,
+        7,
+        2
+      ],
+      "name": "Execution Ordering Plan",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        5,
+        0,
+        2,
+        0,
+        1
+      ],
+      "registry_context": "Mandatory Margin Optimization output declaring ORDERED or UNCONSTRAINED execution. ORDERED supplies explicit precedence/sequence constraints; UNCONSTRAINED explicitly declares that no ordering constraint exists."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        3,
+        1,
+        1
+      ],
+      "name": "Ordering Constraint Enforcer",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Release only work permitted by the dependency graph and confirmed predecessor effects. Missing or invalid ordering permits no execution.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        5,
+        0,
+        3,
+        0,
+        1
+      ],
+      "registry_context": "Interprets the Execution Ordering Plan. In ORDERED mode it releases only currently permitted step(s); in UNCONSTRAINED mode it releases all otherwise eligible work without imposing sequence. Missing/invalid ordering decision means no execution."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        0,
+        1
+      ],
+      "name": "Interrupt Control",
+      "kind": "root",
+      "role": "AGGREGATE",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Emergency preemption, priority, cancellation, flattening and persistent latching follow fixed rules and must remain available when an LLM is unavailable.",
+      "authority_policy": "VALIDATED_AGGREGATION",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "registry_context": "NVIC-inspired supervisory sub-box. Orthogonal to the normal Margin Optimization -> Execution Slicing -> Optimal Execution chain and authorized to preempt all three according to interrupt priority."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        7,
+        1
+      ],
+      "name": "Interrupt Directive",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        5,
+        0,
+        6,
+        0,
+        1
+      ],
+      "registry_context": "Broker-neutral interrupt input carrying interrupt_id, level, scope, reason/source, issue time and target position/order scope. Levels currently: L1 CANCEL_WORK, L2 FLATTEN_SCOPE, L3 FLATTEN_ALL."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        1,
+        1
+      ],
+      "name": "Interrupt Arbiter",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Validate scope and authority, enforce L3 > L2 > L1 > normal, and prevent downgrade or unauthorized latch clearing.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        5,
+        0,
+        6,
+        0,
+        1
+      ],
+      "registry_context": "Prioritizes and vectors interrupts. Higher levels preempt lower levels; normal execution is lower priority than every interrupt."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        2,
+        1
+      ],
+      "name": "Latched Interrupt State",
+      "kind": "state",
+      "role": "STATE",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Persist and reduce typed events through explicit transitions. Only validated owning-component events may update this state; free-form LLM output cannot write authoritative state directly.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        5,
+        0,
+        6,
+        0,
+        1
+      ],
+      "registry_context": "Persists active/pending interrupt priority, scope and completion state. Prevents normal convergence from recreating cancelled work until the interrupt is explicitly cleared."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        6,
+        7,
+        2
+      ],
+      "name": "Interrupt Action Plan",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        5,
+        0,
+        6,
+        0,
+        1
+      ],
+      "registry_context": "Deterministic emergency handler output: cancel working orders, flatten explicit scope, or flatten all controlled positions. Emergency flatten uses market actions for confirmed net positions after cancellation/reconciliation."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        1,
+        7,
+        3
+      ],
+      "name": "Runtime Intent Identity",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "registry_context": "Runtime identity carried by each live execution requirement: composition_id, execution mount_id, canonical component/VID context, intent_id, intent_version, supersedes_version/status and timestamps. The composition/mount context disambiguates concurrent uses of the same canonical execution component. Runtime identity remains distinct from immutable architectural CVIDs/BVIDs."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        7,
+        0,
+        1
+      ],
+      "name": "Execution Slicing",
+      "kind": "root",
+      "role": "AGGREGATE",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Transform already-permitted quantity into bounded slices while conserving quantity and precedence. The current one-slice sequential policy needs no judgment.",
+      "authority_policy": "VALIDATED_AGGREGATION",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "registry_context": "Normal-flow sub-box between Margin Optimization and Optimal Execution. Converts ordered/unconstrained eligible quantity into one or more execution slices. Default slice_count=1."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        7,
+        1,
+        1
+      ],
+      "name": "Slice Planner",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Implement slice_count=1 and SEQUENTIAL first. Later numerical impact or liquidity optimization can remain algorithmic with explicit constraints and reproducible policy versions.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        5,
+        0,
+        7,
+        0,
+        1
+      ],
+      "registry_context": "Chooses number, quantity and scheduling of execution slices while preserving upstream ordering constraints. Current default: one slice; if multiple slices exist, execute sequentially."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        7,
+        7,
+        1
+      ],
+      "name": "Execution Slice Plan",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        5,
+        0,
+        7,
+        0,
+        1
+      ],
+      "registry_context": "Per-intent slice plan carrying intent identity/version, ordering metadata, slice_count, slice_id/index, quantity and scheduling policy."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        7,
+        2,
+        1
+      ],
+      "name": "Slice Progress State",
+      "kind": "state",
+      "role": "STATE",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Persist and reduce typed events through explicit transitions. Only validated owning-component events may update this state; free-form LLM output cannot write authoritative state directly.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        5,
+        0,
+        7,
+        0,
+        1
+      ],
+      "registry_context": "Tracks current/complete/pending slices and authoritative filled quantity. Default sequential policy releases the next slice only after the current slice completes/reconciles."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        7,
+        7,
+        2
+      ],
+      "name": "Slice Policy",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        5,
+        0,
+        7,
+        0,
+        1
+      ],
+      "registry_context": "Slicing configuration. Current default: slice_count=1 and scheduling_mode=SEQUENTIAL. Future policies may dynamically size/schedule slices."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        0,
+        1
+      ],
+      "name": "Execution Recovery",
+      "kind": "root",
+      "role": "AGGREGATE",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Coordinate durable admission and authoritative reconstruction after uncertainty. A model cannot substitute inferred broker state for verified orders, fills and positions.",
+      "authority_policy": "VALIDATED_AGGREGATION",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "registry_context": "Cross-cutting durable execution/reconciliation sub-box. Owns write-ahead action recording, runtime identity/version validation, correlation and restart/ambiguity recovery."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        9,
+        1
+      ],
+      "name": "Execution Ledger",
+      "kind": "resource",
+      "role": "SUPPORTING_RUNTIME",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Persist action/correlation identity and state transitions before broker release, enforce atomic uniqueness, and recover history after restart; broker observations remain authoritative.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        5,
+        0,
+        8,
+        0,
+        1
+      ],
+      "registry_context": "Durable append/update record linking composition/mount/canonical execution context -> runtime intent/version -> slice -> execution action -> correlation/order IDs -> authoritative fills/status/positions. Canonical VIDs are never repurposed as runtime IDs."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        1,
+        1
+      ],
+      "name": "Reconciliation Engine",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Reconcile ledger entries against authoritative orders, trades and positions; deduplicate facts, resolve races and preserve ambiguity when evidence is insufficient.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        5,
+        0,
+        8,
+        0,
+        1
+      ],
+      "registry_context": "Reconstructs broker truth after timeout, ambiguity or restart using authoritative orders, trades, fills and positions. No blind mutation retry while outcome is unknown."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        1,
+        2
+      ],
+      "name": "Command Commit Guard",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Enforce current intent, interrupt compatibility, integrity permission, unique identity and durable write-ahead recording before broker release. No LLM may waive these predicates.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        5,
+        0,
+        8,
+        0,
+        1
+      ],
+      "registry_context": "Final pre-broker mutation gate. Rejects stale intent versions, requires durable write-ahead record/correlation identity, checks interrupt latch and action-class integrity permission, then releases the command."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        2,
+        1
+      ],
+      "name": "Recovery State",
+      "kind": "state",
+      "role": "STATE",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Persist and reduce typed events through explicit transitions. Only validated owning-component events may update this state; free-form LLM output cannot write authoritative state directly.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        5,
+        0,
+        8,
+        0,
+        1
+      ],
+      "registry_context": "Tracks CLEAN, RECONCILING, AMBIGUOUS and RECOVERY_REQUIRED execution states. Normal new mutations are blocked while unresolved ambiguity exists in relevant scope."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        7,
+        1
+      ],
+      "name": "Execution Action Envelope",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        5,
+        0,
+        8,
+        0,
+        1
+      ],
+      "registry_context": "Broker-neutral mutation envelope carrying composition_id, execution mount_id, canonical execution context, action_id, origin/intent or interrupt identity, intent_version, slice_id, action_class, correlation_id and requested broker operation."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        8,
+        7,
+        2
+      ],
+      "name": "Reconciliation Result",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        5,
+        0,
+        8,
+        0,
+        1
+      ],
+      "registry_context": "Authoritative reconciliation result mapping attempted actions to broker orders/trades/fills/positions and exact confirmed remaining requirement."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        9,
+        0,
+        1
+      ],
+      "name": "State Integrity",
+      "kind": "root",
+      "role": "AGGREGATE",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Compute action-specific permission from explicit freshness, completeness, consistency and recovery predicates.",
+      "authority_policy": "VALIDATED_AGGREGATION",
+      "parent_vid": [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      "registry_context": "Cross-cutting broker-neutral readiness guard that classifies freshness/completeness/consistency of market, account, order/fill and recovery state before actions are allowed."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        9,
+        1,
+        1
+      ],
+      "name": "State Integrity Guard",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Apply the correct integrity requirements to normal adds, reductions, cancellations and emergency flattening. Missing required evidence denies the affected action.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        5,
+        0,
+        9,
+        0,
+        1
+      ],
+      "registry_context": "Computes action-class-aware execution permission. Normal risk-adding work requires sufficiently fresh/complete state; emergency cancel/flatten uses separate minimum-integrity requirements and never silently falls back."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        9,
+        7,
+        1
+      ],
+      "name": "Integrity Assessment",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        5,
+        0,
+        9,
+        0,
+        1
+      ],
+      "registry_context": "Assessment with status VALID/STALE/INCOMPLETE/INCONSISTENT/UNKNOWN plus per-action permissions and reasons."
+    },
+    {
+      "vid": [
+        5,
+        0,
+        9,
+        2,
+        1
+      ],
+      "name": "Integrity State",
+      "kind": "state",
+      "role": "STATE",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Persist and reduce typed events through explicit transitions. Only validated owning-component events may update this state; free-form LLM output cannot write authoritative state directly.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        5,
+        0,
+        9,
+        0,
+        1
+      ],
+      "registry_context": "Current freshness/completeness/consistency state of required broker-neutral inputs."
+    }
+  ],
+  "scope": "component.execution_engine",
+  "source_registry": "architecture/components/execution-engine/vector-id-registry.json",
+  "namespace_filter": {
+    "include": [
+      5
+    ]
+  },
+  "summary": {
+    "active_non_edge_entities": 43,
+    "by_classification": {
+      "PURE_ALGORITHMIC": 43
+    }
+  }
+}

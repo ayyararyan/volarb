@@ -1,3 +1,6 @@
+// Transitional JavaScript compatibility contract for legacy Dhan/testkit consumers.
+// Canonical Execution Engine implementation lives in execution-engine/volarb_execution/.
+
 function needMethod(value,name,method){
   if(!value || typeof value[method]!=='function') throw new TypeError(`${name} must implement ${method}()`);
   return value;
