@@ -29,3 +29,11 @@ def assert_ledger_port(value: Any) -> Any:
 
 def assert_market_port(value: Any) -> Any:
     return _need_method(value, "market", "snapshot")
+
+
+def assert_admission_ledger_port(value: Any) -> Any:
+    """Atomic admission is stronger than the legacy append/entries trace port."""
+    for method in ("lock_scope", "admit", "mark_dispatch", "abort_before_dispatch",
+                   "record_outcome", "pending", "record_reconciliation", "entries"):
+        _need_method(value, "admission_ledger", method)
+    return value

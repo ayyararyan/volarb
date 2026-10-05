@@ -1,6 +1,6 @@
 # [5,0,8,0,1] Execution Recovery
 
-Status: **active reusable execution design with `[5,0,8,1,2]` Command Commit Guard implemented**. Reconciliation, recovery-state orchestration and the complete pipeline are not yet implemented; see [current engine implementation](../../execution-engine/README.md). These rules specify the remaining required behavior and do not constitute a live trading service.
+Status: **Command Commit Guard, local durable Execution Ledger admission and conservative account-scoped reconciliation are implemented in Python**. Full recovery orchestration, State Integrity, Interrupt Control and the complete pipeline remain outstanding. The [implementation guide](../architecture/durable-execution-recovery.md) specifies supported topology, stronger ledger contracts, restart rules and current provider-evidence limitations. These components do not activate a live trading service.
 
 Execution Recovery is the broker-neutral durability and reconciliation layer for Execution Engine.
 

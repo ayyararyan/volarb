@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import copy
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from typing import Any
@@ -26,6 +27,11 @@ from volarb_execution.recovery.command_commit_guard import (  # noqa: E402
     CommandCommitGuardErrorCode,
 )
 
+from volarb_execution.recovery.execution_scope import ExecutionScope
+from volarb_execution.recovery.sqlite_ledger import SQLiteExecutionLedger
+
+SCOPE = ExecutionScope("simulated", "synthetic-account")
+
 
 class FakeClock:
     def __init__(self, now_ms: int = 0) -> None:
@@ -38,23 +44,28 @@ class FakeClock:
         return delay_ms, callback
 
 
-class MemoryLedger:
-    def __init__(self, trace: list[tuple[str, dict[str, Any]]], fail_append: bool = False) -> None:
-        self._rows: list[dict[str, Any]] = []
-        self._trace = trace
-        self._fail_append = fail_append
+class RecordingLedger(SQLiteExecutionLedger):
+    def __init__(self, trace, fail_append=False):
+        self._directory = tempfile.TemporaryDirectory()
+        self._trace, self._fail_append = trace, fail_append
+        super().__init__(Path(self._directory.name) / "ledger.sqlite3")
 
-    async def append(self, entry: dict[str, Any]) -> dict[str, Any]:
+    def admit(self, lease, action):
         if self._fail_append:
             raise OSError("disk unavailable")
-        row = copy.deepcopy(entry)
-        row["ledgerSeq"] = len(self._rows) + 1
-        self._rows.append(row)
+        row = super().admit(lease, action)
         self._trace.append(("ledger.append", copy.deepcopy(row)))
-        return copy.deepcopy(row)
+        return row
 
-    async def entries(self) -> list[dict[str, Any]]:
-        return copy.deepcopy(self._rows)
+    def mark_dispatch(self, lease, action_id, now_ms):
+        row = super().mark_dispatch(lease, action_id, now_ms)
+        self._trace.append(("ledger.append", copy.deepcopy(row)))
+        return row
+
+    def record_outcome(self, lease, action_id, status, details):
+        row = super().record_outcome(lease, action_id, status, details)
+        self._trace.append(("ledger.append", copy.deepcopy(row)))
+        return row
 
 
 class AllowIntent:
@@ -88,6 +99,7 @@ class SimulatedBroker:
         outcome: ProviderCommandOutcome | None = None,
     ) -> None:
         self.trace = trace
+        self.scope = SCOPE
         self.outcome = outcome
         self.calls: list[dict[str, Any]] = []
         self.applied = 0
@@ -158,7 +170,7 @@ class SimulatedBroker:
             "kind": request["kind"],
             "operation": request["operation"],
             "observedAt": "1970-01-01T00:00:00Z",
-            "data": {"accepted": True},
+            "data": {"accepted": True, "brokerOrderRef": "synthetic-order-1"},
         }
 
 
@@ -201,12 +213,14 @@ class CommandCommitGuardTests(unittest.IsolatedAsyncioTestCase):
         intent_authority: Any | None = None,
         integrity_authority: Any | None = None,
         interrupt_authority: Any | None = None,
-    ) -> tuple[CommandCommitGuard, list[tuple[str, dict[str, Any]]], MemoryLedger, SimulatedBroker]:
+    ) -> tuple[CommandCommitGuard, list[tuple[str, dict[str, Any]]], RecordingLedger, SimulatedBroker]:
         trace: list[tuple[str, dict[str, Any]]] = []
-        actual_ledger = ledger or MemoryLedger(trace)
+        actual_ledger = ledger or RecordingLedger(trace)
         actual_broker = broker or SimulatedBroker(trace)
+        self.addCleanup(actual_ledger._directory.cleanup)
         guard = CommandCommitGuard(
             broker_port=actual_broker,
+            command_timeout_s=1,
             ledger=actual_ledger,
             clock=FakeClock(),
             intent_authority=intent_authority or AllowIntent(),
@@ -222,10 +236,11 @@ class CommandCommitGuardTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(result["broker_result"]["operation"], "PLACE_ORDER")
         self.assertEqual(result["action"].correlation_id, "exec:action-1")
-        rows = await ledger.entries()
+        rows = ledger.entries()
         self.assertEqual(rows[0]["eventType"], "MUTATION_INTENDED")
-        self.assertEqual(rows[1]["eventType"], "BROKER_RESULT")
-        self.assertEqual(rows[1]["status"], "ACKNOWLEDGED")
+        self.assertEqual(rows[1]["eventType"], "DISPATCH_STARTED")
+        self.assertEqual(rows[2]["eventType"], "BROKER_RESULT")
+        self.assertEqual(rows[2]["status"], "ACKNOWLEDGED")
         event_names = [name for name, _ in trace]
         self.assertLess(
             event_names.index("ledger.append"),
@@ -235,7 +250,7 @@ class CommandCommitGuardTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_ledger_failure_prevents_broker_mutation(self) -> None:
         trace: list[tuple[str, dict[str, Any]]] = []
-        ledger = MemoryLedger(trace, fail_append=True)
+        ledger = RecordingLedger(trace, fail_append=True)
         broker = SimulatedBroker(trace)
         guard, _, _, _ = self.make_guard(ledger=ledger, broker=broker)
 
@@ -253,7 +268,7 @@ class CommandCommitGuardTests(unittest.IsolatedAsyncioTestCase):
             await guard.commit(place_action())
 
         self.assertEqual(raised.exception.code, CommandCommitGuardErrorCode.STALE_INTENT)
-        self.assertEqual(await ledger.entries(), [])
+        self.assertEqual(ledger.entries(), [])
         self.assertEqual(broker.calls, [])
 
     async def test_integrity_denial_is_rejected_before_ledger_or_broker(self) -> None:
@@ -265,7 +280,7 @@ class CommandCommitGuardTests(unittest.IsolatedAsyncioTestCase):
             await guard.commit(place_action())
 
         self.assertEqual(raised.exception.code, CommandCommitGuardErrorCode.INTEGRITY_DENIED)
-        self.assertEqual(await ledger.entries(), [])
+        self.assertEqual(ledger.entries(), [])
         self.assertEqual(broker.calls, [])
 
     async def test_interrupt_conflict_is_rejected_before_ledger_or_broker(self) -> None:
@@ -277,12 +292,12 @@ class CommandCommitGuardTests(unittest.IsolatedAsyncioTestCase):
             await guard.commit(place_action())
 
         self.assertEqual(raised.exception.code, CommandCommitGuardErrorCode.INTERRUPT_CONFLICT)
-        self.assertEqual(await ledger.entries(), [])
+        self.assertEqual(ledger.entries(), [])
         self.assertEqual(broker.calls, [])
 
     async def test_ambiguous_ack_is_recorded_and_same_action_cannot_blind_retry(self) -> None:
         trace: list[tuple[str, dict[str, Any]]] = []
-        ledger = MemoryLedger(trace)
+        ledger = RecordingLedger(trace)
         broker = SimulatedBroker(trace, outcome=ProviderCommandOutcome.UNKNOWN)
         guard, _, _, _ = self.make_guard(ledger=ledger, broker=broker)
         action = place_action(action_id="action-ambiguous")
@@ -291,7 +306,7 @@ class CommandCommitGuardTests(unittest.IsolatedAsyncioTestCase):
             await guard.commit(action)
         self.assertEqual(raised.exception.outcome, ProviderCommandOutcome.UNKNOWN)
 
-        rows = await ledger.entries()
+        rows = ledger.entries()
         result = next(
             row
             for row in rows
@@ -316,7 +331,7 @@ class CommandCommitGuardTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_interrupt_action_may_omit_runtime_intent_identity(self) -> None:
         trace: list[tuple[str, dict[str, Any]]] = []
-        ledger = MemoryLedger(trace)
+        ledger = RecordingLedger(trace)
         broker = SimulatedBroker(trace, outcome=ProviderCommandOutcome.KNOWN_NOT_APPLIED)
         guard, _, _, _ = self.make_guard(ledger=ledger, broker=broker)
         action = place_action(
@@ -335,9 +350,9 @@ class CommandCommitGuardTests(unittest.IsolatedAsyncioTestCase):
             await guard.commit(action)
 
         self.assertEqual(raised.exception.outcome, ProviderCommandOutcome.KNOWN_NOT_APPLIED)
-        rows = [row for row in await ledger.entries() if row["actionId"] == "interrupt-cancel"]
+        rows = [row for row in ledger.entries() if row["actionId"] == "interrupt-cancel"]
         self.assertEqual(rows[0]["eventType"], "MUTATION_INTENDED")
-        self.assertEqual(rows[1]["status"], "KNOWN_NOT_APPLIED")
+        self.assertEqual(rows[2]["status"], "KNOWN_NOT_APPLIED")
 
     async def test_concurrent_duplicate_admission_releases_exactly_one_mutation(self) -> None:
         guard, _, _, broker = self.make_guard()
@@ -360,3 +375,4 @@ class CommandCommitGuardTests(unittest.IsolatedAsyncioTestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

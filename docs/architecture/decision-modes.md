@@ -228,9 +228,11 @@ The unnumbered Dhan provider is algorithmic translation/transport/normalization.
 7. A new action ID must not provide a route around unresolved ambiguity. Recovery state gates subsequent work in the affected economic scope, including after restart or a post-mutation ledger failure.
 8. Safe unavailability is action-specific: stop discretionary risk increases, preserve integrity/reconciliation, and continue independently authorized hard-risk handling. Neither unconditional `HOLD` nor an indiscriminate automatic market exit is a suitable universal fallback.
 
-## Implementation gaps exposed by the review
+## Implementation gaps identified at the reviewed revision
 
-The current Python guard checks injected authorities, rejects action/correlation reuse, writes ahead and records ambiguous outcomes. Its in-process lock serializes one guard instance. The broader production guarantees still require:
+**Implementation follow-up (2026-10-05):** local durable ledger admission, durable intent versioning and conservative account-scoped reconciliation have since been implemented. See the [implementation guide](durable-execution-recovery.md) for current behavior and limits. The following list records the gaps at the source revision reviewed above.
+
+At that revision, the Python guard checked injected authorities, rejected action/correlation reuse, wrote ahead and recorded ambiguous outcomes. Its in-process lock serialized one guard instance. The review identified these requirements:
 
 - A durable ledger with atomic action/correlation reservation and correct transaction boundaries across processes or a documented single-writer topology. Replaying a graph must not allocate a fresh identity for the same economic attempt.
 - An admission boundary that coordinates intent supersession, interrupt/integrity changes and broker release. Checking a boolean before an awaited ledger operation is not by itself proof that the permission remains valid at release. An accepted in-flight action cannot be retroactively unsent; subsequent preemption must reconcile it.

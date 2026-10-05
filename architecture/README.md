@@ -25,7 +25,7 @@ Strategy -> optional Strategy Execution Adapter -> Execution Engine
 
 ## Implementation status
 
-These manifests define architecture, not an autonomous production deployment. [execution-engine/](../execution-engine/README.md) currently implements shared contracts, structural ports and the Python Command Commit Guard. The remaining margin/slicing/optimal-execution/recovery/integrity/interrupt pipeline is an active design; testkit primitives and injected harnesses exist, but a complete pipeline is not implemented here.
+These manifests define architecture, not an autonomous production deployment. [execution-engine/](../execution-engine/README.md) currently implements shared contracts, structural ports, the Python Command Commit Guard, durable account admission and conservative scoped reconciliation. See the [durable recovery guide](../docs/architecture/durable-execution-recovery.md). The remaining margin/slicing/optimal-execution/recovery/integrity/interrupt pipeline is an active design; testkit primitives and injected harnesses exist, but a complete pipeline is not implemented here.
 
 Retired registry entries remain tombstones. Never reuse or renumber them. New code should use `component.execution_engine`; `component.internal_execution` remains a compatibility alias only.
 

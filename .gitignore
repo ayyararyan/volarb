@@ -35,6 +35,14 @@ desktop.ini
 *.db
 *.db-wal
 *.db-shm
+*.sqlite3-journal
+*.sqlite3-wal
+*.sqlite3-shm
+*.sqlite3.locks/
+*.sqlite-journal
+*.sqlite.locks/
+*.db-journal
+*.db.locks/
 *.parquet
 *.arrow
 *.feather

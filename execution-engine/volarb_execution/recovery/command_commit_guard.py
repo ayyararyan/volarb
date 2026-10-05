@@ -1,25 +1,19 @@
-"""[5,0,8,1,2] production Command Commit Guard."""
+"""[5,0,8,1,2] durable account-scoped Command Commit Guard."""
 
 from __future__ import annotations
 
 import asyncio
 import inspect
+import math
 from copy import deepcopy
 from enum import StrEnum
 from typing import Any, Mapping
 
-from ..contracts.provider_error import (
-    ProviderCommandOutcome,
-    ProviderError,
-    is_provider_error,
-)
-from ..ports.runtime_ports import assert_broker_port, assert_clock_port, assert_ledger_port
-from .execution_action_envelope import (
-    CorrelationIdFactory,
-    ExecutionAction,
-    broker_request_for_execution_action,
-    normalize_execution_action,
-)
+from ..contracts.provider_error import ProviderCommandOutcome, is_provider_error
+from ..ports.runtime_ports import assert_admission_ledger_port, assert_broker_port, assert_clock_port
+from .execution_action_envelope import CorrelationIdFactory, ExecutionAction, broker_request_for_execution_action, normalize_execution_action
+from .execution_scope import ExecutionScope
+from .sqlite_ledger import LedgerAdmissionError
 
 
 class CommandCommitGuardErrorCode(StrEnum):
@@ -28,18 +22,15 @@ class CommandCommitGuardErrorCode(StrEnum):
     INTEGRITY_DENIED = "COMMAND_COMMIT_GUARD.INTEGRITY_DENIED"
     DUPLICATE_ACTION = "COMMAND_COMMIT_GUARD.DUPLICATE_ACTION"
     CORRELATION_COLLISION = "COMMAND_COMMIT_GUARD.CORRELATION_COLLISION"
+    SCOPE_BUSY = "COMMAND_COMMIT_GUARD.SCOPE_BUSY"
+    SCOPE_UNRESOLVED = "COMMAND_COMMIT_GUARD.SCOPE_UNRESOLVED"
     WRITE_AHEAD_FAILED = "COMMAND_COMMIT_GUARD.WRITE_AHEAD_FAILED"
     POST_MUTATION_LEDGER_FAILED = "COMMAND_COMMIT_GUARD.POST_MUTATION_LEDGER_FAILED"
 
 
 class CommandCommitGuardError(Exception):
-    def __init__(
-        self,
-        code: CommandCommitGuardErrorCode,
-        message: str,
-        details: Mapping[str, Any] | None = None,
-        cause: BaseException | None = None,
-    ) -> None:
+    def __init__(self, code: CommandCommitGuardErrorCode, message: str,
+                 details: Mapping[str, Any] | None = None, cause: BaseException | None = None) -> None:
         self.code = code
         self.details = deepcopy(dict(details or {}))
         super().__init__(message)
@@ -54,245 +45,129 @@ def _require_method(value: Any, name: str, method: str) -> Any:
 
 
 async def _maybe_await(value: Any) -> Any:
-    if inspect.isawaitable(value):
-        return await value
-    return value
+    return await value if inspect.isawaitable(value) else value
 
 
 def _allowed(result: Any) -> bool:
     if isinstance(result, bool):
         return result
     if isinstance(result, Mapping) and isinstance(result.get("allowed"), bool):
-        return bool(result["allowed"])
+        return result["allowed"]
     raise TypeError("authority result must be bool or {'allowed': bool}")
 
 
-def _authority_reason(result: Any) -> Any:
-    return result.get("reason") if isinstance(result, Mapping) else None
-
-
-def _ledger_identity(action: ExecutionAction) -> dict[str, Any]:
-    return {
-        "actionId": action.action_id,
-        "actionClass": action.action_class,
-        "originType": action.origin_type,
-        "originId": action.origin_id,
-        "intentId": action.intent_id,
-        "intentVersion": action.intent_version,
-        "sliceId": action.slice_id,
-        "correlationId": action.correlation_id,
-        "operation": action.operation.value,
-    }
-
-
-def _row_value(row: Mapping[str, Any], camel: str, snake: str) -> Any:
-    return row.get(camel, row.get(snake))
-
-
 class CommandCommitGuard:
-    """Single admission point for every mutating broker command.
+    """One admitted command per account until authoritative resolution.
 
-    The in-process lock prevents concurrent duplicate admission within one guard
-    instance. A production durable ledger must additionally enforce unique
-    action/correlation identities across processes.
+    The bound broker, all guards, reconciliation and authority writers must use
+    the same ledger/account fence. Authority callbacks are read-only. Broker calls
+    must be nonblocking/async and must not suppress task cancellation.
     """
 
-    def __init__(
-        self,
-        *,
-        broker_port: Any,
-        ledger: Any,
-        clock: Any,
-        intent_authority: Any,
-        integrity_authority: Any,
-        interrupt_authority: Any,
-        correlation_id_factory: CorrelationIdFactory | None = None,
-    ) -> None:
+    def __init__(self, *, broker_port: Any, ledger: Any, clock: Any,
+                 intent_authority: Any, integrity_authority: Any, interrupt_authority: Any,
+                 command_timeout_s: float, correlation_id_factory: CorrelationIdFactory | None = None) -> None:
         self.broker_port = assert_broker_port(broker_port)
-        self.ledger = assert_ledger_port(ledger)
+        self.scope = getattr(broker_port, "scope", None)
+        if not isinstance(self.scope, ExecutionScope):
+            raise TypeError("broker_port must have a trusted ExecutionScope account binding")
+        self.ledger = assert_admission_ledger_port(ledger)
         self.clock = assert_clock_port(clock)
+        if isinstance(command_timeout_s, bool) or not math.isfinite(command_timeout_s) or command_timeout_s <= 0:
+            raise ValueError("command_timeout_s must be positive and finite")
+        self.command_timeout_s = command_timeout_s
         self.intent_authority = _require_method(intent_authority, "intent_authority", "is_current")
         self.integrity_authority = _require_method(integrity_authority, "integrity_authority", "allows")
         self.interrupt_authority = _require_method(interrupt_authority, "interrupt_authority", "allows")
+        for authority in (self.intent_authority, self.integrity_authority, self.interrupt_authority):
+            if getattr(authority, "scope", self.scope) != self.scope:
+                raise ValueError("authority is bound to a different broker account")
         self.correlation_id_factory = correlation_id_factory
         self._commit_lock = asyncio.Lock()
 
-    async def _ledger_entries(self) -> list[Mapping[str, Any]]:
-        entries = await _maybe_await(self.ledger.entries())
-        if not isinstance(entries, list):
-            raise TypeError("ledger.entries() must return a list")
-        return entries
-
-    async def _assert_unique(self, action: ExecutionAction) -> None:
-        rows = await self._ledger_entries()
-        if any(_row_value(row, "actionId", "action_id") == action.action_id for row in rows):
-            raise CommandCommitGuardError(
-                CommandCommitGuardErrorCode.DUPLICATE_ACTION,
-                f"action {action.action_id} already exists in the execution ledger",
-                _ledger_identity(action),
-            )
-        collision = next(
-            (
-                row
-                for row in rows
-                if _row_value(row, "correlationId", "correlation_id") == action.correlation_id
-                and _row_value(row, "actionId", "action_id") != action.action_id
-            ),
-            None,
-        )
-        if collision is not None:
-            raise CommandCommitGuardError(
-                CommandCommitGuardErrorCode.CORRELATION_COLLISION,
-                f"correlation {action.correlation_id} is already bound to another action",
-                {
-                    **_ledger_identity(action),
-                    "existingActionId": _row_value(collision, "actionId", "action_id"),
-                },
-            )
-
     async def _assert_authorities(self, action: ExecutionAction) -> None:
         if action.intent_id is not None:
-            current = await _maybe_await(
-                self.intent_authority.is_current(
-                    intent_id=action.intent_id,
-                    intent_version=action.intent_version,
-                    action=action,
-                )
-            )
-            if not _allowed(current):
-                raise CommandCommitGuardError(
-                    CommandCommitGuardErrorCode.STALE_INTENT,
-                    f"intent {action.intent_id} version {action.intent_version} is not current",
-                    {**_ledger_identity(action), "reason": _authority_reason(current)},
-                )
+            result = await _maybe_await(self.intent_authority.is_current(
+                intent_id=action.intent_id, intent_version=action.intent_version, action=action))
+            if not _allowed(result):
+                raise CommandCommitGuardError(CommandCommitGuardErrorCode.STALE_INTENT,
+                                              "intent version is not current", {"actionId": action.action_id})
+        for authority, code in ((self.interrupt_authority, CommandCommitGuardErrorCode.INTERRUPT_CONFLICT),
+                                (self.integrity_authority, CommandCommitGuardErrorCode.INTEGRITY_DENIED)):
+            result = await _maybe_await(authority.allows(action))
+            if not _allowed(result):
+                raise CommandCommitGuardError(code, "authority denies action", {
+                    "actionId": action.action_id, "reason": result.get("reason") if isinstance(result, Mapping) else None})
 
-        interrupt = await _maybe_await(self.interrupt_authority.allows(action))
-        if not _allowed(interrupt):
-            raise CommandCommitGuardError(
-                CommandCommitGuardErrorCode.INTERRUPT_CONFLICT,
-                f"action {action.action_id} conflicts with the active interrupt state",
-                {**_ledger_identity(action), "reason": _authority_reason(interrupt)},
-            )
-
-        integrity = await _maybe_await(self.integrity_authority.allows(action))
-        if not _allowed(integrity):
-            raise CommandCommitGuardError(
-                CommandCommitGuardErrorCode.INTEGRITY_DENIED,
-                f"state integrity does not permit action {action.action_id}",
-                {**_ledger_identity(action), "reason": _authority_reason(integrity)},
-            )
-
-    async def _append_before_mutation(self, action: ExecutionAction) -> Any:
-        entry = {
-            "eventType": "MUTATION_INTENDED",
-            "status": "INTENDED",
-            **_ledger_identity(action),
-            "createdAt": action.created_at,
-            "request": deepcopy(action.payload),
-        }
+    def _record_outcome(self, lease: Any, action: ExecutionAction, status: str, details: Mapping[str, Any]) -> dict[str, Any]:
         try:
-            return await _maybe_await(self.ledger.append(entry))
+            return self.ledger.record_outcome(lease, action.action_id, status, details)
         except Exception as error:
-            raise CommandCommitGuardError(
-                CommandCommitGuardErrorCode.WRITE_AHEAD_FAILED,
-                f"write-ahead ledger append failed for action {action.action_id}",
-                _ledger_identity(action),
-                error,
-            ) from error
+            raise CommandCommitGuardError(CommandCommitGuardErrorCode.POST_MUTATION_LEDGER_FAILED,
+                                          "broker outcome was not persisted; account remains unresolved",
+                                          {"actionId": action.action_id}, error) from error
 
-    async def _append_after_mutation(self, action: ExecutionAction, entry: Mapping[str, Any]) -> Any:
-        try:
-            return await _maybe_await(self.ledger.append(dict(entry)))
-        except Exception as error:
-            raise CommandCommitGuardError(
-                CommandCommitGuardErrorCode.POST_MUTATION_LEDGER_FAILED,
-                (
-                    f"post-mutation ledger append failed for action {action.action_id}; "
-                    "broker truth must be reconciled before another mutation"
-                ),
-                _ledger_identity(action),
-                error,
-            ) from error
+    def _known_not_applied(self, error: BaseException, action: ExecutionAction) -> bool:
+        if not is_provider_error(error):
+            return False
+        provider = getattr(error, "provider", {})
+        return (getattr(error, "outcome", None) == ProviderCommandOutcome.KNOWN_NOT_APPLIED
+                and str(getattr(error, "kind", "")) == "COMMAND"
+                and getattr(error, "operation", None) == action.operation.value
+                and isinstance(provider, Mapping) and provider.get("key") == self.scope.provider)
+
+    def _validate_ack(self, result: Any, action: ExecutionAction) -> None:
+        if (not isinstance(result, Mapping) or result.get("contractVersion") != "1.0"
+                or result.get("provider") != self.scope.provider or result.get("kind") != "COMMAND"
+                or result.get("operation") != action.operation.value):
+            raise ValueError("invalid broker acknowledgement envelope")
+        data = result.get("data")
+        if not isinstance(data, Mapping) or not isinstance(data.get("brokerOrderRef"), str) or not data["brokerOrderRef"].strip():
+            raise ValueError("broker acknowledgement lacks order identity")
+        if action.operation.value != "PLACE_ORDER" and data["brokerOrderRef"] != action.payload.get("orderId"):
+            raise ValueError("broker acknowledgement references a different order")
 
     async def commit(self, action_input: Mapping[str, Any]) -> dict[str, Any]:
         async with self._commit_lock:
-            return await self._commit_once(action_input)
-
-    async def _commit_once(self, action_input: Mapping[str, Any]) -> dict[str, Any]:
-        action = normalize_execution_action(
-            action_input,
-            now_ms=float(self.clock.now()),
-            correlation_id_factory=self.correlation_id_factory,
-        )
-
-        await self._assert_unique(action)
-        await self._assert_authorities(action)
-        intended = await self._append_before_mutation(action)
-        request = broker_request_for_execution_action(action)
-
-        try:
-            broker_result = await _maybe_await(self.broker_port.call(request))
-            acknowledged = await self._append_after_mutation(
-                action,
-                {
-                    "eventType": "BROKER_RESULT",
-                    "status": "ACKNOWLEDGED",
-                    **_ledger_identity(action),
-                    "brokerObservedAt": (
-                        broker_result.get("observedAt") if isinstance(broker_result, Mapping) else None
-                    ),
-                    "brokerProvider": (
-                        broker_result.get("provider") if isinstance(broker_result, Mapping) else None
-                    ),
-                    "brokerResult": deepcopy(broker_result),
-                },
-            )
-            return {
-                "action": action,
-                "intended": intended,
-                "acknowledged": acknowledged,
-                "broker_result": broker_result,
-            }
-        except CommandCommitGuardError:
-            raise
-        except Exception as error:
-            if is_provider_error(error):
-                provider_outcome = ProviderCommandOutcome(getattr(error, "outcome"))
-                if isinstance(error, ProviderError):
-                    provider_error_payload: Mapping[str, Any] = error.to_dict()
-                else:
-                    provider_error_payload = {
-                        "name": type(error).__name__,
-                        "contractVersion": getattr(error, "contract_version", None),
-                        "category": str(getattr(error, "category", "")),
-                        "code": str(getattr(error, "code", "")),
-                        "message": str(error),
-                        "operation": getattr(error, "operation", None),
-                        "kind": str(getattr(error, "kind", "")),
-                        "outcome": provider_outcome.value,
-                        "provider": deepcopy(getattr(error, "provider", {})),
-                        "observedAt": getattr(error, "observed_at", None),
-                    }
-            else:
-                provider_outcome = ProviderCommandOutcome.UNKNOWN
-                provider_error_payload = {
-                    "name": type(error).__name__,
-                    "message": str(error),
-                }
-
-            status = (
-                "KNOWN_NOT_APPLIED"
-                if provider_outcome is ProviderCommandOutcome.KNOWN_NOT_APPLIED
-                else "UNKNOWN"
-            )
-            await self._append_after_mutation(
-                action,
-                {
-                    "eventType": "BROKER_RESULT",
-                    "status": status,
-                    **_ledger_identity(action),
-                    "providerOutcome": provider_outcome.value,
-                    "providerError": deepcopy(dict(provider_error_payload)),
-                },
-            )
-            raise
+            action = normalize_execution_action(action_input, now_ms=float(self.clock.now()), correlation_id_factory=self.correlation_id_factory)
+            try:
+                with self.ledger.lock_scope(self.scope) as lease:
+                    await self._assert_authorities(action)
+                    request = broker_request_for_execution_action(action)
+                    try:
+                        intended = self.ledger.admit(lease, action)
+                    except LedgerAdmissionError:
+                        raise
+                    except Exception as error:
+                        raise CommandCommitGuardError(CommandCommitGuardErrorCode.WRITE_AHEAD_FAILED,
+                                                      "durable admission failed", {"actionId": action.action_id}, error) from error
+                    try:
+                        await self._assert_authorities(action)
+                        if broker_request_for_execution_action(action) != request:
+                            raise ValueError("authority callback changed the admitted action")
+                    except BaseException:
+                        # Failed abort persistence leaves INTENDED, also provably unsent.
+                        self.ledger.abort_before_dispatch(lease, action.action_id, "authority or preparation failed before dispatch")
+                        raise
+                    try:
+                        self.ledger.mark_dispatch(lease, action.action_id, float(self.clock.now()))
+                    except Exception as error:
+                        raise CommandCommitGuardError(CommandCommitGuardErrorCode.WRITE_AHEAD_FAILED,
+                                                      "dispatch marker was not durably confirmed; do not send",
+                                                      {"actionId": action.action_id}, error) from error
+                    try:
+                        async with asyncio.timeout(self.command_timeout_s):
+                            result = await _maybe_await(self.broker_port.call(request))
+                        self._validate_ack(result, action)
+                    except BaseException as error:
+                        status = "KNOWN_NOT_APPLIED" if self._known_not_applied(error, action) else "UNKNOWN"
+                        self._record_outcome(lease, action, status, {
+                            "providerError": {"name": type(error).__name__, "message": str(error)}, "providerOutcome": status})
+                        raise
+                    acknowledged = self._record_outcome(lease, action, "ACKNOWLEDGED", {"brokerResult": deepcopy(result)})
+                    return {"action": action, "intended": intended, "acknowledged": acknowledged,
+                            "broker_result": result, "reconciliation_required": True}
+            except LedgerAdmissionError as error:
+                codes = {code.name: code for code in CommandCommitGuardErrorCode}
+                raise CommandCommitGuardError(codes.get(error.code, CommandCommitGuardErrorCode.WRITE_AHEAD_FAILED),
+                                              str(error), {"actionId": action.action_id}, error) from error

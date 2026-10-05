@@ -18,6 +18,7 @@ VolArb brings Indian index-option research and strategy workflows together with 
 ## Capabilities and status
 
 - **Execution contracts — implemented in Python.** Provider-neutral ports, the global Provider Error Envelope, immutable component identities and validated composition bindings are canonical under `execution-engine/volarb_execution/`. The policy/convergence pipeline and production environment loader remain in development.
+- **Durable admission and recovery — implemented in Python.** Atomic ledger admission, account fencing and conservative broker-evidence reconciliation; [supported topology and limitations](docs/architecture/durable-execution-recovery.md). The full engine remains under development.
 - **Dhan Provider — implemented.** REST/WebSocket integration; normalized commands, queries and streams; instrument translation and readiness gates. Broker mechanics, not trading policy.
 - **Execution Testbed — implemented.** Virtual time, seeded scenarios, simulated broker/market, faults, traces and composition harnesses. Complete-engine coverage awaits the engine.
 - **Research skills — implemented decision support.** Option-surface analytics, physical realized-volatility forecasting, event/news filtering and butterfly workflows. No order authority.

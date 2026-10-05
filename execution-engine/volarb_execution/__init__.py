@@ -5,8 +5,17 @@ from .recovery.command_commit_guard import (
     CommandCommitGuardError,
     CommandCommitGuardErrorCode,
 )
+from .recovery.execution_scope import AccountBrokerPort, ExecutionScope
+from .recovery.sqlite_ledger import LedgerAdmissionError, LedgerIntentAuthority, SQLiteExecutionLedger
+from .recovery.scoped_reconciliation import ScopedReconciler
 
 __all__ = [
+    "AccountBrokerPort",
+    "ExecutionScope",
+    "LedgerAdmissionError",
+    "LedgerIntentAuthority",
+    "SQLiteExecutionLedger",
+    "ScopedReconciler",
     "CommandCommitGuard",
     "CommandCommitGuardError",
     "CommandCommitGuardErrorCode",
