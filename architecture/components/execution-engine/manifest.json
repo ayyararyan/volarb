@@ -6,6 +6,7 @@
   "version": "1.1.0",
   "ownership": "strategy_agnostic",
   "provider_dependency": "injected",
+  "decision_modes": "architecture/components/execution-engine/decision-modes.json",
   "canonical_identity": {
     "identity_kind": "vector_namespace",
     "canonical_root_vid": [

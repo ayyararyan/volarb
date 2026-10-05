@@ -176,5 +176,6 @@
       "bound": "bvid://composition.volarb/mount.volarb.execution.main/5.0.8.1.2",
       "entity": "Command Commit Guard"
     }
-  ]
+  ],
+  "decision_modes": "architecture/strategies/volarb/decision-modes.json"
 }

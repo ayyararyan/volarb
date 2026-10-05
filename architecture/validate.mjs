@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { validateDecisionModes } from './lib/decision-modes.mjs';
 
 const root = process.cwd();
 const readJson = p => JSON.parse(fs.readFileSync(path.join(root, p), 'utf8'));
@@ -101,6 +102,16 @@ for (const entry of compositionCatalog.compositions) {
 }
 requirePath(volarb.strategy_scope.legacy_registry, 'Volarb strategy registry');
 if (volarb.strategy_scope.strategy_owned_box_codes.includes(5) || !volarb.strategy_scope.excluded_reusable_namespace_codes.includes(5)) fail('Volarb must not own execution namespace 5');
+
+for (const [inventoryPath, entities] of [
+  [executionManifest.decision_modes, executionRegistry.entities],
+  [volarb.decision_modes, legacy.entities.filter(e => e.vid[0] !== 5)]
+]) {
+  requirePath(inventoryPath, 'decision-mode inventory');
+  if (typeof inventoryPath === 'string' && fs.existsSync(path.join(root, inventoryPath))) {
+    for (const error of validateDecisionModes(readJson(inventoryPath), entities)) fail(error);
+  }
+}
 
 const componentIds = new Set(componentCatalog.components.map(x => x.component_id));
 for (const mount of volarb.mounts) {

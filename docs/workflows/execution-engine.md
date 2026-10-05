@@ -4,6 +4,8 @@ Status: **active reusable execution design**. The complete pipeline is not yet i
 
 Execution Engine is the reusable, strategy-agnostic convergence component that turns broker-neutral economic execution requirements into authoritative broker positions. Strategy-specific interpretation, when needed, sits upstream in a Strategy Execution Adapter.
 
+Decision mode: **`PURE_ALGORITHMIC` for the current engine and every active execution box/sub-box**, including Command Commit Guard, margin sequencing, slicing, Passive Chase, recovery, integrity and interrupts. The [decision-mode review](../architecture/decision-modes.md) explains the reasoning and upstream hybrid strategy boundaries; the [canonical decision inventory](../../architecture/components/execution-engine/decision-modes.json) records every active entity. Python/LangGraph orchestration does not itself make a component agentic.
+
 ## Canonical structure
 
 Normal execution has three ordered sub-boxes:

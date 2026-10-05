@@ -1,0 +1,1194 @@
+{
+  "schema_version": "1.0",
+  "decision_date": "2026-10-05",
+  "decision_status": "adopted_for_implementation_design",
+  "reviewed_revision": "61471deaa3cc35da2d88b1bef251680829daaef8",
+  "rationale_document": "docs/architecture/decision-modes.md",
+  "classification_semantics": {
+    "PURE_AGENTIC": "The substantive decision is delegated to open-ended LLM reasoning. Generic tool transport, schema checks and logging alone do not make a node hybrid. No current registered operational entity is assigned this mode.",
+    "PURE_ALGORITHMIC": "Substantive decisions and state changes follow specified numerical methods, predicates, solvers or state machines without runtime LLM judgment. External observations can be uncertain; this does not make the decision agentic.",
+    "HYBRID": "LLM interpretation affects a proposal or assessment, while substantive numerical policy and deterministic admission jointly determine the accepted result. Aggregate containers inherit this mode from their children."
+  },
+  "coverage_rule": "Exactly one entry for every active non-edge entity in scope. Retired VIDs remain tombstones. Edges are deterministic routing/transition rules, not independent decision makers.",
+  "implementation_boundary": "These are architecture decisions, not claims of completed implementation or grants of live trading authority.",
+  "broker_mutation_authority": "Only the deterministic Command Commit Guard may admit a mutation, using valid upstream authority and injected ledger/broker dependencies. No LLM receives a direct broker mutation path.",
+  "change_policy": "Changing decision mode, LLM authority or a supporting contract requires an explicit architecture revision and renewed validation; a different orchestrator or model choice does not silently change mode.",
+  "entries": [
+    {
+      "vid": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "name": "Master Architecture",
+      "kind": "root",
+      "role": "AGGREGATE",
+      "classification": "HYBRID",
+      "rationale": "Aggregates hybrid strategy judgment and algorithmic execution. Scheduling, routing and committed state changes remain deterministic; this is an aggregate classification, not an additional LLM agent.",
+      "authority_policy": "VALIDATED_AGGREGATION",
+      "hybrid_boundary": {
+        "llm_may": "Only the explicitly hybrid descendants own LLM judgment; this container adds no independent model call.",
+        "code_must": "Route validated outputs, preserve state/version/authority boundaries and enforce deterministic child constraints.",
+        "invalid_or_unavailable": "Use the affected child policy; keep independent hard monitoring and execution recovery available."
+      }
+    },
+    {
+      "vid": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "name": "Regime Gate",
+      "kind": "root",
+      "role": "AGGREGATE",
+      "classification": "HYBRID",
+      "rationale": "Combines numerical regime evidence with interpretation of macroeconomic and event context. Deterministic admission rules must validate the resulting permission to consider new exposure.",
+      "authority_policy": "VALIDATED_AGGREGATION",
+      "hybrid_boundary": {
+        "llm_may": "Only the explicitly hybrid descendants own LLM judgment; this container adds no independent model call.",
+        "code_must": "Route validated outputs, preserve state/version/authority boundaries and enforce deterministic child constraints.",
+        "invalid_or_unavailable": "Use the affected child policy; keep independent hard monitoring and execution recovery available."
+      }
+    },
+    {
+      "vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ],
+      "name": "Underlying Allocation",
+      "kind": "root",
+      "role": "AGGREGATE",
+      "classification": "HYBRID",
+      "rationale": "Combines contextual opportunity evaluation with numerical feasibility, allocation and atomic capital reservation. Only opportunity evaluation needs LLM judgment.",
+      "authority_policy": "VALIDATED_AGGREGATION",
+      "hybrid_boundary": {
+        "llm_may": "Only the explicitly hybrid descendants own LLM judgment; this container adds no independent model call.",
+        "code_must": "Route validated outputs, preserve state/version/authority boundaries and enforce deterministic child constraints.",
+        "invalid_or_unavailable": "Use the affected child policy; keep independent hard monitoring and execution recovery available."
+      }
+    },
+    {
+      "vid": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ],
+      "name": "Trade Selection",
+      "kind": "root",
+      "role": "AGGREGATE",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Enumerates approved structures and solves an explicit constrained selection problem. With frozen objectives and admissibility rules, an LLM is unnecessary in the live selection loop.",
+      "authority_policy": "VALIDATED_AGGREGATION"
+    },
+    {
+      "vid": [
+        4,
+        0,
+        0,
+        0,
+        0
+      ],
+      "name": "Position Management",
+      "kind": "root",
+      "role": "AGGREGATE",
+      "classification": "HYBRID",
+      "rationale": "Combines contextual economic decisions with deterministic risk limits, margin validation, exact intent construction and mandatory emergency handling.",
+      "authority_policy": "VALIDATED_AGGREGATION",
+      "hybrid_boundary": {
+        "llm_may": "Only the explicitly hybrid descendants own LLM judgment; this container adds no independent model call.",
+        "code_must": "Route validated outputs, preserve state/version/authority boundaries and enforce deterministic child constraints.",
+        "invalid_or_unavailable": "Use the affected child policy; keep independent hard monitoring and execution recovery available."
+      }
+    },
+    {
+      "vid": [
+        0,
+        0,
+        1,
+        1,
+        1
+      ],
+      "name": "Start / Wake",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Wake conditions, session identity and duplicate-start suppression are explicit orchestration rules.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        0,
+        0,
+        2,
+        1,
+        1
+      ],
+      "name": "Fan out one Trade Selection instance per selected X",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Fan out exactly once per valid underlying commitment and instance identity; reasoning must not create duplicate graphs or unreserved work.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        1,
+        0,
+        1,
+        1,
+        1
+      ],
+      "name": "Start / scheduled regime review",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Trigger a review from approved time or event conditions, preserving review identity and rate limits.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        1,
+        0,
+        2,
+        1,
+        1
+      ],
+      "name": "Collect regime-relevant market context",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "HYBRID",
+      "rationale": "Code acquires numerical observations and checks provenance, timestamps and duplicates; an LLM identifies relevant news, interprets events and assembles evidence-backed context.",
+      "authority_policy": "BOUNDED_LLM_PROPOSAL",
+      "parent_vid": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "hybrid_boundary": {
+        "llm_may": "Select relevant sources, summarize events, identify transmission channels, flag contradictions and propose evidence-backed event labels.",
+        "code_must": "Acquire measured data; retain source/time provenance; deduplicate; validate evidence references and field types; prevent invented numerical observations from entering trusted state.",
+        "invalid_or_unavailable": "Mark contextual evidence incomplete; downstream regime assessment becomes UNCERTAIN and cannot permit new short gamma."
+      }
+    },
+    {
+      "vid": [
+        1,
+        0,
+        3,
+        1,
+        1
+      ],
+      "name": "Multi-day Regime Gate",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "HYBRID",
+      "rationale": "An LLM synthesizes multi-day evidence and proposes a regime. Code enforces the calibrated policy, evidence sufficiency, expiry and hard prohibitions before publishing an admissible decision.",
+      "authority_policy": "BOUNDED_LLM_PROPOSAL",
+      "parent_vid": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "hybrid_boundary": {
+        "llm_may": "Propose FAVORABLE, UNFAVORABLE or UNCERTAIN from supplied evidence, with reasons and bounded typed review-trigger proposals.",
+        "code_must": "Enforce the versioned regime policy, calibrated numerical gates, evidence sufficiency, hard prohibitions, maximum validity and a fixed invalidation vocabulary.",
+        "invalid_or_unavailable": "Publish UNCERTAIN or retain an independently still-valid prior certificate only until its precommitted expiry; never extend validity or create new permission."
+      }
+    },
+    {
+      "vid": [
+        1,
+        0,
+        4,
+        7,
+        1
+      ],
+      "name": "REGIME_FAVORABLE",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        1,
+        0,
+        5,
+        1,
+        1
+      ],
+      "name": "Hand off to Underlying Allocation",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Handoff requires a current, validated favorable regime. Narrative confidence cannot bypass the gate.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        1,
+        0,
+        4,
+        2,
+        1
+      ],
+      "name": "NO-NEW-SHORT-GAMMA",
+      "kind": "state",
+      "role": "STATE",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Persist and reduce typed events through explicit transitions. Only validated owning-component events may update this state; free-form LLM output cannot write authoritative state directly.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        1,
+        0,
+        5,
+        3,
+        1
+      ],
+      "name": "Regime Recheck Scheduler",
+      "kind": "scheduler",
+      "role": "SUPPORTING_RUNTIME",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Execute versioned deadlines and typed invalidation triggers. An LLM may propose a trigger during review; it does not control the live scheduler or postpone mandatory reviews.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        1,
+        0,
+        6,
+        2,
+        1
+      ],
+      "name": "Wait until next multi-day review condition",
+      "kind": "state",
+      "role": "STATE",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Persist and reduce typed events through explicit transitions. Only validated owning-component events may update this state; free-form LLM output cannot write authoritative state directly.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        1,
+        0,
+        4,
+        2,
+        2
+      ],
+      "name": "Fail-safe: do not deploy new short gamma",
+      "kind": "state",
+      "role": "STATE",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Persist and reduce typed events through explicit transitions. Only validated owning-component events may update this state; free-form LLM output cannot write authoritative state directly.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        1,
+        7,
+        1
+      ],
+      "name": "REGIME_FAVORABLE input",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        2,
+        1,
+        1
+      ],
+      "name": "Read normalized market data and account/capital state",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Read and normalize market/account facts with freshness checks. Account balances and observations must never be reconstructed from an LLM narrative.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        3,
+        1,
+        1
+      ],
+      "name": "Evaluate NIFTY / BANKNIFTY / SENSEX opportunities",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "HYBRID",
+      "rationale": "Code computes comparable volatility, liquidity, cost and risk measures; an LLM supplies bounded contextual labels about event exposure and suitability within the declared opportunity policy.",
+      "authority_policy": "BOUNDED_LLM_PROPOSAL",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ],
+      "hybrid_boundary": {
+        "llm_may": "Apply bounded contextual suitability labels and compare index-specific event exposure, citing the supplied evidence.",
+        "code_must": "Compute numerical features and scores under fixed policy; apply eligibility and portfolio constraints; validate label provenance and expiry; reserve no capital here.",
+        "invalid_or_unavailable": "Admit no new commitment requiring missing context. A numerical-only alternative must be separately configured and validated, never a silent fallback."
+      }
+    },
+    {
+      "vid": [
+        2,
+        0,
+        4,
+        1,
+        1
+      ],
+      "name": "Apply capital and margin feasibility constraints",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Apply broker-backed margin/capital constraints, portfolio limits and reservations exactly. A plausible trade narrative cannot make an infeasible position feasible.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        5,
+        1,
+        1
+      ],
+      "name": "Selected set S empty?",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Emptiness is a predicate over the validated eligible set, with a fixed wait transition.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        6,
+        2,
+        1
+      ],
+      "name": "INTRADAY OPPORTUNITY WAIT",
+      "kind": "state",
+      "role": "STATE",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Persist and reduce typed events through explicit transitions. Only validated owning-component events may update this state; free-form LLM output cannot write authoritative state directly.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        7,
+        3,
+        1
+      ],
+      "name": "Intraday Opportunity Recheck Scheduler",
+      "kind": "scheduler",
+      "role": "SUPPORTING_RUNTIME",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Run bounded time/event rechecks against current commitment and regime validity; deduplicate triggers and enforce end-of-session rules.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        8,
+        2,
+        1
+      ],
+      "name": "Wait until next intraday scan",
+      "kind": "state",
+      "role": "STATE",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Persist and reduce typed events through explicit transitions. Only validated owning-component events may update this state; free-form LLM output cannot write authoritative state directly.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        6,
+        7,
+        1
+      ],
+      "name": "Selected set S",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        7,
+        1,
+        1
+      ],
+      "name": "Portfolio Capital Allocator",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Allocate capital with a declared objective, quantitative inputs and hard portfolio constraints. The objective remains to be specified; that gap does not justify discretionary LLM sizing.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        8,
+        9,
+        1
+      ],
+      "name": "Assign W_X to every X in S",
+      "kind": "resource",
+      "role": "SUPPORTING_RUNTIME",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Assign exact budget values from the accepted allocation result; rounding, conservation and units are deterministic.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        9,
+        7,
+        1
+      ],
+      "name": "DailyUnderlyingCommitment",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        10,
+        9,
+        1
+      ],
+      "name": "Reserve each W_X",
+      "kind": "resource",
+      "role": "SUPPORTING_RUNTIME",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Reserve budgets atomically across concurrent graphs and preserve them while a graph waits. This is transactional accounting.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        11,
+        1,
+        1
+      ],
+      "name": "For each X in S",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Iterate over the validated committed set without inventing, dropping or duplicating members.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        2,
+        0,
+        12,
+        1,
+        1
+      ],
+      "name": "Launch Trade Selection X",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Launch the correct instance with its committed budget, identity and version using idempotent orchestration.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        1,
+        7,
+        1
+      ],
+      "name": "DailyUnderlyingCommitment + W_X input",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        2,
+        2,
+        1
+      ],
+      "name": "Graph X ACTIVE / COMMITTED",
+      "kind": "state",
+      "role": "STATE",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Persist and reduce typed events through explicit transitions. Only validated owning-component events may update this state; free-form LLM output cannot write authoritative state directly.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        3,
+        1,
+        1
+      ],
+      "name": "Build or refresh admissible structure universe C_X",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Enumerate the approved catalogue against listed contracts, expiries, quotes and the current covenant; reject unsupported structures and missing observations.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        4,
+        7,
+        1
+      ],
+      "name": "Candidate structure universe C_X",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        5,
+        1,
+        1
+      ],
+      "name": "Constrained Structure Optimizer",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Evaluate explicit payoff, risk, cost and capital constraints, optimize the frozen objective, and apply reproducible tie-breaking or return no candidate.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        6,
+        2,
+        1
+      ],
+      "name": "WAITING_FOR_STRUCTURE",
+      "kind": "state",
+      "role": "STATE",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Persist and reduce typed events through explicit transitions. Only validated owning-component events may update this state; free-form LLM output cannot write authoritative state directly.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        7,
+        3,
+        1
+      ],
+      "name": "Within-Hour Structure Recheck Scheduler",
+      "kind": "scheduler",
+      "role": "SUPPORTING_RUNTIME",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Apply bounded within-hour review rules while preserving reservations and respecting regime/session expiry.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        8,
+        2,
+        1
+      ],
+      "name": "Wait minutes / within the hour",
+      "kind": "state",
+      "role": "STATE",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Persist and reduce typed events through explicit transitions. Only validated owning-component events may update this state; free-form LLM output cannot write authoritative state directly.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        6,
+        7,
+        1
+      ],
+      "name": "Selected StructureSpec",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        7,
+        2,
+        1
+      ],
+      "name": "Decision complete",
+      "kind": "state",
+      "role": "STATE",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Persist and reduce typed events through explicit transitions. Only validated owning-component events may update this state; free-form LLM output cannot write authoritative state directly.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        3,
+        0,
+        8,
+        7,
+        1
+      ],
+      "name": "TradeIntent",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        1,
+        7,
+        1
+      ],
+      "name": "TradeIntent input",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        4,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        2,
+        1,
+        1
+      ],
+      "name": "Volarb Execution + Risk Management Engine",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "HYBRID",
+      "rationale": "An LLM may choose an economic response from admissible alternatives; code computes exposures, enforces limits and versions intent. This orchestrator delegates judgment to the monitoring/action nodes.",
+      "authority_policy": "BOUNDED_LLM_PROPOSAL",
+      "parent_vid": [
+        4,
+        0,
+        0,
+        0,
+        0
+      ],
+      "hybrid_boundary": {
+        "llm_may": "Coordinate economic interpretation and propose changes to intended exposure through the monitoring and action-selection nodes.",
+        "code_must": "Own numerical risk, admissible action sets, current state/version, exact sizing, intent publication and mandatory risk responses. Reuse child judgment rather than require another model call.",
+        "invalid_or_unavailable": "Suspend discretionary risk increases; keep deterministic monitoring, reconciliation and mandatory risk responses running."
+      }
+    },
+    {
+      "vid": [
+        4,
+        0,
+        3,
+        1,
+        1
+      ],
+      "name": "Build intended execution plan",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Compile an accepted economic decision into exact instrument identities, signed quantities, constraints and runtime versions. An underspecified decision returns for clarification instead of being guessed.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        4,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        4,
+        1,
+        1
+      ],
+      "name": "Pre-trade Margin Feasibility Check",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Use current normalized broker margin/account facts for the actual proposed transition, including live orders and existing positions; infeasibility returns to strategy policy.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        4,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        5,
+        6,
+        1
+      ],
+      "name": "BrokerMarginFeasibilityPort",
+      "kind": "interface",
+      "role": "SUPPORTING_RUNTIME",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "A typed query/normalization interface transports broker facts. It has no discretion to grant margin or reinterpret feasibility.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        4,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "vid": [
+        4,
+        0,
+        5,
+        7,
+        1
+      ],
+      "name": "Atomic broker-neutral instrument execution intent",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        4,
+        0,
+        0,
+        0,
+        0
+      ],
+      "registry_context": "One desired instrument-level economic action. Multiple instances may be handed to Execution Engine concurrently. Strategy meaning remains in Position Management; broker identifiers remain below the broker port."
+    },
+    {
+      "vid": [
+        4,
+        0,
+        6,
+        6,
+        1
+      ],
+      "name": "OptimalExecutionPort",
+      "kind": "interface",
+      "role": "SUPPORTING_RUNTIME",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Validate and transport versioned broker-neutral economic intent to the generic engine. Transport does not add strategy authority.",
+      "authority_policy": "DETERMINISTIC_POLICY",
+      "parent_vid": [
+        4,
+        0,
+        0,
+        0,
+        0
+      ],
+      "registry_context": "Position Management handoff to broker-neutral Execution Engine."
+    },
+    {
+      "vid": [
+        4,
+        0,
+        3,
+        1,
+        2
+      ],
+      "name": "Live execution / risk / monitoring policy",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "HYBRID",
+      "rationale": "Deterministic monitors enforce continuous hard risk conditions; an LLM periodically interprets changing context. Mandatory risk actions must proceed without waiting for the LLM.",
+      "authority_policy": "BOUNDED_LLM_PROPOSAL",
+      "parent_vid": [
+        4,
+        0,
+        0,
+        0,
+        0
+      ],
+      "hybrid_boundary": {
+        "llm_may": "Interpret new context and request a bounded strategic review at a slower cadence than the mechanical risk monitors.",
+        "code_must": "Continuously enforce approved loss, exposure, session and data-validity rules; issue authorized hard interrupts without waiting for a model; reject stale contextual results.",
+        "invalid_or_unavailable": "Continue hard monitoring and mandatory action. Missing LLM output is never permission to HOLD through a breached limit."
+      }
+    },
+    {
+      "vid": [
+        4,
+        0,
+        4,
+        1,
+        2
+      ],
+      "name": "Hold / adjust / recenter / hedge / reduce / exit",
+      "kind": "node",
+      "role": "DECISION_OR_PROCESS",
+      "classification": "HYBRID",
+      "rationale": "An LLM selects or explains an admissible economic action; code independently evaluates its quantitative consequences and enforces mandatory exits, constraints and authorization.",
+      "authority_policy": "BOUNDED_LLM_PROPOSAL",
+      "parent_vid": [
+        4,
+        0,
+        0,
+        0,
+        0
+      ],
+      "hybrid_boundary": {
+        "llm_may": "Choose among admissible HOLD, ADJUST, RECENTRE, HEDGE, REDUCE and EXIT proposals and explain the economic rationale.",
+        "code_must": "Generate or validate exact candidates, recompute risk and transition margin, enforce covenant/allowlist/version constraints, and emit accepted versioned intent. Mandatory risk actions override discretionary choices.",
+        "invalid_or_unavailable": "Reject the discretionary proposal; apply the independently authorized risk policy for existing exposure, including required exits. Never manufacture HOLD as a universal fallback."
+      }
+    },
+    {
+      "vid": [
+        0,
+        0,
+        1,
+        7,
+        1
+      ],
+      "name": "Provider Error Envelope",
+      "kind": "data_contract",
+      "role": "CONTRACT",
+      "classification": "PURE_ALGORITHMIC",
+      "rationale": "Schema validation and serialization are algorithmic. The economic judgment, if any, belongs to the producing box; this record carries its validated result and provenance without adding discretion.",
+      "authority_policy": "TYPED_STATE_OR_CONTRACT",
+      "parent_vid": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "registry_context": "Global broker/provider-neutral error contract consumed by any Volarb box calling an external provider. Every provider-native failure must map into a stable global category/code/outcome while retaining provider provenance; unknown native errors map to UNKNOWN rather than leaking raw exceptions."
+    }
+  ],
+  "scope": "strategy.volarb_and_global_orchestration",
+  "source_registry": "docs/workflows/vector-id-registry.json",
+  "namespace_filter": {
+    "exclude": [
+      5
+    ]
+  },
+  "summary": {
+    "active_non_edge_entities": 52,
+    "by_classification": {
+      "HYBRID": 10,
+      "PURE_ALGORITHMIC": 42
+    }
+  }
+}

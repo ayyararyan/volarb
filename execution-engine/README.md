@@ -8,6 +8,8 @@ The canonical architecture remains the immutable `[5,0,...]` VID namespace. The 
 
 The JavaScript files under `compat/javascript/execution-contracts/` are transitional wire-contract compatibility for the existing Dhan provider and JavaScript testkit. They are not a second Execution Engine and must not contain execution policy.
 
+Decision ownership is settled for the current design: **the engine and all active execution boxes/sub-boxes are `PURE_ALGORITHMIC`**. Follow the [decision-mode analysis](../docs/architecture/decision-modes.md) and [canonical inventory](../architecture/components/execution-engine/decision-modes.json). Contextual LLM proposals belong to the explicitly hybrid upstream strategy processes; only deterministic admission may release broker mutations.
+
 ```text
 Strategy
    |
