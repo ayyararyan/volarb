@@ -8,7 +8,7 @@ permissions:
   contents: read
 jobs:
   source-consistency:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, aryan-mac-linux]
     steps:
       - uses: actions/checkout@v4
         with:

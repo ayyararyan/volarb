@@ -227,8 +227,10 @@ for name, path, mode in [('confirmation_read', sys.argv[1], 'r'), ('evaluator_wr
         results[name] = False
     except PermissionError: results[name] = True
     except FileNotFoundError: results[name] = True
+    except OSError as e: results[name] = e.errno == 30  # Linux EROFS denial
+# TEST-NET-1 needs a route; isolated Linux loopback can return ECONNREFUSED.
 try:
-    sock = socket.socket(); sock.settimeout(0.3); sock.connect(('127.0.0.1', 9))
+    sock = socket.socket(); sock.settimeout(0.3); sock.connect(('192.0.2.1', 9))
     results['network'] = False
 except PermissionError: results['network'] = True
 except OSError as e: results['network'] = e.errno in (1, 13, 101)

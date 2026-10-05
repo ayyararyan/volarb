@@ -8,7 +8,7 @@ permissions:
   contents: read
 jobs:
   package:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, aryan-mac-linux]
     env:
       PYTHONDONTWRITEBYTECODE: '1'
     steps:
